@@ -1,15 +1,12 @@
 <template>
-
-  https://github.com/will-lucena/vue3-pwa-tutorial
-
   <v-app>
     <v-navigation-drawer v-if="!mobile" permanent v-model="drawer">
       <v-list-item height="64">
         <template v-slot:prepend>
           <v-img contain :src="appLogo" height="45" width="45"></v-img>
         </template>
-        <v-list-item-title class="text-h6 ml-3">Le Ricette</v-list-item-title>
-        <v-list-item-subtitle class="text-h6 ml-3 pb-1">Della Casa</v-list-item-subtitle>
+        <v-list-item-title class="text-h6 ml-3">Agenda</v-list-item-title>
+        <v-list-item-subtitle class="text-h6 ml-3 pb-1">Del Maestro</v-list-item-subtitle>
       </v-list-item>
 
       <v-divider></v-divider>
@@ -22,14 +19,42 @@
           <v-list-item-title>Home</v-list-item-title>
         </v-list-item>
 
-        <v-list-item v-if="hasRole('HANDLE_ORDER')" to="/order-dashboard" color="lime-darken-4">
+        <v-list-item to="/schools" color="lime-darken-4">
+          <template v-slot:prepend>
+            <v-icon icon="mdi-town-hall"></v-icon>
+          </template>
+          <v-list-item-title>Gestisci Scuole</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item to="/lessons" color="lime-darken-4">
+          <template v-slot:prepend>
+            <v-icon icon="mdi-calendar"></v-icon>
+          </template>
+          <v-list-item-title>Calendario</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item to="/lessons" color="lime-darken-4">
+          <template v-slot:prepend>
+            <v-icon icon="mdi-book-account"></v-icon>
+          </template>
+          <v-list-item-title>Lezioni</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item to="/recoveries" color="lime-darken-4">
+          <template v-slot:prepend>
+            <v-icon icon="mdi-repeat"></v-icon>
+          </template>
+          <v-list-item-title>Recuperi</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item to="/reports" color="lime-darken-4">
           <template v-slot:prepend>
             <v-icon icon="mdi-chart-bar"></v-icon>
           </template>
           <v-list-item-title>Statistiche</v-list-item-title>
         </v-list-item>
 
-        <v-list-item v-if="hasRole('HANDLE_DIE')" to="/die-dashboard" color="lime-darken-4">
+        <v-list-item v-if="hasRole('HANDLE_DIE')" to="/settings" color="lime-darken-4">
           <template v-slot:prepend>
             <v-icon icon="mdi-cog"></v-icon>
           </template>
@@ -65,7 +90,7 @@
         <v-icon right>mdi-theme-light-dark</v-icon>
       </v-btn>
 
-      <v-tooltip location="bottom">
+      <v-tooltip location="bottom" v-if="user">
         <template v-slot:activator="{ props }">
           <v-avatar size="40" color="lime-darken-4" v-bind="props" key="Default" class="mr-2">
             <span>{{ userInitials }}</span>
@@ -80,13 +105,13 @@
             </div>
           </v-list>
           <v-list v-else bg-color="surface-variant">
-            <v-list-item prepend-icon="mdi-account-off"> No roles found </v-list-item>
+            <v-list-item prepend-icon="mdi-account-off">No roles found</v-list-item>
           </v-list>
         </span>
       </v-tooltip>
       <div>
         <v-btn class="mx-5" variant="outlined" v-if="!user" @click="signIn">Accedi
-          <v-icon right class="ml-2">mdi-signin</v-icon></v-btn>
+          <v-icon right class="ml-2">mdi-login</v-icon></v-btn>
         <v-btn class="mx-5" variant="outlined" v-if="user" @click="signOut">Esci
           <v-icon right class="ml-2">mdi-logout</v-icon></v-btn>
       </div>
@@ -134,7 +159,7 @@ import { useTheme } from 'vuetify'
 import { useSettingsStore } from './stores/settings'
 import { useDisplay } from 'vuetify'
 
-const { mobile } = useDisplay({ mobileBreakpoint: 'sm' })
+const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);
 const color = computed(() => {
   switch (data.value) {
@@ -150,7 +175,7 @@ const user = ref(false);
 
 const settingsStore = useSettingsStore()
 const theme = useTheme()
-const appLogo = new URL('@/assets/images/logo.png', import.meta.url).href
+const appLogo = new URL('@/assets/images/logor.png', import.meta.url).href
 const companyLogo = new URL('@/assets/images/logo.png', import.meta.url).href
 const drawer = ref(true)
 const userInitials = ref<string>()
