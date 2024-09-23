@@ -6,7 +6,8 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "build-only": "vite build",
-    "dev": "vite --host",
+    "dev": "vite",
+    "devE": "vite --host",
     "format": "prettier --write src/",
     "preview": "vite preview",
     "type-check": "vue-tsc --build --force"
