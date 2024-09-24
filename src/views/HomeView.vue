@@ -22,6 +22,8 @@
 
 <script setup lang="ts">
 const shortlinks = [
+  { title: "La Fenice", subtitle: "Visualizza tutti gli aggiornamenti della scuola", icon: "mdi-town-hall", to: "/school/la-fenice", color: "primary" },
+  { title: "Lizard", subtitle: "Visualizza tutti gli aggiornamenti della scuola", icon: "mdi-book-account", to: "/school/lizard", color: "primary" },
   { title: "Scuole", subtitle: "Visualizza tutte le scuole in cui fai lezione", icon: "mdi-town-hall", to: "/schools", color: "primary" },
   { title: "Lezioni", subtitle: "Visualizza tutte le lezioni", icon: "mdi-book-account", to: "/lessons", color: "primary" },
   { title: "Recuperi", subtitle: "Visualizza tutti i recuperi", icon: "mdi-repeat", to: "/recoveries", color: "primary" },

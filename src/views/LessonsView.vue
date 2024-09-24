@@ -53,13 +53,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, type Ref } from 'vue';
 import { useDate } from 'vuetify'
 
 const date = useDate()
 
 const menu = ref(false)
-const events = ref([])
+const events: Ref<any[]> = ref([])
 const today = ref(new Date());
 
 function getColor(event: any): string {
@@ -80,14 +80,19 @@ function absent(event: any) { event.present = false; }
 function scheduleRecoveryLesson(event: any) { }
 
 async function loadLessons() {
+    const yyyyMMdd = date.format(today.value, 'keyboardDate')
+
     events.value = [
-        { title: "Luca Prezzi", start: new Date('2024-09-23 09:00'), end: new Date('2024-09-23 09:40'), note: "", present: true },
-        { title: "Giorgio Forlì", start: new Date('2024-09-23 10:00'), end: new Date('2024-09-23 10:40'), note: "", present: false },
-        { title: "Alessio Palla", start: new Date('2024-09-23 10:40'), end: new Date('2024-09-23 12:00'), note: "", present: true },
-        { title: "Matteo Romagnoli", start: new Date('2024-09-23 14:00'), end: new Date('2024-09-23 14:40'), note: "", present: true },
-        { title: "Lorenzo Bianchi", start: new Date('2024-09-23 14:40'), end: new Date('2024-09-23 15:20'), note: "", present: true },
-        { title: "Francesco Rossi", start: new Date('2024-09-23 15:20'), end: new Date('2024-09-23 16:00'), note: "qualche nota...", present: true },
-        { title: "Giovanni Colori", start: new Date('2024-09-23 16:00'), end: new Date('2024-09-23 16:40'), note: "", present: true },
+        { title: "Cristina Sole", start: new Date(`${yyyyMMdd} 06:00`), end: new Date(`${yyyyMMdd} 06:40`), note: "", present: true },
+        { title: "Angelica Verdi", start: new Date(`${yyyyMMdd} 07:00`), end: new Date(`${yyyyMMdd} 07:40`), note: "", present: true },
+        { title: "Francesca Giallo", start: new Date(`${yyyyMMdd} 07:40`), end: new Date(`${yyyyMMdd} 09:00`), note: "", present: true },
+        { title: "Luca Prezzi", start: new Date(`${yyyyMMdd} 09:00`), end: new Date(`${yyyyMMdd} 09:40`), note: "", present: true },
+        { title: "Giorgio Forlì", start: new Date(`${yyyyMMdd} 10:00`), end: new Date(`${yyyyMMdd} 10:40`), note: "", present: false },
+        { title: "Alessio Palla", start: new Date(`${yyyyMMdd} 10:40`), end: new Date(`${yyyyMMdd} 12:00`), note: "", present: true },
+        { title: "Matteo Romagnoli", start: new Date(`${yyyyMMdd} 14:00`), end: new Date(`${yyyyMMdd} 14:40`), note: "", present: true },
+        { title: "Lorenzo Bianchi", start: new Date(`${yyyyMMdd} 14:40`), end: new Date(`${yyyyMMdd} 15:20`), note: "", present: true },
+        { title: "Francesco Rossi", start: new Date(`${yyyyMMdd} 15:20`), end: new Date(`${yyyyMMdd} 16:00`), note: "qualche nota...", present: true },
+        { title: "Giovanni Colori", start: new Date(`${yyyyMMdd} 16:00`), end: new Date(`${yyyyMMdd} 16:40`), note: "", present: true },
     ]
 }
 
