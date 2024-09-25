@@ -44,42 +44,49 @@
             </v-col>
             <v-col class="pa-2" cols="12" md="6">
                 <v-card title="Recuperi" class="mx-5">
-                    <v-list lines="three" :items="recoveries2" item-props
-                        @click:select="goTo('/recoveries/' + $event.id)">
-                        <template v-slot:subtitle="{ subtitle }">
-                            {{ subtitle }}
+                    <v-list lines="three" :items="recoveries" item-props>
+                        <template v-slot:title="{ item }">
+                            {{ item.name }}
+                        </template>
+                        <template v-slot:subtitle="{ item }">
+                            <div v-if="item.status == 'NOT_RECOVERED'">
+                                Da recuperare la lezione del {{ date.format(item.date, 'keyboardDate') }}
+                            </div>
+                            <div v-else-if="item.status == 'RECOVERY_SCHEDULED'">
+                                Recupero programmato per il {{ date.format(item.recoveryDate, 'keyboardDate') }}
+                            </div>
+                            <div v-else>
+                                Recupero della lezione del {{ date.format(item.date, 'keyboardDate') }} effettuato il {{
+                                    date.format(item.recoveryDate, 'keyboardDate') }}
+                            </div>
+                        </template>
+                        <template v-slot:append="{ item }">
+
+                            <v-dialog width="auto" scrollable v-if="item.status == 'NOT_RECOVERED'" persistent>
+                                <template v-slot:activator="{ props: activatorProps }">
+                                    <v-btn v-bind="activatorProps">programma</v-btn>
+                                </template>
+
+                                <template v-slot:default="{ isActive }">
+                                    <v-card>
+                                        <v-card-text class="pa-6">
+                                            <v-date-picker :min="new Date()" v-model="datePicker"></v-date-picker>
+                                        </v-card-text>
+                                        <v-card-actions>
+                                            <v-btn text="Annulla" @click="isActive.value = false"></v-btn>
+                                            <v-spacer></v-spacer>
+                                            <v-btn color="surface-variant" text="Salva" variant="flat"
+                                                @click="isActive.value = false; scheduleRecovery(item)"></v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </template>
+                            </v-dialog>
+
+                            <v-btn v-if="item.status == 'RECOVERY_SCHEDULED'"
+                                @click="cancelScheduleRecovery(item)">annulla</v-btn>
                         </template>
                     </v-list>
                 </v-card>
-
-                <v-expansion-panels>
-                    <v-expansion-panel v-for="r in recoveries" :key="r.id">
-                        <v-expansion-panel-title v-slot="{ expanded }">
-                            <v-row no-gutters>
-                                <v-col class="d-flex justify-start" cols="4">
-                                    {{ r.name }}
-                                </v-col>
-                                <v-col class="text--secondary" cols="8">
-                                    Da recuperare la lezione del {{ r.date }}
-                                    <!-- <v-fade-transition leave-absolute>
-                                        <span v-if="expanded">When do you want to travel?</span>
-                                        <v-row v-else style="width: 100%" no-gutters>
-                                            <v-col class="d-flex justify-start" cols="6">
-                                                Start date: {{ trip.start || 'Not set' }}
-                                            </v-col>
-                                            <v-col class="d-flex justify-start" cols="6">
-                                                End date: {{ trip.end || 'Not set' }}
-                                            </v-col>
-                                        </v-row>
-                                    </v-fade-transition> -->
-                                </v-col>
-                            </v-row>
-                        </v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <v-btn>programma lezione di recupero</v-btn>
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                </v-expansion-panels>
             </v-col>
         </v-row>
     </v-container>
@@ -93,38 +100,41 @@ import { useDate } from 'vuetify';
 const date = useDate()
 
 const today = ref(new Date());
+const datePicker: Ref<Date | undefined> = ref();
 const lessons: Ref<any[]> = ref([]);
-const recoveries2 = [
-    {
-        title: 'Luca Verdi',
-        subtitle: 'Da recuperare la lezione del 10/09/2024',
-
-        value: 1,
-    },
-    {
-        title: 'Alessio Rossi',
-        subtitle: 'Da recuperare la lezione del 10/09/2024',
-        value: 2,
-    }
-]
-const recoveries = [
-    {
-        name: 'Luca Verdi',
-        date: new Date('10/09/2024 14:00'),
-        status: 'NOT_RECOVERED',
-        id: 1,
-    },
-    {
-        name: 'Alessio Rossi',
-        date: new Date('10/09/2024 18:00'),
-        status: 'NOT_RECOVERED',
-        id: 2,
-    }
-]
+const recoveries: Ref<any[]> = ref([]);
 const schoolName = "La Fenice"
 
-function goTo(e: any) {
-    console.log(e)
+
+function cancelScheduleRecovery(event: any) {
+    event.recoveryDate = undefined;
+    event.status = 'NOT_RECOVERED';
+}
+
+function scheduleRecovery(event: any) {
+    if (!datePicker.value) return;
+
+    event.recoveryDate = datePicker.value;
+    event.status = 'RECOVERY_SCHEDULED';
+}
+
+async function loadRecoveryLessons() {
+    const res = [
+        {
+            name: 'Luca Verdi',
+            date: new Date('10/09/2024 14:00'),
+            status: 'NOT_RECOVERED',
+            id: 1,
+        },
+        {
+            name: 'Alessio Rossi',
+            date: new Date('10/09/2024 18:00'),
+            status: 'NOT_RECOVERED',
+            id: 2,
+        }
+    ];
+
+    recoveries.value = res;
 }
 
 async function loadLessons() {
@@ -166,5 +176,6 @@ async function loadLessons() {
 
 onMounted(async () => {
     await loadLessons();
+    await loadRecoveryLessons();
 })
 </script>
