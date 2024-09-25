@@ -90,25 +90,18 @@
         <v-icon right>mdi-theme-light-dark</v-icon>
       </v-btn>
 
-      <v-tooltip location="bottom" v-if="user">
+      <v-menu transition="slide-y-transition">
         <template v-slot:activator="{ props }">
-          <v-avatar size="40" color="lime-darken-4" v-bind="props" key="Default" class="mr-2">
-            <span>{{ userInitials }}</span>
-          </v-avatar>
+          <v-btn icon class="mr-2" v-bind="props">
+            <v-icon right>mdi-bell</v-icon>
+          </v-btn>
         </template>
-        <span>
-          <v-list bg-color="surface-variant" v-if="userRoles && userRoles.length > 0" density="compact">
-            <div v-for="(userRole, index) in userRoles" :key="index">
-              <v-list-item prepend-icon="mdi-account-check">
-                {{ userRole }}
-              </v-list-item>
-            </div>
-          </v-list>
-          <v-list v-else bg-color="surface-variant">
-            <v-list-item prepend-icon="mdi-account-off">No roles found</v-list-item>
-          </v-list>
-        </span>
-      </v-tooltip>
+        <v-list>
+          <v-list-item v-for="(item, i) in notifications" :key="i">
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
       <div>
         <v-btn class="mx-5" variant="outlined" v-if="!user" @click="signIn">Accedi
           <v-icon right class="ml-2">mdi-login</v-icon></v-btn>
@@ -172,6 +165,7 @@ const color = computed(() => {
 })
 
 const user = ref(false);
+const notifications: any[] = [];
 
 const settingsStore = useSettingsStore()
 const theme = useTheme()

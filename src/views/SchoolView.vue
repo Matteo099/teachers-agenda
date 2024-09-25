@@ -89,6 +89,33 @@
                 </v-card>
             </v-col>
         </v-row>
+        <v-row>
+            <v-col class="pa-2" cols="12">
+                <v-card title="Note" class="mx-5">
+                    <v-expansion-panels>
+                        <v-expansion-panel v-for="note in notes" :key="note.id">
+                            <v-expansion-panel-title>
+                                <template v-slot:default="{ expanded }">
+                                    <v-row no-gutters>
+                                        <v-col class="d-flex justify-start" cols="8">
+                                            {{ note.title }}
+                                        </v-col>
+                                        <v-col class="text-grey" cols="4">
+                                            <span>
+                                                {{ note.student }}
+                                            </span>
+                                        </v-col>
+                                    </v-row>
+                                </template>
+                            </v-expansion-panel-title>
+                            <v-expansion-panel-text>
+                                {{ note.description }}
+                            </v-expansion-panel-text>
+                        </v-expansion-panel>
+                    </v-expansion-panels>
+                </v-card>
+            </v-col>
+        </v-row>
     </v-container>
 </template>
 
@@ -103,6 +130,7 @@ const today = ref(new Date());
 const datePicker: Ref<Date | undefined> = ref();
 const lessons: Ref<any[]> = ref([]);
 const recoveries: Ref<any[]> = ref([]);
+const notes: Ref<any[]> = ref([]);
 const schoolName = "La Fenice"
 
 
@@ -174,8 +202,18 @@ async function loadLessons() {
     lessons.value = res;
 }
 
+async function loadNotes() {
+    const res = [
+        { id: 0, title: "Questa è una nota molto carina e paffutella", description: "", student: "Matteo Rossi" },
+        { id: 1, title: "Questa è una nota con descrizione", description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut viverra tincidunt risus sit amet interdum. Nam sed leo id ipsum efficitur congue nec ut est. Nullam in metus leo. In commodo, leo eu vulputate euismod, urna lacus efficitur nibh, ut maximus felis metus eu odio. Duis cursus commodo auctor. Suspendisse condimentum lorem dui, id tristique lectus commodo nec.", student: "Luca Verdi" }
+    ]
+
+    notes.value = res;
+}
+
 onMounted(async () => {
     await loadLessons();
     await loadRecoveryLessons();
+    await loadNotes();
 })
 </script>
