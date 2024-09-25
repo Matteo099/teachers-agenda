@@ -25,74 +25,130 @@
             </v-menu>
         </p>
 
+        <v-row>
+            <v-btn @click="present" :disabled="!areLessonSelected">presenti</v-btn>
+            <v-btn @click="absent" :disabled="!areLessonSelected">assenti</v-btn>
+            <v-checkbox v-model="selectAllLessons"
+                :indeterminate="selectedLessons.length != 0 && selectedLessons.length != events.length"
+                @click="toggleAll"></v-checkbox>
+        </v-row>
+
+
         <v-timeline side="end" truncate-line="both">
+
             <v-timeline-item class="event-item" :dot-color="getColor(e)" size="small" v-for="(e, index) in events">
-                <v-expansion-panels :id="'time' + index">
-                    <v-expansion-panel :text="e.note">
-                        <template v-slot:title>
-                            <div class="d-flex justify-space-between w-100">
-                                <strong class="ml-4">{{ e.title }} </strong>
-                                <span class="mr-4">{{ date.format(e.start, 'fullTime24h') }}
-                                    -
-                                    {{ date.format(e.end, 'fullTime24h') }}
-                                </span>
-                            </div>
-                        </template>
+                <div class="d-flex">
+                    <v-checkbox v-model="selectedLessons" :value="index" multiple></v-checkbox>
 
-                        <template v-slot:text>
-                            <v-btn @click="present(e)">presente</v-btn>
-                            <v-btn @click="absent(e)">assente</v-btn>
-                            <v-btn v-if="!e.present" @click="scheduleRecoveryLesson(e)">schedula recupero</v-btn>
-                        </template>
+                    <v-expansion-panels :id="'time' + index">
+                        <v-expansion-panel :text="e.note">
+                            <template v-slot:title>
+                                <div class="d-flex justify-space-between w-100">
+                                    <strong class="ml-4">{{ e.title }} </strong>
+                                    <v-icon v-if="e.note?.trim().length != 0" color="primary">mdi-note</v-icon>
+                                    <span class="mr-4">{{ date.format(e.start, 'fullTime24h') }}
+                                        -
+                                        {{ date.format(e.end, 'fullTime24h') }}
+                                    </span>
+                                </div>
+                            </template>
 
-                    </v-expansion-panel>
-                </v-expansion-panels>
+                            <template v-slot:text>
+                                <v-btn @click="present(e)">presente</v-btn>
+                                <v-btn @click="absent(e)">assente</v-btn>
+                                <v-btn @click="notes(e)">note</v-btn>
+                                <v-btn v-if="e.status == 'ABSENT'" @click="scheduleRecoveryLesson(e)">schedula
+                                    recupero</v-btn>
+                                {{ e.note }}
+                            </template>
+
+                        </v-expansion-panel>
+                    </v-expansion-panels>
+                </div>
             </v-timeline-item>
         </v-timeline>
     </v-container>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, type Ref } from 'vue';
+import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify'
 
 const date = useDate()
 
 const menu = ref(false)
+const selectedLessons: Ref<number[]> = ref([])
+const selectAllLessons: Ref<boolean> = ref(false)
 const events: Ref<any[]> = ref([])
 const today = ref(new Date());
 
+const areLessonSelected = computed(() => selectedLessons.value.length != 0)
+
+watch(selectedLessons, () => {
+    if (selectedLessons.value.length == 0)
+        selectAllLessons.value = false
+})
+
 function getColor(event: any): string {
-    const now = new Date();
-    if (date.isAfter(now, event.start)) {
-        if (date.isBefore(now, event.end)) {
-            return "blue"
-        }
-        if (event.present)
-            return "green";
-        return "red";
+
+    switch (event.status) {
+        case 'UNKONWN':
+            return 'gray';
+        case 'PRESENT':
+            return 'green';
+        case 'ABSENT':
+            return 'red'
+        case 'RECOVERED':
+            return 'blue';
+        case 'TRIAL':
+            return 'yellow';
+        default:
+            return 'gray';
     }
-    return "gray"
 }
 
-function present(event: any) { event.present = true; }
-function absent(event: any) { event.present = false; }
-function scheduleRecoveryLesson(event: any) { }
+function present(event: any) {
+    if (event) event.status = 'PRESENT';
+
+    selectedLessons.value.forEach(s => {
+        events.value[s].status = 'PRESENT'
+    });
+    selectedLessons.value = []
+}
+function absent(event: any) {
+    selectedLessons.value.forEach(s => {
+        events.value[s].status = 'ABSENT'
+    });
+    selectedLessons.value = []
+    if (event) event.status = 'ABSENT';
+}
+function scheduleRecoveryLesson(event: any) {
+    event.status = 'RECOVERED'
+}
+function notes(event: any) { }
+
+function toggleAll() {
+    if (!selectAllLessons.value) {
+        selectedLessons.value = [...Array(events.value.length).keys()]
+    } else {
+        selectedLessons.value = [];
+    }
+}
 
 async function loadLessons() {
     const yyyyMMdd = date.format(today.value, 'keyboardDate')
 
     events.value = [
-        { title: "Cristina Sole", start: new Date(`${yyyyMMdd} 06:00`), end: new Date(`${yyyyMMdd} 06:40`), note: "", present: true },
-        { title: "Angelica Verdi", start: new Date(`${yyyyMMdd} 07:00`), end: new Date(`${yyyyMMdd} 07:40`), note: "", present: true },
-        { title: "Francesca Giallo", start: new Date(`${yyyyMMdd} 07:40`), end: new Date(`${yyyyMMdd} 09:00`), note: "", present: true },
-        { title: "Luca Prezzi", start: new Date(`${yyyyMMdd} 09:00`), end: new Date(`${yyyyMMdd} 09:40`), note: "", present: true },
-        { title: "Giorgio Forlì", start: new Date(`${yyyyMMdd} 10:00`), end: new Date(`${yyyyMMdd} 10:40`), note: "", present: false },
-        { title: "Alessio Palla", start: new Date(`${yyyyMMdd} 10:40`), end: new Date(`${yyyyMMdd} 12:00`), note: "", present: true },
-        { title: "Matteo Romagnoli", start: new Date(`${yyyyMMdd} 14:00`), end: new Date(`${yyyyMMdd} 14:40`), note: "", present: true },
-        { title: "Lorenzo Bianchi", start: new Date(`${yyyyMMdd} 14:40`), end: new Date(`${yyyyMMdd} 15:20`), note: "", present: true },
-        { title: "Francesco Rossi", start: new Date(`${yyyyMMdd} 15:20`), end: new Date(`${yyyyMMdd} 16:00`), note: "qualche nota...", present: true },
-        { title: "Giovanni Colori", start: new Date(`${yyyyMMdd} 16:00`), end: new Date(`${yyyyMMdd} 16:40`), note: "", present: true },
+        { title: "Cristina Sole", start: new Date(`${yyyyMMdd} 06:00`), end: new Date(`${yyyyMMdd} 06:40`), note: "", status: 'UNKNOWN' },
+        { title: "Angelica Verdi", start: new Date(`${yyyyMMdd} 07:00`), end: new Date(`${yyyyMMdd} 07:40`), note: "", status: 'UNKNOWN' },
+        { title: "Francesca Giallo", start: new Date(`${yyyyMMdd} 07:40`), end: new Date(`${yyyyMMdd} 09:00`), note: "", status: 'UNKNOWN' },
+        { title: "Luca Prezzi", start: new Date(`${yyyyMMdd} 09:00`), end: new Date(`${yyyyMMdd} 09:40`), note: "", status: 'UNKNOWN' },
+        { title: "Giorgio Forlì", start: new Date(`${yyyyMMdd} 10:00`), end: new Date(`${yyyyMMdd} 10:40`), note: "", status: 'UNKNOWN' },
+        { title: "Alessio Palla", start: new Date(`${yyyyMMdd} 10:40`), end: new Date(`${yyyyMMdd} 12:00`), note: "", status: 'UNKNOWN' },
+        { title: "Matteo Romagnoli", start: new Date(`${yyyyMMdd} 14:00`), end: new Date(`${yyyyMMdd} 14:40`), note: "", status: 'UNKNOWN' },
+        { title: "Lorenzo Bianchi", start: new Date(`${yyyyMMdd} 14:40`), end: new Date(`${yyyyMMdd} 15:20`), note: "", status: 'UNKNOWN' },
+        { title: "Francesco Rossi", start: new Date(`${yyyyMMdd} 15:20`), end: new Date(`${yyyyMMdd} 16:00`), note: "qualche nota...", status: 'UNKNOWN' },
+        { title: "Giovanni Colori", start: new Date(`${yyyyMMdd} 16:00`), end: new Date(`${yyyyMMdd} 16:40`), note: "", status: 'UNKNOWN' },
     ]
 }
 
@@ -121,5 +177,9 @@ onMounted(async () => {
 <style>
 div.v-timeline-item__body {
     width: 100%
+}
+
+div.v-input__details {
+    display: none;
 }
 </style>

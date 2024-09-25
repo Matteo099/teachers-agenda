@@ -26,14 +26,14 @@
           <v-list-item-title>Gestisci Scuole</v-list-item-title>
         </v-list-item>
 
-        <v-list-item to="/lessons" color="lime-darken-4">
+        <v-list-item to="/calendar" color="lime-darken-4">
           <template v-slot:prepend>
             <v-icon icon="mdi-calendar"></v-icon>
           </template>
           <v-list-item-title>Calendario</v-list-item-title>
         </v-list-item>
 
-        <v-list-item to="/lessons" color="lime-darken-4">
+        <v-list-item :to="'/lesson/' + new Date()" color="lime-darken-4">
           <template v-slot:prepend>
             <v-icon icon="mdi-book-account"></v-icon>
           </template>

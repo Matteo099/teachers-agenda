@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import ManageSchoolView from '@/views/ManageSchoolView.vue'
 import SchoolView from '@/views/SchoolView.vue'
 import LessonsView from '@/views/LessonsView.vue'
+import CalendarView from '@/views/CalendarView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,7 +23,7 @@ const router = createRouter({
       component: SchoolView
     },
     {
-      path: '/lessons',
+      path: '/lesson/:date',
       name: 'lessons',
       component: LessonsView
     },
@@ -30,6 +31,11 @@ const router = createRouter({
       path: '/recoveries',
       name: 'recoveries',
       component: HomeView
+    },
+    {
+      path: '/calendar',
+      name: 'calendar',
+      component: CalendarView
     },
     {
       path: '/reports',
