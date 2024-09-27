@@ -5,6 +5,48 @@
         <v-row>
             <v-col class="pa-2" cols="12" md="6">
                 <v-card title="Lezioni" class="mx-5">
+
+                    <template v-slot:append>
+
+                        <v-dialog transition="dialog-bottom-transition" fullscreen>
+                            <template v-slot:activator="{ props: activatorProps }">
+                                <v-btn icon="mdi-pencil" variant="text" v-bind="activatorProps"></v-btn>
+                            </template>
+
+                            <template v-slot:default="{ isActive }">
+                                <WeekLesson @close="isActive.value = false"></WeekLesson>
+                            </template>
+                        </v-dialog>
+
+                        <!-- <v-menu>
+                            <template v-slot:activator="{ props }">
+                                <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
+                            </template>
+
+                            <v-list>
+                                <v-dialog max-width="500">
+                                    <template v-slot:activator="{ props: activatorProps }">
+                                        <v-list-item title="Aggiungi" v-bind="activatorProps"></v-list-item>
+                                    </template>
+
+                                    <template v-slot:default="{ isActive }">
+                                        <WeekLesson @close="isActive.value = false"></WeekLesson>
+                                    </template>
+                                </v-dialog>
+
+                                <v-dialog max-width="500">
+                                    <template v-slot:activator="{ props: activatorProps }">
+                                        <v-list-item title="Modifica" v-bind="activatorProps"></v-list-item>
+                                    </template>
+
+                                    <template v-slot:default="{ isActive }">
+                                        <WeekLesson edit @close="isActive.value = false"></WeekLesson>
+                                    </template>
+                                </v-dialog>
+                            </v-list>
+                        </v-menu> -->
+                    </template>
+
                     <v-list lines="two">
                         <v-list-subheader inset>Settembre</v-list-subheader>
 
@@ -122,6 +164,7 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue';
 import { useDate } from 'vuetify';
+import WeekLesson from '@/components/WeekLesson.vue'
 
 
 const date = useDate()
@@ -133,6 +176,9 @@ const recoveries: Ref<any[]> = ref([]);
 const notes: Ref<any[]> = ref([]);
 const schoolName = "La Fenice"
 
+
+function addWeekLesson() { }
+function editWeekLesson() { }
 
 function cancelScheduleRecovery(event: any) {
     event.recoveryDate = undefined;

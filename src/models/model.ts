@@ -10,7 +10,7 @@ export interface School {
     id: string;
     name: string;
     students: Student[];
-    programmedLesson: WeekLesson[];
+    calendarLesson: WeekLesson[];
     lessonsHistory: Lesson[];
 }
 

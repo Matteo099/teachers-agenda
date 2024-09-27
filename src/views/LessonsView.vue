@@ -28,6 +28,23 @@
         <v-row>
             <v-btn @click="present" :disabled="!areLessonSelected">presenti</v-btn>
             <v-btn @click="absent" :disabled="!areLessonSelected">assenti</v-btn>
+
+            <v-dialog transition="dialog-bottom-transition" fullscreen>
+                <template v-slot:activator="{ props: activatorProps }">
+                    <v-btn @click="loadStudents" v-bind="activatorProps">Aggiugni studente</v-btn>
+                </template>
+
+                <template v-slot:default="{ isActive }">
+                    <v-card>
+                        <v-list :items="allStudents" @click:select="addStudent($event)">
+                            <template v-slot:title="{ item }">
+                                {{ item }}
+                            </template>
+                        </v-list>
+                    </v-card>
+                </template>
+            </v-dialog>
+
             <v-checkbox v-model="selectAllLessons"
                 :indeterminate="selectedLessons.length != 0 && selectedLessons.length != events.length"
                 @click="toggleAll"></v-checkbox>
@@ -71,6 +88,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Student } from '@/models/model';
 import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify'
 
@@ -81,6 +99,8 @@ const selectedLessons: Ref<number[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
 const events: Ref<any[]> = ref([])
 const today = ref(new Date());
+
+const allStudents: Ref<any[]> = ref([]);
 
 const areLessonSelected = computed(() => selectedLessons.value.length != 0)
 
@@ -133,6 +153,17 @@ function toggleAll() {
     } else {
         selectedLessons.value = [];
     }
+}
+
+function addStudent(student: any) {
+    events.value.push(student);
+}
+
+async function loadStudents() {
+    const res: Student[] = [
+        { id: "1", level: "1", name: "Mario", surname: "Rossi", notes: [] }
+    ];
+    allStudents.value = res;
 }
 
 async function loadLessons() {
