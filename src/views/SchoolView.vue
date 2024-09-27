@@ -132,6 +132,12 @@
             </v-col>
         </v-row>
         <v-row>
+            <v-col class="pa-2" cols="12" md="6">
+                <Students schoolName="La Fenice">
+                </Students>
+            </v-col>
+        </v-row>
+        <v-row>
             <v-col class="pa-2" cols="12">
                 <v-card title="Note" class="mx-5">
                     <v-expansion-panels>
@@ -165,6 +171,7 @@
 import { onMounted, ref, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import WeekLesson from '@/components/WeekLesson.vue'
+import Students from '@/components/Students.vue'
 
 
 const date = useDate()
