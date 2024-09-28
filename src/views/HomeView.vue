@@ -8,7 +8,7 @@
         </v-card>
       </v-col>
       <v-col cols="12" sm="4">
-        <v-dialog v-model="dialog" max-width="600">
+        <v-dialog v-model="dialog" fullscreen>
           <template v-slot:activator="{ props: activatorProps }">
             <v-card class="ma-2 pa-2" color="secondary" v-bind="activatorProps">
               <div class="text-center ma-4">
@@ -32,9 +32,42 @@
                 <v-col cols="12" md="6">
                   <v-text-field v-model="email" label="Email"></v-text-field>
                 </v-col>
-                
+
                 <v-col cols="12" md="6">
                   <v-text-field v-model="phoneNumber" label="Numero di Telefono"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" md="12">
+                  <v-row justify-center>
+                    <v-col class="align-self-center">
+                      <v-checkbox v-model="managed" label="Gestione"></v-checkbox>
+                    </v-col>
+                    <v-col class="align-self-center">
+                      <v-dialog v-if="managed" v-model="dialogManager" fullscreen>
+                        <template v-slot:activator="{ props: activatorProps }">
+                          <v-btn text="Gestione" v-bind="activatorProps"></v-btn>
+                        </template>
+
+                        <ManagerEditor :initialManagerOptions="managerOptions" @close="dialogManager = false"
+                          @save="saveManagerOptions($event)">
+                        </ManagerEditor>
+                      </v-dialog>
+                    </v-col>
+                  </v-row>
+                </v-col>
+
+                <!-- <v-divider class="my-5"></v-divider> -->
+
+                <v-col cols="12" md="6">
+                  <v-dialog v-model="dialogLevels" fullscreen>
+                    <template v-slot:activator="{ props: activatorProps }">
+                      <v-btn text="Gestisci Livelli" v-bind="activatorProps"></v-btn>
+                    </template>
+
+                    <LevelRangeEditor :initialLevelRanges="levelRanges" @close="dialogLevels = false"
+                      @save="saveLevelRanges($event)"></LevelRangeEditor>
+
+                  </v-dialog>
                 </v-col>
               </v-row>
 
@@ -51,7 +84,6 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-
       </v-col>
     </v-row>
   </v-container>
@@ -59,42 +91,70 @@
 
 
 <script setup lang="ts">
-import { useDB } from '@/models/firestore-utils';
-import type { School } from '@/models/model';
-import { addDoc, onSnapshot, type Unsubscribe } from "firebase/firestore";
+import LevelRangeEditor from '@/components/LevelRangeEditor.vue';
+import ManagerEditor from '@/components/ManagerEditor.vue';
+import { DatabaseRef, useDB } from '@/models/firestore-utils';
+import type { LevelRange, ManagerOptions, School } from '@/models/model';
+import { addDoc, onSnapshot, query, Timestamp, type Unsubscribe } from "firebase/firestore";
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 
-const schoolsRef = useDB('schools');
+const schoolsRef = useDB(DatabaseRef.SCHOOLS);
 let unsubscribeSchool: Unsubscribe;
 const schools: Ref<School[]> = ref([]);
 const dialog = ref(false)
+const dialogLevels = ref(false)
+const dialogManager = ref(false)
 
 const name = ref("");
 const city = ref("");
 const email = ref("");
 const phoneNumber = ref("");
+const managed = ref(false);
+const managerOptions: Ref<ManagerOptions | undefined> = ref();
+const levelRanges: Ref<LevelRange[]> = ref([]);
+
+function saveManagerOptions(mo: ManagerOptions) {
+  console.log(mo, JSON.stringify(mo));
+  managerOptions.value = mo;
+  dialogManager.value = false
+}
+
+function saveLevelRanges(lr: LevelRange[]) {
+  console.log(lr, JSON.stringify(lr));
+  levelRanges.value = lr;
+  dialogLevels.value = false;
+}
 
 async function addSchool() {
 
   const school: Partial<School> = {
     name: name.value,
+    managed: managed.value,
+    levelRanges: levelRanges.value,
+    managerOptions: managed.value ? managerOptions.value : undefined,
     city: city.value,
     email: email.value,
     phoneNumber: phoneNumber.value,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
   };
 
   try {
     const docRef = await addDoc(schoolsRef, school);
+    console.log("Document (schools) written with ID: ", docRef.id);
     dialog.value = false;
     name.value = "";
     city.value = "";
     email.value = "";
     phoneNumber.value = "";
-    console.log("Document (schools) written with ID: ", docRef.id);
+    managed.value = false;
+    levelRanges.value = [];
+    managerOptions.value = undefined;
   } catch (e) {
     console.error("Error adding document (schools): ", e);
   }
 }
+
 
 async function loadSchools() {
   unsubscribeSchool = onSnapshot(schoolsRef, (snapshot) => {
@@ -109,6 +169,6 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  unsubscribeSchool();
+  unsubscribeSchool?.();
 })
 </script>

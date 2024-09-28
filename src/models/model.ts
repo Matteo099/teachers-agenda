@@ -14,16 +14,37 @@ export interface Student {
 export interface School {
     id: string;
     name: string;
+    managed: boolean;
+    levelRanges: LevelRange[];
+    managerOptions?: ManagerOptions;
     city?: string;
     email?: string;
     phoneNumber?: string;
     students: Student[];
     // calendarLesson: WeekLesson[];
     lessonsHistory: Lesson[];
+    salaryHistory: Salary[];
 
     // Instead of embedding arrays of students, store students in a separate collection and use schoolId for filtering
     createdAt: Timestamp;
     updatedAt: Timestamp;
+}
+
+export interface Salary {
+    date: Timestamp;
+    total: number;
+    // todo...
+}
+
+export interface ManagerOptions {
+    totalStudents: number;
+    quotePerStudent: number;
+    cashFund: number;
+}
+
+export interface LevelRange {
+    levels: string[];
+    price: number;
 }
 
 export interface WeekLesson {

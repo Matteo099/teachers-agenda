@@ -1,10 +1,21 @@
 <template>
-    <v-container fluid>
-        <p class="text-h5 text-center mb-6">{{ schoolName }}</p>
+    <v-card v-if="school" class="pa-3" :title="school.name" elevation="0">
+        <!-- <p class="text-h5 text-center mb-6">{{ school.name }}</p> -->
+        <template v-slot:append>
+            <v-menu transition="slide-y-transition">
+                <template v-slot:activator="{ props }">
+                    <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
+                </template>
+                <v-list>
+                    <v-list-item title="Modifica" @click="edit"></v-list-item>
+                    <v-list-item title="Elimina" @click="remove"></v-list-item>
+                </v-list>
+            </v-menu>
+        </template>
 
-        <v-row>
+        <v-row class="mt-5">
             <v-col class="pa-2" cols="12" md="6">
-                <v-card title="Lezioni" class="mx-5">
+                <v-card title="Lezioni" elevation="3">
 
                     <template v-slot:append>
 
@@ -85,7 +96,7 @@
                 </v-card>
             </v-col>
             <v-col class="pa-2" cols="12" md="6">
-                <v-card title="Recuperi" class="mx-5">
+                <v-card title="Recuperi" elevation="3">
                     <v-list lines="three" :items="recoveries" item-props>
                         <template v-slot:title="{ item }">
                             {{ item.name }}
@@ -139,7 +150,7 @@
         </v-row>
         <v-row>
             <v-col class="pa-2" cols="12">
-                <v-card title="Note" class="mx-5">
+                <v-card title="Note" elevation="3">
                     <v-expansion-panels>
                         <v-expansion-panel v-for="note in notes" :key="note.id">
                             <v-expansion-panel-title>
@@ -164,25 +175,35 @@
                 </v-card>
             </v-col>
         </v-row>
-    </v-container>
+    </v-card>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, type Ref } from 'vue';
+import Students from '@/components/Students.vue';
+import WeekLesson from '@/components/WeekLesson.vue';
+import { DatabaseRef, useDB } from '@/models/firestore-utils';
+import { doc, type Unsubscribe } from 'firebase/firestore';
+import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useDocument } from 'vuefire';
 import { useDate } from 'vuetify';
-import WeekLesson from '@/components/WeekLesson.vue'
-import Students from '@/components/Students.vue'
 
-
+const route = useRoute()
 const date = useDate()
+const schoolsRef = useDB(DatabaseRef.SCHOOLS);
+
+const subscriptions: Unsubscribe[] = [];
 
 const today = ref(new Date());
 const datePicker: Ref<Date | undefined> = ref();
 const lessons: Ref<any[]> = ref([]);
 const recoveries: Ref<any[]> = ref([]);
 const notes: Ref<any[]> = ref([]);
-const schoolName = "La Fenice"
 
+const schoolSource = computed(() =>
+    doc(schoolsRef, route.params.id as string)
+)
+const school = useDocument(schoolSource)
 
 // function addWeekLesson() { }
 // function editWeekLesson() { }
@@ -268,5 +289,9 @@ onMounted(async () => {
     await loadLessons();
     await loadRecoveryLessons();
     await loadNotes();
+})
+
+onUnmounted(() => {
+    subscriptions.forEach(u => u());
 })
 </script>

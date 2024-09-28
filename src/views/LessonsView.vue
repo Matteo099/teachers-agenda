@@ -73,6 +73,7 @@
                             <template v-slot:text>
                                 <v-btn @click="present(e)">presente</v-btn>
                                 <v-btn @click="absent(e)">assente</v-btn>
+                                <v-btn @click="cancel(e)" v-if="e.status != 'UNKNOWN'">annulla</v-btn>
                                 <v-btn @click="notes(e)">note</v-btn>
                                 <v-btn v-if="e.status == 'ABSENT'" @click="scheduleRecoveryLesson(e)">schedula
                                     recupero</v-btn>
@@ -141,6 +142,9 @@ function absent(event: any) {
     });
     selectedLessons.value = []
     if (event) event.status = 'ABSENT';
+}
+function cancel(event: any) {
+    if (event) event.status = 'UNKNOWN'
 }
 function scheduleRecoveryLesson(event: any) {
     event.status = 'RECOVERED'

@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card elevation="3">
         <!-- <p class="text-h5 text-center mb-6">Studenti della scuola {{ schoolName }}</p> -->
 
         <v-card-text>

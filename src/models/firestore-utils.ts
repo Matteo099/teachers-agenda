@@ -1,12 +1,16 @@
-import { collection, CollectionReference, type DocumentData, type FirestoreDataConverter, type QueryDocumentSnapshot } from "firebase/firestore"
-import { useFirestore } from "vuefire"
-import type { School } from "./model"
+import { collection, CollectionReference, type DocumentData, type FirestoreDataConverter, type QueryDocumentSnapshot } from "firebase/firestore";
+import { useFirestore } from "vuefire";
+import type { School } from "./model";
 
-interface Database {
-    schools: CollectionReference<School, DocumentData>
+export enum DatabaseRef {
+    SCHOOLS = "schools"
 }
 
-const db: Partial<Database> = {}
+interface Database {
+    [DatabaseRef.SCHOOLS]: CollectionReference<School, DocumentData>;
+}
+
+const db: Partial<Database> = {};
 
 function init() {
     const converter = <T>(): FirestoreDataConverter<T> => ({
@@ -20,10 +24,11 @@ function init() {
         }
     })
     const dataPoint = <T>(collectionPath: string) => collection(useFirestore(), collectionPath).withConverter(converter<T>())
-    db.schools = dataPoint<School>('schools')
+
+    db[DatabaseRef.SCHOOLS] = dataPoint<School>('schools')
 }
 
-export function useDB<T extends keyof typeof db>(name: T) {
+export function useDB(ref: DatabaseRef) {
     if (Object.keys(db).length == 0) init();
-    return db[name]!;
+    return db[ref]!;
 }

@@ -11,6 +11,7 @@ import getFirebase from './plugins/firebase'
 
 const { firebaseApp } = getFirebase()
 const app = createApp(App)
+app.config.performance = true;
 
 app.use(createPinia())
 app.use(router)
