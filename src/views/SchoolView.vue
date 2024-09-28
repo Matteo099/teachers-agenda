@@ -143,7 +143,7 @@
                     <v-expansion-panels>
                         <v-expansion-panel v-for="note in notes" :key="note.id">
                             <v-expansion-panel-title>
-                                <template v-slot:default="{ expanded }">
+                                <template v-slot:default> <!--="{ expanded }"-->
                                     <v-row no-gutters>
                                         <v-col class="d-flex justify-start" cols="8">
                                             {{ note.title }}
@@ -184,8 +184,8 @@ const notes: Ref<any[]> = ref([]);
 const schoolName = "La Fenice"
 
 
-function addWeekLesson() { }
-function editWeekLesson() { }
+// function addWeekLesson() { }
+// function editWeekLesson() { }
 
 function cancelScheduleRecovery(event: any) {
     event.recoveryDate = undefined;
@@ -225,7 +225,7 @@ async function loadLessons() {
             alert: true,
         },
         {
-            date: new Date(2024, 8, 30),
+            date: new Date(2024, 8, 26),
         },
         {
             date: new Date(2024, 9, 7),

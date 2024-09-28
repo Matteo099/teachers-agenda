@@ -6,7 +6,8 @@
                 <v-date-input label="Da"></v-date-input>
                 <v-date-input label="A"></v-date-input>
                 <v-select :items="['10/09/2024', new Date().toISOString()]" label="Giorni da Escludere"
-                    multiple></v-select>
+                multiple></v-select>
+                <v-date-input label="Orario di Inizio"></v-date-input>
                 <v-select v-model="students" :items="['A1', 'A2']" label="Studenti" multiple></v-select>
             </v-form>
             <v-list title="Studenti" :items="students"></v-list>

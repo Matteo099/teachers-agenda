@@ -13,10 +13,12 @@
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
+    "firebase": "^10.13.2",
     "pinia": "^2.1.7",
     "teachers-agenda": "file:",
     "vue": "^3.4.29",
     "vue-router": "^4.3.3",
+    "vuefire": "^3.2.0",
     "vuetify": "^3.7.1"
   },
   "devDependencies": {

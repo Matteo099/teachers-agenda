@@ -1,38 +1,58 @@
+import type { Timestamp } from "firebase/firestore";
+
 export interface Student {
     id: string;
+    schoolId: string; // relation with the school
     name: string;
     surname: string;
     level: string;
     notes: string[];
+    createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
+    updatedAt: Timestamp;
 }
 
 export interface School {
     id: string;
     name: string;
+    city?: string;
+    email?: string;
+    phoneNumber?: string;
     students: Student[];
-    calendarLesson: WeekLesson[];
+    // calendarLesson: WeekLesson[];
     lessonsHistory: Lesson[];
+
+    // Instead of embedding arrays of students, store students in a separate collection and use schoolId for filtering
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
 }
 
 export interface WeekLesson {
     id: string;
-    dayOfWeek: number;
-    from: Date;
-    to: Date;
-    exclude: Date[];
-    schedule: ScheduledLesson[];
+    schoolId: string;  // Relation with School (if needed)
+    dayOfWeek: number;  // 0 = Sunday, 1 = Monday, etc.
+    from: Timestamp;  // Using Timestamp for better Firestore compatibility
+    to: Timestamp;  // Same as above
+    exclude: Timestamp[];  // Consider using Timestamps instead of Date
+    schedule: ScheduledLesson[];  // Keep this but consider limiting nesting depth
+    
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
 }
 
 export interface ScheduledLesson {
     id: string;
-    studentId: string;
-    time: { hour: number, minutes: number };
+    studentId: string; // relation with the user
+    time: { hour: number, minutes: number }; // Could be simplified into one field for easier querying (optional)
 }
 
 export interface Lesson extends ScheduledLesson {
-    status: 'NONE' | 'PRESENT' | 'ABSENT';
+    status: 'NONE' | 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'RESCHEDULED';
     trial?: boolean;
-    recoveryDate?: Date;
+    recoveryDate?: Timestamp;
+    originalScheduledLessonId?: string;  // Link to the original scheduled lesson if rescheduled
+
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
 }
 
 /*
