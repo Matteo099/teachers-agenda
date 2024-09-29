@@ -9,12 +9,12 @@
                 </v-col>
                 <v-col cols="12" md="6">
                     <v-number-input v-model="quotePerStudent" :reverse="false" controlVariant="default"
-                        label="Quota per Studente" :hideInput="false" :inset="false" :min="0">
+                        label="Quota per Studente" prefix="€" :hideInput="false" :inset="false" :min="0">
                     </v-number-input>
                 </v-col>
                 <v-col cols="12" md="6">
                     <v-number-input v-model="cashFund" :reverse="false" controlVariant="default"
-                        label="Fondo Cassa" :hideInput="false" :inset="false" :min="0">
+                        label="Fondo Cassa" :hideInput="false" prefix="€" :inset="false" :min="0">
                     </v-number-input>
                 </v-col>
             </v-row>

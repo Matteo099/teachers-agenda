@@ -3,9 +3,11 @@
         <v-card-text>
             <v-row class="my-3 mb-10 justify-center">
                 <v-number-input max-width="500" v-model="levelRangePrice" :reverse="false" controlVariant="default"
-                    label="Fascia di Prezzo" :hideInput="false" :inset="false" :min="0">
+                    label="Fascia di Prezzo" prefix="€" :hideInput="false" :inset="false" :min="0">
                     <template v-slot:append>
                         <v-btn @click="addLevelRange" icon="mdi-plus" color="success"></v-btn>
+                        <v-btn @click="deleteLevelRange" icon="mdi-minus" color="error"></v-btn>
+                        <!-- <v-btn @click="editLevelRange" icon="mdi-pencil" color="info"></v-btn> -->
                     </template>
                 </v-number-input>
             </v-row>
@@ -16,7 +18,8 @@
                 </v-tabs>
 
                 <v-tabs-window v-model="tab">
-                    <v-tabs-window-item class="mx-5 my-5" v-for="levelRange in levelRanges" :key="levelRange.price" :value="levelRange">
+                    <v-tabs-window-item class="mx-5 my-5" v-for="levelRange in levelRanges" :key="levelRange.price"
+                        :value="levelRange">
                         <v-text-field v-model="levelName" label="Nome Livello" append-icon="mdi-plus" type="text"
                             @click:append="addLevelName(levelRange)"></v-text-field>
                         <v-list :items="levelRange.levels">
@@ -49,9 +52,9 @@ import { onMounted, ref, watch, type Ref } from 'vue';
 const props = defineProps<{ initialLevelRanges?: LevelRange[] }>()
 const emit = defineEmits(['close', 'save'])
 
-const levelRangePrice = ref();
+const levelRangePrice = ref(0);
 const levelName = ref("");
-const tab = ref()
+const tab: Ref<LevelRange | undefined> = ref()
 const levelRanges: Ref<LevelRange[]> = ref([])
 
 watch(() => props.initialLevelRanges, () => updateLevelRanges())
@@ -68,10 +71,28 @@ function deleteItem(levelRange: LevelRange, item: string) {
     levelRange.levels.splice(editedIndex, 1)
 }
 
+function deleteLevelRange() {
+    const lr = tab.value;
+    if (lr) {
+        const index = levelRanges.value.findIndex(t => t.price == lr.price)
+        levelRanges.value.splice(index, 1);
+        tab.value = levelRanges.value[0];
+    }
+}
+
+// function editLevelRange() {
+//     const lr = tab.value;
+//     console.log(lr);
+//     if (lr) {
+//         const index = levelRanges.value.findIndex(t => t.price == lr.price)
+//         levelRangePrice.value = levelRanges.value[index].price;
+//     }
+// }
+
 function addLevelRange() {
     const price = +levelRangePrice.value;
     if (price == undefined || price == null || isNaN(price) || price == 0) return;
-    levelRangePrice.value = null;
+    levelRangePrice.value = 0;
     if (levelRanges.value.findIndex(lr => lr.price == price) != -1) return;
     const levelRange = tab.value = { price: price, levels: [] };
     levelRanges.value.push(levelRange);
