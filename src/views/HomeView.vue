@@ -1,6 +1,12 @@
 <template>
   <v-container fluid>
     <v-row no-gutters>
+      <template v-if="loadingSchools">
+        <v-col v-for="fo in 3" :key="fo" cols="12" sm="4">
+          <v-skeleton-loader class="ma-2 pa-2" type="card"></v-skeleton-loader>
+        </v-col>
+      </template>
+
       <v-col v-for="fo in schools" :key="fo.name" cols="12" sm="4">
         <v-card append-icon="mdi-open-in-new" class="ma-2 pa-2" :to="'/school/' + fo.id" prepend-icon="mdi-town-hall"
           :subtitle="'Visualizza tutti gli aggiornamenti della scuola ' + fo.name" :title="fo.name" color="primary">
@@ -101,6 +107,7 @@ import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 const schoolsRef = useDB(DatabaseRef.SCHOOLS);
 let unsubscribeSchool: Unsubscribe;
 const schools: Ref<School[]> = ref([]);
+const loadingSchools = ref(false);
 const dialog = ref(false)
 const dialogLevels = ref(false)
 const dialogManager = ref(false)
@@ -131,13 +138,13 @@ async function addSchool() {
     name: name.value,
     managed: managed.value,
     levelRanges: levelRanges.value,
-    managerOptions: managed.value ? managerOptions.value : undefined,
     city: city.value,
     email: email.value,
     phoneNumber: phoneNumber.value,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   };
+  if (managed.value) school.managerOptions = managerOptions.value;
 
   try {
     const docRef = await addDoc(schoolsRef, school);
@@ -157,10 +164,15 @@ async function addSchool() {
 
 
 async function loadSchools() {
+  loadingSchools.value = true;
   unsubscribeSchool = onSnapshot(schoolsRef, (snapshot) => {
     const data = snapshot.docs.map(doc => doc.data())
     schools.value = data;
+    loadingSchools.value = false;
     console.log("Current data: ", snapshot, data);
+  }, (error) => {
+    loadingSchools.value = false;
+    console.error(error);
   });
 }
 

@@ -14,12 +14,13 @@ export interface Student {
 export interface School {
     id: string;
     name: string;
-    managed: boolean;
-    levelRanges: LevelRange[];
-    managerOptions?: ManagerOptions;
     city?: string;
     email?: string;
     phoneNumber?: string;
+
+    managed: boolean;
+    levelRanges: LevelRange[];
+    managerOptions?: ManagerOptions;
     students: Student[];
     // calendarLesson: WeekLesson[];
     lessonsHistory: Lesson[];

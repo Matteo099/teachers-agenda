@@ -205,6 +205,8 @@ const schoolSource = computed(() =>
 )
 const school = useDocument(schoolSource)
 
+function edit() {}
+function remove() {}
 // function addWeekLesson() { }
 // function editWeekLesson() { }
 
