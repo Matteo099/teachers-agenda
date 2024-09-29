@@ -7,7 +7,33 @@
                     <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
                 </template>
                 <v-list>
-                    <v-list-item title="Modifica" @click="edit"></v-list-item>
+                    <v-dialog v-model="schoolDialog" fullscreen>
+                        <template v-slot:activator="{ props: activatorProps }">
+                            <v-list-item title="Modifica" v-bind="activatorProps"></v-list-item>
+                        </template>
+
+                        <SchoolEditor edit :initialSchool="school" @close="schoolDialog = false"
+                            @save="schoolDialog = false">
+                        </SchoolEditor>
+                    </v-dialog>
+                    <!-- <v-dialog v-if="managed" v-model="dialogManager" fullscreen>
+                        <template v-slot:activator="{ props: activatorProps }">
+                            <v-list-item title="Gestione" v-bind="activatorProps"></v-list-item>
+                        </template>
+
+                        <ManagerEditor :initialManagerOptions="managerOptions" @close="dialogManager = false"
+                            @save="saveManagerOptions($event)">
+                        </ManagerEditor>
+                    </v-dialog>
+                    <v-dialog v-model="dialogLevels" fullscreen>
+                        <template v-slot:activator="{ props: activatorProps }">
+                            <v-list-item title="Livelli" v-bind="activatorProps"></v-list-item>
+                        </template>
+
+                        <LevelRangeEditor :initialLevelRanges="levelRanges" @close="dialogLevels = false"
+                            @save="saveLevelRanges($event)"></LevelRangeEditor>
+                        </ManagerEditor>
+                    </v-dialog> -->
                     <v-list-item title="Elimina" @click="remove"></v-list-item>
                 </v-list>
             </v-menu>
@@ -179,6 +205,7 @@
 </template>
 
 <script setup lang="ts">
+import SchoolEditor from '@/components/SchoolEditor.vue';
 import Students from '@/components/Students.vue';
 import WeekLesson from '@/components/WeekLesson.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
@@ -199,14 +226,15 @@ const datePicker: Ref<Date | undefined> = ref();
 const lessons: Ref<any[]> = ref([]);
 const recoveries: Ref<any[]> = ref([]);
 const notes: Ref<any[]> = ref([]);
+const schoolDialog = ref(false);
 
 const schoolSource = computed(() =>
     doc(schoolsRef, route.params.id as string)
 )
 const school = useDocument(schoolSource)
 
-function edit() {}
-function remove() {}
+function edit() { }
+function remove() { }
 // function addWeekLesson() { }
 // function editWeekLesson() { }
 
