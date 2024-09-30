@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import ManageSchoolView from '@/views/ManageSchoolView.vue'
 import SchoolView from '@/views/SchoolView.vue'
-import LessonsView from '@/views/LessonsView.vue'
+import LessonsView from '@/views/DayLessonView.vue'
 import CalendarView from '@/views/CalendarView.vue'
 
 const router = createRouter({

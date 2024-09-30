@@ -22,109 +22,13 @@
                             <v-list-item title="Elimina" v-bind="activatorProps"></v-list-item>
                         </template>
                     </DeleteDialog>
-                    <!-- <v-dialog v-if="managed" v-model="dialogManager" fullscreen>
-                        <template v-slot:activator="{ props: activatorProps }">
-                            <v-list-item title="Gestione" v-bind="activatorProps"></v-list-item>
-                        </template>
-
-                        <ManagerEditor :initialManagerOptions="managerOptions" @close="dialogManager = false"
-                            @save="saveManagerOptions($event)">
-                        </ManagerEditor>
-                    </v-dialog>
-                    <v-dialog v-model="dialogLevels" fullscreen>
-                        <template v-slot:activator="{ props: activatorProps }">
-                            <v-list-item title="Livelli" v-bind="activatorProps"></v-list-item>
-                        </template>
-
-                        <LevelRangeEditor :initialLevelRanges="levelRanges" @close="dialogLevels = false"
-                            @save="saveLevelRanges($event)"></LevelRangeEditor>
-                        </ManagerEditor>
-                    </v-dialog> -->
                 </v-list>
             </v-menu>
         </template>
 
         <v-row class="mt-5">
             <v-col class="pa-2" cols="12" md="6">
-                <v-card title="Lezioni" elevation="3">
-
-                    <template v-slot:append>
-
-                        <v-dialog transition="dialog-bottom-transition" fullscreen>
-                            <template v-slot:activator="{ props: activatorProps }">
-                                <v-btn icon="mdi-pencil" variant="text" v-bind="activatorProps"></v-btn>
-                            </template>
-
-                            <template v-slot:default="{ isActive }">
-                                <WeekLesson @close="isActive.value = false"></WeekLesson>
-                            </template>
-                        </v-dialog>
-
-                        <!-- <v-menu>
-                            <template v-slot:activator="{ props }">
-                                <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
-                            </template>
-
-                            <v-list>
-                                <v-dialog max-width="500">
-                                    <template v-slot:activator="{ props: activatorProps }">
-                                        <v-list-item title="Aggiungi" v-bind="activatorProps"></v-list-item>
-                                    </template>
-
-                                    <template v-slot:default="{ isActive }">
-                                        <WeekLesson @close="isActive.value = false"></WeekLesson>
-                                    </template>
-                                </v-dialog>
-
-                                <v-dialog max-width="500">
-                                    <template v-slot:activator="{ props: activatorProps }">
-                                        <v-list-item title="Modifica" v-bind="activatorProps"></v-list-item>
-                                    </template>
-
-                                    <template v-slot:default="{ isActive }">
-                                        <WeekLesson edit @close="isActive.value = false"></WeekLesson>
-                                    </template>
-                                </v-dialog>
-                            </v-list>
-                        </v-menu> -->
-                    </template>
-
-                    <v-list lines="two">
-                        <v-list-subheader inset>Settembre</v-list-subheader>
-
-                        <v-list-item v-for="lesson in lessons" :key="lesson.date"
-                            :title="date.format(lesson.date, 'keyboardDate')" :to="'/lesson/' + lesson.date"
-                            :baseColor="lesson.next ? 'primary' : ''">
-                            <template v-slot:prepend>
-                                <v-avatar
-                                    :color="lesson.next ? 'primary' : lesson.alert ? 'warning' : 'grey-lighten-1'">
-                                    <v-icon color="white">mdi-calendar</v-icon>
-                                </v-avatar>
-                            </template>
-
-                            <template v-slot:append v-if="lesson.alert">
-                                <v-icon color="warning">mdi-alert</v-icon>
-                            </template>
-                        </v-list-item>
-
-                        <!-- <v-divider inset></v-divider>
-
-                        <v-list-subheader inset>Files</v-list-subheader>
-
-                        <v-list-item v-for="file in files" :key="file.title" :subtitle="file.subtitle"
-                            :title="file.title">
-                            <template v-slot:prepend>
-                                <v-avatar :color="file.color">
-                                    <v-icon color="white">{{ file.icon }}</v-icon>
-                                </v-avatar>
-                            </template>
-
-                            <template v-slot:append>
-                                <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"></v-btn>
-                            </template>
-                        </v-list-item> -->
-                    </v-list>
-                </v-card>
+                <Lessons></Lessons>
             </v-col>
             <v-col class="pa-2" cols="12" md="6">
                 <v-card title="Recuperi" elevation="3">
@@ -211,6 +115,7 @@
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
+import Lessons from '@/components/Lessons.vue';
 import SchoolEditor from '@/components/SchoolEditor.vue';
 import Students from '@/components/Students.vue';
 import WeekLesson from '@/components/WeekLesson.vue';
