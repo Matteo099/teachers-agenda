@@ -112,7 +112,14 @@
 
     <v-main>
       <v-container fluid>
-        <RouterView />
+        <router-view v-slot="{ Component, route }">
+          <!-- <component :is="route.meta?.transition?.toString() || 'v-fade-transition'" leave-absolute>
+            <component :is="Component" />
+          </component> -->
+          <v-slide-x-transition leave-absolute>
+            <component :is="Component" />
+          </v-slide-x-transition>
+        </router-view>
       </v-container>
     </v-main>
 

@@ -1,12 +1,15 @@
 <template>
   <v-container fluid>
-    <v-row no-gutters>
+    <v-expand-transition mode="out-in">
       <template v-if="loadingSchools">
-        <v-col v-for="fo in 3" :key="fo" cols="12" sm="4">
-          <v-skeleton-loader class="ma-2 pa-2" type="card"></v-skeleton-loader>
-        </v-col>
+        <v-row no-gutters>
+          <v-col v-for="fo in 3" :key="fo" cols="12" sm="4">
+            <v-skeleton-loader class="ma-2 pa-2" type="card"></v-skeleton-loader>
+          </v-col>
+        </v-row>
       </template>
-
+    </v-expand-transition>
+    <v-row no-gutters>
       <v-col v-for="fo in schools" :key="fo.name" cols="12" sm="4">
         <v-card append-icon="mdi-open-in-new" class="ma-2 pa-2" :to="'/school/' + fo.id" prepend-icon="mdi-town-hall"
           :subtitle="'Visualizza tutti gli aggiornamenti della scuola ' + fo.name" :title="fo.name" color="primary">
@@ -48,7 +51,7 @@ const dialog = ref(false)
 
 
 function onSaveSchool(school?: School) {
-  if(school)
+  if (school)
     dialog.value = false;
 }
 

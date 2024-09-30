@@ -16,6 +16,12 @@
                             @save="schoolDialog = false">
                         </SchoolEditor>
                     </v-dialog>
+
+                    <DeleteDialog :name="school.name" objName="Scuola" :onDelete="deleteSchool">
+                        <template v-slot:activator="{ props: activatorProps }">
+                            <v-list-item title="Elimina" v-bind="activatorProps"></v-list-item>
+                        </template>
+                    </DeleteDialog>
                     <!-- <v-dialog v-if="managed" v-model="dialogManager" fullscreen>
                         <template v-slot:activator="{ props: activatorProps }">
                             <v-list-item title="Gestione" v-bind="activatorProps"></v-list-item>
@@ -34,7 +40,6 @@
                             @save="saveLevelRanges($event)"></LevelRangeEditor>
                         </ManagerEditor>
                     </v-dialog> -->
-                    <v-list-item title="Elimina" @click="remove"></v-list-item>
                 </v-list>
             </v-menu>
         </template>
@@ -205,17 +210,19 @@
 </template>
 
 <script setup lang="ts">
+import DeleteDialog from '@/components/DeleteDialog.vue';
 import SchoolEditor from '@/components/SchoolEditor.vue';
 import Students from '@/components/Students.vue';
 import WeekLesson from '@/components/WeekLesson.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { doc, type Unsubscribe } from 'firebase/firestore';
+import { deleteDoc, doc, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useDocument } from 'vuefire';
 import { useDate } from 'vuetify';
 
 const route = useRoute()
+const router = useRouter()
 const date = useDate()
 const schoolsRef = useDB(DatabaseRef.SCHOOLS);
 
@@ -233,10 +240,6 @@ const schoolSource = computed(() =>
 )
 const school = useDocument(schoolSource)
 
-function edit() { }
-function remove() { }
-// function addWeekLesson() { }
-// function editWeekLesson() { }
 
 function cancelScheduleRecovery(event: any) {
     event.recoveryDate = undefined;
@@ -248,6 +251,16 @@ function scheduleRecovery(event: any) {
 
     event.recoveryDate = datePicker.value;
     event.status = 'RECOVERY_SCHEDULED';
+}
+
+async function deleteSchool(): Promise<boolean> {
+    try {
+        await deleteDoc(schoolSource.value);
+        router.push('/')
+        return true;
+    } catch (error) {
+        return false;
+    }
 }
 
 async function loadRecoveryLessons() {

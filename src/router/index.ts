@@ -20,7 +20,8 @@ const router = createRouter({
     },
     {
       path: '/school/:id',
-      component: SchoolView
+      component: SchoolView,
+      meta: { transition: 'v-slide-x-transition' }
     },
     {
       path: '/lesson/:date',
