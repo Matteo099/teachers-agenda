@@ -28,7 +28,7 @@
 
         <v-row class="mt-5">
             <v-col class="pa-2" cols="12" md="6">
-                <Lessons></Lessons>
+                <Lessons :schoolId="school.id" :calendarLesson="school.calendarLesson"></Lessons>
             </v-col>
             <v-col class="pa-2" cols="12" md="6">
                 <v-card title="Recuperi" elevation="3">
@@ -115,10 +115,10 @@
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
-import Lessons from '@/components/Lessons.vue';
-import SchoolEditor from '@/components/SchoolEditor.vue';
+import Lessons from '@/components/lesson/Lessons.vue';
+import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import Students from '@/components/Students.vue';
-import WeekLesson from '@/components/WeekLesson.vue';
+import WeekLesson from '@/components/lesson/WeekLesson.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { deleteDoc, doc, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
@@ -135,7 +135,6 @@ const subscriptions: Unsubscribe[] = [];
 
 const today = ref(new Date());
 const datePicker: Ref<Date | undefined> = ref();
-const lessons: Ref<any[]> = ref([]);
 const recoveries: Ref<any[]> = ref([]);
 const notes: Ref<any[]> = ref([]);
 const schoolDialog = ref(false);
@@ -187,42 +186,6 @@ async function loadRecoveryLessons() {
     recoveries.value = res;
 }
 
-async function loadLessons() {
-    const res: { date: Date, alert?: boolean, next?: boolean }[] = [
-        {
-            date: new Date(2024, 8, 23),
-            alert: true,
-        },
-        {
-            date: new Date(2024, 8, 26),
-        },
-        {
-            date: new Date(2024, 9, 7),
-        },
-        {
-            date: new Date(2024, 9, 14),
-        }
-    ];
-
-    let nextLesson = { date: Infinity, index: -1 }
-    res.forEach((lesson, index) => {
-        lesson.next = false;
-        if (date.isAfter(lesson.date, today.value)) {
-            const diff = date.getDiff(lesson.date, today.value);
-            if (diff < nextLesson.date) {
-                nextLesson = {
-                    date: diff,
-                    index
-                };
-            }
-        }
-    });
-
-    if (nextLesson.index !== -1)
-        res[nextLesson.index].next = true
-
-    lessons.value = res;
-}
 
 async function loadNotes() {
     const res = [
@@ -234,7 +197,6 @@ async function loadNotes() {
 }
 
 onMounted(async () => {
-    await loadLessons();
     await loadRecoveryLessons();
     await loadNotes();
 })

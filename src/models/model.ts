@@ -21,17 +21,19 @@ export interface School {
     managed: boolean;
     levelRanges: LevelRange[];
     managerOptions?: ManagerOptions;
-    students: Student[];
-    // calendarLesson: WeekLesson[];
-    lessonsHistory: Lesson[];
-    salaryHistory: Salary[];
+    calendarLesson: WeekLesson[];
 
     // Instead of embedding arrays of students, store students in a separate collection and use schoolId for filtering
+    // students: Student[];
+    // lessonsHistory: Lesson[];
+    // salaryHistory: Salary[];
+
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }
 
 export interface Salary {
+    schoolId: string; // relation with the school
     date: Timestamp;
     total: number;
     // todo...
@@ -56,7 +58,7 @@ export interface WeekLesson {
     to: Timestamp;  // Same as above
     exclude: Timestamp[];  // Consider using Timestamps instead of Date
     schedule: ScheduledLesson[];  // Keep this but consider limiting nesting depth
-    
+
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }
@@ -68,6 +70,7 @@ export interface ScheduledLesson {
 }
 
 export interface Lesson extends ScheduledLesson {
+    schoolId: string; // relation with the school
     status: 'NONE' | 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'RESCHEDULED';
     trial?: boolean;
     recoveryDate?: Timestamp;

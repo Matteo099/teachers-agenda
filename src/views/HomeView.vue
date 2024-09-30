@@ -36,7 +36,7 @@
 
 
 <script setup lang="ts">
-import SchoolEditor from '@/components/SchoolEditor.vue';
+import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import type { School } from '@/models/model';
 import { onSnapshot, type Unsubscribe } from "firebase/firestore";
