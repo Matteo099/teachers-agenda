@@ -1,5 +1,7 @@
 import type { Timestamp } from "firebase/firestore";
 
+export const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+
 export interface Student {
     id: string;
     schoolId: string; // relation with the school

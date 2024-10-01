@@ -8,7 +8,7 @@
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <WeekLesson @close="isActive.value = false"></WeekLesson>
+                    <WeekLessonEditor @close="isActive.value = false"></WeekLessonEditor>
                 </template>
             </v-dialog>
         </template>
@@ -53,6 +53,7 @@
 import { onMounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import type { WeekLesson } from '@/models/model';
+import WeekLessonEditor from './CalendarLessonEditor.vue';
 
 interface LessonsProps {
     schoolId: string,

@@ -64,7 +64,8 @@
 import type { ScheduledLesson, WeekLesson } from '@/models/model';
 import { onMounted, ref, type Ref } from 'vue';
 import { useDate } from 'vuetify';
-import WeekLessonEvent from './WeekLessonEvent.vue';
+import WeekLessonEvent from './WeekLessonEditor.vue';
+import { Timestamp } from 'firebase/firestore';
 
 const date = useDate();
 const emit = defineEmits(['close'])
@@ -84,7 +85,7 @@ async function loadCalendar() {
         { id: "1", studentId: "A1", time: { hour: 14, minutes: 0 } }
     ]
     const res: WeekLesson[] = [
-        { id: "1", dayOfWeek: 0, exclude: [], from: new Date(), to: date.addMonths(new Date(), 6) as Date, schedule }
+        { id: "1", schoolId: "", dayOfWeek: 0, exclude: [] as Timestamp[], from: Timestamp.now(), to: Timestamp.now(), schedule, createdAt: Timestamp.now(), updatedAt: Timestamp.now() }
     ];
     programmedLessons.value = res;
 }

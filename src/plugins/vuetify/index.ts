@@ -34,7 +34,7 @@ const myCustomDarkTheme = {
 }
 
 const vuetify = createVuetify({
-    components:{
+    components: {
         ...components,
         ...labsComponents
     },
@@ -52,7 +52,16 @@ const vuetify = createVuetify({
             myCustomLightTheme,
             myCustomDarkTheme
         }
-    }
+    },
+    locale: {
+        locale: 'it',
+        fallback: 'en',
+    },
+    date: {
+        locale: {
+            it: 'it-IT',
+        },
+    },
 })
 
 export default vuetify
