@@ -79,7 +79,7 @@
         </v-row>
         <v-row>
             <v-col class="pa-2" cols="12" md="6">
-                <Students schoolName="La Fenice">
+                <Students :schoolId="school.id">
                 </Students>
             </v-col>
         </v-row>
@@ -117,7 +117,7 @@
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import Lessons from '@/components/lesson/Lessons.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
-import Students from '@/components/Students.vue';
+import Students from '@/components/student/Students.vue';
 import WeekLesson from '@/components/lesson/CalendarLessonEditor.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { deleteDoc, doc, type Unsubscribe } from 'firebase/firestore';
@@ -125,11 +125,12 @@ import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDocument } from 'vuefire';
 import { useDate } from 'vuetify';
+import type { School } from '@/models/model';
 
 const route = useRoute()
 const router = useRouter()
 const date = useDate()
-const schoolsRef = useDB(DatabaseRef.SCHOOLS);
+const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 
 const subscriptions: Unsubscribe[] = [];
 

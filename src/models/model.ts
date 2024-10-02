@@ -7,6 +7,8 @@ export interface Student {
     schoolId: string; // relation with the school
     name: string;
     surname: string;
+    contact: string;
+    lessonDay: number;
     level: string;
     notes: string[];
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying

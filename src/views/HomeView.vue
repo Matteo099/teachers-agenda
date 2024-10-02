@@ -42,7 +42,7 @@ import type { School } from '@/models/model';
 import { onSnapshot, type Unsubscribe } from "firebase/firestore";
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 
-const schoolsRef = useDB(DatabaseRef.SCHOOLS);
+const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 let unsubscribeSchool: Unsubscribe;
 
 const schools: Ref<School[]> = ref([]);
