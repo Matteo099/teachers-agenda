@@ -22,8 +22,8 @@
                         <v-time-picker v-if="modalTimePicker" v-model="startingTime"></v-time-picker>
                     </v-dialog>
                 </v-text-field>
-                <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" :loading="loadingStudents"
-                    item-title="name" item-value="id" multiple
+                <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" ref="selectStudentRef"
+                    item-title="name" item-value="id" multiple @click="console.log(selectStudentRef)"
                     no-data-text="Nessuno studente disponibile per questa scuola">
                     <template v-slot:prepend-item>
                         <v-list-item title="Seleziona tutti" @click="toggle">
@@ -66,7 +66,7 @@
                         </b>
                     </template>
 
-                    <v-list-item-title v-text="item.studentId"></v-list-item-title>
+                    <v-list-item-title text="item.studentId"></v-list-item-title>
                 </v-list-item>
             </v-list>
         </v-card-text>
@@ -86,6 +86,7 @@ import { nameof } from '@/models/utils';
 import { addDoc, doc, onSnapshot, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify';
+import StudentEditor from '../student/StudentEditor.vue';
 
 interface WeekLessonEventProps {
     edit?: boolean;
@@ -100,6 +101,8 @@ const props = defineProps<WeekLessonEventProps>()
 const weekLessonsRef = useDB<WeekLesson>(DatabaseRef.WEEK_LESSONS);
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const subscriptions: Unsubscribe[] = [];
+
+const selectStudentRef = ref();
 
 const _schoolId: Ref<string | undefined> = ref();
 const dayOfWeek: Ref<string | undefined> = ref();
