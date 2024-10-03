@@ -23,7 +23,8 @@
                     </v-dialog>
                 </v-text-field>
                 <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" :loading="loadingStudents"
-                    item-title="name" item-value="id" multiple>
+                    item-title="name" item-value="id" multiple
+                    no-data-text="Nessuno studente disponibile per questa scuola">
                     <template v-slot:prepend-item>
                         <v-list-item title="Seleziona tutti" @click="toggle">
                             <template v-slot:prepend>
@@ -34,6 +35,24 @@
                         </v-list-item>
 
                         <v-divider class="mt-2"></v-divider>
+                    </template>
+
+                    <template v-slot:append-item>
+                        <v-divider class="mt-2"></v-divider>
+
+                        <v-dialog v-model="dialogCreateStudent" fullscreen>
+                            <template v-slot:activator="{ props: activatorProps }">
+                                <v-list-item prepend-icon="mdi-plus" title="Crea Studente" color="success"
+                                    v-bind="activatorProps">
+                                </v-list-item>
+                            </template>
+
+                            <StudentEditor :schoolId="schoolId" @close="dialogCreateStudent = false"
+                                @save="dialogCreateStudent = false">
+                            </StudentEditor>
+                        </v-dialog>
+
+
                     </template>
                 </v-select>
             </v-form>
@@ -95,6 +114,7 @@ const scheduledLessons: Ref<ScheduledLesson[]> = ref([]);
 const modalTimePicker = ref(false);
 const saving = ref(false);
 const loadingStudents = ref(false);
+const dialogCreateStudent = ref(false);
 
 let unsubscribeStudents: Unsubscribe;
 
@@ -252,6 +272,8 @@ async function save() {
 async function loadStudents() {
     unsubscribeStudents?.();
 
+    console.log("loadStudents called")
+
     loadingStudents.value = true;
     unsubscribeStudents = onSnapshot(query(studentsRef, where(nameof<Student>('lessonDay'), '==', dayOfWeek.value)), (snapshot) => {
         const data = snapshot.docs.map(doc => doc.data())
@@ -261,6 +283,8 @@ async function loadStudents() {
     }, (error) => {
         loadingStudents.value = false;
         console.error(error);
+    }, () => {
+        console.log("loadStudents completitions")
     });
     subscriptions.push(unsubscribeStudents);
 }
