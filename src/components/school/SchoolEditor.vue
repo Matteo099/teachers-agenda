@@ -74,7 +74,7 @@ import LevelRangeEditor from './LevelRangeEditor.vue';
 import ManagerEditor from './ManagerEditor.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 
-const schoolsRef = useDB(DatabaseRef.SCHOOLS);
+const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 const props = defineProps<{ initialSchool?: School, edit?: boolean }>()
 const emit = defineEmits(['close', 'save'])
 

@@ -52,6 +52,7 @@ export interface ManagerOptions {
 export interface LevelRange {
     levels: string[];
     price: number;
+    minutes: number;
 }
 
 export interface WeekLesson {
@@ -68,7 +69,6 @@ export interface WeekLesson {
 }
 
 export interface ScheduledLesson {
-    id: string;
     studentId: string; // relation with the user
     time: { hour: number, minutes: number }; // Could be simplified into one field for easier querying (optional)
 }

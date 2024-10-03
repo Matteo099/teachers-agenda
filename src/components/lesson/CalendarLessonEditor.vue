@@ -8,7 +8,7 @@
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <WeekLessonEvent @close="isActive.value = false"></WeekLessonEvent>
+                    <WeekLessonEvent :schoolId="schoolId" @close="isActive.value = false"></WeekLessonEvent>
                 </template>
             </v-dialog>
         </template>
@@ -34,7 +34,8 @@
                                         </template>
 
                                         <template v-slot:default="{ isActive }">
-                                            <WeekLessonEvent edit @close="isActive.value = false"></WeekLessonEvent>
+                                            <WeekLessonEvent :schoolId="pl.schoolId" :initialWeekLesson="pl" edit
+                                                @close="isActive.value = false"></WeekLessonEvent>
                                         </template>
                                     </v-dialog>
                                 </v-col>
@@ -67,7 +68,13 @@ import { useDate } from 'vuetify';
 import WeekLessonEvent from './WeekLessonEditor.vue';
 import { Timestamp } from 'firebase/firestore';
 
-const date = useDate();
+interface CalendarLessonEditorProps {
+    schoolId: string;
+    calendarLesson: WeekLesson[];
+}
+
+const date = useDate()
+const props = defineProps<CalendarLessonEditorProps>()
 const emit = defineEmits(['close'])
 const programmedLessons: Ref<WeekLesson[]> = ref([]);
 

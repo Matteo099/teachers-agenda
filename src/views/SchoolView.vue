@@ -118,7 +118,6 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import Lessons from '@/components/lesson/Lessons.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import Students from '@/components/student/Students.vue';
-import WeekLesson from '@/components/lesson/CalendarLessonEditor.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { deleteDoc, doc, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';

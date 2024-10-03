@@ -43,7 +43,7 @@ import { days, type Student } from '@/models/model';
 import { addDoc, doc, setDoc, Timestamp } from 'firebase/firestore';
 import { onMounted, ref, watch, type Ref } from 'vue';
 
-const studentsRef = useDB(DatabaseRef.STUDENTS);
+const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const props = defineProps<{ initialStudent?: Student, schoolId?: string, edit?: boolean }>()
 const emit = defineEmits(['close', 'save'])
 

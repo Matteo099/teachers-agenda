@@ -1,14 +1,15 @@
 <template>
-    <v-card title="Lezioni" elevation="3">
+    <v-card title="Lezioni" elevation="3" :loading="!calendarLesson">
 
         <template v-slot:append>
             <v-dialog transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn icon="mdi-pencil" variant="text" v-bind="activatorProps"></v-btn>
+                    <v-btn icon="mdi-pencil" variant="text" v-bind="activatorProps" :disabled="!calendarLesson"></v-btn>
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <WeekLessonEditor @close="isActive.value = false"></WeekLessonEditor>
+                    <WeekLessonEditor v-if="calendarLesson" :schoolId="schoolId" :calendarLesson="calendarLesson"
+                        @close="isActive.value = false"></WeekLessonEditor>
                 </template>
             </v-dialog>
         </template>
@@ -61,7 +62,11 @@ interface LessonsProps {
 }
 
 const date = useDate()
-const props = defineProps<LessonsProps>()
+const props = withDefaults(defineProps<LessonsProps>(), {
+    calendarLesson(props) {
+        return [];
+    },
+})
 
 const lessons: Ref<any[]> = ref([]);
 
