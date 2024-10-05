@@ -90,6 +90,7 @@
 
 <script setup lang="ts">
 import type { Student } from '@/models/model';
+import { Timestamp } from 'firebase/firestore';
 import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify'
 
@@ -165,7 +166,7 @@ function addStudent(student: any) {
 
 async function loadStudents() {
     const res: Student[] = [
-        { id: "1", level: "1", name: "Mario", surname: "Rossi", notes: [] }
+        { id: "1", schoolId: "prova", level: "1", name: "Mario", surname: "Rossi", notes: [], contact: "2378542365", lessonDay: 0, createdAt: Timestamp.now(), updatedAt: Timestamp.now() }
     ];
     allStudents.value = res;
 }

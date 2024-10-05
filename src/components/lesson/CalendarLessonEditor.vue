@@ -8,7 +8,7 @@
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <WeekLessonEvent :schoolId="schoolId" @close="isActive.value = false"></WeekLessonEvent>
+                    <WeekLessonEvent :schoolId="schoolId" :levelRanges="[]" @close="isActive.value = false"></WeekLessonEvent>
                 </template>
             </v-dialog>
         </template>
@@ -34,7 +34,7 @@
                                         </template>
 
                                         <template v-slot:default="{ isActive }">
-                                            <WeekLessonEvent :schoolId="pl.schoolId" :initialWeekLesson="pl" edit
+                                            <WeekLessonEvent :schoolId="pl.schoolId" :initialWeekLesson="pl" :levelRanges="[]" edit
                                                 @close="isActive.value = false"></WeekLessonEvent>
                                         </template>
                                     </v-dialog>
@@ -89,7 +89,7 @@ function getDayName(day: number): string {
 
 async function loadCalendar() {
     const schedule: ScheduledLesson[] = [
-        { id: "1", studentId: "A1", time: { hour: 14, minutes: 0 } }
+        { studentId: "A1", time: { hour: 14, minutes: 0 } }
     ]
     const res: WeekLesson[] = [
         { id: "1", schoolId: "", dayOfWeek: 0, exclude: [] as Timestamp[], from: Timestamp.now(), to: Timestamp.now(), schedule, createdAt: Timestamp.now(), updatedAt: Timestamp.now() }

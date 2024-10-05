@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, type Ref } from 'vue';
 
 
 const expanded = ref([]);
@@ -58,7 +58,7 @@ const schoolsHeaders: any = [
     { title: 'Indirizzo', key: 'address' },
     { title: '€ / minuto', key: 'paymentCriteria' }
 ];
-const schools: any = ref([]);
+const schools: Ref<any[]> = ref([]);
 
 function newSchool() { }
 function edit(school: any) { }
