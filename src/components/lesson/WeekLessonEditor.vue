@@ -2,73 +2,95 @@
     <v-card title="Lezione Settimanale">
         <v-card-text>
             <v-form>
-                <v-select v-model="dayOfWeek" :items="days" label="Giorno" required></v-select>
-                <v-date-input :max="to" v-model="from" label="Dal" inputmode="none"></v-date-input>
-                <v-date-input :min="from" v-model="to" label="Al" inputmode="none"></v-date-input>
-                <v-select v-model="excludeDates" :items="allDates" label="Giorni da Escludere" multiple
-                    item-title="name" item-value="value" no-data-text="Nessuna Data Disponibile" clearable>
-                    <template v-slot:selection="{ item, index }">
-                        <v-chip v-if="index < 2">
-                            <span>{{ date.format(item.title, 'keyboard24') }}</span>
-                        </v-chip>
-                        <span v-if="index === 2" class="text-grey text-caption align-self-center">
-                            (+{{ excludeDates.length - 2 }} others)
-                        </span>
-                    </template>
-                </v-select>
-                <v-text-field v-model="startingTime" :active="modalTimePicker" :focused="modalTimePicker"
-                    inputmode="none" label="Orario della prima Lezione" prepend-icon="mdi-clock-time-four-outline"
-                    readonly>
-                    <v-dialog v-model="modalTimePicker" activator="parent" width="auto">
-                        <v-time-picker v-if="modalTimePicker" v-model="startingTime" format="24hr"></v-time-picker>
-                    </v-dialog>
-                </v-text-field>
-                <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" item-title="name"
-                    item-value="id" :return-object="true" multiple
-                    no-data-text="Nessuno studente disponibile per questa scuola">
-                    <!-- <template v-slot:item="{ item }">
-                        <v-list-item :value="item.raw" :key="item.raw.id" role="option">
-                            <template v-slot:prepend="{ isSelected }">
-                                <v-list-item-action start>
-                                    <v-checkbox-btn :model-value="isSelected"></v-checkbox-btn>
-                                </v-list-item-action>
+                <v-row class="my-1 justify-center">
+                    <v-col class="mx-2">
+                        <v-select v-model="dayOfWeek" :items="days" label="Giorno" required></v-select>
+                    </v-col>
+                </v-row>
+                <v-row class="my-1 justify-center">
+                    <v-col class="mx-2">
+                        <v-date-input :max="to" v-model="from" label="Dal" inputmode="none"></v-date-input>
+                    </v-col>
+                    <v-col class="mx-2">
+                        <v-date-input :min="from" v-model="to" label="Al" inputmode="none"></v-date-input>
+                    </v-col>
+                    <v-col class="mx-2">
+                        <v-select v-model="excludeDates" :items="allDates" label="Giorni da Escludere" multiple
+                            item-title="name" item-value="value" no-data-text="Nessuna Data Disponibile" clearable>
+                            <template v-slot:selection="{ item, index }">
+                                <v-chip v-if="index < 2">
+                                    <span>{{ date.format(item.title, 'keyboard24') }}</span>
+                                </v-chip>
+                                <span v-if="index === 2" class="text-grey text-caption align-self-center">
+                                    (+{{ excludeDates.length - 2 }} others)
+                                </span>
                             </template>
+                        </v-select>
+                    </v-col>
+                </v-row>
+                <v-row class="my-1 justify-center">
+                    <v-col class="mx-2">
+                        <v-text-field v-model="startingTime" :active="modalTimePicker" :focused="modalTimePicker"
+                            inputmode="none" label="Orario della prima Lezione"
+                            prepend-icon="mdi-clock-time-four-outline" readonly>
+                            <v-dialog v-model="modalTimePicker" activator="parent" width="auto">
+                                <v-time-picker v-if="modalTimePicker" v-model="startingTime"
+                                    format="24hr"></v-time-picker>
+                            </v-dialog>
+                        </v-text-field>
+                    </v-col>
+                    <v-col class="mx-2">
+                        <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" item-title="name"
+                            item-value="id" :return-object="true" multiple
+                            no-data-text="Nessuno studente disponibile per questa scuola">
+                            <!-- <template v-slot:item="{ item }">
+                                <v-list-item :value="item.raw" :key="item.raw.id" role="option">
+                                    <template v-slot:prepend="{ isSelected }">
+                                        <v-list-item-action start>
+                                            <v-checkbox-btn :model-value="isSelected"></v-checkbox-btn>
+                                        </v-list-item-action>
+                                    </template>
 
-                            <v-list-item-title>{{ item.raw.name }} {{ item.raw.surname }}</v-list-item-title>
-                        </v-list-item>
-                    </template> -->
-                    <template v-slot:prepend-item v-if="allStudents.length > 1">
-                        <v-list-item title="Seleziona tutti" @click="toggle">
-                            <template v-slot:prepend>
-                                <v-checkbox-btn :color="selectSomeStudents ? 'indigo-darken-4' : undefined"
-                                    :indeterminate="selectSomeStudents && !selectAllStudents"
-                                    :model-value="selectAllStudents"></v-checkbox-btn>
-                            </template>
-                        </v-list-item>
-
-                        <v-divider class="mt-2"></v-divider>
-                    </template>
-
-                    <!-- <template v-slot:append-item>
-                        <v-divider class="mt-2"></v-divider>
-
-                        <v-dialog v-model="dialogCreateStudent" fullscreen>
-                            <template v-slot:activator="{ props: activatorProps }">
-                                <v-list-item prepend-icon="mdi-plus" title="Crea Studente" color="success"
-                                    v-bind="activatorProps">
+                                    <v-list-item-title>{{ item.raw.name }} {{ item.raw.surname }}</v-list-item-title>
                                 </v-list-item>
+                            </template> -->
+                            <template v-slot:prepend-item v-if="allStudents.length > 1">
+                                <v-list-item title="Seleziona tutti" @click="toggle">
+                                    <template v-slot:prepend>
+                                        <v-checkbox-btn :color="selectSomeStudents ? 'indigo-darken-4' : undefined"
+                                            :indeterminate="selectSomeStudents && !selectAllStudents"
+                                            :model-value="selectAllStudents"></v-checkbox-btn>
+                                    </template>
+                                </v-list-item>
+
+                                <v-divider class="mt-2"></v-divider>
                             </template>
 
-                            <StudentEditor :schoolId="schoolId" @close="dialogCreateStudent = false"
-                                @save="dialogCreateStudent = false">
-                            </StudentEditor>
-                        </v-dialog>
-                    </template> -->
-                </v-select>
+                            <!-- <template v-slot:append-item>
+                                <v-divider class="mt-2"></v-divider>
+
+                                <v-dialog v-model="dialogCreateStudent" fullscreen>
+                                    <template v-slot:activator="{ props: activatorProps }">
+                                        <v-list-item prepend-icon="mdi-plus" title="Crea Studente" color="success"
+                                            v-bind="activatorProps">
+                                        </v-list-item>
+                                    </template>
+
+                                    <StudentEditor :schoolId="schoolId" @close="dialogCreateStudent = false"
+                                        @save="dialogCreateStudent = false">
+                                    </StudentEditor>
+                                </v-dialog>
+                            </template> -->
+                        </v-select>
+                    </v-col>
+                </v-row>
+
             </v-form>
+
             <v-list>
                 <v-list-subheader>STUDENTI</v-list-subheader>
-                <draggableComponent :list="scheduledLessons" item-key="studentId" @end="updateScheduledLessonsTime">
+                <draggableComponent v-if="startingTime" :list="scheduledLessons" item-key="studentId"
+                    @end="updateScheduledLessonsTime">
                     <template v-slot:item="{ element }">
                         <v-list-item :key="element.studentId" :value="element" color="primary">
                             <template v-slot:prepend>
@@ -78,11 +100,11 @@
                                             element.time.minutes.toString().padStart(2,
                                                 '0') }}
                                     </b>
-                                    <span> - </span><i>{{ element.studentId }}</i>
+                                    <span> - </span>
+                                    <i>{{ getCompleteStudentName(element.studentId) }}</i>
+                                    <span> ({{ getStudentLessonDay(element.studentId) }})</span>
                                 </p>
                             </template>
-
-                            <v-list-item-title text="item.studentId"></v-list-item-title>
                         </v-list-item>
                     </template>
 
@@ -101,7 +123,7 @@
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, type ScheduledLesson, type School, type Student, type WeekLesson } from '@/models/model';
-import { nameof } from '@/models/utils';
+import { formatDate, nameof } from '@/models/utils';
 import { addDoc, doc, onSnapshot, orderBy, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import draggableComponent from 'vuedraggable';
@@ -242,7 +264,7 @@ function updateExcludeDates() {
             // Push the date to the allDates array
             const d = new Date(currentDate);
             allDates.value.push({
-                name: date.format(d.toUTCString(), 'keyboard24'),
+                name: formatDate(d),//date.format(d.toUTCString(), 'keyboard24'),
                 value: d
             }); // Store a copy of the date
         }
@@ -293,6 +315,15 @@ async function save() {
     }
 }
 
+function getCompleteStudentName(studentId: string): string {
+    const student = allStudents.value.find(s => s.id == studentId);
+    return `${student?.name} ${student?.surname}`;
+}
+
+function getStudentLessonDay(studentId: string): string {
+    const student = allStudents.value.find(s => s.id == studentId);
+    return days[student?.lessonDay ?? 0];
+}
 
 async function loadStudents() {
     unsubscribeStudents?.();
