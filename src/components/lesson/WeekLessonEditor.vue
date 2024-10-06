@@ -182,6 +182,7 @@ function toggle() {
 }
 
 function updateScheduledLessons() {
+    console.log("updateScheduledLessons")
 
     // add new selected students at the end of the list
     for (const student of selectedStudents.value) {
@@ -202,6 +203,8 @@ function updateScheduledLessons() {
 }
 
 function updateScheduledLessonsTime() {
+    console.log("updateScheduledLessonsTime")
+
     let startingMinutes = 0;
     try {
         const time = startingTime.value;
@@ -214,13 +217,16 @@ function updateScheduledLessonsTime() {
         const m = parseInt(hhmm[1]);
 
         startingMinutes = h * 60 + m;
+        console.log(startingMinutes)
     } catch (error) {
+        console.log(error)
         return;
     }
 
     scheduledLessons.value.forEach(sl => {
         sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
-        const student = selectedStudents.value.find(s => s.id == sl.studentId)!;
+        const student = selectedStudents.value.find(s => s.id == sl.studentId);
+        if (!student) return;
         const levelTime = props.school.levelRanges.find(lr => lr.levels.includes(student.level))!;
         startingMinutes += levelTime.minutes;
     });
@@ -230,15 +236,17 @@ function updateWeekLesson() {
     if (props.initialWeekLesson) {
         const weekLessonClone = JSON.parse(JSON.stringify(props.initialWeekLesson)) as WeekLesson;
         dayOfWeek.value = days[weekLessonClone.dayOfWeek];
-        from.value = weekLessonClone.from.toDate();
-        to.value = weekLessonClone.to.toDate();
-        excludeDates.value = weekLessonClone.exclude.map(d => d.toDate());
+        from.value = new Timestamp(weekLessonClone.from.seconds, weekLessonClone.from.nanoseconds).toDate();
+        to.value = new Timestamp(weekLessonClone.to.seconds, weekLessonClone.to.nanoseconds).toDate();
+        excludeDates.value = weekLessonClone.exclude.map(d => new Timestamp(d.seconds, d.nanoseconds).toDate());
         scheduledLessons.value = weekLessonClone.schedule;
-
-        const firstScheduledLesson = scheduledLessons.value.reduce((prev, curr) => prev.time.hour * 60 + prev.time.minutes < curr.time.hour * 60 + prev.time.minutes ? prev : curr);
-        if (firstScheduledLesson) startingTime.value = `${firstScheduledLesson.time.hour}:${firstScheduledLesson.time.minutes}`
         const studentsId = scheduledLessons.value.map(s => s.studentId);
-        selectedStudents.value.push(...allStudents.value.filter(s => studentsId.includes(s.id)));
+        selectedStudents.value = allStudents.value.filter(s => studentsId.includes(s.id));
+
+        if (scheduledLessons.value.length > 0) {
+            const minTime = scheduledLessons.value[0].time;
+            startingTime.value = `${minTime.hour}:${minTime.minutes}`;
+        }
     }
 }
 
@@ -280,6 +288,7 @@ async function save() {
     saving.value = true;
 
     const weekLesson: Partial<WeekLesson> = {
+        schoolId: props.school.id,
         dayOfWeek: days.indexOf(dayOfWeek.value!),
         from: Timestamp.fromDate(from.value!),
         to: Timestamp.fromDate(to.value!),
@@ -329,18 +338,37 @@ async function loadStudents() {
     unsubscribeStudents?.();
 
     loadingStudents.value = true;
-    unsubscribeStudents = onSnapshot(query(studentsRef, where(nameof<Student>('schoolId'), '==', props.school.id), orderBy(nameof<Student>('lessonDay'))), (snapshot) => {
-        const data = snapshot.docs.map(doc => doc.data())
-        allStudents.value = data;
-        loadingStudents.value = false;
-        console.log("Current data: ", snapshot, data);
-    }, (error) => {
-        loadingStudents.value = false;
-        console.error(error);
-    }, () => {
-        console.log("loadStudents completitions")
+
+    // Create a promise that resolves when the first snapshot is received
+    const firstSnapshot = new Promise<void>((resolve, reject) => {
+        unsubscribeStudents = onSnapshot(
+            query(
+                studentsRef,
+                where(nameof<Student>('schoolId'), '==', props.school.id),
+                orderBy(nameof<Student>('lessonDay'))
+            ),
+            (snapshot) => {
+                const data = snapshot.docs.map(doc => doc.data());
+                allStudents.value = data;
+                loadingStudents.value = false;
+                console.log("Current data: ", snapshot, data);
+
+                // Resolve the promise when the first snapshot is received
+                resolve();
+            },
+            (error) => {
+                loadingStudents.value = false;
+                console.error(error);
+                reject(error); // Reject the promise on error
+            }
+        );
     });
+
+    // Ensure to add the unsubscribe function for cleanup
     subscriptions.push(unsubscribeStudents);
+
+    // Wait for the first snapshot to be loaded
+    await firstSnapshot;
 }
 
 onUnmounted(() => {
@@ -348,7 +376,7 @@ onUnmounted(() => {
 })
 
 onMounted(async () => {
-    updateWeekLesson();
     await loadStudents();
+    updateWeekLesson();
 })
 </script>
