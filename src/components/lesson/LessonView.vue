@@ -1,5 +1,5 @@
 <template>
-    <v-card title="Lezioni" elevation="3" :loading="!school">
+    <v-card title="Lezioni" elevation="3" :loading="loading">
 
         <template v-slot:append>
             <v-dialog transition="dialog-bottom-transition" fullscreen>
@@ -14,20 +14,23 @@
         </template>
 
         <v-list lines="two">
-            <v-list-subheader inset>Settembre</v-list-subheader>
+            <template v-for="lg of lessonGroups" :key="lg.month">
+                <v-list-subheader inset>{{ lg.month }}</v-list-subheader>
 
-            <v-list-item v-for="lesson in lessons" :key="lesson.date" :title="date.format(lesson.date, 'keyboardDate')"
-                :to="'/lesson/' + lesson.date" :baseColor="lesson.next ? 'primary' : ''">
-                <template v-slot:prepend>
-                    <v-avatar :color="lesson.next ? 'primary' : lesson.alert ? 'warning' : 'grey-lighten-1'">
-                        <v-icon color="white">mdi-calendar</v-icon>
-                    </v-avatar>
-                </template>
+                <v-list-item v-for="lesson in lg.lessons" :key="lesson.createdAt"
+                    :title="date.format(lesson.date, 'keyboardDate')" :to="'/lesson/' + lesson.date"
+                    :baseColor="lesson.next ? 'primary' : ''">
+                    <template v-slot:prepend>
+                        <v-avatar :color="lesson.next ? 'primary' : lesson.alert ? 'warning' : 'grey-lighten-1'">
+                            <v-icon color="white">mdi-calendar</v-icon>
+                        </v-avatar>
+                    </template>
 
-                <template v-slot:append v-if="lesson.alert">
-                    <v-icon color="warning">mdi-alert</v-icon>
-                </template>
-            </v-list-item>
+                    <template v-slot:append v-if="lesson.alert">
+                        <v-icon color="warning">mdi-alert</v-icon>
+                    </template>
+                </v-list-item>
+            </template>
 
             <!-- <v-divider inset></v-divider>
 
@@ -50,61 +53,94 @@
 </template>
 
 <script setup lang="ts">
-import type { School } from '@/models/model';
-import { onMounted, ref, watch, type Ref } from 'vue';
+import type { Lesson, School, WeekLesson } from '@/models/model';
+import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import WeekLessonEditor from './CalendarLessonEditor.vue';
+import { onSnapshot, query, where, type Unsubscribe } from 'firebase/firestore';
+import { DatabaseRef, useDB } from '@/models/firestore-utils';
+import { nameof } from '@/models/utils';
 
 interface LessonViewProps {
     school: School
 }
 
+interface LessonGroup {
+    month: string;
+    lessons: LessonProjection[];
+}
+
+interface LessonProjection {
+    lessonId: string;
+    date: Date;
+    absent: boolean;
+}
+
 const date = useDate()
 const props = defineProps<LessonViewProps>();
+const lessonsRef = useDB<Lesson>(DatabaseRef.LESSONS);
+const weekLessonsRef = useDB<WeekLesson>(DatabaseRef.WEEK_LESSONS);
+const subscriptions: Unsubscribe[] = [];
 
-const lessons: Ref<any[]> = ref([]);
+const programmedLessons: Ref<WeekLesson[]> = ref([]);
+const lessons: Ref<Lesson[]> = ref([]);
+const lessonGroups: Ref<LessonGroup[]> = ref([]);
+const loadingLessons = ref(false);
+const loadingCalendar = ref(false);
 
-watch(props.school, () => loadLessons())
+const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value);
+watch(props.school, () => loadLessonGroup())
+
+async function loadLessonGroup() {
+    await loadLessons();
+    await loadCalendar();
+
+    programmedLessons.value.forEach(pl => {
+        // pl.
+    })
+}
 
 async function loadLessons() {
-    const today = new Date();
-    const res: { date: Date, alert?: boolean, next?: boolean }[] = [
-        {
-            date: new Date(2024, 8, 23),
-            alert: true,
-        },
-        {
-            date: new Date(2024, 8, 26),
-        },
-        {
-            date: new Date(2024, 9, 7),
-        },
-        {
-            date: new Date(2024, 9, 14),
-        }
-    ];
+    // load done lessons
+    // compute weeklessons
 
-    let nextLesson = { date: Infinity, index: -1 }
-    res.forEach((lesson, index) => {
-        lesson.next = false;
-        if (date.isAfter(lesson.date, today)) {
-            const diff = date.getDiff(lesson.date, today);
-            if (diff < nextLesson.date) {
-                nextLesson = {
-                    date: diff,
-                    index
-                };
-            }
-        }
+    loadingLessons.value = true;
+    const unsubscribeStudents = onSnapshot(query(lessonsRef, where(nameof<Lesson>('schoolId'), '==', props.school.id)), (snapshot) => {
+        const data = snapshot.docs.map(doc => doc.data())
+        lessons.value = data;
+        loadingLessons.value = false;
+        console.log("Current data: ", snapshot, data);
+    }, (error) => {
+        loadingLessons.value = false;
+        console.error(error);
+    }, () => {
+        console.log("loadStudents completitions")
+    });
+    subscriptions.push(unsubscribeStudents);
+}
+
+
+async function loadCalendar() {
+
+    loadingCalendar.value = true;
+    const unsub = onSnapshot(query(weekLessonsRef, where(nameof<WeekLesson>('schoolId'), '==', props.school.id)), (snapshot) => {
+        const data = snapshot.docs.map(doc => doc.data())
+        programmedLessons.value = data;
+        loadingCalendar.value = false;
+        console.log("Current data: ", snapshot, data);
+    }, (error) => {
+        loadingCalendar.value = false;
+        console.error(error);
     });
 
-    if (nextLesson.index !== -1)
-        res[nextLesson.index].next = true
-
-    lessons.value = res;
+    subscriptions.push(unsub);
 }
 
 onMounted(async () => {
-    await loadLessons();
+    await loadLessonGroup();
 })
+
+onUnmounted(() => {
+    subscriptions.forEach(u => u?.());
+}) 
 </script>

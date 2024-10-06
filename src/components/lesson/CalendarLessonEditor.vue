@@ -20,7 +20,7 @@
                             <!-- v-slot:default="{ expanded }" -->
                             <v-row no-gutters>
                                 <v-col class="d-flex justify-start" cols="5">
-                                    Tutti i {{ getDayName(pl.dayOfWeek) }}
+                                    <span>Tutti i <b>{{ days[pl.dayOfWeek] }}</b></span>
                                 </v-col>
                                 <v-col class="text-grey" cols="5">
                                     Dal {{ formatDate(pl.from.toDate(), 'keyboard24') }} 
@@ -106,15 +106,6 @@ const dialog = ref(false);
 function onSaveWeekLessonEvent(weekLesson?: WeekLesson) {
     if (weekLesson)
         dialog.value = false;
-}
-
-function getDayName(day: number): string {
-    switch (day) {
-        case 0:
-            return "Lunedì"
-        default:
-            return "None";
-    }
 }
 
 async function loadCalendar() {
