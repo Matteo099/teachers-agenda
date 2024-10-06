@@ -41,6 +41,7 @@ npm run lint
 
 ### Firebase Emultator integration
 
+```
 (optional)
 $ npm i -g firebase-tools
 
@@ -71,3 +72,10 @@ and <enter> to proceed): **Authentication Emulator, Firestore Emulator**
 > Would you like to download the emulators now? **Y**
 
 $ firebase emulators:start
+```
+
+### github pages
+
+``` sh
+git subtree push --prefix dist origin gh-pages
+```

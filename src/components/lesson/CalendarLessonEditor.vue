@@ -8,7 +8,7 @@
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <WeekLessonEvent :schoolId="schoolId" :levelRanges="[]" @close="isActive.value = false"></WeekLessonEvent>
+                    <WeekLessonEvent :school="school" @close="isActive.value = false"></WeekLessonEvent>
                 </template>
             </v-dialog>
         </template>
@@ -16,7 +16,8 @@
             <v-expansion-panels>
                 <v-expansion-panel v-for="pl in programmedLessons" :key="pl.id">
                     <v-expansion-panel-title>
-                        <template v-slot:default="{ expanded }">
+                        <template v-slot:default>
+                            <!-- v-slot:default="{ expanded }" -->
                             <v-row no-gutters>
                                 <v-col class="d-flex justify-start" cols="5">
                                     Tutti i {{ getDayName(pl.dayOfWeek) }}
@@ -34,7 +35,7 @@
                                         </template>
 
                                         <template v-slot:default="{ isActive }">
-                                            <WeekLessonEvent :schoolId="pl.schoolId" :initialWeekLesson="pl" :levelRanges="[]" edit
+                                            <WeekLessonEvent :school="school" :initialWeekLesson="pl" edit
                                                 @close="isActive.value = false"></WeekLessonEvent>
                                         </template>
                                     </v-dialog>
@@ -62,15 +63,14 @@
 </template>
 
 <script setup lang="ts">
-import type { ScheduledLesson, WeekLesson } from '@/models/model';
+import type { ScheduledLesson, School, WeekLesson } from '@/models/model';
 import { onMounted, ref, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import WeekLessonEvent from './WeekLessonEditor.vue';
 import { Timestamp } from 'firebase/firestore';
 
 interface CalendarLessonEditorProps {
-    schoolId: string;
-    calendarLesson: WeekLesson[];
+    school: School;
 }
 
 const date = useDate()

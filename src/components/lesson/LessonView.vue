@@ -1,15 +1,14 @@
 <template>
-    <v-card title="Lezioni" elevation="3" :loading="!calendarLesson">
+    <v-card title="Lezioni" elevation="3" :loading="!school">
 
         <template v-slot:append>
             <v-dialog transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn icon="mdi-pencil" variant="text" v-bind="activatorProps" :disabled="!calendarLesson"></v-btn>
+                    <v-btn icon="mdi-pencil" variant="text" v-bind="activatorProps" :disabled="!school"></v-btn>
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <WeekLessonEditor v-if="calendarLesson" :schoolId="schoolId" :calendarLesson="calendarLesson"
-                        @close="isActive.value = false"></WeekLessonEditor>
+                    <WeekLessonEditor :school="school" @close="isActive.value = false"></WeekLessonEditor>
                 </template>
             </v-dialog>
         </template>
@@ -51,34 +50,23 @@
 </template>
 
 <script setup lang="ts">
+import type { School } from '@/models/model';
 import { onMounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify';
-import type { WeekLesson } from '@/models/model';
 import WeekLessonEditor from './CalendarLessonEditor.vue';
 
-interface LessonsProps {
-    schoolId: string,
-    calendarLesson?: WeekLesson[]
+interface LessonViewProps {
+    school: School
 }
 
 const date = useDate()
-const props = withDefaults(defineProps<LessonsProps>(), {
-    calendarLesson(props) {
-        return [];
-    },
-})
+const props = defineProps<LessonViewProps>();
 
 const lessons: Ref<any[]> = ref([]);
 
-watch(props.calendarLesson ?? [], () => loadLessons())
-
-async function loadCalendarLesson() {
-    // ...
-}
+watch(props.school, () => loadLessons())
 
 async function loadLessons() {
-    if (props.calendarLesson == undefined) await loadCalendarLesson();
-
     const today = new Date();
     const res: { date: Date, alert?: boolean, next?: boolean }[] = [
         {

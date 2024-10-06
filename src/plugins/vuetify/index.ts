@@ -4,6 +4,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import * as labsComponents from 'vuetify/labs/components'
+import { en, it } from 'vuetify/locale'
 // import { aliases, mdi } from 'vuetify/iconsets/mdi'
 
 const myCustomLightTheme = {
@@ -56,6 +57,7 @@ const vuetify = createVuetify({
     locale: {
         locale: 'it',
         fallback: 'en',
+        messages: { en, it },
     },
     date: {
         locale: {

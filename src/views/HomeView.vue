@@ -12,7 +12,8 @@
     <v-row no-gutters>
       <v-col v-for="fo in schools" :key="fo.name" cols="12" sm="4">
         <v-card append-icon="mdi-open-in-new" class="ma-2 pa-2" :to="'/school/' + fo.id" prepend-icon="mdi-town-hall"
-          :subtitle="'Visualizza tutti gli aggiornamenti della scuola ' + fo.name" :title="fo.name" color="primary">
+          :subtitle="'Visualizza tutti gli aggiornamenti della scuola ' + fo.name" :title="getSchoolName(fo)"
+          color="primary">
           <!-- target="_blank" -->
         </v-card>
       </v-col>
@@ -55,6 +56,11 @@ function onSaveSchool(school?: School) {
     dialog.value = false;
 }
 
+function getSchoolName(school: School): string {
+  if (school.city)
+    return `${school.name} (${school.city})`;
+  return school.name;
+}
 
 async function loadSchools() {
   loadingSchools.value = true;

@@ -3,8 +3,8 @@
         <v-card-text>
             <v-form>
                 <v-select v-model="dayOfWeek" :items="days" label="Giorno" required></v-select>
-                <v-date-input :max="to" v-model="from" label="Dal"></v-date-input>
-                <v-date-input :min="from" v-model="to" label="Al"></v-date-input>
+                <v-date-input :max="to" v-model="from" label="Dal" inputmode="none"></v-date-input>
+                <v-date-input :min="from" v-model="to" label="Al" inputmode="none"></v-date-input>
                 <v-select v-model="excludeDates" :items="allDates" label="Giorni da Escludere" multiple
                     item-title="name" item-value="value" no-data-text="Nessuna Data Disponibile" clearable>
                     <template v-slot:selection="{ item, index }">
@@ -17,15 +17,27 @@
                     </template>
                 </v-select>
                 <v-text-field v-model="startingTime" :active="modalTimePicker" :focused="modalTimePicker"
-                    label="Orario della prima Lezione" prepend-icon="mdi-clock-time-four-outline" readonly>
+                    inputmode="none" label="Orario della prima Lezione" prepend-icon="mdi-clock-time-four-outline"
+                    readonly>
                     <v-dialog v-model="modalTimePicker" activator="parent" width="auto">
-                        <v-time-picker v-if="modalTimePicker" v-model="startingTime"></v-time-picker>
+                        <v-time-picker v-if="modalTimePicker" v-model="startingTime" format="24hr"></v-time-picker>
                     </v-dialog>
                 </v-text-field>
-                <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" ref="selectStudentRef"
-                    item-title="name" item-value="id" multiple @click="console.log(selectStudentRef)"
+                <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" item-title="name"
+                    item-value="id" :return-object="true" multiple
                     no-data-text="Nessuno studente disponibile per questa scuola">
-                    <template v-slot:prepend-item>
+                    <!-- <template v-slot:item="{ item }">
+                        <v-list-item :value="item.raw" :key="item.raw.id" role="option">
+                            <template v-slot:prepend="{ isSelected }">
+                                <v-list-item-action start>
+                                    <v-checkbox-btn :model-value="isSelected"></v-checkbox-btn>
+                                </v-list-item-action>
+                            </template>
+
+                            <v-list-item-title>{{ item.raw.name }} {{ item.raw.surname }}</v-list-item-title>
+                        </v-list-item>
+                    </template> -->
+                    <template v-slot:prepend-item v-if="allStudents.length > 1">
                         <v-list-item title="Seleziona tutti" @click="toggle">
                             <template v-slot:prepend>
                                 <v-checkbox-btn :color="selectSomeStudents ? 'indigo-darken-4' : undefined"
@@ -37,7 +49,7 @@
                         <v-divider class="mt-2"></v-divider>
                     </template>
 
-                    <template v-slot:append-item>
+                    <!-- <template v-slot:append-item>
                         <v-divider class="mt-2"></v-divider>
 
                         <v-dialog v-model="dialogCreateStudent" fullscreen>
@@ -51,48 +63,54 @@
                                 @save="dialogCreateStudent = false">
                             </StudentEditor>
                         </v-dialog>
-
-
-                    </template>
+                    </template> -->
                 </v-select>
             </v-form>
             <v-list>
                 <v-list-subheader>STUDENTI</v-list-subheader>
+                <draggableComponent :list="scheduledLessons" item-key="studentId" @end="updateScheduledLessonsTime">
+                    <template v-slot:item="{ element }">
+                        <v-list-item :key="element.studentId" :value="element" color="primary">
+                            <template v-slot:prepend>
+                                <p>
+                                    <b>
+                                        {{ element.time.hour.toString().padStart(2, '0') }}:{{
+                                            element.time.minutes.toString().padStart(2,
+                                                '0') }}
+                                    </b>
+                                    <span> - </span><i>{{ element.studentId }}</i>
+                                </p>
+                            </template>
 
-                <v-list-item v-for="(item, i) in scheduledLessons" :key="i" :value="item" color="primary">
-                    <template v-slot:prepend>
-                        <b>
-                            {{ item.time.hour }}:{{ item.time.minutes }}
-                        </b>
+                            <v-list-item-title text="item.studentId"></v-list-item-title>
+                        </v-list-item>
                     </template>
 
-                    <v-list-item-title text="item.studentId"></v-list-item-title>
-                </v-list-item>
+                </draggableComponent>
             </v-list>
         </v-card-text>
         <v-card-actions>
             <v-spacer></v-spacer>
 
             <v-btn text="Chiudi" @click="emit('close')"></v-btn>
-            <v-btn text="Salva" @click="save" :loading="saving"></v-btn>
+            <v-btn text="Salva" color="primary" @click="save" :loading="saving"></v-btn>
         </v-card-actions>
     </v-card>
 </template>
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { days, type LevelRange, type ScheduledLesson, type Student, type WeekLesson } from '@/models/model';
+import { days, type ScheduledLesson, type School, type Student, type WeekLesson } from '@/models/model';
 import { nameof } from '@/models/utils';
-import { addDoc, doc, onSnapshot, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
+import { addDoc, doc, onSnapshot, orderBy, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import draggableComponent from 'vuedraggable';
 import { useDate } from 'vuetify';
-import StudentEditor from '../student/StudentEditor.vue';
 
 interface WeekLessonEventProps {
+    school: School;
     edit?: boolean;
-    schoolId?: string
     initialWeekLesson?: WeekLesson
-    levelRanges: LevelRange[]
 }
 
 const date = useDate();
@@ -102,9 +120,6 @@ const weekLessonsRef = useDB<WeekLesson>(DatabaseRef.WEEK_LESSONS);
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const subscriptions: Unsubscribe[] = [];
 
-const selectStudentRef = ref();
-
-const _schoolId: Ref<string | undefined> = ref();
 const dayOfWeek: Ref<string | undefined> = ref();
 const from: Ref<Date | undefined> = ref();
 const to: Ref<Date | undefined> = ref();
@@ -117,16 +132,16 @@ const scheduledLessons: Ref<ScheduledLesson[]> = ref([]);
 const modalTimePicker = ref(false);
 const saving = ref(false);
 const loadingStudents = ref(false);
-const dialogCreateStudent = ref(false);
+// const dialogCreateStudent = ref(false);
 
 let unsubscribeStudents: Unsubscribe;
 
-watch(() => props.schoolId, () => updateSchoolId())
 watch(() => props.initialWeekLesson, () => updateWeekLesson())
 watch(dayOfWeek, () => updateExcludeDates())
 watch(from, () => updateExcludeDates())
 watch(to, () => updateExcludeDates())
 watch(selectedStudents, () => updateScheduledLessons())
+watch(startingTime, () => updateScheduledLessonsTime())
 watch(dayOfWeek, async () => await loadStudents())
 
 const selectAllStudents = computed(() => {
@@ -140,11 +155,31 @@ function toggle() {
     if (selectAllStudents.value) {
         selectedStudents.value = []
     } else {
-        selectedStudents.value = allStudents.value.slice()
+        selectedStudents.value = allStudents.value.slice();
     }
 }
 
 function updateScheduledLessons() {
+
+    // add new selected students at the end of the list
+    for (const student of selectedStudents.value) {
+        const index = scheduledLessons.value.findIndex(s => s.studentId == student.id)
+        if (index == -1) scheduledLessons.value.push({ studentId: student.id, time: { hour: 0, minutes: 0 } });
+    }
+
+    // remove de-selected students from the list
+    for (const element of [...scheduledLessons.value]) {
+        const si = selectedStudents.value.findIndex(s => s.id == element.studentId)
+        if (si == -1) {
+            const index = scheduledLessons.value.indexOf(element);
+            scheduledLessons.value.splice(index, 1);
+        }
+    }
+
+    updateScheduledLessonsTime();
+}
+
+function updateScheduledLessonsTime() {
     let startingMinutes = 0;
     try {
         const time = startingTime.value;
@@ -161,22 +196,12 @@ function updateScheduledLessons() {
         return;
     }
 
-    // TODO: 
-    // const scheduledLessonClone = JSON.parse(JSON.stringify(scheduledLessons.value)) as ScheduledLesson[];
-    scheduledLessons.value = [];
-    selectedStudents.value.forEach((student, index) => {
-        scheduledLessons.value.push({
-            studentId: student.id,
-            time: { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
-        })
-
-        props.levelRanges.forEach(lr => {
-            if (lr.levels.includes(student.level)) {
-                startingMinutes += lr.minutes;
-                return;
-            }
-        })
-    })
+    scheduledLessons.value.forEach(sl => {
+        sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
+        const student = selectedStudents.value.find(s => s.id == sl.studentId)!;
+        const levelTime = props.school.levelRanges.find(lr => lr.levels.includes(student.level))!;
+        startingMinutes += levelTime.minutes;
+    });
 }
 
 function updateWeekLesson() {
@@ -192,12 +217,6 @@ function updateWeekLesson() {
         if (firstScheduledLesson) startingTime.value = `${firstScheduledLesson.time.hour}:${firstScheduledLesson.time.minutes}`
         const studentsId = scheduledLessons.value.map(s => s.studentId);
         selectedStudents.value.push(...allStudents.value.filter(s => studentsId.includes(s.id)));
-    }
-}
-
-function updateSchoolId() {
-    if (props.schoolId) {
-        _schoolId.value = props.schoolId;
     }
 }
 
@@ -223,7 +242,7 @@ function updateExcludeDates() {
             // Push the date to the allDates array
             const d = new Date(currentDate);
             allDates.value.push({
-                name: date.format(d, 'keyboard24'),
+                name: date.format(d.toUTCString(), 'keyboard24'),
                 value: d
             }); // Store a copy of the date
         }
@@ -243,8 +262,7 @@ async function save() {
         from: Timestamp.fromDate(from.value!),
         to: Timestamp.fromDate(to.value!),
         exclude: excludeDates.value.map(d => Timestamp.fromDate(d)),
-        // TODO
-        // schedule: ...
+        schedule: scheduledLessons.value,
         createdAt: props.edit ? props.initialWeekLesson?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now(),
     };
@@ -253,6 +271,10 @@ async function save() {
     from.value = undefined;
     to.value = undefined;
     excludeDates.value = [];
+    scheduledLessons.value = [];
+    startingTime.value = undefined;
+    selectedStudents.value = [];
+    allStudents.value = [];
 
     try {
         if (props.edit && props.initialWeekLesson?.id != undefined) {
@@ -275,10 +297,8 @@ async function save() {
 async function loadStudents() {
     unsubscribeStudents?.();
 
-    console.log("loadStudents called")
-
     loadingStudents.value = true;
-    unsubscribeStudents = onSnapshot(query(studentsRef, where(nameof<Student>('lessonDay'), '==', dayOfWeek.value)), (snapshot) => {
+    unsubscribeStudents = onSnapshot(query(studentsRef, where(nameof<Student>('schoolId'), '==', props.school.id), orderBy(nameof<Student>('lessonDay'))), (snapshot) => {
         const data = snapshot.docs.map(doc => doc.data())
         allStudents.value = data;
         loadingStudents.value = false;
@@ -297,7 +317,6 @@ onUnmounted(() => {
 })
 
 onMounted(async () => {
-    updateSchoolId();
     updateWeekLesson();
     await loadStudents();
 })

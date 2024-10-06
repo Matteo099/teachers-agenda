@@ -1,5 +1,5 @@
 <template>
-    <v-card prepend-icon="mdi-school" title="Studente">
+    <v-card prepend-icon="mdi-school" :title="`Studente (${school.name})`">
         <v-card-text>
             <v-row dense>
                 <v-col cols="12" md="6">
@@ -14,12 +14,16 @@
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-select v-model="lessonDay" :items="days" label="Giorno della Lezione"></v-select>
+                    <v-select v-model="level" :items="_levels" label="Livello" required></v-select>
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-text-field v-model="_schoolId" label="Scuola" required></v-text-field>
+                    <v-select v-model="lessonDay" :items="days" label="Giorno della Lezione"></v-select>
                 </v-col>
+
+                <!-- <v-col cols="12" md="6">
+                    <v-text-field v-model="_schoolId" label="Scuola" required></v-text-field>
+                </v-col> -->
             </v-row>
 
         </v-card-text>
@@ -39,26 +43,28 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { days, type Student } from '@/models/model';
+import { days, type School, type Student } from '@/models/model';
 import { addDoc, doc, setDoc, Timestamp } from 'firebase/firestore';
 import { onMounted, ref, watch, type Ref } from 'vue';
 
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
-const props = defineProps<{ initialStudent?: Student, schoolId?: string, edit?: boolean }>()
+const props = defineProps<{ school: School, initialStudent?: Student, edit?: boolean }>()
 const emit = defineEmits(['close', 'save'])
 
-const _schoolId: Ref<string | undefined> = ref();
+const _school: Ref<School | undefined> = ref();
+const _levels: Ref<string[]> = ref([]);
+
 const name = ref("");
 const surname = ref("");
 const contact = ref("");
 const lessonDay: Ref<string | undefined> = ref();
-const level = ref("");
+const level: Ref<string | undefined> = ref();
 const notes: Ref<string[]> = ref([]);
 
 const saving = ref(false);
 
 watch(() => props.initialStudent, () => updateStudent());
-watch(() => props.schoolId, () => updateSchoolId());
+watch(() => props.school, () => updateSchool());
 
 function updateStudent() {
     if (props.initialStudent) {
@@ -72,15 +78,16 @@ function updateStudent() {
     }
 }
 
-function updateSchoolId() {
-    _schoolId.value = props.schoolId
+function updateSchool() {
+    _school.value = props.school
+    _levels.value = _school.value.levelRanges.flatMap(l => l.levels);
 }
 
 async function save() {
     saving.value = true;
 
     const student: Partial<Student> = {
-        schoolId: _schoolId.value,
+        schoolId: _school.value!.id,
         name: name.value,
         surname: surname.value,
         contact: contact.value,
@@ -117,6 +124,6 @@ async function save() {
 
 onMounted(() => {
     updateStudent();
-    updateSchoolId();
+    updateSchool();
 })
 </script>

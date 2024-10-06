@@ -10,7 +10,7 @@
                         <v-btn prepend-icon="mdi-plus" color="success" v-bind="activatorProps">nuovo studente</v-btn>
                     </template>
 
-                    <StudentEditor :schoolId="schoolId" @close="dialog = false" @save="onSaveStudent($event)">
+                    <StudentEditor :school="school" @close="dialog = false" @save="onSaveStudent($event)">
                     </StudentEditor>
                 </v-dialog>
             </v-row>
@@ -26,7 +26,7 @@
                             </v-icon>
                         </template>
 
-                        <StudentEditor edit :schoolId="schoolId" :initialStudent="item" @close="dialog2 = false"
+                        <StudentEditor edit :school="school" :initialStudent="item" @close="dialog2 = false"
                             @save="dialog2 = false">
                         </StudentEditor>
                     </v-dialog>
@@ -48,18 +48,18 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { days, type Student } from '@/models/model';
+import { days, type School, type Student } from '@/models/model';
 import type { Unsubscribe } from 'firebase/database';
 import { deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import StudentEditor from './StudentEditor.vue';
 import DeleteDialog from '../DeleteDialog.vue';
 
-interface StudentsProps {
-    schoolId: string
+interface StudentViewProps {
+    school: School
 }
 
-const props = defineProps<StudentsProps>();
+const props = defineProps<StudentViewProps>();
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const subscriptions: Unsubscribe[] = [];
 

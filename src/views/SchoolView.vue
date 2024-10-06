@@ -28,7 +28,7 @@
 
         <v-row class="mt-5">
             <v-col class="pa-2" cols="12" md="6">
-                <Lessons :schoolId="school.id" :calendarLesson="school.calendarLesson"></Lessons>
+                <LessonView :school="school"></LessonView>
             </v-col>
             <v-col class="pa-2" cols="12" md="6">
                 <v-card title="Recuperi" elevation="3">
@@ -79,8 +79,7 @@
         </v-row>
         <v-row>
             <v-col class="pa-2" cols="12" md="6">
-                <Students :schoolId="school.id">
-                </Students>
+                <StudentView :school="school"></StudentView>
             </v-col>
         </v-row>
         <v-row>
@@ -115,16 +114,16 @@
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
-import Lessons from '@/components/lesson/Lessons.vue';
+import LessonView from '@/components/lesson/LessonView.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
-import Students from '@/components/student/Students.vue';
+import StudentView from '@/components/student/StudentView.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
+import type { School } from '@/models/model';
 import { deleteDoc, doc, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDocument } from 'vuefire';
 import { useDate } from 'vuetify';
-import type { School } from '@/models/model';
 
 const route = useRoute()
 const router = useRouter()
