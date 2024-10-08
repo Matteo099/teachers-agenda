@@ -122,7 +122,7 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { days, type ScheduledLesson, type School, type Student, type WeekLesson } from '@/models/model';
+import { days, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { formatDate, nameof } from '@/models/utils';
 import { addDoc, doc, onSnapshot, orderBy, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
@@ -132,13 +132,13 @@ import { useDate } from 'vuetify';
 interface WeekLessonEventProps {
     school: School;
     edit?: boolean;
-    initialWeekLesson?: WeekLesson
+    initialWeekLesson?: WeeklyLesson
 }
 
 const date = useDate();
 const emit = defineEmits(['close', 'save'])
 const props = defineProps<WeekLessonEventProps>()
-const weekLessonsRef = useDB<WeekLesson>(DatabaseRef.WEEK_LESSONS);
+const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEK_LESSONS);
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const subscriptions: Unsubscribe[] = [];
 
@@ -234,7 +234,7 @@ function updateScheduledLessonsTime() {
 
 function updateWeekLesson() {
     if (props.initialWeekLesson) {
-        const weekLessonClone = JSON.parse(JSON.stringify(props.initialWeekLesson)) as WeekLesson;
+        const weekLessonClone = JSON.parse(JSON.stringify(props.initialWeekLesson)) as WeeklyLesson;
         dayOfWeek.value = days[weekLessonClone.dayOfWeek];
         from.value = new Timestamp(weekLessonClone.from.seconds, weekLessonClone.from.nanoseconds).toDate();
         to.value = new Timestamp(weekLessonClone.to.seconds, weekLessonClone.to.nanoseconds).toDate();
@@ -287,7 +287,7 @@ function updateExcludeDates() {
 async function save() {
     saving.value = true;
 
-    const weekLesson: Partial<WeekLesson> = {
+    const weekLesson: Partial<WeeklyLesson> = {
         schoolId: props.school.id,
         dayOfWeek: days.indexOf(dayOfWeek.value!),
         from: Timestamp.fromDate(from.value!),

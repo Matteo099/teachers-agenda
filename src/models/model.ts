@@ -25,7 +25,7 @@ export interface School {
     managed: boolean;
     levelRanges: LevelRange[];
     managerOptions?: ManagerOptions;
-    calendarLesson: WeekLesson[];
+    calendarLesson: WeeklyLesson[];
 
     // Instead of embedding arrays of students, store students in a separate collection and use schoolId for filtering
     // students: Student[];
@@ -55,7 +55,7 @@ export interface LevelRange {
     minutes: number;
 }
 
-export interface WeekLesson {
+export interface WeeklyLesson {
     id: string;
     schoolId: string;  // Relation with School (if needed)
     dayOfWeek: number;  // 0 = Sunday, 1 = Monday, etc.
@@ -73,8 +73,15 @@ export interface ScheduledLesson {
     time: { hour: number, minutes: number }; // Could be simplified into one field for easier querying (optional)
 }
 
+export interface DailyLesson {
+    id: string;
+    date: Timestamp;
+    schoolId: string;
+    lessons: Lesson[];
+}
+
 export interface Lesson extends ScheduledLesson {
-    schoolId: string; // relation with the school
+    // schoolId: string; // relation with the school
     status: 'NONE' | 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'RESCHEDULED';
     trial?: boolean;
     recoveryDate?: Timestamp;

@@ -53,11 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Lesson, School, WeekLesson } from '@/models/model';
+import type { DailyLesson, Lesson, School, WeeklyLesson } from '@/models/model';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import WeekLessonEditor from './CalendarLessonEditor.vue';
-import { onSnapshot, query, where, type Unsubscribe } from 'firebase/firestore';
+import { onSnapshot, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { nameof } from '@/models/utils';
 
@@ -78,12 +78,12 @@ interface LessonProjection {
 
 const date = useDate()
 const props = defineProps<LessonViewProps>();
-const lessonsRef = useDB<Lesson>(DatabaseRef.LESSONS);
-const weekLessonsRef = useDB<WeekLesson>(DatabaseRef.WEEK_LESSONS);
+const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
+const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEK_LESSONS);
 const subscriptions: Unsubscribe[] = [];
 
-const programmedLessons: Ref<WeekLesson[]> = ref([]);
-const lessons: Ref<Lesson[]> = ref([]);
+const programmedLessons: Ref<WeeklyLesson[]> = ref([]);
+const dailyLessons: Ref<DailyLesson[]> = ref([]);
 const lessonGroups: Ref<LessonGroup[]> = ref([]);
 const loadingLessons = ref(false);
 const loadingCalendar = ref(false);
@@ -92,22 +92,87 @@ const loading = computed(() => props.school == undefined || loadingLessons.value
 watch(props.school, () => loadLessonGroup())
 
 async function loadLessonGroup() {
-    await loadLessons();
+    // 1. Load all the existing lessons and the calendar.
+    await loadDailyLessons();
     await loadCalendar();
 
-    programmedLessons.value.forEach(pl => {
-        // pl.
-    })
+    // 2. Find the last done lesson and all lessons that have at least one 'ABSENT' status.
+    const doneLessons = dailyLessons.value.filter((lesson) => {
+        return lesson.status === 'PRESENT' || lesson.status === 'ABSENT' || lesson.status === 'CANCELLED';
+    });
+
+    // Get the last done lesson by finding the most recent 'PRESENT' or 'ABSENT' lesson.
+    const lastDoneLesson = doneLessons.reduce((lastLesson, currentLesson) => {
+        return (lastLesson.createdAt.seconds > currentLesson.createdAt.seconds) ? lastLesson : currentLesson;
+    }, doneLessons[0]);
+
+    // Find all lessons that contain at least one 'ABSENT' status.
+    const absentLessons = dailyLessons.value.filter((lesson) => lesson.status === 'ABSENT');
+
+    // Create a list of lessons that includes the last done lesson and all absent lessons.
+    const selectedLessons: Lesson[] = [];
+    if (lastDoneLesson) {
+        selectedLessons.push(lastDoneLesson);
+    }
+    selectedLessons.push(...absentLessons);
+
+    // 3. Now, let's add the upcoming n lessons from the calendar (week lessons).
+    const upcomingLessons: Lesson[] = [];
+    const n = 5;  // Number of upcoming lessons to fetch
+    programmedLessons.value.forEach((weekLesson) => {
+        if (upcomingLessons.length < n) {
+            weekLesson.schedule.forEach((scheduledLesson) => {
+                const newLesson: Lesson = {
+                    studentId: scheduledLesson.studentId,
+                    time: scheduledLesson.time,
+                    schoolId: weekLesson.schoolId,
+                    status: 'NONE',  // Set as default; real status can be assigned later
+                    createdAt: weekLesson.createdAt,
+                    updatedAt: weekLesson.updatedAt,
+                };
+                upcomingLessons.push(newLesson);
+            });
+        }
+    });
+
+    // Add the next 'n' upcoming lessons to the selected list.
+    selectedLessons.push(...upcomingLessons.slice(0, n));
+
+    // 4. Now, group the lessons by month.
+    const groupedLessons: { [key: string]: Lesson[] } = {}; // Object to group lessons by month
+    selectedLessons.forEach((lesson) => {
+        const lessonMonth = new Date(lesson.createdAt.seconds * 1000).toLocaleString('default', { month: 'long', year: 'numeric' });
+        if (!groupedLessons[lessonMonth]) {
+            groupedLessons[lessonMonth] = [];
+        }
+        groupedLessons[lessonMonth].push(lesson);
+    });
+
+    // Convert the groupedLessons object into an array of LessonGroup.
+    lessonGroups.value = Object.keys(groupedLessons).map((month) => {
+        return {
+            month,
+            lessons: groupedLessons[month]
+        };
+    });
 }
 
-async function loadLessons() {
-    // load done lessons
-    // compute weeklessons
-
+async function loadDailyLessons() {
     loadingLessons.value = true;
-    const unsubscribeStudents = onSnapshot(query(lessonsRef, where(nameof<Lesson>('schoolId'), '==', props.school.id)), (snapshot) => {
+
+    const start = date.addMonths(new Date(), -12);
+
+    // 1. Query to get DailyLesson documents by schoolId from a year ago untill now and order them by date (descending)
+    const dailyLessonsQuery = query(
+        dailyLessonsRef,
+        where(nameof<DailyLesson>('schoolId'), '==', props.school.id),
+        where(nameof<DailyLesson>('date'), '>=', start),
+        orderBy(nameof<DailyLesson>('date'), 'desc')  // Sort by the lesson date in descending order
+    );
+
+    const unsubscribeStudents = onSnapshot(dailyLessonsQuery, (snapshot) => {
         const data = snapshot.docs.map(doc => doc.data())
-        lessons.value = data;
+        dailyLessons.value = data;
         loadingLessons.value = false;
         console.log("Current data: ", snapshot, data);
     }, (error) => {
@@ -123,7 +188,7 @@ async function loadLessons() {
 async function loadCalendar() {
 
     loadingCalendar.value = true;
-    const unsub = onSnapshot(query(weekLessonsRef, where(nameof<WeekLesson>('schoolId'), '==', props.school.id)), (snapshot) => {
+    const unsub = onSnapshot(query(weekLessonsRef, where(nameof<WeeklyLesson>('schoolId'), '==', props.school.id)), (snapshot) => {
         const data = snapshot.docs.map(doc => doc.data())
         programmedLessons.value = data;
         loadingCalendar.value = false;

@@ -23,7 +23,7 @@
                                     <span>Tutti i <b>{{ days[pl.dayOfWeek] }}</b></span>
                                 </v-col>
                                 <v-col class="text-grey" cols="5">
-                                    Dal {{ formatDate(pl.from.toDate(), 'keyboard24') }} 
+                                    Dal {{ formatDate(pl.from.toDate(), 'keyboard24') }}
                                     al {{ formatDate(pl.to.toDate(), 'keyboard24') }}
                                 </v-col>
                                 <v-col>
@@ -44,7 +44,8 @@
                     </v-expansion-panel-title>
                     <v-expansion-panel-text>
                         <v-list v-if="pl.schedule.length > 0">
-                            <v-list-item v-for="element of pl.schedule" :key="element.studentId" :value="element" color="primary">
+                            <v-list-item v-for="element of pl.schedule" :key="element.studentId" :value="element"
+                                color="primary">
                                 <template v-slot:prepend>
                                     <p>
                                         <b>
@@ -78,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { days, type ScheduledLesson, type School, type Student, type WeekLesson } from '@/models/model';
+import { days, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import WeekLessonEvent from './WeekLessonEditor.vue';
@@ -93,17 +94,17 @@ interface CalendarLessonEditorProps {
 const date = useDate()
 const props = defineProps<CalendarLessonEditorProps>()
 const emit = defineEmits(['close'])
-const weekLessonsRef = useDB<WeekLesson>(DatabaseRef.WEEK_LESSONS);
+const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEK_LESSONS);
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const subscriptions: Unsubscribe[] = [];
 
-const programmedLessons: Ref<WeekLesson[]> = ref([]);
+const programmedLessons: Ref<WeeklyLesson[]> = ref([]);
 const loadingCalendar = ref(false);
 const loadingStudents = ref(false);
 const allStudents: Ref<Student[]> = ref([]);
 const dialog = ref(false);
 
-function onSaveWeekLessonEvent(weekLesson?: WeekLesson) {
+function onSaveWeekLessonEvent(weekLesson?: WeeklyLesson) {
     if (weekLesson)
         dialog.value = false;
 }
@@ -111,7 +112,7 @@ function onSaveWeekLessonEvent(weekLesson?: WeekLesson) {
 async function loadCalendar() {
 
     loadingCalendar.value = true;
-    const unsub = onSnapshot(query(weekLessonsRef, where(nameof<WeekLesson>('schoolId'), '==', props.school.id), orderBy(nameof<WeekLesson>('dayOfWeek'))), (snapshot) => {
+    const unsub = onSnapshot(query(weekLessonsRef, where(nameof<WeeklyLesson>('schoolId'), '==', props.school.id), orderBy(nameof<WeeklyLesson>('dayOfWeek'))), (snapshot) => {
         const data = snapshot.docs.map(doc => doc.data())
         programmedLessons.value = data;
         loadingCalendar.value = false;
