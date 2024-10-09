@@ -96,9 +96,7 @@
                             <template v-slot:prepend>
                                 <p>
                                     <b>
-                                        {{ element.time.hour.toString().padStart(2, '0') }}:{{
-                                            element.time.minutes.toString().padStart(2,
-                                                '0') }}
+                                        {{ Time.fromITime(element.time).format() }}
                                     </b>
                                     <span> - </span>
                                     <i>{{ getCompleteStudentName(element.studentId) }}</i>
