@@ -1,6 +1,17 @@
 import type { Timestamp } from "firebase/firestore";
 
 export const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+export const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+
+export enum DayOfWeek {
+    SUNDAY,
+    MONDAY,
+    TUESDAY,
+    WEDNESDAY,
+    THURSDAY,
+    FRIDAY,
+    SATURDAY,
+}
 
 export interface Student {
     id: string;
@@ -58,7 +69,7 @@ export interface LevelRange {
 export interface WeeklyLesson {
     id: string;
     schoolId: string;  // Relation with School (if needed)
-    dayOfWeek: number;  // 0 = Sunday, 1 = Monday, etc.
+    dayOfWeek: DayOfWeek;  // 0 = Sunday, 1 = Monday, etc.
     from: Timestamp;  // Using Timestamp for better Firestore compatibility
     to: Timestamp;  // Same as above
     exclude: Timestamp[];  // Consider using Timestamps instead of Date

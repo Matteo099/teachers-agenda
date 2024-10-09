@@ -17,16 +17,16 @@
             <template v-for="lg of lessonGroups" :key="lg.month">
                 <v-list-subheader inset>{{ lg.month }}</v-list-subheader>
 
-                <v-list-item v-for="lesson in lg.lessons" :key="lesson.createdAt"
-                    :title="date.format(lesson.date, 'keyboardDate')" :to="'/lesson/' + lesson.date"
+                <v-list-item v-for="lesson in lg.lessons" :key="lesson.date.toString()" :title="dateFormat(lesson.date)"
+                    :to="lesson.lessonId ? '/lesson/' + lesson.lessonId : '/lesson/new'"
                     :baseColor="lesson.next ? 'primary' : ''">
                     <template v-slot:prepend>
-                        <v-avatar :color="lesson.next ? 'primary' : lesson.alert ? 'warning' : 'grey-lighten-1'">
+                        <v-avatar :color="lesson.next ? 'primary' : lesson.absent ? 'warning' : 'grey-lighten-1'">
                             <v-icon color="white">mdi-calendar</v-icon>
                         </v-avatar>
                     </template>
 
-                    <template v-slot:append v-if="lesson.alert">
+                    <template v-slot:append v-if="lesson.absent">
                         <v-icon color="warning">mdi-alert</v-icon>
                     </template>
                 </v-list-item>
@@ -53,13 +53,13 @@
 </template>
 
 <script setup lang="ts">
-import type { DailyLesson, Lesson, School, WeeklyLesson } from '@/models/model';
+import { DatabaseRef, useDB } from '@/models/firestore-utils';
+import { months, type DailyLesson, type School, type WeeklyLesson } from '@/models/model';
+import { dateFormat, nameof, nextDay, toDate } from '@/models/utils';
+import { getDocs, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import WeekLessonEditor from './CalendarLessonEditor.vue';
-import { onSnapshot, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { nameof } from '@/models/utils';
 
 interface LessonViewProps {
     school: School
@@ -71,9 +71,10 @@ interface LessonGroup {
 }
 
 interface LessonProjection {
-    lessonId: string;
     date: Date;
-    absent: boolean;
+    next: boolean;
+    lessonId?: string;
+    absent?: boolean;
 }
 
 const date = useDate()
@@ -96,52 +97,39 @@ async function loadLessonGroup() {
     await loadDailyLessons();
     await loadCalendar();
 
-    // 2. Find the last done lesson and all lessons that have at least one 'ABSENT' status.
-    const doneLessons = dailyLessons.value.filter((lesson) => {
-        return lesson.status === 'PRESENT' || lesson.status === 'ABSENT' || lesson.status === 'CANCELLED';
-    });
+    const lessonProjections: LessonProjection[] = [];
 
-    // Get the last done lesson by finding the most recent 'PRESENT' or 'ABSENT' lesson.
-    const lastDoneLesson = doneLessons.reduce((lastLesson, currentLesson) => {
-        return (lastLesson.createdAt.seconds > currentLesson.createdAt.seconds) ? lastLesson : currentLesson;
-    }, doneLessons[0]);
-
-    // Find all lessons that contain at least one 'ABSENT' status.
-    const absentLessons = dailyLessons.value.filter((lesson) => lesson.status === 'ABSENT');
-
-    // Create a list of lessons that includes the last done lesson and all absent lessons.
-    const selectedLessons: Lesson[] = [];
-    if (lastDoneLesson) {
-        selectedLessons.push(lastDoneLesson);
-    }
-    selectedLessons.push(...absentLessons);
-
-    // 3. Now, let's add the upcoming n lessons from the calendar (week lessons).
-    const upcomingLessons: Lesson[] = [];
-    const n = 5;  // Number of upcoming lessons to fetch
-    programmedLessons.value.forEach((weekLesson) => {
-        if (upcomingLessons.length < n) {
-            weekLesson.schedule.forEach((scheduledLesson) => {
-                const newLesson: Lesson = {
-                    studentId: scheduledLesson.studentId,
-                    time: scheduledLesson.time,
-                    schoolId: weekLesson.schoolId,
-                    status: 'NONE',  // Set as default; real status can be assigned later
-                    createdAt: weekLesson.createdAt,
-                    updatedAt: weekLesson.updatedAt,
-                };
-                upcomingLessons.push(newLesson);
-            });
+    // 2. Filter the lessons within each DailyLesson to find those with 'ABSENT' status
+    for (const dailyLesson of dailyLessons.value) {
+        if (dailyLesson.lessons.findIndex(lesson => lesson.status === 'ABSENT') != -1) {
+            lessonProjections.push({ lessonId: dailyLesson.id, date: toDate(dailyLesson.date), absent: true, next: false });
         }
-    });
+    }
 
-    // Add the next 'n' upcoming lessons to the selected list.
-    selectedLessons.push(...upcomingLessons.slice(0, n));
+    // 3. If lessonProjections is Empty add the last done lesson (if there is)
+    if (lessonProjections.length == 0) {
+        const lastDailyLesson = dailyLessons.value?.[0];
+        if (lastDailyLesson != undefined)
+            lessonProjections.push({ lessonId: lastDailyLesson.id, date: toDate(lastDailyLesson.date), absent: false, next: false })
+    }
 
-    // 4. Now, group the lessons by month.
-    const groupedLessons: { [key: string]: Lesson[] } = {}; // Object to group lessons by month
-    selectedLessons.forEach((lesson) => {
-        const lessonMonth = new Date(lesson.createdAt.seconds * 1000).toLocaleString('default', { month: 'long', year: 'numeric' });
+    // 6. Now, let's add the upcoming n lessons from the calendar (week lessons).
+    const n = lessonProjections.length + 4;  // Number of upcoming week lessons to add
+    let startingDay = new Date();
+    while (programmedLessons.value.length > 0 && lessonProjections.length < n) {
+        programmedLessons.value.forEach((weekLesson) => {
+            const d = nextDay(startingDay, weekLesson.dayOfWeek)
+            lessonProjections.push({ date: d, next: false })
+        });
+        startingDay = date.addDays(startingDay, 7) as Date;
+    }
+
+    console.log(lessonProjections)
+
+    // 7. Now, group the lessons by month.
+    const groupedLessons: { [key: number]: LessonProjection[] } = {}; // Object to group lessons by month
+    lessonProjections.forEach((lesson) => {
+        const lessonMonth = lesson.date.getMonth();
         if (!groupedLessons[lessonMonth]) {
             groupedLessons[lessonMonth] = [];
         }
@@ -150,9 +138,10 @@ async function loadLessonGroup() {
 
     // Convert the groupedLessons object into an array of LessonGroup.
     lessonGroups.value = Object.keys(groupedLessons).map((month) => {
+        const m = parseInt(month);
         return {
-            month,
-            lessons: groupedLessons[month]
+            month: months[m],
+            lessons: groupedLessons[m]
         };
     });
 }
@@ -161,7 +150,6 @@ async function loadDailyLessons() {
     loadingLessons.value = true;
 
     const start = date.addMonths(new Date(), -12);
-
     // 1. Query to get DailyLesson documents by schoolId from a year ago untill now and order them by date (descending)
     const dailyLessonsQuery = query(
         dailyLessonsRef,
@@ -170,35 +158,22 @@ async function loadDailyLessons() {
         orderBy(nameof<DailyLesson>('date'), 'desc')  // Sort by the lesson date in descending order
     );
 
-    const unsubscribeStudents = onSnapshot(dailyLessonsQuery, (snapshot) => {
-        const data = snapshot.docs.map(doc => doc.data())
-        dailyLessons.value = data;
-        loadingLessons.value = false;
-        console.log("Current data: ", snapshot, data);
-    }, (error) => {
-        loadingLessons.value = false;
-        console.error(error);
-    }, () => {
-        console.log("loadStudents completitions")
-    });
-    subscriptions.push(unsubscribeStudents);
+    const snapshot = await getDocs(dailyLessonsQuery)
+    const data = snapshot.docs.map(doc => doc.data());
+    dailyLessons.value = data;
+    loadingLessons.value = false;
+    console.log("Current data: ", snapshot, data);
 }
 
 
 async function loadCalendar() {
-
     loadingCalendar.value = true;
-    const unsub = onSnapshot(query(weekLessonsRef, where(nameof<WeeklyLesson>('schoolId'), '==', props.school.id)), (snapshot) => {
-        const data = snapshot.docs.map(doc => doc.data())
-        programmedLessons.value = data;
-        loadingCalendar.value = false;
-        console.log("Current data: ", snapshot, data);
-    }, (error) => {
-        loadingCalendar.value = false;
-        console.error(error);
-    });
 
-    subscriptions.push(unsub);
+    const snapshot = await getDocs(query(weekLessonsRef, where(nameof<WeeklyLesson>('schoolId'), '==', props.school.id)));
+    const data = snapshot.docs.map(doc => doc.data())
+    programmedLessons.value = data;
+    loadingCalendar.value = false;
+    console.log("Current data: ", snapshot, data);
 }
 
 onMounted(async () => {

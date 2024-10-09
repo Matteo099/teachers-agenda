@@ -1,6 +1,6 @@
 <template>
     <v-container fluid>
-        <p class="text-h5 text-center mb-6">Lezioni del {{ date.format(today, 'keyboardDate') }}
+        <p class="text-h5 text-center mb-6">Lezioni del {{ dateFormat(today) }}
 
             <v-menu :close-on-content-click="false" :model-value="menu">
                 <template v-slot:activator="{ props }">
@@ -63,9 +63,9 @@
                                 <div class="d-flex justify-space-between w-100">
                                     <strong class="ml-4">{{ e.title }} </strong>
                                     <v-icon v-if="e.note?.trim().length != 0" color="primary">mdi-note</v-icon>
-                                    <span class="mr-4">{{ date.format(e.start, 'fullTime24h') }}
+                                    <span class="mr-4">{{ timestampFormat(e.start) }}
                                         -
-                                        {{ date.format(e.end, 'fullTime24h') }}
+                                        {{ timestampFormat(e.end) }}
                                     </span>
                                 </div>
                             </template>
@@ -90,6 +90,7 @@
 
 <script setup lang="ts">
 import type { Student } from '@/models/model';
+import { dateFormat, timestampFormat } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify'
@@ -172,7 +173,7 @@ async function loadStudents() {
 }
 
 async function loadLessons() {
-    const yyyyMMdd = date.format(today.value, 'keyboardDate')
+    const yyyyMMdd = dateFormat(today.value)
 
     events.value = [
         { title: "Cristina Sole", start: new Date(`${yyyyMMdd} 06:00`), end: new Date(`${yyyyMMdd} 06:40`), note: "", status: 'UNKNOWN' },

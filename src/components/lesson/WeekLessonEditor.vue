@@ -19,7 +19,7 @@
                             item-title="name" item-value="value" no-data-text="Nessuna Data Disponibile" clearable>
                             <template v-slot:selection="{ item, index }">
                                 <v-chip v-if="index < 2">
-                                    <span>{{ date.format(item.title, 'keyboard24') }}</span>
+                                    <span>{{ dateFormat(item.title) }}</span>
                                 </v-chip>
                                 <span v-if="index === 2" class="text-grey text-caption align-self-center">
                                     (+{{ excludeDates.length - 2 }} others)
@@ -123,7 +123,7 @@
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
-import { formatDate, nameof } from '@/models/utils';
+import { dateFormat, fromDate, nameof, toDate } from '@/models/utils';
 import { addDoc, doc, onSnapshot, orderBy, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import draggableComponent from 'vuedraggable';
@@ -236,9 +236,9 @@ function updateWeekLesson() {
     if (props.initialWeekLesson) {
         const weekLessonClone = JSON.parse(JSON.stringify(props.initialWeekLesson)) as WeeklyLesson;
         dayOfWeek.value = days[weekLessonClone.dayOfWeek];
-        from.value = new Timestamp(weekLessonClone.from.seconds, weekLessonClone.from.nanoseconds).toDate();
-        to.value = new Timestamp(weekLessonClone.to.seconds, weekLessonClone.to.nanoseconds).toDate();
-        excludeDates.value = weekLessonClone.exclude.map(d => new Timestamp(d.seconds, d.nanoseconds).toDate());
+        from.value = toDate(weekLessonClone.from);
+        to.value = toDate(weekLessonClone.to);
+        excludeDates.value = weekLessonClone.exclude.map(d => toDate(d));
         scheduledLessons.value = weekLessonClone.schedule;
         const studentsId = scheduledLessons.value.map(s => s.studentId);
         selectedStudents.value = allStudents.value.filter(s => studentsId.includes(s.id));
@@ -272,7 +272,7 @@ function updateExcludeDates() {
             // Push the date to the allDates array
             const d = new Date(currentDate);
             allDates.value.push({
-                name: formatDate(d),//date.format(d.toUTCString(), 'keyboard24'),
+                name: dateFormat(d),
                 value: d
             }); // Store a copy of the date
         }
@@ -290,9 +290,9 @@ async function save() {
     const weekLesson: Partial<WeeklyLesson> = {
         schoolId: props.school.id,
         dayOfWeek: days.indexOf(dayOfWeek.value!),
-        from: Timestamp.fromDate(from.value!),
-        to: Timestamp.fromDate(to.value!),
-        exclude: excludeDates.value.map(d => Timestamp.fromDate(d)),
+        from: fromDate(from.value!),
+        to: fromDate(to.value!),
+        exclude: excludeDates.value.map(d => fromDate(d)),
         schedule: scheduledLessons.value,
         createdAt: props.edit ? props.initialWeekLesson?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now(),

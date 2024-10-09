@@ -50,10 +50,11 @@
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, type School, type Student } from '@/models/model';
 import type { Unsubscribe } from 'firebase/database';
-import { deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import StudentEditor from './StudentEditor.vue';
 import DeleteDialog from '../DeleteDialog.vue';
+import { nameof } from '@/models/utils';
 
 interface StudentViewProps {
     school: School
@@ -99,7 +100,10 @@ async function deleteStudent(student?: Student): Promise<boolean> {
 
 async function loadStudents() {
     loadingStudents.value = true;
-    const uns = onSnapshot(studentsRef, (snapshot) => {
+    const studentsOfSchool = query(
+        studentsRef,
+        where(nameof<Student>('schoolId'), '==', props.school.id));
+    const uns = onSnapshot(studentsOfSchool, (snapshot) => {
         const data = snapshot.docs.map(doc => doc.data())
         students.value = data;
         loadingStudents.value = false;

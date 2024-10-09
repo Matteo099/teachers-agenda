@@ -38,14 +38,14 @@
                         </template>
                         <template v-slot:subtitle="{ item }">
                             <div v-if="item.status == 'NOT_RECOVERED'">
-                                Da recuperare la lezione del {{ date.format(item.date, 'keyboardDate') }}
+                                Da recuperare la lezione del {{ dateFormat(item.date) }}
                             </div>
                             <div v-else-if="item.status == 'RECOVERY_SCHEDULED'">
-                                Recupero programmato per il {{ date.format(item.recoveryDate, 'keyboardDate') }}
+                                Recupero programmato per il {{ dateFormat(item.recoveryDate) }}
                             </div>
                             <div v-else>
-                                Recupero della lezione del {{ date.format(item.date, 'keyboardDate') }} effettuato il {{
-                                    date.format(item.recoveryDate, 'keyboardDate') }}
+                                Recupero della lezione del {{ dateFormat(item.date) }} effettuato il {{
+                                    dateFormat(item.recoveryDate) }}
                             </div>
                         </template>
                         <template v-slot:append="{ item }">
@@ -119,6 +119,7 @@ import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import StudentView from '@/components/student/StudentView.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import type { School } from '@/models/model';
+import { dateFormat } from '@/models/utils';
 import { deleteDoc, doc, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';

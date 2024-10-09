@@ -23,8 +23,8 @@
                                     <span>Tutti i <b>{{ days[pl.dayOfWeek] }}</b></span>
                                 </v-col>
                                 <v-col class="text-grey" cols="5">
-                                    Dal {{ formatDate(pl.from.toDate(), 'keyboard24') }}
-                                    al {{ formatDate(pl.to.toDate(), 'keyboard24') }}
+                                    Dal {{ dateFormat(toDate(pl.from)) }}
+                                    al {{ dateFormat(toDate(pl.to)) }}
                                 </v-col>
                                 <v-col>
                                     <v-dialog transition="dialog-bottom-transition" fullscreen>
@@ -79,13 +79,13 @@
 </template>
 
 <script setup lang="ts">
-import { days, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
+import { DatabaseRef, useDB } from '@/models/firestore-utils';
+import { days, type School, type Student, type WeeklyLesson } from '@/models/model';
+import { dateFormat, nameof, toDate } from '@/models/utils';
+import { onSnapshot, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import WeekLessonEvent from './WeekLessonEditor.vue';
-import { onSnapshot, orderBy, query, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { formatDate, nameof } from '@/models/utils';
 
 interface CalendarLessonEditorProps {
     school: School;
