@@ -23,8 +23,8 @@
                                     <span>Tutti i <b>{{ days[pl.dayOfWeek] }}</b></span>
                                 </v-col>
                                 <v-col class="text-grey" cols="5">
-                                    Dal {{ dateFormat(toDate(pl.from)) }}
-                                    al {{ dateFormat(toDate(pl.to)) }}
+                                    Dal {{ yyyyMMdd.fromIyyyyMMdd(pl.from).format() }}
+                                    al {{ yyyyMMdd.fromIyyyyMMdd(pl.to).format() }}
                                 </v-col>
                                 <v-col>
                                     <v-dialog transition="dialog-bottom-transition" fullscreen>
@@ -49,9 +49,7 @@
                                 <template v-slot:prepend>
                                     <p>
                                         <b>
-                                            {{ element.time.hour.toString().padStart(2, '0') }}:{{
-                                                element.time.minutes.toString().padStart(2,
-                                                    '0') }}
+                                            {{ Time.fromITime(element.time).format() }}
                                         </b>
                                         <span> - </span>
                                         <i>{{ getCompleteStudentName(element.studentId) }}</i>
@@ -80,7 +78,7 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { days, type School, type Student, type WeeklyLesson } from '@/models/model';
+import { days, Time, yyyyMMdd, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { dateFormat, nameof, toDate } from '@/models/utils';
 import { onSnapshot, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
@@ -94,7 +92,7 @@ interface CalendarLessonEditorProps {
 const date = useDate()
 const props = defineProps<CalendarLessonEditorProps>()
 const emit = defineEmits(['close'])
-const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEK_LESSONS);
+const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const subscriptions: Unsubscribe[] = [];
 

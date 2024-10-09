@@ -127,7 +127,6 @@ async function save() {
         city: city.value,
         email: email.value,
         phoneNumber: phoneNumber.value,
-        calendarLesson: props.initialSchool?.calendarLesson ?? [],
         createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now(),
     };
