@@ -19,7 +19,7 @@
                             item-title="name" item-value="value" no-data-text="Nessuna Data Disponibile" clearable>
                             <template v-slot:selection="{ item, index }">
                                 <v-chip v-if="index < 2">
-                                    <span>{{ dateFormat(item.title) }}</span>
+                                    <span>{{ item.title }}</span>
                                 </v-chip>
                                 <span v-if="index === 2" class="text-grey text-caption align-self-center">
                                     (+{{ excludeDates.length - 2 }} others)
@@ -143,7 +143,7 @@ const subscriptions: Unsubscribe[] = [];
 const dayOfWeek: Ref<string | undefined> = ref();
 const from: Ref<Date | undefined> = ref();
 const to: Ref<Date | undefined> = ref();
-const excludeDates: Ref<yyyyMMdd[]> = ref([]);
+const excludeDates: Ref<Date[]> = ref([]);
 const allDates: Ref<{ name: string, value: Date }[]> = ref([]);
 const startingTime: Ref<string | undefined> = ref();
 const allStudents: Ref<Student[]> = ref([]);
@@ -237,7 +237,7 @@ function updateWeekLesson() {
         dayOfWeek.value = days[weekLessonClone.dayOfWeek];
         from.value = yyyyMMdd.fromIyyyyMMdd(weekLessonClone.from).toDate();
         to.value = yyyyMMdd.fromIyyyyMMdd(weekLessonClone.to).toDate();
-        excludeDates.value = weekLessonClone.exclude.map(d => yyyyMMdd.fromIyyyyMMdd(d));
+        excludeDates.value = weekLessonClone.exclude.map(d => yyyyMMdd.fromIyyyyMMdd(d).toDate());
         scheduledLessons.value = weekLessonClone.schedule;
         const studentsId = scheduledLessons.value.map(s => s.studentId);
         selectedStudents.value = allStudents.value.filter(s => studentsId.includes(s.id));
@@ -255,11 +255,7 @@ function updateExcludeDates() {
     // Clear the previous allDates array
     allDates.value = [];
 
-    const dayNumber = days.indexOf(dayOfWeek.value);
-
-    // Convert dayOfWeek to match Date.getDay() format
-    // Days are 0 (Sunday) to 6 (Saturday) in JavaScript, so we map it to our custom array `days` where 0 is Monday
-    const targetDayOfWeek = dayNumber === 6 ? 0 : dayNumber + 1;
+    const targetDayOfWeek = days.indexOf(dayOfWeek.value);
 
     // Create a new date instance to avoid mutating the original `from` date
     let currentDate = new Date(from.value);
@@ -291,7 +287,7 @@ async function save() {
         dayOfWeek: days.indexOf(dayOfWeek.value!),
         from: yyyyMMdd.fromDate(from.value!).toIyyyyMMdd(),
         to: yyyyMMdd.fromDate(to.value!).toIyyyyMMdd(),
-        exclude: excludeDates.value.map(d => d.toIyyyyMMdd()),
+        exclude: excludeDates.value.map(d => yyyyMMdd.fromDate(d).toIyyyyMMdd()),
         schedule: scheduledLessons.value,
         createdAt: props.edit ? props.initialWeekLesson?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now(),

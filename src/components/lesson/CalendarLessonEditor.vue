@@ -26,7 +26,7 @@
                                     Dal {{ yyyyMMdd.fromIyyyyMMdd(pl.from).format() }}
                                     al {{ yyyyMMdd.fromIyyyyMMdd(pl.to).format() }}
                                 </v-col>
-                                <v-col>
+                                <v-col cols="1">
                                     <v-dialog transition="dialog-bottom-transition" fullscreen>
                                         <template v-slot:activator="{ props: activatorProps }">
                                             <v-btn icon="mdi-pencil" variant="text" @click.stop="console.log('edit')"
@@ -38,6 +38,14 @@
                                                 @close="isActive.value = false"></WeekLessonEvent>
                                         </template>
                                     </v-dialog>
+                                </v-col>
+                                <v-col cols="1">
+                                    <DeleteDialog :name="'Tutti i ' + days[pl.dayOfWeek]" objName="Lezione Programmata"
+                                        :onDelete="async () => await deleteWeeklyLesson(pl)">
+                                        <template v-slot:activator="{ props: activatorProps }">
+                                            <v-btn icon="mdi-delete" variant="text" v-bind="activatorProps"></v-btn>
+                                        </template>
+                                    </DeleteDialog>
                                 </v-col>
                             </v-row>
                         </template>
@@ -80,10 +88,11 @@
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, Time, yyyyMMdd, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { dateFormat, nameof, toDate } from '@/models/utils';
-import { onSnapshot, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
+import { deleteDoc, doc, onSnapshot, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import WeekLessonEvent from './WeekLessonEditor.vue';
+import DeleteDialog from '../DeleteDialog.vue';
 
 interface CalendarLessonEditorProps {
     school: School;
@@ -105,6 +114,16 @@ const dialog = ref(false);
 function onSaveWeekLessonEvent(weekLesson?: WeeklyLesson) {
     if (weekLesson)
         dialog.value = false;
+}
+
+
+async function deleteWeeklyLesson(weekLesson?: WeeklyLesson): Promise<boolean> {
+    try {
+        await deleteDoc(doc(weekLessonsRef, weekLesson?.id));
+        return true;
+    } catch (error) {
+        return false;
+    }
 }
 
 async function loadCalendar() {
