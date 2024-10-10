@@ -21,8 +21,7 @@
                 <v-list-subheader inset>{{ lg.month }}</v-list-subheader>
 
                 <v-list-item v-for="lesson in lg.lessons" :key="lesson.date.toString()" :title="lesson.date.format()"
-                    :to="lesson.lessonId ? '/lesson/' + lesson.lessonId : '/lesson/new'"
-                    :baseColor="lesson.next ? 'primary' : ''">
+                    @click="routeToDailyLesson(lesson)" :baseColor="lesson.next ? 'primary' : ''">
                     <template v-slot:prepend>
                         <v-avatar :color="lesson.next ? 'primary' : lesson.absent ? 'warning' : 'grey-lighten-1'">
                             <v-icon color="white">mdi-calendar</v-icon>
@@ -57,12 +56,13 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { months, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type School, type WeeklyLesson } from '@/models/model';
+import { months, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type ScheduledLesson, type School, type WeeklyLesson } from '@/models/model';
 import { dateFormat, nameof, nextDay, toDate } from '@/models/utils';
-import { getDocs, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
+import { addDoc, getDocs, orderBy, query, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import WeekLessonEditor from './CalendarLessonEditor.vue';
+import { useRouter } from 'vue-router';
 
 interface LessonViewProps {
     school: School
@@ -78,8 +78,10 @@ interface LessonProjection {
     next: boolean;
     lessonId?: string;
     absent?: boolean;
+    lessons: ScheduledLesson[];
 }
 
+const router = useRouter();
 const date = useDate()
 const props = defineProps<LessonViewProps>();
 const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
@@ -96,6 +98,32 @@ const computingLessonGroups = ref(false);
 const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value);
 watch(props.school, () => loadLessonGroup())
 
+async function routeToDailyLesson(lessonGroup: LessonProjection) {
+    let dailyLessonId;
+
+    if (lessonGroup.lessonId == undefined) {
+        // create new daily lesson
+        const dailyLesson: Partial<DailyLesson> = {
+            date: lessonGroup.date.toIyyyyMMdd(),
+            schoolId: props.school.id,
+            lessons: lessonGroup.lessons.map(l => ({
+                status: 'NONE',
+                studentId: l.studentId,
+                time: l.time,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now()
+            }))
+        }
+        // store it
+        const docRef = await addDoc(dailyLessonsRef, dailyLesson);
+        console.log("Document (week lessons) written with ID: ", docRef.id);
+        dailyLessonId = docRef.id;
+    } else {
+        dailyLessonId = lessonGroup.lessonId;
+    }
+    router.push(`/lesson/${lessonGroup.lessonId}`);
+}
+
 async function loadLessonGroup() {
     computingLessonGroups.value = true;
 
@@ -108,7 +136,7 @@ async function loadLessonGroup() {
     // 2. Filter the lessons within each DailyLesson to find those with 'ABSENT' status
     for (const dailyLesson of dailyLessons.value) {
         if (dailyLesson.lessons.findIndex(lesson => lesson.status === 'ABSENT') != -1) {
-            lessonProjections.push({ lessonId: dailyLesson.id, date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date), absent: true, next: false });
+            lessonProjections.push({ lessonId: dailyLesson.id, date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date), absent: true, next: false, lessons: dailyLesson.lessons });
         }
     }
 
@@ -116,7 +144,7 @@ async function loadLessonGroup() {
     if (lessonProjections.length == 0) {
         const lastDailyLesson = dailyLessons.value?.[0];
         if (lastDailyLesson != undefined)
-            lessonProjections.push({ lessonId: lastDailyLesson.id, date: yyyyMMdd.fromIyyyyMMdd(lastDailyLesson.date), absent: false, next: false })
+            lessonProjections.push({ lessonId: lastDailyLesson.id, date: yyyyMMdd.fromIyyyyMMdd(lastDailyLesson.date), absent: false, next: false, lessons: lastDailyLesson.lessons })
     }
 
     // 6. Now, let's add the upcoming n lessons from the calendar (week lessons).
@@ -125,7 +153,7 @@ async function loadLessonGroup() {
     while (programmedLessons.value.length > 0 && lessonProjections.length < n) {
         programmedLessons.value.forEach((weekLesson) => {
             const d = nextDay(startingDay, weekLesson.dayOfWeek)
-            lessonProjections.push({ date: yyyyMMdd.fromDate(d), next: false })
+            lessonProjections.push({ date: yyyyMMdd.fromDate(d), next: false, lessons: weekLesson.schedule })
         });
         startingDay = date.addDays(startingDay, 7) as Date;
     }
@@ -162,11 +190,13 @@ async function loadDailyLessons() {
     loadingLessons.value = true;
 
     const start = date.addMonths(new Date(), -12);
+    const today = new Date(new Date().toDateString());
     // 1. Query to get DailyLesson documents by schoolId from a year ago untill now and order them by date (descending)
     const dailyLessonsQuery = query(
         dailyLessonsRef,
         where(nameof<DailyLesson>('schoolId'), '==', props.school.id),
         where(nameof<DailyLesson>('date'), '>=', start),
+        where(nameof<DailyLesson>('date'), '<=', today),
         orderBy(nameof<DailyLesson>('date'), 'desc')  // Sort by the lesson date in descending order
     );
 
