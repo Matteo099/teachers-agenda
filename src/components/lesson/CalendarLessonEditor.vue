@@ -23,10 +23,10 @@
                                     <span>Tutti i <b>{{ days[pl.dayOfWeek] }}</b></span>
                                 </v-col>
                                 <v-col class="text-grey" cols="5">
-                                    Dal {{ dateFormat(toDate(pl.from)) }}
-                                    al {{ dateFormat(toDate(pl.to)) }}
+                                    Dal {{ yyyyMMdd.fromIyyyyMMdd(pl.from).format() }}
+                                    al {{ yyyyMMdd.fromIyyyyMMdd(pl.to).format() }}
                                 </v-col>
-                                <v-col>
+                                <v-col cols="1">
                                     <v-dialog transition="dialog-bottom-transition" fullscreen>
                                         <template v-slot:activator="{ props: activatorProps }">
                                             <v-btn icon="mdi-pencil" variant="text" @click.stop="console.log('edit')"
@@ -39,6 +39,14 @@
                                         </template>
                                     </v-dialog>
                                 </v-col>
+                                <v-col cols="1">
+                                    <DeleteDialog :name="'Tutti i ' + days[pl.dayOfWeek]" objName="Lezione Programmata"
+                                        :onDelete="async () => await deleteWeeklyLesson(pl)">
+                                        <template v-slot:activator="{ props: activatorProps }">
+                                            <v-btn icon="mdi-delete" variant="text" v-bind="activatorProps"></v-btn>
+                                        </template>
+                                    </DeleteDialog>
+                                </v-col>
                             </v-row>
                         </template>
                     </v-expansion-panel-title>
@@ -49,9 +57,7 @@
                                 <template v-slot:prepend>
                                     <p>
                                         <b>
-                                            {{ element.time.hour.toString().padStart(2, '0') }}:{{
-                                                element.time.minutes.toString().padStart(2,
-                                                    '0') }}
+                                            {{ Time.fromITime(element.time).format() }}
                                         </b>
                                         <span> - </span>
                                         <i>{{ getCompleteStudentName(element.studentId) }}</i>
@@ -80,12 +86,13 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { days, type School, type Student, type WeeklyLesson } from '@/models/model';
+import { days, Time, yyyyMMdd, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { dateFormat, nameof, toDate } from '@/models/utils';
-import { onSnapshot, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
+import { deleteDoc, doc, onSnapshot, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useDate } from 'vuetify';
 import WeekLessonEvent from './WeekLessonEditor.vue';
+import DeleteDialog from '../DeleteDialog.vue';
 
 interface CalendarLessonEditorProps {
     school: School;
@@ -94,7 +101,7 @@ interface CalendarLessonEditorProps {
 const date = useDate()
 const props = defineProps<CalendarLessonEditorProps>()
 const emit = defineEmits(['close'])
-const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEK_LESSONS);
+const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const subscriptions: Unsubscribe[] = [];
 
@@ -107,6 +114,16 @@ const dialog = ref(false);
 function onSaveWeekLessonEvent(weekLesson?: WeeklyLesson) {
     if (weekLesson)
         dialog.value = false;
+}
+
+
+async function deleteWeeklyLesson(weekLesson?: WeeklyLesson): Promise<boolean> {
+    try {
+        await deleteDoc(doc(weekLessonsRef, weekLesson?.id));
+        return true;
+    } catch (error) {
+        return false;
+    }
 }
 
 async function loadCalendar() {

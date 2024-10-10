@@ -19,7 +19,7 @@
                             item-title="name" item-value="value" no-data-text="Nessuna Data Disponibile" clearable>
                             <template v-slot:selection="{ item, index }">
                                 <v-chip v-if="index < 2">
-                                    <span>{{ dateFormat(item.title) }}</span>
+                                    <span>{{ item.title }}</span>
                                 </v-chip>
                                 <span v-if="index === 2" class="text-grey text-caption align-self-center">
                                     (+{{ excludeDates.length - 2 }} others)
@@ -96,9 +96,7 @@
                             <template v-slot:prepend>
                                 <p>
                                     <b>
-                                        {{ element.time.hour.toString().padStart(2, '0') }}:{{
-                                            element.time.minutes.toString().padStart(2,
-                                                '0') }}
+                                        {{ Time.fromITime(element.time).format() }}
                                     </b>
                                     <span> - </span>
                                     <i>{{ getCompleteStudentName(element.studentId) }}</i>
@@ -122,7 +120,7 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { days, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
+import { days, Time, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { dateFormat, fromDate, nameof, toDate } from '@/models/utils';
 import { addDoc, doc, onSnapshot, orderBy, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
@@ -138,7 +136,7 @@ interface WeekLessonEventProps {
 const date = useDate();
 const emit = defineEmits(['close', 'save'])
 const props = defineProps<WeekLessonEventProps>()
-const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEK_LESSONS);
+const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const subscriptions: Unsubscribe[] = [];
 
@@ -187,7 +185,7 @@ function updateScheduledLessons() {
     // add new selected students at the end of the list
     for (const student of selectedStudents.value) {
         const index = scheduledLessons.value.findIndex(s => s.studentId == student.id)
-        if (index == -1) scheduledLessons.value.push({ studentId: student.id, time: { hour: 0, minutes: 0 } });
+        if (index == -1) scheduledLessons.value.push({ studentId: student.id, time: 0 });
     }
 
     // remove de-selected students from the list
@@ -224,7 +222,8 @@ function updateScheduledLessonsTime() {
     }
 
     scheduledLessons.value.forEach(sl => {
-        sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
+        sl.time = startingMinutes * 60;
+        // sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
         const student = selectedStudents.value.find(s => s.id == sl.studentId);
         if (!student) return;
         const levelTime = props.school.levelRanges.find(lr => lr.levels.includes(student.level))!;
@@ -236,16 +235,16 @@ function updateWeekLesson() {
     if (props.initialWeekLesson) {
         const weekLessonClone = JSON.parse(JSON.stringify(props.initialWeekLesson)) as WeeklyLesson;
         dayOfWeek.value = days[weekLessonClone.dayOfWeek];
-        from.value = toDate(weekLessonClone.from);
-        to.value = toDate(weekLessonClone.to);
-        excludeDates.value = weekLessonClone.exclude.map(d => toDate(d));
+        from.value = yyyyMMdd.fromIyyyyMMdd(weekLessonClone.from).toDate();
+        to.value = yyyyMMdd.fromIyyyyMMdd(weekLessonClone.to).toDate();
+        excludeDates.value = weekLessonClone.exclude.map(d => yyyyMMdd.fromIyyyyMMdd(d).toDate());
         scheduledLessons.value = weekLessonClone.schedule;
         const studentsId = scheduledLessons.value.map(s => s.studentId);
         selectedStudents.value = allStudents.value.filter(s => studentsId.includes(s.id));
 
         if (scheduledLessons.value.length > 0) {
             const minTime = scheduledLessons.value[0].time;
-            startingTime.value = `${minTime.hour}:${minTime.minutes}`;
+            startingTime.value = Time.fromITime(minTime).format();
         }
     }
 }
@@ -256,11 +255,7 @@ function updateExcludeDates() {
     // Clear the previous allDates array
     allDates.value = [];
 
-    const dayNumber = days.indexOf(dayOfWeek.value);
-
-    // Convert dayOfWeek to match Date.getDay() format
-    // Days are 0 (Sunday) to 6 (Saturday) in JavaScript, so we map it to our custom array `days` where 0 is Monday
-    const targetDayOfWeek = dayNumber === 6 ? 0 : dayNumber + 1;
+    const targetDayOfWeek = days.indexOf(dayOfWeek.value);
 
     // Create a new date instance to avoid mutating the original `from` date
     let currentDate = new Date(from.value);
@@ -290,9 +285,9 @@ async function save() {
     const weekLesson: Partial<WeeklyLesson> = {
         schoolId: props.school.id,
         dayOfWeek: days.indexOf(dayOfWeek.value!),
-        from: fromDate(from.value!),
-        to: fromDate(to.value!),
-        exclude: excludeDates.value.map(d => fromDate(d)),
+        from: yyyyMMdd.fromDate(from.value!).toIyyyyMMdd(),
+        to: yyyyMMdd.fromDate(to.value!).toIyyyyMMdd(),
+        exclude: excludeDates.value.map(d => yyyyMMdd.fromDate(d).toIyyyyMMdd()),
         schedule: scheduledLessons.value,
         createdAt: props.edit ? props.initialWeekLesson?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now(),

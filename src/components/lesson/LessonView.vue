@@ -2,13 +2,16 @@
     <v-card title="Lezioni" elevation="3" :loading="loading">
 
         <template v-slot:append>
+            <v-btn icon="mdi-refresh" variant="text" :disabled="!school || computingLessonGroups"
+                @click="loadLessonGroup"></v-btn>
             <v-dialog transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn icon="mdi-pencil" variant="text" v-bind="activatorProps" :disabled="!school"></v-btn>
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <WeekLessonEditor :school="school" @close="isActive.value = false"></WeekLessonEditor>
+                    <WeekLessonEditor :school="school" @close="isActive.value = false; loadLessonGroup()">
+                    </WeekLessonEditor>
                 </template>
             </v-dialog>
         </template>
@@ -17,7 +20,7 @@
             <template v-for="lg of lessonGroups" :key="lg.month">
                 <v-list-subheader inset>{{ lg.month }}</v-list-subheader>
 
-                <v-list-item v-for="lesson in lg.lessons" :key="lesson.date.toString()" :title="dateFormat(lesson.date)"
+                <v-list-item v-for="lesson in lg.lessons" :key="lesson.date.toString()" :title="lesson.date.format()"
                     :to="lesson.lessonId ? '/lesson/' + lesson.lessonId : '/lesson/new'"
                     :baseColor="lesson.next ? 'primary' : ''">
                     <template v-slot:prepend>
@@ -54,7 +57,7 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { months, type DailyLesson, type School, type WeeklyLesson } from '@/models/model';
+import { months, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type School, type WeeklyLesson } from '@/models/model';
 import { dateFormat, nameof, nextDay, toDate } from '@/models/utils';
 import { getDocs, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
@@ -71,7 +74,7 @@ interface LessonGroup {
 }
 
 interface LessonProjection {
-    date: Date;
+    date: yyyyMMdd;
     next: boolean;
     lessonId?: string;
     absent?: boolean;
@@ -80,7 +83,7 @@ interface LessonProjection {
 const date = useDate()
 const props = defineProps<LessonViewProps>();
 const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
-const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEK_LESSONS);
+const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
 const subscriptions: Unsubscribe[] = [];
 
 const programmedLessons: Ref<WeeklyLesson[]> = ref([]);
@@ -88,11 +91,14 @@ const dailyLessons: Ref<DailyLesson[]> = ref([]);
 const lessonGroups: Ref<LessonGroup[]> = ref([]);
 const loadingLessons = ref(false);
 const loadingCalendar = ref(false);
+const computingLessonGroups = ref(false);
 
 const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value);
 watch(props.school, () => loadLessonGroup())
 
 async function loadLessonGroup() {
+    computingLessonGroups.value = true;
+
     // 1. Load all the existing lessons and the calendar.
     await loadDailyLessons();
     await loadCalendar();
@@ -102,7 +108,7 @@ async function loadLessonGroup() {
     // 2. Filter the lessons within each DailyLesson to find those with 'ABSENT' status
     for (const dailyLesson of dailyLessons.value) {
         if (dailyLesson.lessons.findIndex(lesson => lesson.status === 'ABSENT') != -1) {
-            lessonProjections.push({ lessonId: dailyLesson.id, date: toDate(dailyLesson.date), absent: true, next: false });
+            lessonProjections.push({ lessonId: dailyLesson.id, date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date), absent: true, next: false });
         }
     }
 
@@ -110,7 +116,7 @@ async function loadLessonGroup() {
     if (lessonProjections.length == 0) {
         const lastDailyLesson = dailyLessons.value?.[0];
         if (lastDailyLesson != undefined)
-            lessonProjections.push({ lessonId: lastDailyLesson.id, date: toDate(lastDailyLesson.date), absent: false, next: false })
+            lessonProjections.push({ lessonId: lastDailyLesson.id, date: yyyyMMdd.fromIyyyyMMdd(lastDailyLesson.date), absent: false, next: false })
     }
 
     // 6. Now, let's add the upcoming n lessons from the calendar (week lessons).
@@ -119,19 +125,23 @@ async function loadLessonGroup() {
     while (programmedLessons.value.length > 0 && lessonProjections.length < n) {
         programmedLessons.value.forEach((weekLesson) => {
             const d = nextDay(startingDay, weekLesson.dayOfWeek)
-            lessonProjections.push({ date: d, next: false })
+            lessonProjections.push({ date: yyyyMMdd.fromDate(d), next: false })
         });
         startingDay = date.addDays(startingDay, 7) as Date;
     }
 
-    console.log(lessonProjections)
-
     // 7. Now, group the lessons by month.
     const groupedLessons: { [key: number]: LessonProjection[] } = {}; // Object to group lessons by month
+    let nextFound = false;
+    const today = new Date(new Date().toDateString());
     lessonProjections.forEach((lesson) => {
         const lessonMonth = lesson.date.getMonth();
         if (!groupedLessons[lessonMonth]) {
             groupedLessons[lessonMonth] = [];
+        }
+        if (!nextFound && lesson.date.toDate() >= today) {
+            nextFound = true;
+            lesson.next = true;
         }
         groupedLessons[lessonMonth].push(lesson);
     });
@@ -144,6 +154,8 @@ async function loadLessonGroup() {
             lessons: groupedLessons[m]
         };
     });
+
+    computingLessonGroups.value = false;
 }
 
 async function loadDailyLessons() {

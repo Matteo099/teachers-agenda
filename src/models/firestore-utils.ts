@@ -5,14 +5,14 @@ import type { DailyLesson, Lesson, School, Student, WeeklyLesson } from "./model
 export enum DatabaseRef {
     SCHOOLS = "schools",
     STUDENTS = "students",
-    WEEK_LESSONS = "weekLessons",
+    WEEKLY_LESSONS = "weeklyLessons",
     DAILY_LESSONS = "dailyLessons"
 }
 
 interface Database {
     [DatabaseRef.SCHOOLS]: CollectionReference<School, DocumentData>;
     [DatabaseRef.STUDENTS]: CollectionReference<Student, DocumentData>;
-    [DatabaseRef.WEEK_LESSONS]: CollectionReference<WeeklyLesson, DocumentData>;
+    [DatabaseRef.WEEKLY_LESSONS]: CollectionReference<WeeklyLesson, DocumentData>;
     [DatabaseRef.DAILY_LESSONS]: CollectionReference<DailyLesson, DocumentData>;
 }
 
@@ -33,7 +33,7 @@ function init() {
 
     db[DatabaseRef.SCHOOLS] = dataPoint<School>(DatabaseRef.SCHOOLS)
     db[DatabaseRef.STUDENTS] = dataPoint<Student>(DatabaseRef.STUDENTS)
-    db[DatabaseRef.WEEK_LESSONS] = dataPoint<WeeklyLesson>(DatabaseRef.WEEK_LESSONS)
+    db[DatabaseRef.WEEKLY_LESSONS] = dataPoint<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS)
     db[DatabaseRef.DAILY_LESSONS] = dataPoint<DailyLesson>(DatabaseRef.DAILY_LESSONS)
 }
 
