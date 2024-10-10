@@ -22,6 +22,7 @@ export const isAtfer = function (a: Timestamp, b: Timestamp): boolean {
 export const nextDay = function (startingDate: Date, targetDayOfWeek: DayOfWeek): Date {
     // Get the day of the week for the starting date (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
     const startingDayOfWeek = startingDate.getDay();
+    if (targetDayOfWeek == startingDayOfWeek) return startingDate;
 
     // Calculate the difference between the target day and the current day
     // We add 7 to ensure the result is non-negative, then take mod 7

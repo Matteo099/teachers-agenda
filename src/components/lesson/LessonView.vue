@@ -2,13 +2,16 @@
     <v-card title="Lezioni" elevation="3" :loading="loading">
 
         <template v-slot:append>
+            <v-btn icon="mdi-refresh" variant="text" :disabled="!school || computingLessonGroups"
+                @click="loadLessonGroup"></v-btn>
             <v-dialog transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn icon="mdi-pencil" variant="text" v-bind="activatorProps" :disabled="!school"></v-btn>
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <WeekLessonEditor :school="school" @close="isActive.value = false"></WeekLessonEditor>
+                    <WeekLessonEditor :school="school" @close="isActive.value = false; loadLessonGroup()">
+                    </WeekLessonEditor>
                 </template>
             </v-dialog>
         </template>
@@ -88,11 +91,14 @@ const dailyLessons: Ref<DailyLesson[]> = ref([]);
 const lessonGroups: Ref<LessonGroup[]> = ref([]);
 const loadingLessons = ref(false);
 const loadingCalendar = ref(false);
+const computingLessonGroups = ref(false);
 
 const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value);
 watch(props.school, () => loadLessonGroup())
 
 async function loadLessonGroup() {
+    computingLessonGroups.value = true;
+
     // 1. Load all the existing lessons and the calendar.
     await loadDailyLessons();
     await loadCalendar();
@@ -124,14 +130,18 @@ async function loadLessonGroup() {
         startingDay = date.addDays(startingDay, 7) as Date;
     }
 
-    console.log(lessonProjections)
-
     // 7. Now, group the lessons by month.
     const groupedLessons: { [key: number]: LessonProjection[] } = {}; // Object to group lessons by month
+    let nextFound = false;
+    const today = new Date(new Date().toDateString());
     lessonProjections.forEach((lesson) => {
         const lessonMonth = lesson.date.getMonth();
         if (!groupedLessons[lessonMonth]) {
             groupedLessons[lessonMonth] = [];
+        }
+        if (!nextFound && lesson.date.toDate() >= today) {
+            nextFound = true;
+            lesson.next = true;
         }
         groupedLessons[lessonMonth].push(lesson);
     });
@@ -144,6 +154,8 @@ async function loadLessonGroup() {
             lessons: groupedLessons[m]
         };
     });
+
+    computingLessonGroups.value = false;
 }
 
 async function loadDailyLessons() {
