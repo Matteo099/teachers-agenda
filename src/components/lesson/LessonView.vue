@@ -56,7 +56,7 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { months, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type ScheduledLesson, type School, type WeeklyLesson } from '@/models/model';
+import { LessonStatus, months, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type ScheduledLesson, type School, type WeeklyLesson } from '@/models/model';
 import { dateFormat, nameof, nextDay, toDate } from '@/models/utils';
 import { addDoc, getDocs, orderBy, query, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
@@ -99,7 +99,7 @@ const loading = computed(() => props.school == undefined || loadingLessons.value
 watch(props.school, () => loadLessonGroup())
 
 async function routeToDailyLesson(lessonGroup: LessonProjection) {
-    let dailyLessonId;
+    let dailyLessonId: string;
 
     if (lessonGroup.lessonId == undefined) {
         // create new daily lesson
@@ -107,7 +107,7 @@ async function routeToDailyLesson(lessonGroup: LessonProjection) {
             date: lessonGroup.date.toIyyyyMMdd(),
             schoolId: props.school.id,
             lessons: lessonGroup.lessons.map(l => ({
-                status: 'NONE',
+                status: LessonStatus.NONE,
                 studentId: l.studentId,
                 time: l.time,
                 createdAt: Timestamp.now(),
@@ -116,12 +116,12 @@ async function routeToDailyLesson(lessonGroup: LessonProjection) {
         }
         // store it
         const docRef = await addDoc(dailyLessonsRef, dailyLesson);
-        console.log("Document (week lessons) written with ID: ", docRef.id);
+        console.log("Document (daily lessons) written with ID: ", docRef.id);
         dailyLessonId = docRef.id;
     } else {
         dailyLessonId = lessonGroup.lessonId;
     }
-    router.push(`/lesson/${lessonGroup.lessonId}`);
+    router.push(`/lesson/${dailyLessonId}`);
 }
 
 async function loadLessonGroup() {
@@ -135,7 +135,7 @@ async function loadLessonGroup() {
 
     // 2. Filter the lessons within each DailyLesson to find those with 'ABSENT' status
     for (const dailyLesson of dailyLessons.value) {
-        if (dailyLesson.lessons.findIndex(lesson => lesson.status === 'ABSENT') != -1) {
+        if (dailyLesson.lessons.findIndex(lesson => lesson.status === LessonStatus.ABSENT) != -1) {
             lessonProjections.push({ lessonId: dailyLesson.id, date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date), absent: true, next: false, lessons: dailyLesson.lessons });
         }
     }

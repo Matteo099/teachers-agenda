@@ -98,6 +98,8 @@ export interface Student {
     level: string;
     notes: string[];
 
+    removed?: boolean;
+
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
     updatedAt: Timestamp;
 }
@@ -167,9 +169,19 @@ export interface DailyLesson {
     lessons: Lesson[];
 }
 
+export const lessonStatusName = ["", "presente", "assente", "cancellata", "recuperata"]
+export const lessonStatusColor = ["gray", "green", "red", "orange", "blue"]
+export enum LessonStatus {
+    NONE,
+    PRESENT,
+    ABSENT,
+    CANCELLED,
+    RESCHEDULED
+}
+
 export interface Lesson extends ScheduledLesson {
     // schoolId: string; // relation with the school
-    status: 'NONE' | 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'RESCHEDULED';
+    status: LessonStatus;
     trial?: boolean;
     recoveryDate?: IyyyyMMdd;
     originalScheduledLessonId?: string;  // Link to the original scheduled lesson if rescheduled

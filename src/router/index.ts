@@ -24,7 +24,7 @@ const router = createRouter({
       meta: { transition: 'v-slide-x-transition' }
     },
     {
-      path: '/lesson/:date',
+      path: '/lesson/:id',
       name: 'lessons',
       component: LessonsView
     },
