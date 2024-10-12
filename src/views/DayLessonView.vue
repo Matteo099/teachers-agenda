@@ -27,41 +27,117 @@
                 @click="toggleAll"></v-checkbox>
         </v-row>
 
+        <v-row>
+            <v-col cols=4>
+                Prova...
+            </v-col>
+            <v-col align-start cols=8>
+                <!-- <v-timeline side="end" truncate-line="both">
 
-        <v-timeline side="end" truncate-line="both">
+                    <v-timeline-item class="event-item" :dot-color="getColor(e)" size="small" :key="e.id"
+                        v-for="(e, index) in studentLessons">
+                        <div class="d-flex">
+                            <v-checkbox v-model="selectedLessons" :value="index" multiple></v-checkbox>
 
-            <v-timeline-item class="event-item" :dot-color="getColor(e)" size="small"
-                v-for="(e, index) in studentLessons">
-                <div class="d-flex">
-                    <v-checkbox v-model="selectedLessons" :value="index" multiple></v-checkbox>
+                            <v-expansion-panels :id="'time' + index">
+                                <v-expansion-panel :text="e.notes?.toString()">
+                                    <template v-slot:title>
+                                        <div class="d-flex justify-space-between w-100">
+                                            <strong class="ml-4">{{ e.name }} {{ e.surname }}</strong>
+                                            <v-icon v-if="e.notes?.toString().trim().length != 0"
+                                                color="primary">mdi-note</v-icon>
+                                            <span class="mr-4">{{ Time.fromITime(e.time).format() }}</span>
+                                        </div>
+                                    </template>
 
-                    <v-expansion-panels :id="'time' + index">
-                        <v-expansion-panel :text="e.notes?.toString()">
-                            <template v-slot:title>
-                                <div class="d-flex justify-space-between w-100">
-                                    <strong class="ml-4">{{ e.name }} {{ e.surname }} nome e cognome</strong>
-                                    <v-icon v-if="e.notes?.toString().trim().length != 0"
-                                        color="primary">mdi-note</v-icon>
-                                    <span class="mr-4">{{ Time.fromITime(e.time).format() }}</span>
+                                    <template v-slot:text>
+                                        <v-btn @click="present(e)">presente</v-btn>
+                                        <v-btn @click="absent(e)">assente</v-btn>
+                                        <v-btn @click="cancel(e)" v-if="e.status != LessonStatus.NONE">annulla</v-btn>
+                                        <v-btn @click="notes(e)">note</v-btn>
+                                        <v-btn v-if="e.status == LessonStatus.ABSENT"
+                                            @click="scheduleRecoveryLesson(e)">schedula
+                                            recupero</v-btn>
+                                        {{ e.notes }}
+                                    </template>
+
+                                </v-expansion-panel>
+                            </v-expansion-panels>
+                        </div>
+                    </v-timeline-item>
+                </v-timeline> -->
+
+                <v-timeline side="end" truncate-line="both">
+                    <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id" :dot-color="getColor(item)"
+                        size="small">
+                        <!-- <v-card elevation=3>
+                            <template v-slot:prepend>
+                                <v-checkbox v-model="selectedLessons" :value="index" multiple></v-checkbox>
+                            </template>
+                            <template v-slot:text>
+                                <v-row class="align-center justify-space-between">
+                                    <v-col cols="8">
+                                        <span class="w-100"><b>{{ Time.fromITime(item.time).format() }}</b> - <i>{{
+                                            item.name }} {{ item.surname }}</i></span>
+                                    </v-col>
+                                    <v-col cols="2">
+                                        <v-icon color="primary">mdi-note</v-icon>
+                                    </v-col>
+                                    <v-col cols="2">
+                                        <v-btn variant="text" icon="mdi-pencil"></v-btn>
+                                    </v-col>
+                                </v-row>
+                                <div class="d-flex justify-space-between align-center">
                                 </div>
                             </template>
-
-                            <template v-slot:text>
-                                <v-btn @click="present(e)">presente</v-btn>
-                                <v-btn @click="absent(e)">assente</v-btn>
-                                <v-btn @click="cancel(e)" v-if="e.status != LessonStatus.NONE">annulla</v-btn>
-                                <v-btn @click="notes(e)">note</v-btn>
-                                <v-btn v-if="e.status == LessonStatus.ABSENT"
-                                    @click="scheduleRecoveryLesson(e)">schedula
-                                    recupero</v-btn>
-                                {{ e.notes }}
+                        </v-card> -->
+                        <v-alert :value="true">
+                            <template v-slot:prepend>
+                                <v-checkbox v-model="selectedLessons" :value="index" multiple></v-checkbox>
                             </template>
+                            <template v-slot:text>
+                                <v-row class="align-center justify-space-between">
+                                    <v-col cols="8">
+                                        <span class="w-100"><b>{{ Time.fromITime(item.time).format() }}</b> - <i>{{
+                                            item.name }} {{ item.surname }}</i></span>
+                                    </v-col>
+                                    <v-col cols="2">
+                                        <v-icon color="primary">mdi-note</v-icon>
+                                    </v-col>
+                                    <v-col cols="2">
+                                        <v-btn variant="text" icon="mdi-pencil"></v-btn>
+                                    </v-col>
+                                </v-row>
+                                <div class="d-flex justify-space-between align-center">
+                                </div>
+                            </template>
+                            <!-- <v-row>
+                                <v-col>
+                                    <v-btn @click="present(item)">presente</v-btn>
+                                </v-col>
+                                <v-col>
+                                    <v-btn @click="absent(item)">assente</v-btn>
+                                </v-col>
+                                <v-col>
+                                    <v-btn @click="cancel(item)" v-if="item.status != LessonStatus.NONE">annulla</v-btn>
+                                </v-col>
+                                <v-col>
+                                    <v-btn @click="notes(item)">note</v-btn>
+                                </v-col>
+                                <v-col>
+                                    <v-btn v-if="item.status == LessonStatus.ABSENT"
+                                        @click="scheduleRecoveryLesson(item)">schedula
+                                        recupero</v-btn>
+                                </v-col>
+                                {{ item.notes }} 
+                            </v-row> -->
+                        </v-alert>
+                    </v-timeline-item>
+                </v-timeline>
+            </v-col>
+        </v-row>
 
-                        </v-expansion-panel>
-                    </v-expansion-panels>
-                </div>
-            </v-timeline-item>
-        </v-timeline>
+
     </v-container>
 </template>
 
@@ -69,7 +145,7 @@
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type Lesson, type Student } from '@/models/model';
 import { nameof } from '@/models/utils';
-import { doc, getDocs, query, where, type Unsubscribe } from 'firebase/firestore';
+import { doc, documentId, getDocs, query, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDocument } from 'vuefire';
@@ -86,6 +162,19 @@ const selectAllLessons: Ref<boolean> = ref(false)
 const studentLessons: Ref<StudentLesson[]> = ref([])
 const allStudents: Ref<any[]> = ref([]);
 const loadingStudents = ref(false);
+
+const items = [
+    {
+        id: 1,
+        color: 'info',
+        icon: 'mdi-information',
+    },
+    {
+        id: 2,
+        color: 'error',
+        icon: 'mdi-alert-circle',
+    },
+];
 
 const dailyLessonSource = computed(() =>
     doc(dailyLessonsRef, route.params.id as string)
@@ -159,7 +248,8 @@ async function updateStudentLesson() {
     const q = query(
         studentsRef,
         where(nameof<Student>('schoolId'), '==', dailyLesson.value.schoolId),
-        where(nameof<Student>('id'), 'in', newStudentsId));
+        where(documentId(), 'in', newStudentsId));
+
     const snapshot = await getDocs(q);
     const data = snapshot.docs.map(doc => doc.data())
 

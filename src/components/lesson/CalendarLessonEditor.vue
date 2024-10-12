@@ -7,8 +7,8 @@
                     <v-btn icon="mdi-plus" v-bind="activatorProps" variant="text"></v-btn>
                 </template>
 
-                <WeekLessonEvent :school="school" @close="dialog = false" @save="onSaveWeekLessonEvent($event)">
-                </WeekLessonEvent>
+                <WeekLessonEditor :school="school" @close="dialog = false" @save="$event ? dialog = false : null">
+                </WeekLessonEditor>
             </v-dialog>
         </template>
 
@@ -34,8 +34,9 @@
                                         </template>
 
                                         <template v-slot:default="{ isActive }">
-                                            <WeekLessonEvent :school="school" :initialWeekLesson="pl" edit
-                                                @close="isActive.value = false"></WeekLessonEvent>
+                                            <WeekLessonEditor :school="school" :initialWeekLesson="pl" edit
+                                                @close="isActive.value = false"
+                                                @save="$event ? isActive.value = false : null"></WeekLessonEditor>
                                         </template>
                                     </v-dialog>
                                 </v-col>
@@ -87,18 +88,16 @@
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, Time, yyyyMMdd, type School, type Student, type WeeklyLesson } from '@/models/model';
-import { dateFormat, nameof, toDate } from '@/models/utils';
+import { nameof } from '@/models/utils';
 import { deleteDoc, doc, onSnapshot, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
-import { useDate } from 'vuetify';
-import WeekLessonEvent from './WeekLessonEditor.vue';
 import DeleteDialog from '../DeleteDialog.vue';
+import WeekLessonEditor from './WeekLessonEditor.vue';
 
 interface CalendarLessonEditorProps {
     school: School;
 }
 
-const date = useDate()
 const props = defineProps<CalendarLessonEditorProps>()
 const emit = defineEmits(['close'])
 const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
@@ -110,12 +109,6 @@ const loadingCalendar = ref(false);
 const loadingStudents = ref(false);
 const allStudents: Ref<Student[]> = ref([]);
 const dialog = ref(false);
-
-function onSaveWeekLessonEvent(weekLesson?: WeeklyLesson) {
-    if (weekLesson)
-        dialog.value = false;
-}
-
 
 async function deleteWeeklyLesson(weekLesson?: WeeklyLesson): Promise<boolean> {
     try {

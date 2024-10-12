@@ -121,21 +121,19 @@
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, Time, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
-import { dateFormat, fromDate, nameof, toDate } from '@/models/utils';
+import { dateFormat, nameof } from '@/models/utils';
 import { addDoc, doc, onSnapshot, orderBy, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import draggableComponent from 'vuedraggable';
-import { useDate } from 'vuetify';
 
-interface WeekLessonEventProps {
+interface WeekLessonEditorProps {
     school: School;
     edit?: boolean;
     initialWeekLesson?: WeeklyLesson
 }
 
-const date = useDate();
 const emit = defineEmits(['close', 'save'])
-const props = defineProps<WeekLessonEventProps>()
+const props = defineProps<WeekLessonEditorProps>()
 const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const subscriptions: Unsubscribe[] = [];
@@ -293,19 +291,10 @@ async function save() {
         updatedAt: Timestamp.now(),
     };
 
-    dayOfWeek.value = undefined;
-    from.value = undefined;
-    to.value = undefined;
-    excludeDates.value = [];
-    scheduledLessons.value = [];
-    startingTime.value = undefined;
-    selectedStudents.value = [];
-    allStudents.value = [];
-
     try {
         if (props.edit && props.initialWeekLesson?.id != undefined) {
-            const docRef = await setDoc(doc(weekLessonsRef, props.initialWeekLesson.id), weekLesson);
-            console.log("Document (week lessons) update with ID: ", weekLesson.id, docRef);
+            await setDoc(doc(weekLessonsRef, props.initialWeekLesson.id), weekLesson);
+            console.log("Document (week lessons) update with ID: ", props.initialWeekLesson.id);
         } else {
             const docRef = await addDoc(weekLessonsRef, weekLesson);
             console.log("Document (week lessons) written with ID: ", docRef.id);
