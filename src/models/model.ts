@@ -45,6 +45,7 @@ export class Time {
  */
 export type IyyyyMMdd = string;
 export class yyyyMMdd {
+
     constructor(private day: number, private month: number, private year: number) { }
 
     static fromIyyyyMMdd(date: IyyyyMMdd): yyyyMMdd {
@@ -73,6 +74,10 @@ export class yyyyMMdd {
 
     format(): string {
         return dateFormat(this.toDate());
+    }
+
+    equals(date: yyyyMMdd): boolean {
+        return this.day == date.day && this.month == date.month && this.year == date.year;
     }
 
     getYear() {

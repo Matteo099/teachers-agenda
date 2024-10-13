@@ -27,50 +27,31 @@
                 @click="toggleAll"></v-checkbox>
         </v-row>
 
-        <v-row>
-            <v-col cols=4>
-                Prova...
-            </v-col>
-            <v-col align-start cols=8>
-                <!-- <v-timeline side="end" truncate-line="both">
+        <v-container fluid>
+            <v-timeline side="end" truncate-line="both">
+                <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id" :dot-color="getColor(item)"
+                    size="small">
+                    <v-card elevation=3>
+                        <v-card-title>
+                            <v-checkbox v-model="selectedLessons" :value="index" multiple>
+                                <template v-slot:label>
+                                    <span><b>{{ Time.fromITime(item.time).format() }}</b> - <i>{{
+                                        item.name }} {{ item.surname }}</i></span>
+                                </template>
+                            </v-checkbox>
+                        </v-card-title>
+                        <v-card-text>
+                            <v-btn class="ma-1" @click="present(item)">presente</v-btn>
+                            <v-btn class="ma-1" @click="absent(item)">assente</v-btn>
+                            <v-btn class="ma-1" @click="cancel(item)"
+                                v-if="item.status != LessonStatus.NONE">annulla</v-btn>
+                            <v-btn class="ma-1" @click="notes(item)">note</v-btn>
+                            <v-btn class="ma-1" v-if="item.status == LessonStatus.ABSENT"
+                                @click="scheduleRecoveryLesson(item)">schedula
+                                recupero</v-btn> </v-card-text>
 
-                    <v-timeline-item class="event-item" :dot-color="getColor(e)" size="small" :key="e.id"
-                        v-for="(e, index) in studentLessons">
-                        <div class="d-flex">
-                            <v-checkbox v-model="selectedLessons" :value="index" multiple></v-checkbox>
-
-                            <v-expansion-panels :id="'time' + index">
-                                <v-expansion-panel :text="e.notes?.toString()">
-                                    <template v-slot:title>
-                                        <div class="d-flex justify-space-between w-100">
-                                            <strong class="ml-4">{{ e.name }} {{ e.surname }}</strong>
-                                            <v-icon v-if="e.notes?.toString().trim().length != 0"
-                                                color="primary">mdi-note</v-icon>
-                                            <span class="mr-4">{{ Time.fromITime(e.time).format() }}</span>
-                                        </div>
-                                    </template>
-
-                                    <template v-slot:text>
-                                        <v-btn @click="present(e)">presente</v-btn>
-                                        <v-btn @click="absent(e)">assente</v-btn>
-                                        <v-btn @click="cancel(e)" v-if="e.status != LessonStatus.NONE">annulla</v-btn>
-                                        <v-btn @click="notes(e)">note</v-btn>
-                                        <v-btn v-if="e.status == LessonStatus.ABSENT"
-                                            @click="scheduleRecoveryLesson(e)">schedula
-                                            recupero</v-btn>
-                                        {{ e.notes }}
-                                    </template>
-
-                                </v-expansion-panel>
-                            </v-expansion-panels>
-                        </div>
-                    </v-timeline-item>
-                </v-timeline> -->
-
-                <v-timeline side="end" truncate-line="both">
-                    <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id" :dot-color="getColor(item)"
-                        size="small">
-                        <!-- <v-card elevation=3>
+                    </v-card>
+                    <!-- <v-alert :value="true">
                             <template v-slot:prepend>
                                 <v-checkbox v-model="selectedLessons" :value="index" multiple></v-checkbox>
                             </template>
@@ -90,54 +71,14 @@
                                 <div class="d-flex justify-space-between align-center">
                                 </div>
                             </template>
-                        </v-card> -->
-                        <v-alert :value="true">
-                            <template v-slot:prepend>
-                                <v-checkbox v-model="selectedLessons" :value="index" multiple></v-checkbox>
-                            </template>
-                            <template v-slot:text>
-                                <v-row class="align-center justify-space-between">
-                                    <v-col cols="8">
-                                        <span class="w-100"><b>{{ Time.fromITime(item.time).format() }}</b> - <i>{{
-                                            item.name }} {{ item.surname }}</i></span>
-                                    </v-col>
-                                    <v-col cols="2">
-                                        <v-icon color="primary">mdi-note</v-icon>
-                                    </v-col>
-                                    <v-col cols="2">
-                                        <v-btn variant="text" icon="mdi-pencil"></v-btn>
-                                    </v-col>
-                                </v-row>
-                                <div class="d-flex justify-space-between align-center">
-                                </div>
-                            </template>
-                            <!-- <v-row>
-                                <v-col>
-                                    <v-btn @click="present(item)">presente</v-btn>
-                                </v-col>
-                                <v-col>
-                                    <v-btn @click="absent(item)">assente</v-btn>
-                                </v-col>
-                                <v-col>
-                                    <v-btn @click="cancel(item)" v-if="item.status != LessonStatus.NONE">annulla</v-btn>
-                                </v-col>
-                                <v-col>
-                                    <v-btn @click="notes(item)">note</v-btn>
-                                </v-col>
-                                <v-col>
-                                    <v-btn v-if="item.status == LessonStatus.ABSENT"
-                                        @click="scheduleRecoveryLesson(item)">schedula
-                                        recupero</v-btn>
-                                </v-col>
-                                {{ item.notes }} 
-                            </v-row> -->
-                        </v-alert>
-                    </v-timeline-item>
-                </v-timeline>
-            </v-col>
-        </v-row>
+                        </v-alert> -->
+                </v-timeline-item>
+            </v-timeline>
+        </v-container>
 
-
+        <v-overlay :model-value="saving" class="align-center justify-center">
+            <v-progress-circular color="primary" size="64" indeterminate></v-progress-circular>
+        </v-overlay>
     </v-container>
 </template>
 
@@ -145,7 +86,7 @@
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type Lesson, type Student } from '@/models/model';
 import { nameof } from '@/models/utils';
-import { doc, documentId, getDocs, query, where, type Unsubscribe } from 'firebase/firestore';
+import { doc, documentId, getDocs, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDocument } from 'vuefire';
@@ -162,19 +103,7 @@ const selectAllLessons: Ref<boolean> = ref(false)
 const studentLessons: Ref<StudentLesson[]> = ref([])
 const allStudents: Ref<any[]> = ref([]);
 const loadingStudents = ref(false);
-
-const items = [
-    {
-        id: 1,
-        color: 'info',
-        icon: 'mdi-information',
-    },
-    {
-        id: 2,
-        color: 'error',
-        icon: 'mdi-alert-circle',
-    },
-];
+const saving = ref(false);
 
 const dailyLessonSource = computed(() =>
     doc(dailyLessonsRef, route.params.id as string)
@@ -194,28 +123,37 @@ function getColor(event: StudentLesson): string {
     return lessonStatusColor[event.status];
 }
 
-function present(event: any) {
+async function present(event: StudentLesson) {
+    doBackup();
     if (event) event.status = LessonStatus.PRESENT;
-
     selectedLessons.value.forEach(s => {
         studentLessons.value[s].status = LessonStatus.PRESENT
     });
     selectedLessons.value = []
+    save();
 }
-function absent(event: any) {
+function absent(event: StudentLesson) {
+    doBackup();
     selectedLessons.value.forEach(s => {
         studentLessons.value[s].status = LessonStatus.ABSENT
     });
     selectedLessons.value = []
     if (event) event.status = LessonStatus.ABSENT;
+    save();
 }
-function cancel(event: any) {
-    if (event) event.status = LessonStatus.NONE
+function cancel(event: StudentLesson) {
+    if (event) {
+        doBackup();
+        event.status = LessonStatus.NONE
+        save();
+    }
 }
-function scheduleRecoveryLesson(event: any) {
+function scheduleRecoveryLesson(event: StudentLesson) {
+    doBackup();
     event.status = LessonStatus.RESCHEDULED
+    save();
 }
-function notes(event: any) { }
+function notes(event: StudentLesson) { }
 
 function toggleAll() {
     if (!selectAllLessons.value) {
@@ -227,6 +165,16 @@ function toggleAll() {
 
 function addStudent(student: any) {
     studentLessons.value.push(student);
+}
+
+let backup: string;
+function doBackup() {
+    backup = JSON.stringify(studentLessons.value);
+}
+
+function doRestore() {
+    if (backup != undefined)
+        studentLessons.value = JSON.parse(backup);
 }
 
 async function loadSchoolStudents() {
@@ -244,7 +192,6 @@ async function updateStudentLesson() {
 
     loadingStudents.value = true;
 
-    // fetch students TODO: d id always null on DB => query by path!!
     const q = query(
         studentsRef,
         where(nameof<Student>('schoolId'), '==', dailyLesson.value.schoolId),
@@ -270,6 +217,51 @@ function arraysHaveSameElements(arr1: string[], arr2: string[]): boolean {
     const sortedArr2 = [...arr2].sort();
 
     return sortedArr1.every((value, index) => value === sortedArr2[index]);
+}
+
+async function save() {
+    saving.value = true;
+    const dl = extractDailyLesson();
+    if (dl === undefined) {
+        saving.value = false;
+        return;
+    }
+    try {
+        const docRef = await setDoc(doc(dailyLessonsRef, dl.id), dl);
+        console.log("Document (dailyLesson) update with ID: ", dl.id, docRef);
+        saving.value = false;
+    } catch (e) {
+        console.error("Error adding document (dailyLesson): ", e);
+        saving.value = false;
+        doRestore();
+    }
+}
+
+function extractDailyLesson(): DailyLesson | undefined {
+    const dl = dailyLesson.value;
+    if (dl === undefined) return;
+    const lessons: Lesson[] = [];
+    dl.lessons.forEach(l => {
+        const less = studentLessons.value.find(sl => sl.id == l.studentId);
+        if (less === undefined) return;
+        const newLesson: Lesson = {
+            createdAt: l.createdAt,
+            studentId: l.studentId,
+            time: l.time,
+            status: less.status,
+            updatedAt: Timestamp.now()
+        }
+        if (l.originalScheduledLessonId) newLesson.originalScheduledLessonId = l.originalScheduledLessonId;
+        if (l.recoveryDate) newLesson.recoveryDate = l.recoveryDate;
+        if (l.trial) newLesson.trial = l.trial;
+        lessons.push(newLesson);
+    })
+    return {
+        date: dl.date,
+        id: dl.id,
+        lessons,
+        schoolId: dl.schoolId
+    } as DailyLesson;
 }
 
 // function scrollToCurrentLesson() {

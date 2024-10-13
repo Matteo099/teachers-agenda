@@ -101,6 +101,8 @@ watch(props.school, () => loadLessonGroup())
 async function routeToDailyLesson(lessonGroup: LessonProjection) {
     let dailyLessonId: string;
 
+    console.log(lessonGroup);
+
     if (lessonGroup.lessonId == undefined) {
         // create new daily lesson
         const dailyLesson: Partial<DailyLesson> = {
@@ -153,7 +155,9 @@ async function loadLessonGroup() {
     while (programmedLessons.value.length > 0 && lessonProjections.length < n) {
         programmedLessons.value.forEach((weekLesson) => {
             const d = nextDay(startingDay, weekLesson.dayOfWeek)
-            lessonProjections.push({ date: yyyyMMdd.fromDate(d), next: false, lessons: weekLesson.schedule })
+            const date = yyyyMMdd.fromDate(d);
+            if (lessonProjections.find(l => l.date.equals(date)) == undefined)
+                lessonProjections.push({ date, next: false, lessons: weekLesson.schedule })
         });
         startingDay = date.addDays(startingDay, 7) as Date;
     }
@@ -189,14 +193,15 @@ async function loadLessonGroup() {
 async function loadDailyLessons() {
     loadingLessons.value = true;
 
-    const start = date.addMonths(new Date(), -12);
     const today = new Date(new Date().toDateString());
+    const startingdate = date.addMonths(today, -12) as Date;
+    const start = yyyyMMdd.fromDate(startingdate).toIyyyyMMdd();
     // 1. Query to get DailyLesson documents by schoolId from a year ago untill now and order them by date (descending)
     const dailyLessonsQuery = query(
         dailyLessonsRef,
         where(nameof<DailyLesson>('schoolId'), '==', props.school.id),
         where(nameof<DailyLesson>('date'), '>=', start),
-        where(nameof<DailyLesson>('date'), '<=', today),
+        // where(nameof<DailyLesson>('date'), '<=', today),
         orderBy(nameof<DailyLesson>('date'), 'desc')  // Sort by the lesson date in descending order
     );
 
