@@ -3,22 +3,30 @@
         <v-card-text>
             <v-row dense>
                 <v-col cols="12" md="6">
-                    <v-text-field v-model="name" label="Nome" required></v-text-field>
+                    <v-text-field v-model="name" v-bind="nameProps" label="Nome"></v-text-field>
                 </v-col>
                 <v-col cols="12" md="6">
-                    <v-text-field v-model="surname" label="Cognome" required></v-text-field>
-                </v-col>
-
-                <v-col cols="12" md="6">
-                    <v-text-field v-model="contact" label="Contatto"></v-text-field>
+                    <v-text-field v-model="surname" v-bind="surnameProps" label="Cognome"></v-text-field>
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-select v-model="level" :items="_levels" label="Livello" required></v-select>
+                    <v-text-field v-model="contact" v-bind="contactProps" label="Contatto"></v-text-field>
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-select v-model="lessonDay" :items="days" label="Giorno della Lezione"></v-select>
+                    <v-select v-model="level" v-bind="levelProps" :items="_levels" label="Livello"></v-select>
+                </v-col>
+
+                <v-col cols="12" md="6">
+                    <v-select v-model="lessonDay" v-bind="lessonDayProps" :items="days"
+                        label="Giorno della Lezione"></v-select>
+                </v-col>
+
+                <v-col cols="12" md="6">
+                    <v-number-input v-model="minutesLessonDuration" v-bind="minutesLessonDurationProps" :reverse="false"
+                        controlVariant="default" label="Durata della Lezione" suffix="min" :hideInput="false"
+                        :inset="false" :min="1">
+                    </v-number-input>
                 </v-col>
 
                 <!-- <v-col cols="12" md="6">
@@ -36,7 +44,7 @@
             <v-btn text="Chiudi" variant="plain" @click="emit('close')"></v-btn>
 
             <v-btn color="primary" :loading="saving" :disabled="saving" :text="edit ? 'Salva Modifiche' : 'Crea'"
-                variant="tonal" @click="save"></v-btn>
+                variant="tonal" @click="onSave"></v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -45,7 +53,10 @@
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, type School, type Student } from '@/models/model';
 import { addDoc, doc, setDoc, Timestamp } from 'firebase/firestore';
+import { useForm, type GenericObject } from 'vee-validate';
 import { onMounted, ref, watch, type Ref } from 'vue';
+import { toast } from 'vue3-toastify';
+import * as yup from 'yup'
 
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const props = defineProps<{ school: School, initialStudent?: Student, edit?: boolean }>()
@@ -54,17 +65,56 @@ const emit = defineEmits(['close', 'save'])
 const _school: Ref<School | undefined> = ref();
 const _levels: Ref<string[]> = ref([]);
 
-const name = ref("");
-const surname = ref("");
-const contact = ref("");
-const lessonDay: Ref<string | undefined> = ref();
-const level: Ref<string | undefined> = ref();
-const notes: Ref<string[]> = ref([]);
+// const name = ref("");
+// const surname = ref("");
+// const contact = ref("");
+// const lessonDay: Ref<string | undefined> = ref();
+// const level: Ref<string | undefined> = ref();
+// const minutesLessonDuration: Ref<number | undefined> = ref();
+// const notes: Ref<string[]> = ref([]);
 
 const saving = ref(false);
 
 watch(() => props.initialStudent, () => updateStudent());
 watch(() => props.school, () => updateSchool());
+
+const schema = yup.object({
+    name: yup.string().required('Il Nome è obbligatorio').length(1).label('Nome'),
+    surname: yup.string().required('Il Cognome è obbligatorio').label('Cognome'),
+    contact: yup.string().label('Contatto').nullable().optional(),
+    lessonDay: yup.string().label('Giono di Lezione').nullable().optional(),
+    level: yup.string().required('Il Livello è obbligatorio').label('Livello'),
+    minutesLessonDuration: yup.string().required('La Durata della Lezione è obbligatoria').label('Durata della Lezione'),
+    notes: yup.array().of(yup.string()).label('Note'),
+})
+
+const { defineField, handleSubmit } = useForm({
+    validationSchema: schema
+})
+
+const vuetifyConfig = (state: any) => ({
+    props: {
+        'error-messages': state.errors
+    }
+})
+
+const [name, nameProps] = defineField('name', vuetifyConfig);
+const [surname, surnameProps] = defineField('surname', vuetifyConfig);
+const [contact, contactProps] = defineField('contact', vuetifyConfig);
+const [lessonDay, lessonDayProps] = defineField('lessonDay', vuetifyConfig);
+const [level, levelProps] = defineField('level', vuetifyConfig);
+const [minutesLessonDuration, minutesLessonDurationProps] = defineField('minutesLessonDuration', vuetifyConfig);
+const [notes, notesProps] = defineField('notes', vuetifyConfig);
+
+const onSave = handleSubmit(
+    async (values: GenericObject) => {
+        save(values);
+    },
+    (err) => {
+        toast.warn('Ci sono alcuni errori! Inserisci correttamente i dati')
+        console.log(err)
+    }
+)
 
 function updateStudent() {
     if (props.initialStudent) {
@@ -75,6 +125,7 @@ function updateStudent() {
         lessonDay.value = days[studentClone.lessonDay];
         level.value = studentClone.level;
         notes.value = studentClone.notes ?? [];
+        minutesLessonDuration.value = studentClone.minutesLessonDuration;
     }
 }
 
@@ -83,39 +134,29 @@ function updateSchool() {
     _levels.value = _school.value.levelRanges.flatMap(l => l.levels);
 }
 
-async function save() {
+async function save(values: GenericObject) {
     saving.value = true;
 
-    const student: Partial<Student> = {
-        schoolId: _school.value!.id,
-        name: name.value,
-        surname: surname.value,
-        contact: contact.value,
-        level: level.value,
-        notes: notes.value,
-        createdAt: props.edit ? props.initialStudent?.createdAt : Timestamp.now(),
-        updatedAt: Timestamp.now(),
-    };
+    const student: Partial<Student> = { ...values }
+    student.schoolId = _school.value!.id;
+    student.createdAt = props.edit ? props.initialStudent?.createdAt : Timestamp.now();
+    student.updatedAt = Timestamp.now();
     if (lessonDay.value) student.lessonDay = days.indexOf(lessonDay.value);
-
-    name.value = "";
-    surname.value = "";
-    contact.value = "";
-    level.value = "";
-    lessonDay.value = undefined;
-    notes.value = [];
 
     try {
         if (props.edit && props.initialStudent?.id != undefined) {
             const docRef = await setDoc(doc(studentsRef, props.initialStudent.id), student);
             console.log("Document (schools) update with ID: ", student.id, docRef);
+            toast.success("Studente Aggiornato")
         } else {
             const docRef = await addDoc(studentsRef, student);
             console.log("Document (schools) written with ID: ", docRef.id);
+            toast.success("Studente Creato")
         }
         emit('save', student);
     } catch (e) {
         emit('save');
+        toast.error("Errore durante il salvataggio")
         console.error("Error adding document (schools): ", e);
     } finally {
         saving.value = false;

@@ -51,27 +51,6 @@
                                 recupero</v-btn> </v-card-text>
 
                     </v-card>
-                    <!-- <v-alert :value="true">
-                            <template v-slot:prepend>
-                                <v-checkbox v-model="selectedLessons" :value="index" multiple></v-checkbox>
-                            </template>
-                            <template v-slot:text>
-                                <v-row class="align-center justify-space-between">
-                                    <v-col cols="8">
-                                        <span class="w-100"><b>{{ Time.fromITime(item.time).format() }}</b> - <i>{{
-                                            item.name }} {{ item.surname }}</i></span>
-                                    </v-col>
-                                    <v-col cols="2">
-                                        <v-icon color="primary">mdi-note</v-icon>
-                                    </v-col>
-                                    <v-col cols="2">
-                                        <v-btn variant="text" icon="mdi-pencil"></v-btn>
-                                    </v-col>
-                                </v-row>
-                                <div class="d-flex justify-space-between align-center">
-                                </div>
-                            </template>
-                        </v-alert> -->
                 </v-timeline-item>
             </v-timeline>
         </v-container>
@@ -288,7 +267,7 @@ onMounted(async () => {
 
 </script>
 
-<style>
+<!-- <style scoped>
 div.v-timeline-item__body {
     width: 100%
 }
@@ -296,4 +275,4 @@ div.v-timeline-item__body {
 div.v-input__details {
     display: none;
 }
-</style>
+</style> -->

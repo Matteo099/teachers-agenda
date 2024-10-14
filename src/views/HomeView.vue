@@ -42,6 +42,7 @@ import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import type { School } from '@/models/model';
 import { onSnapshot, type Unsubscribe } from "firebase/firestore";
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
+import { toast } from 'vue3-toastify';
 
 const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 let unsubscribeSchool: Unsubscribe;
@@ -70,8 +71,9 @@ async function loadSchools() {
     loadingSchools.value = false;
     console.log("Current data: ", snapshot, data);
   }, (error) => {
+    toast.warning('Impossibile caricare le scuole...');
     loadingSchools.value = false;
-    console.error(error);
+    console.error("Impossibile caricare le scuole", error);
   });
 }
 

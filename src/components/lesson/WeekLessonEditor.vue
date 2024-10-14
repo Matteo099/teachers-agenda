@@ -124,6 +124,7 @@ import { days, Time, yyyyMMdd, type ScheduledLesson, type School, type Student, 
 import { dateFormat, nameof } from '@/models/utils';
 import { addDoc, doc, onSnapshot, orderBy, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import { toast } from 'vue3-toastify';
 import draggableComponent from 'vuedraggable';
 
 interface WeekLessonEditorProps {
@@ -178,8 +179,6 @@ function toggle() {
 }
 
 function updateScheduledLessons() {
-    console.log("updateScheduledLessons")
-
     // add new selected students at the end of the list
     for (const student of selectedStudents.value) {
         const index = scheduledLessons.value.findIndex(s => s.studentId == student.id)
@@ -199,8 +198,6 @@ function updateScheduledLessons() {
 }
 
 function updateScheduledLessonsTime() {
-    console.log("updateScheduledLessonsTime")
-
     let startingMinutes = 0;
     try {
         const time = startingTime.value;
@@ -224,8 +221,7 @@ function updateScheduledLessonsTime() {
         // sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
         const student = selectedStudents.value.find(s => s.id == sl.studentId);
         if (!student) return;
-        const levelTime = props.school.levelRanges.find(lr => lr.levels.includes(student.level))!;
-        startingMinutes += levelTime.minutes;
+        startingMinutes += student.minutesLessonDuration;
     });
 }
 
@@ -295,13 +291,16 @@ async function save() {
         if (props.edit && props.initialWeekLesson?.id != undefined) {
             await setDoc(doc(weekLessonsRef, props.initialWeekLesson.id), weekLesson);
             console.log("Document (week lessons) update with ID: ", props.initialWeekLesson.id);
+            toast.success("Lezione Settimanale Aggiornata")
         } else {
             const docRef = await addDoc(weekLessonsRef, weekLesson);
             console.log("Document (week lessons) written with ID: ", docRef.id);
+            toast.success("Lezione Settimanale Creata")
         }
         emit('save', weekLesson);
     } catch (e) {
         emit('save');
+        toast.error("Errore durante il salvataggio")
         console.error("Error adding document (schools): ", e);
     } finally {
         saving.value = false;

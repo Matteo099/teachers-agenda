@@ -23,16 +23,19 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { toast } from 'vue3-toastify';
 
 
 interface DeleteDialogProps {
     objName?: string,
+    useToast?: boolean,
     name: string,
     onDelete: () => Promise<boolean>
 }
 
 const props = withDefaults(defineProps<DeleteDialogProps>(), {
-    objName: "Oggetto"
+    objName: "Oggetto",
+    useToast: true
 });
 const emit = defineEmits(['delete']);
 const dialog = ref(false);
@@ -42,6 +45,10 @@ const removing = ref(false);
 async function remove() {
     removing.value = true;
     const res = await props.onDelete?.() ?? false;
+    if (props.useToast) {
+        if (res) toast.success(`${props.objName} eliminato/a`)
+        else toast.warning("Errore durante l'eliminazione")
+    }
     removing.value = false;
     dialog.value = res;
 }

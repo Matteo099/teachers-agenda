@@ -102,6 +102,7 @@ export interface Student {
     lessonDay: number;
     level: string;
     notes: string[];
+    minutesLessonDuration: number;
 
     removed?: boolean;
 
@@ -146,7 +147,6 @@ export interface ManagerOptions {
 export interface LevelRange {
     levels: string[];
     price: number;
-    minutes: number;
 }
 
 export interface WeeklyLesson {

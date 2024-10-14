@@ -154,10 +154,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useTheme } from 'vuetify'
 import { useSettingsStore } from './stores/settings'
 import { useDisplay } from 'vuetify'
+import { toast } from 'vue3-toastify';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);

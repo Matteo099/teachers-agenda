@@ -73,6 +73,7 @@ import { onMounted, ref, watch, type Ref } from 'vue';
 import LevelRangeEditor from './LevelRangeEditor.vue';
 import ManagerEditor from './ManagerEditor.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
+import { toast } from 'vue3-toastify';
 
 const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 const props = defineProps<{ initialSchool?: School, edit?: boolean }>()
@@ -144,13 +145,16 @@ async function save() {
         if (props.edit && props.initialSchool?.id != undefined) {
             const docRef = await setDoc(doc(schoolsRef, props.initialSchool.id), school);
             console.log("Document (schools) update with ID: ", school.id, docRef);
+            toast.success("Scuola Aggiornata")
         } else {
             const docRef = await addDoc(schoolsRef, school);
             console.log("Document (schools) written with ID: ", docRef.id);
+            toast.success("Scuola Creata")
         }
         emit('save', school);
     } catch (e) {
         emit('save');
+        toast.error("Errore durante il salvataggio")
         console.error("Error adding document (schools): ", e);
     } finally {
         saving.value = false;

@@ -8,12 +8,6 @@
                     </v-number-input>
                 </v-col>
                 <v-col class="mx-2">
-                    <v-number-input max-width="500" v-model="levelRangeMinutes" :reverse="false"
-                        controlVariant="default" label="Minuti di Lezione" suffix="min" :hideInput="false"
-                        :inset="false" :min="1">
-                    </v-number-input>
-                </v-col>
-                <v-col class="mx-2">
                     <v-btn @click="addLevelRange" icon="mdi-plus" color="success"></v-btn>
                     <v-btn @click="deleteLevelRange" icon="mdi-minus" color="error"></v-btn>
                 </v-col>
@@ -60,7 +54,6 @@ const props = defineProps<{ initialLevelRanges?: LevelRange[] }>()
 const emit = defineEmits(['close', 'save'])
 
 const levelRangePrice = ref(0);
-const levelRangeMinutes = ref(0);
 const levelName = ref("");
 const tab: Ref<LevelRange | undefined> = ref()
 const levelRanges: Ref<LevelRange[]> = ref([])
@@ -99,13 +92,10 @@ function deleteLevelRange() {
 
 function addLevelRange() {
     const price = +levelRangePrice.value;
-    const minutes = +levelRangeMinutes.value;
     if (price == undefined || price == null || isNaN(price) || price == 0) return;
-    if (minutes == undefined || minutes == null || isNaN(minutes) || minutes == 0) return;
     levelRangePrice.value = 0;
-    levelRangeMinutes.value = 0;
     if (levelRanges.value.findIndex(lr => lr.price == price) != -1) return;
-    const levelRange = tab.value = { price, levels: [], minutes };
+    const levelRange = tab.value = { price, levels: [] };
     levelRanges.value.push(levelRange);
     levelRanges.value.sort((a, b) => a.price - b.price)
 }
