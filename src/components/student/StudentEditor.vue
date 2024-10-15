@@ -79,12 +79,12 @@ watch(() => props.initialStudent, () => updateStudent());
 watch(() => props.school, () => updateSchool());
 
 const schema = yup.object({
-    name: yup.string().required('Il Nome è obbligatorio').length(1).label('Nome'),
-    surname: yup.string().required('Il Cognome è obbligatorio').label('Cognome'),
+    name: yup.string().required('Il Nome è obbligatorio').min(1).label('Nome'),
+    surname: yup.string().required('Il Cognome è obbligatorio').min(1).label('Cognome'),
     contact: yup.string().label('Contatto').nullable().optional(),
     lessonDay: yup.string().label('Giono di Lezione').nullable().optional(),
     level: yup.string().required('Il Livello è obbligatorio').label('Livello'),
-    minutesLessonDuration: yup.string().required('La Durata della Lezione è obbligatoria').label('Durata della Lezione'),
+    minutesLessonDuration: yup.number().required('La Durata della Lezione è obbligatoria').min(1).label('Durata della Lezione'),
     notes: yup.array().of(yup.string()).label('Note'),
 })
 

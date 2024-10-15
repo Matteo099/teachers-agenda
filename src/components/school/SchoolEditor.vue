@@ -3,29 +3,37 @@
         <v-card-text>
             <v-row dense>
                 <v-col cols="12" md="6">
-                    <v-text-field v-model="name" label="Nome" required></v-text-field>
+                    <v-text-field v-model="name" v-bind="nameProps" label="Nome" required></v-text-field>
                 </v-col>
                 <v-col cols="12" md="6">
-                    <v-text-field v-model="city" label="Città"></v-text-field>
-                </v-col>
-
-                <v-col cols="12" md="6">
-                    <v-text-field v-model="email" label="Email"></v-text-field>
+                    <v-text-field v-model="city" v-bind="cityProps" label="Città"></v-text-field>
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-text-field v-model="phoneNumber" label="Numero di Telefono"></v-text-field>
+                    <v-text-field v-model="email" v-bind="emailProps" label="Email"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" md="6">
+                    <v-text-field v-model="phoneNumber" v-bind="phoneNumberProps"
+                        label="Numero di Telefono"></v-text-field>
                 </v-col>
 
                 <v-col cols="12" md="12">
                     <v-row justify-center>
                         <v-col class="align-self-center">
-                            <v-checkbox v-model="managed" label="Gestione"></v-checkbox>
+                            <v-checkbox v-model="managed" v-bind="managedProps" label="Gestione"></v-checkbox>
                         </v-col>
                         <v-col class="align-self-center">
                             <v-dialog v-if="managed" v-model="dialogManager" fullscreen>
                                 <template v-slot:activator="{ props: activatorProps }">
-                                    <v-btn text="Gestione" v-bind="activatorProps"></v-btn>
+                                    <div class="v-input--center-affix v-input--error">
+                                        <v-btn text="Gestione" v-bind="activatorProps"></v-btn>
+                                        <div class="v-input__details">
+                                            <div class="v-messages__message v-messages" role="alert">
+                                                <span>{{ managerOptionsProps['error-messages']?.[0] }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </template>
 
                                 <ManagerEditor :initialManagerOptions="managerOptions" @close="dialogManager = false"
@@ -41,7 +49,14 @@
                 <v-col cols="12" md="6">
                     <v-dialog v-model="dialogLevels" fullscreen>
                         <template v-slot:activator="{ props: activatorProps }">
-                            <v-btn text="Gestisci Livelli" v-bind="activatorProps"></v-btn>
+                            <div class="v-input--center-affix v-input--error">
+                                <v-btn text="Gestisci Livelli" v-bind="activatorProps"></v-btn>
+                                <div class="v-input__details">
+                                    <div class="v-messages__message v-messages" role="alert">
+                                        <span>{{ levelRangesProps['error-messages']?.[0] }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </template>
 
                         <LevelRangeEditor :initialLevelRanges="levelRanges" @close="dialogLevels = false"
@@ -61,7 +76,7 @@
             <v-btn text="Chiudi" variant="plain" @click="emit('close')"></v-btn>
 
             <v-btn color="primary" :loading="saving" :disabled="saving" :text="edit ? 'Salva Modifiche' : 'Crea'"
-                variant="tonal" @click="save"></v-btn>
+                variant="tonal" @click="onSave"></v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -74,22 +89,77 @@ import LevelRangeEditor from './LevelRangeEditor.vue';
 import ManagerEditor from './ManagerEditor.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { toast } from 'vue3-toastify';
+import * as yup from 'yup'
+import { useForm, type GenericObject } from 'vee-validate';
 
 const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 const props = defineProps<{ initialSchool?: School, edit?: boolean }>()
 const emit = defineEmits(['close', 'save'])
 
-const name = ref("");
-const city = ref("");
-const email = ref("");
-const phoneNumber = ref("");
-const managed = ref(false);
-const managerOptions: Ref<ManagerOptions | undefined> = ref();
-const levelRanges: Ref<LevelRange[]> = ref([]);
+// const name = ref("");
+// const city = ref("");
+// const email = ref("");
+// const phoneNumber = ref("");
+// const managed = ref(false);
+// const managerOptions: Ref<ManagerOptions | undefined> = ref();
+// const levelRanges: Ref<LevelRange[]> = ref([]);
 
 const dialogLevels = ref(false)
 const dialogManager = ref(false)
 const saving = ref(false);
+
+const schema = yup.object({
+    name: yup.string().required('Il Nome è obbligatorio').min(1).label('Nome'),
+    city: yup.string().label('Città').nullable().optional(),
+    email: yup.string().label('Email').nullable().optional(),
+    phoneNumber: yup.string().label('Numero di Telefono').nullable().optional(),
+    managed: yup.bool().label('Gestione'),
+    managerOptions: yup.object().test({
+        test: (v: any | ManagerOptions) => {
+            if (managed.value)
+                return v !== undefined;
+            return true;
+        },
+        message: 'Configurare la Gestione della Scuola correttamente',
+        exclusive: false,
+        name: 'managedProp'
+    }).label('Opzioni Gestione'),
+    levelRanges: yup.array().of(yup.object()).test({
+        test: (v: any | LevelRange[]) => !!v && v.length != 0,
+        message: 'I livelli sono obbligatori; configurare correttamente i Livelli',
+        exclusive: false,
+        name: 'level'
+    }).label('Livelli'),
+})
+
+const { defineField, handleSubmit } = useForm({
+    validationSchema: schema
+})
+
+const vuetifyConfig = (state: any) => ({
+    props: {
+        'error-messages': state.errors
+    }
+})
+
+const [name, nameProps] = defineField('name', vuetifyConfig);
+const [city, cityProps] = defineField('city', vuetifyConfig);
+const [email, emailProps] = defineField('email', vuetifyConfig);
+const [phoneNumber, phoneNumberProps] = defineField('phoneNumber', vuetifyConfig);
+const [managed, managedProps] = defineField('managed', vuetifyConfig);
+const [managerOptions, managerOptionsProps] = defineField('managerOptions', vuetifyConfig);
+const [levelRanges, levelRangesProps] = defineField('levelRanges', vuetifyConfig);
+
+const onSave = handleSubmit(
+    async (values: GenericObject) => {
+        save(values);
+    },
+    (err) => {
+        toast.warn('Ci sono alcuni errori! Inserisci correttamente i dati')
+        console.log(err)
+    }
+)
+
 
 watch(() => props.initialSchool, () => updateSchool())
 
@@ -118,28 +188,33 @@ function saveLevelRanges(lr: LevelRange[]) {
     dialogLevels.value = false;
 }
 
-async function save() {
+async function save(values: GenericObject) {
     saving.value = true;
 
-    const school: Partial<School> = {
-        name: name.value,
-        managed: managed.value,
-        levelRanges: levelRanges.value,
-        city: city.value,
-        email: email.value,
-        phoneNumber: phoneNumber.value,
-        createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),
-        updatedAt: Timestamp.now(),
-    };
+    const school: Partial<School> = { ...values };
+
+    // const school: Partial<School> = {
+    //     name: name.value,
+    //     managed: managed.value,
+    //     levelRanges: levelRanges.value,
+    //     city: city.value,
+    //     email: email.value,
+    //     phoneNumber: phoneNumber.value,
+    //     createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),
+    //     updatedAt: Timestamp.now(),
+    // };
+    school.createdAt = props.edit ? props.initialSchool?.createdAt : Timestamp.now();
+    school.updatedAt = Timestamp.now();
     if (managed.value) school.managerOptions = managerOptions.value;
 
-    name.value = "";
-    city.value = "";
-    email.value = "";
-    phoneNumber.value = "";
-    managed.value = false;
-    levelRanges.value = [];
-    managerOptions.value = undefined;
+    console.log(school);
+    // name.value = "";
+    // city.value = "";
+    // email.value = "";
+    // phoneNumber.value = "";
+    // managed.value = false;
+    // levelRanges.value = [];
+    // managerOptions.value = undefined;
 
     try {
         if (props.edit && props.initialSchool?.id != undefined) {

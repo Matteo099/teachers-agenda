@@ -125,29 +125,25 @@
 
     <v-layout v-if="mobile" class="overflow-visible position-relative" style="height: 56px;">
       <v-bottom-navigation class="position-fixed bottom-0" v-model="data" :bg-color="color" mode="shift">
-        <v-btn>
-          <v-icon>mdi-television-play</v-icon>
-
-          <span>Video</span>
+        <v-btn to="/">
+          <v-icon>mdi-home</v-icon>
+          <span>Home</span>
         </v-btn>
-
+        <!-- 
         <v-btn>
           <v-icon>mdi-music-note</v-icon>
-
           <span>Music</span>
         </v-btn>
 
         <v-btn>
           <v-icon>mdi-book</v-icon>
-
           <span>Book</span>
         </v-btn>
 
         <v-btn>
           <v-icon>mdi-image</v-icon>
-
           <span>Image</span>
-        </v-btn>
+        </v-btn> -->
       </v-bottom-navigation>
     </v-layout>
   </v-app>
