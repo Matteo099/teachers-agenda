@@ -4,19 +4,23 @@
             <v-form>
                 <v-row class="my-1 justify-center">
                     <v-col class="mx-2">
-                        <v-select v-model="dayOfWeek" :items="days" label="Giorno" required></v-select>
+                        <v-select v-model="dayOfWeek" v-bind="dayOfWeekProps" :items="days" label="Giorno"
+                            required></v-select>
                     </v-col>
                 </v-row>
                 <v-row class="my-1 justify-center">
                     <v-col class="mx-2">
-                        <v-date-input :max="to" v-model="from" label="Dal" inputmode="none"></v-date-input>
+                        <v-date-input :max="to" v-model="from" v-bind="fromProps" label="Dal"
+                            inputmode="none"></v-date-input>
                     </v-col>
                     <v-col class="mx-2">
-                        <v-date-input :min="from" v-model="to" label="Al" inputmode="none"></v-date-input>
+                        <v-date-input :min="from" v-model="to" v-bind="toProps" label="Al"
+                            inputmode="none"></v-date-input>
                     </v-col>
                     <v-col class="mx-2">
-                        <v-select v-model="excludeDates" :items="allDates" label="Giorni da Escludere" multiple
-                            item-title="name" item-value="value" no-data-text="Nessuna Data Disponibile" clearable>
+                        <v-select v-model="excludeDates" v-bind="excludeDatesProps" :items="allDates"
+                            label="Giorni da Escludere" multiple item-title="name" item-value="value"
+                            no-data-text="Nessuna Data Disponibile" clearable>
                             <template v-slot:selection="{ item, index }">
                                 <v-chip v-if="index < 2">
                                     <span>{{ item.title }}</span>
@@ -30,8 +34,8 @@
                 </v-row>
                 <v-row class="my-1 justify-center">
                     <v-col class="mx-2">
-                        <v-text-field v-model="startingTime" :active="modalTimePicker" :focused="modalTimePicker"
-                            inputmode="none" label="Orario della prima Lezione"
+                        <v-text-field v-model="startingTime" v-bind="startingTimeProps" :active="modalTimePicker"
+                            :focused="modalTimePicker" inputmode="none" label="Orario della prima Lezione"
                             prepend-icon="mdi-clock-time-four-outline" readonly>
                             <v-dialog v-model="modalTimePicker" activator="parent" width="auto">
                                 <v-time-picker v-if="modalTimePicker" v-model="startingTime"
@@ -113,7 +117,7 @@
             <v-spacer></v-spacer>
 
             <v-btn text="Chiudi" @click="emit('close')"></v-btn>
-            <v-btn text="Salva" color="primary" @click="save" :loading="saving"></v-btn>
+            <v-btn text="Salva" color="primary" @click="onSave" :loading="saving"></v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -123,9 +127,11 @@ import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, Time, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { dateFormat, nameof } from '@/models/utils';
 import { addDoc, doc, onSnapshot, orderBy, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
+import { useForm, type GenericObject } from 'vee-validate';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import draggableComponent from 'vuedraggable';
+import * as yup from 'yup'
 
 interface WeekLessonEditorProps {
     school: School;
@@ -139,19 +145,53 @@ const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const subscriptions: Unsubscribe[] = [];
 
-const dayOfWeek: Ref<string | undefined> = ref();
-const from: Ref<Date | undefined> = ref();
-const to: Ref<Date | undefined> = ref();
-const excludeDates: Ref<Date[]> = ref([]);
+// const dayOfWeek: Ref<string | undefined> = ref();
+// const from: Ref<Date | undefined> = ref();
+// const to: Ref<Date | undefined> = ref();
+// const excludeDates: Ref<Date[]> = ref([]);
+// const startingTime: Ref<string | undefined> = ref();
+const scheduledLessons: Ref<ScheduledLesson[]> = ref([]);
 const allDates: Ref<{ name: string, value: Date }[]> = ref([]);
-const startingTime: Ref<string | undefined> = ref();
 const allStudents: Ref<Student[]> = ref([]);
 const selectedStudents: Ref<Student[]> = ref([]);
-const scheduledLessons: Ref<ScheduledLesson[]> = ref([]);
 const modalTimePicker = ref(false);
 const saving = ref(false);
 const loadingStudents = ref(false);
 // const dialogCreateStudent = ref(false);
+
+const schema = yup.object({
+    dayOfWeek: yup.string().required('Il Giorno è obbligatorio').label('Giorno'),
+    from: yup.date().required('La Data di Inizio delle lezioni settimanali è obbligatoria').label('Dal'),
+    to: yup.date().required('La Data di Fine delle lezioni settimanali è obbligatoria').label('Al'),
+    excludeDates: yup.array().of(yup.date()).label('Giorni da Escludere').nullable().optional(),
+    startingTime: yup.string().required(`L'Orario della prima Lezione è obbligatorio`).label('Orario della prima Lezione'),
+})
+
+const { defineField, handleSubmit } = useForm({
+    validationSchema: schema
+})
+
+const vuetifyConfig = (state: any) => ({
+    props: {
+        'error-messages': state.errors
+    }
+})
+
+const [dayOfWeek, dayOfWeekProps] = defineField('dayOfWeek', vuetifyConfig);
+const [from, fromProps] = defineField('from', vuetifyConfig);
+const [to, toProps] = defineField('to', vuetifyConfig);
+const [excludeDates, excludeDatesProps] = defineField('excludeDates', vuetifyConfig);
+const [startingTime, startingTimeProps] = defineField('startingTime', vuetifyConfig);
+
+const onSave = handleSubmit(
+    async (values: GenericObject) => {
+        save(values);
+    },
+    (err) => {
+        toast.warn('Ci sono alcuni errori! Inserisci correttamente i dati')
+        console.log(err)
+    }
+)
 
 let unsubscribeStudents: Unsubscribe;
 
@@ -273,7 +313,7 @@ function updateExcludeDates() {
 
 
 
-async function save() {
+async function save(values: GenericObject) {
     saving.value = true;
 
     const weekLesson: Partial<WeeklyLesson> = {
@@ -281,7 +321,7 @@ async function save() {
         dayOfWeek: days.indexOf(dayOfWeek.value!),
         from: yyyyMMdd.fromDate(from.value!).toIyyyyMMdd(),
         to: yyyyMMdd.fromDate(to.value!).toIyyyyMMdd(),
-        exclude: excludeDates.value.map(d => yyyyMMdd.fromDate(d).toIyyyyMMdd()),
+        exclude: excludeDates.value.map((d: Date) => yyyyMMdd.fromDate(d).toIyyyyMMdd()),
         schedule: scheduledLessons.value,
         createdAt: props.edit ? props.initialWeekLesson?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now(),
