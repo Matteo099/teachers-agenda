@@ -3,28 +3,43 @@
         <p class="text-h5 text-center mb-6">Lezioni del <b>{{ yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format() }}</b>
         </p>
         <v-row>
-            <v-btn @click="present" :disabled="!areLessonSelected">presenti</v-btn>
-            <v-btn @click="absent" :disabled="!areLessonSelected">assenti</v-btn>
+            <v-col>
+                <v-btn @click="present" :disabled="!areLessonSelected">presenti</v-btn>
+            </v-col>
+            <v-col>
+                <v-btn @click="absent" :disabled="!areLessonSelected">assenti</v-btn>
+            </v-col>
+            <v-col>
+                <v-dialog transition="dialog-bottom-transition" max-width="500">
+                    <template v-slot:activator="{ props: activatorProps }">
+                        <v-btn @click="loadSchoolStudents" v-bind="activatorProps">Aggiungi studente</v-btn>
+                    </template>
 
-            <v-dialog transition="dialog-bottom-transition" fullscreen>
-                <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn @click="loadSchoolStudents" v-bind="activatorProps">Aggiugni studente</v-btn>
-                </template>
-
-                <template v-slot:default="{ isActive }">
-                    <v-card>
-                        <v-list :items="allStudents" @click:select="addStudent($event)">
-                            <template v-slot:title="{ item }">
-                                {{ item }}
-                            </template>
-                        </v-list>
-                    </v-card>
-                </template>
-            </v-dialog>
-
-            <v-checkbox v-model="selectAllLessons"
-                :indeterminate="selectedLessons.length != 0 && selectedLessons.length != studentLessons.length"
-                @click="toggleAll"></v-checkbox>
+                    <template v-slot:default="{ isActive }">
+                        <v-card title="Tutti gli studenti della scuola" :loading="loadingAllStudents">
+                            <v-card-text>
+                                <span class="text-caption mb-2">Premi sopra il nome per aggiungerlo/rimuoverlo</span>
+                                <v-chip-group v-model="selectedStudents" column multiple
+                                    selected-class="text-deep-purple-accent-4">
+                                    <v-chip v-for="n in allStudents" :key="n.id" :text="n.name + ' ' + n.surname"
+                                        variant="outlined" filter>
+                                    </v-chip>
+                                </v-chip-group>
+                            </v-card-text>
+                            <!-- <v-list :items="allStudents" @click:select="addStudent($event)">
+                                <template v-slot:title="{ item }">
+                                    {{ item.name }} {{ item.surname }}
+                                </template>
+</v-list> -->
+                        </v-card>
+                    </template>
+                </v-dialog>
+            </v-col>
+            <v-col>
+                <v-checkbox v-model="selectAllLessons"
+                    :indeterminate="selectedLessons.length != 0 && selectedLessons.length != studentLessons.length"
+                    @click="toggleAll"></v-checkbox>
+            </v-col>
         </v-row>
 
         <v-container fluid>
@@ -80,8 +95,10 @@ const subscriptions: Unsubscribe[] = [];
 const selectedLessons: Ref<number[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
 const studentLessons: Ref<StudentLesson[]> = ref([])
-const allStudents: Ref<any[]> = ref([]);
+const allStudents: Ref<Student[]> = ref([]);
+const selectedStudents: Ref<number[]> = ref([]);
 const loadingStudents = ref(false);
+const loadingAllStudents = ref(false);
 const saving = ref(false);
 
 const dailyLessonSource = computed(() =>
@@ -157,7 +174,17 @@ function doRestore() {
 }
 
 async function loadSchoolStudents() {
+    if (!dailyLesson.value) return;
 
+    loadingAllStudents.value = true;
+    const q = query(
+        studentsRef,
+        where(nameof<Student>('schoolId'), '==', dailyLesson.value.schoolId));
+
+    const snapshot = await getDocs(q);
+    allStudents.value = snapshot.docs.map(doc => doc.data())
+    selectedStudents.value = [...Array(allStudents.value.length).keys()]
+    loadingAllStudents.value = false;
 }
 
 async function updateStudentLesson() {

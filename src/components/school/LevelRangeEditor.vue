@@ -2,12 +2,12 @@
     <v-card prepend-icon="mdi-format-list-numbered" title="Livelli">
         <v-card-text>
             <v-row class="my-3 mb-10 justify-center">
-                <v-col class="mx-2">
+                <v-col class="px-2" cols="12" md="4">
                     <v-number-input max-width="500" v-model="levelRangePrice" :reverse="false" controlVariant="default"
                         label="Fascia di Prezzo" prefix="€" :hideInput="false" :inset="false" :min="0">
                     </v-number-input>
                 </v-col>
-                <v-col class="mx-2">
+                <v-col class="px-2" cols="12" md="1">
                     <v-btn @click="addLevelRange" icon="mdi-plus" color="success"></v-btn>
                     <v-btn @click="deleteLevelRange" icon="mdi-minus" color="error"></v-btn>
                 </v-col>

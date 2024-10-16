@@ -118,19 +118,23 @@ import LessonView from '@/components/lesson/LessonView.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import StudentView from '@/components/student/StudentView.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import type { School } from '@/models/model';
-import { dateFormat } from '@/models/utils';
-import { deleteDoc, doc, type Unsubscribe } from 'firebase/firestore';
+import type { DailyLesson, School, Student, WeeklyLesson } from '@/models/model';
+import { dateFormat, nameof } from '@/models/utils';
+import { get } from 'firebase/database';
+import { deleteDoc, doc, getDocs, getFirestore, query, where, writeBatch, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { toast } from 'vue3-toastify';
-import { useDocument } from 'vuefire';
+import { useDocument, useFirestore } from 'vuefire';
 import { useDate } from 'vuetify';
 
 const route = useRoute()
 const router = useRouter()
 const date = useDate()
 const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
+const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
+const weeklyLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
+const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
 
 const subscriptions: Unsubscribe[] = [];
 
@@ -159,8 +163,45 @@ function scheduleRecovery(event: any) {
 }
 
 async function deleteSchool(): Promise<boolean> {
+    if (!school.value) return false;
+
     try {
-        await deleteDoc(schoolSource.value);
+        const schoolId = school.value.id;
+        // await deleteDoc(schoolSource.value);
+
+        const batches = writeBatch(useFirestore());
+        // delete school and all relations
+        batches.delete(schoolSource.value);
+
+        // delete students
+        {
+            const studentsOfSchool = query(
+                studentsRef,
+                where(nameof<Student>('schoolId'), '==', schoolId));
+            const snapshot = await getDocs(studentsOfSchool);
+            snapshot.forEach(n => batches.delete(n.ref));
+        }
+
+        // delete weeklyLessons
+        {
+            const weeklyLessonsOfSchool = query(
+                weeklyLessonsRef,
+                where(nameof<WeeklyLesson>('schoolId'), '==', schoolId));
+            const snapshot = await getDocs(weeklyLessonsOfSchool);
+            snapshot.forEach(n => batches.delete(n.ref));
+        }
+
+        // delete dailyLessons
+        {
+            const dailyLessonsOfSchool = query(
+                dailyLessonsRef,
+                where(nameof<WeeklyLesson>('schoolId'), '==', schoolId));
+            const snapshot = await getDocs(dailyLessonsOfSchool);
+            snapshot.forEach(n => batches.delete(n.ref));
+        }
+
+        await batches.commit();
+
         router.push('/')
         return true;
     } catch (error) {

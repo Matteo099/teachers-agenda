@@ -1,23 +1,23 @@
 <template>
     <v-card title="Lezione Settimanale">
         <v-card-text>
-            <v-form>
+            <v-form class="ma-2">
                 <v-row class="my-1 justify-center">
-                    <v-col class="mx-2">
+                    <v-col class="px-2">
                         <v-select v-model="dayOfWeek" v-bind="dayOfWeekProps" :items="days" label="Giorno"
                             required></v-select>
                     </v-col>
                 </v-row>
                 <v-row class="my-1 justify-center">
-                    <v-col class="mx-2">
+                    <v-col class="px-2" cols="12" md="4">
                         <v-date-input :max="to" v-model="from" v-bind="fromProps" label="Dal"
                             inputmode="none"></v-date-input>
                     </v-col>
-                    <v-col class="mx-2">
+                    <v-col class="px-2" cols="12" md="4">
                         <v-date-input :min="from" v-model="to" v-bind="toProps" label="Al"
                             inputmode="none"></v-date-input>
                     </v-col>
-                    <v-col class="mx-2">
+                    <v-col class="px-2" cols="12" md="4">
                         <v-select v-model="excludeDates" v-bind="excludeDatesProps" :items="allDates"
                             label="Giorni da Escludere" multiple item-title="name" item-value="value"
                             no-data-text="Nessuna Data Disponibile" clearable>
@@ -33,7 +33,7 @@
                     </v-col>
                 </v-row>
                 <v-row class="my-1 justify-center">
-                    <v-col class="mx-2">
+                    <v-col class="px-2" cols="12" md="6">
                         <v-text-field v-model="startingTime" v-bind="startingTimeProps" :active="modalTimePicker"
                             :focused="modalTimePicker" inputmode="none" label="Orario della prima Lezione"
                             prepend-icon="mdi-clock-time-four-outline" readonly>
@@ -43,7 +43,7 @@
                             </v-dialog>
                         </v-text-field>
                     </v-col>
-                    <v-col class="mx-2">
+                    <v-col class="px-2" cols="12" md="6">
                         <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" item-title="name"
                             item-value="id" :return-object="true" multiple
                             no-data-text="Nessuno studente disponibile per questa scuola">
