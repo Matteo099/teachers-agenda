@@ -10,7 +10,7 @@
                 <v-btn @click="absent" :disabled="!areLessonSelected">assenti</v-btn>
             </v-col>
             <v-col>
-                <v-dialog transition="dialog-bottom-transition" max-width="500">
+                <v-dialog transition="dialog-bottom-transition" max-width="500" persistent>
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn @click="loadSchoolStudents" v-bind="activatorProps">Aggiungi studente</v-btn>
                     </template>
@@ -18,19 +18,17 @@
                     <template v-slot:default="{ isActive }">
                         <v-card title="Tutti gli studenti della scuola" :loading="loadingAllStudents">
                             <v-card-text>
-                                <span class="text-caption mb-2">Premi sopra il nome per aggiungerlo/rimuoverlo</span>
-                                <v-chip-group v-model="selectedStudents" column multiple
-                                    selected-class="text-deep-purple-accent-4">
-                                    <v-chip v-for="n in allStudents" :key="n.id" :text="n.name + ' ' + n.surname"
-                                        variant="outlined" filter>
-                                    </v-chip>
-                                </v-chip-group>
+                                <VSelectStudents v-model="selectedStudents" :all-students="availableStudents" />
+                                {{ availableStudents }}
+                                <br>
+                                {{ selectedStudents }}
                             </v-card-text>
-                            <!-- <v-list :items="allStudents" @click:select="addStudent($event)">
-                                <template v-slot:title="{ item }">
-                                    {{ item.name }} {{ item.surname }}
-                                </template>
-</v-list> -->
+                            <v-card-actions>
+                                <v-btn text="Annulla" @click="isActive.value = false"></v-btn>
+                                <v-spacer></v-spacer>
+                                <v-btn color="primary" text="Salva" @click="saveSelectedStudents"
+                                    :loading="savingSelectedStudents"></v-btn>
+                            </v-card-actions>
                         </v-card>
                     </template>
                 </v-dialog>
@@ -77,12 +75,14 @@
 </template>
 
 <script setup lang="ts">
+import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type Lesson, type Student } from '@/models/model';
 import { nameof } from '@/models/utils';
 import { doc, documentId, getDocs, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
 
 type StudentLesson = Lesson & Student;
@@ -95,11 +95,12 @@ const subscriptions: Unsubscribe[] = [];
 const selectedLessons: Ref<number[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
 const studentLessons: Ref<StudentLesson[]> = ref([])
-const allStudents: Ref<Student[]> = ref([]);
-const selectedStudents: Ref<number[]> = ref([]);
+const availableStudents: Ref<Student[]> = ref([]);
+const selectedStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
 const loadingAllStudents = ref(false);
 const saving = ref(false);
+const savingSelectedStudents = ref(false);
 
 const dailyLessonSource = computed(() =>
     doc(dailyLessonsRef, route.params.id as string)
@@ -177,14 +178,48 @@ async function loadSchoolStudents() {
     if (!dailyLesson.value) return;
 
     loadingAllStudents.value = true;
+
+    const studentIds = dailyLesson.value.lessons.map(l => l.studentId)
+    console.log(studentIds, dailyLesson.value.schoolId)
     const q = query(
         studentsRef,
         where(nameof<Student>('schoolId'), '==', dailyLesson.value.schoolId));
+    try {
+        const snapshot = await getDocs(q);
+        console.log(snapshot)
+        availableStudents.value = snapshot.docs.map(doc => doc.data()).filter(s => !studentIds.includes(s.id))
+        selectedStudents.value = [];
+    } catch (error) {
+        toast.warn("Impossibile caricare gli studenti...")
+        console.log(error);
+    } finally {
+        loadingAllStudents.value = false;
+    }
+}
 
-    const snapshot = await getDocs(q);
-    allStudents.value = snapshot.docs.map(doc => doc.data())
-    selectedStudents.value = [...Array(allStudents.value.length).keys()]
-    loadingAllStudents.value = false;
+async function saveSelectedStudents() {
+    savingSelectedStudents.value = true;
+
+    const newDailyLesson = { ...dailyLesson.value };
+    selectedStudents.value.forEach(s => {
+        const lastLessonTime = newDailyLesson.lessons!.length == 0 ? 0 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].time;
+        newDailyLesson.lessons?.push({
+            status: LessonStatus.NONE,
+            studentId: s.id,
+            time: lastLessonTime + s.minutesLessonDuration,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now()
+        });
+    })
+    try {
+        // save it
+        await setDoc(doc(dailyLessonsRef, newDailyLesson.id), newDailyLesson);
+        console.log("Document (daily lessons) update with ID: ", newDailyLesson.id);
+    } catch (error) {
+        toast.warning("Impossibile aggiungere gli studenti alla lezione giornaliera")
+    } finally {
+        savingSelectedStudents.value = false;
+    }
 }
 
 async function updateStudentLesson() {
