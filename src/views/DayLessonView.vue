@@ -236,12 +236,10 @@ async function deleteStudent(student: StudentLesson) {
     const newDailyLesson = { ...dailyLesson.value };
 
     const index = newDailyLesson.lessons?.findIndex(s => s.studentId == student.id) ?? -1;
-    if (index == -1) {
-        // toast.error("Impossibile eliminare lo studente");
+    if (index == -1)
         return false;
-    }
     const startingTime = index == 0 ? newDailyLesson.lessons![index].time : newDailyLesson.lessons![index - 1].time;
-    newDailyLesson.lessons = newDailyLesson.lessons?.filter(s => s.studentId != student.id) ?? [];
+    newDailyLesson.lessons?.splice(index, 1);
     updateDailyLessonTime(startingTime, { scheduledLessons: newDailyLesson.lessons!, students: studentLessons.value });
 
     try {
@@ -350,7 +348,6 @@ function extractDailyLesson(): DailyLesson | undefined {
 
 
 onUnmounted(() => {
-    subscriptions.forEach(u => u?.());
 })
 
 onMounted(async () => {
