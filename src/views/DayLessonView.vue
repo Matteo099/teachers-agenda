@@ -10,7 +10,7 @@
                 <v-btn @click="absent" :disabled="!areLessonSelected">assenti</v-btn>
             </v-col>
             <v-col>
-                <v-dialog transition="dialog-bottom-transition" max-width="500" persistent>
+                <v-dialog v-model="studentsDialog" transition="dialog-bottom-transition" max-width="500" persistent>
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn @click="loadSchoolStudents" v-bind="activatorProps">Aggiungi studente</v-btn>
                     </template>
@@ -19,12 +19,9 @@
                         <v-card title="Tutti gli studenti della scuola" :loading="loadingAllStudents">
                             <v-card-text>
                                 <VSelectStudents v-model="selectedStudents" :all-students="availableStudents" />
-                                {{ availableStudents }}
-                                <br>
-                                {{ selectedStudents }}
                             </v-card-text>
                             <v-card-actions>
-                                <v-btn text="Annulla" @click="isActive.value = false"></v-btn>
+                                <v-btn text="Annulla" @click="studentsDialog = false"></v-btn>
                                 <v-spacer></v-spacer>
                                 <v-btn color="primary" text="Salva" @click="saveSelectedStudents"
                                     :loading="savingSelectedStudents"></v-btn>
@@ -54,15 +51,23 @@
                             </v-checkbox>
                         </v-card-title>
                         <v-card-text>
-                            <v-btn class="ma-1" @click="present(item)">presente</v-btn>
-                            <v-btn class="ma-1" @click="absent(item)">assente</v-btn>
-                            <v-btn class="ma-1" @click="cancel(item)"
-                                v-if="item.status != LessonStatus.NONE">annulla</v-btn>
-                            <v-btn class="ma-1" @click="notes(item)">note</v-btn>
+                            <v-btn class="ma-1" v-if="item.status != LessonStatus.PRESENT"
+                                @click="present(item)">presente</v-btn>
+                            <v-btn class="ma-1" v-if="item.status != LessonStatus.ABSENT"
+                                @click="absent(item)">assente</v-btn>
+                            <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
+                                @click="cancel(item)">annulla</v-btn>
                             <v-btn class="ma-1" v-if="item.status == LessonStatus.ABSENT"
-                                @click="scheduleRecoveryLesson(item)">schedula
-                                recupero</v-btn> </v-card-text>
+                                @click="scheduleRecoveryLesson(item)">schedula recupero</v-btn>
+                            <v-btn class="ma-1" @click="notes(item)">note</v-btn>
 
+                            <DeleteDialog :name="`${item.name} ${item.surname}`" objName="Studente"
+                                :onDelete="async () => await deleteStudent(item)">
+                                <template v-slot:activator="{ props: activatorProps }">
+                                    <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
+                                </template>
+                            </DeleteDialog>
+                        </v-card-text>
                     </v-card>
                 </v-timeline-item>
             </v-timeline>
@@ -75,6 +80,7 @@
 </template>
 
 <script setup lang="ts">
+import DeleteDialog from '@/components/DeleteDialog.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type Lesson, type Student } from '@/models/model';
@@ -101,6 +107,7 @@ const loadingStudents = ref(false);
 const loadingAllStudents = ref(false);
 const saving = ref(false);
 const savingSelectedStudents = ref(false);
+const studentsDialog = ref(false);
 
 const dailyLessonSource = computed(() =>
     doc(dailyLessonsRef, route.params.id as string)
@@ -206,7 +213,7 @@ async function saveSelectedStudents() {
         newDailyLesson.lessons?.push({
             status: LessonStatus.NONE,
             studentId: s.id,
-            time: lastLessonTime + s.minutesLessonDuration,
+            time: lastLessonTime + s.minutesLessonDuration * 60,
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
         });
@@ -214,11 +221,27 @@ async function saveSelectedStudents() {
     try {
         // save it
         await setDoc(doc(dailyLessonsRef, newDailyLesson.id), newDailyLesson);
+        toast.success("Studenti aggiunti!");
+        studentsDialog.value = false;
         console.log("Document (daily lessons) update with ID: ", newDailyLesson.id);
     } catch (error) {
         toast.warning("Impossibile aggiungere gli studenti alla lezione giornaliera")
     } finally {
         savingSelectedStudents.value = false;
+    }
+}
+
+async function deleteStudent(student: StudentLesson) {
+    const newDailyLesson = { ...dailyLesson.value };
+    newDailyLesson.lessons = newDailyLesson.lessons?.filter(s => s.studentId != student.id);
+
+    // TODO: update dailyLesson time
+
+    try {
+        await setDoc(doc(dailyLessonsRef, newDailyLesson.id), newDailyLesson);
+        return true;
+    } catch (error) {
+        return false;
     }
 }
 
