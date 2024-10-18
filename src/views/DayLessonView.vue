@@ -232,10 +232,16 @@ async function saveSelectedStudents() {
 }
 
 async function deleteStudent(student: StudentLesson) {
+    debugger;
     const newDailyLesson = { ...dailyLesson.value };
-    newDailyLesson.lessons = newDailyLesson.lessons?.filter(s => s.studentId != student.id) ?? [];
 
-    const startingTime = newDailyLesson.lessons?.length == 0 ? 0 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].time;
+    const index = newDailyLesson.lessons?.findIndex(s => s.studentId == student.id) ?? -1;
+    if (index == -1) {
+        // toast.error("Impossibile eliminare lo studente");
+        return false;
+    }
+    const startingTime = index == 0 ? newDailyLesson.lessons![index].time : newDailyLesson.lessons![index - 1].time;
+    newDailyLesson.lessons = newDailyLesson.lessons?.filter(s => s.studentId != student.id) ?? [];
     updateDailyLessonTime(startingTime, { scheduledLessons: newDailyLesson.lessons!, students: studentLessons.value });
 
     try {

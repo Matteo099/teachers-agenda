@@ -195,10 +195,10 @@ export interface Lesson extends ScheduledLesson {
     updatedAt: Timestamp;
 }
 
-export const updateDailyLessonTime = function (startingTime: number | string | undefined, studentLessons: (Student & Lesson)[] | { scheduledLessons: ScheduledLesson[], students: Student[] }) {
+export const updateDailyLessonTime = function (startingTimeInSeconds: number | string | undefined, studentLessons: (Student & Lesson)[] | { scheduledLessons: ScheduledLesson[], students: Student[] }) {
     let startingMinutes = 0;
     try {
-        const time = startingTime;
+        const time = startingTimeInSeconds;
         if (time == undefined) return;
 
         if (typeof time == "string") {
@@ -210,7 +210,7 @@ export const updateDailyLessonTime = function (startingTime: number | string | u
 
             startingMinutes = h * 60 + m;
         } else {
-            startingMinutes = time;
+            startingMinutes = time / 60;
         }
 
         console.log(startingMinutes)
