@@ -194,3 +194,43 @@ export interface Lesson extends ScheduledLesson {
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }
+
+export const updateDailyLessonTime = function (startingTime: number | string | undefined, studentLessons: (Student & Lesson)[] | { scheduledLessons: ScheduledLesson[], students: Student[] }) {
+    let startingMinutes = 0;
+    try {
+        const time = startingTime;
+        if (time == undefined) return;
+
+        if (typeof time == "string") {
+            const hhmm = time.split(":");
+            if (hhmm.length != 2) return;
+
+            const h = parseInt(hhmm[0]);
+            const m = parseInt(hhmm[1]);
+
+            startingMinutes = h * 60 + m;
+        } else {
+            startingMinutes = time;
+        }
+
+        console.log(startingMinutes)
+    } catch (error) {
+        console.log(error)
+        return;
+    }
+
+    if (Array.isArray(studentLessons)) {
+        studentLessons.forEach(sl => {
+            sl.time = startingMinutes * 60;
+            startingMinutes += sl.minutesLessonDuration;
+        })
+    } else {
+        studentLessons.scheduledLessons.forEach(sl => {
+            sl.time = startingMinutes * 60;
+            // sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
+            const student = studentLessons.students.find(s => s.id == sl.studentId);
+            if (!student) return;
+            startingMinutes += student.minutesLessonDuration;
+        });
+    }
+}

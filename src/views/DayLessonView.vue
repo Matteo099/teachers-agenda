@@ -83,7 +83,7 @@
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type Lesson, type Student } from '@/models/model';
+import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type Student } from '@/models/model';
 import { nameof } from '@/models/utils';
 import { doc, documentId, getDocs, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
@@ -209,7 +209,7 @@ async function saveSelectedStudents() {
 
     const newDailyLesson = { ...dailyLesson.value };
     selectedStudents.value.forEach(s => {
-        const lastLessonTime = newDailyLesson.lessons!.length == 0 ? 0 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].time;
+        const lastLessonTime = newDailyLesson.lessons?.length == 0 ? 0 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].time;
         newDailyLesson.lessons?.push({
             status: LessonStatus.NONE,
             studentId: s.id,
@@ -233,9 +233,10 @@ async function saveSelectedStudents() {
 
 async function deleteStudent(student: StudentLesson) {
     const newDailyLesson = { ...dailyLesson.value };
-    newDailyLesson.lessons = newDailyLesson.lessons?.filter(s => s.studentId != student.id);
+    newDailyLesson.lessons = newDailyLesson.lessons?.filter(s => s.studentId != student.id) ?? [];
 
-    // TODO: update dailyLesson time
+    const startingTime = newDailyLesson.lessons?.length == 0 ? 0 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].time;
+    updateDailyLessonTime(startingTime, { scheduledLessons: newDailyLesson.lessons!, students: studentLessons.value });
 
     try {
         await setDoc(doc(dailyLessonsRef, newDailyLesson.id), newDailyLesson);

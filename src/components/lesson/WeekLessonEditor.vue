@@ -124,7 +124,7 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { days, Time, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
+import { days, Time, updateDailyLessonTime, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { dateFormat, nameof } from '@/models/utils';
 import { addDoc, doc, onSnapshot, orderBy, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -238,31 +238,33 @@ function updateScheduledLessons() {
 }
 
 function updateScheduledLessonsTime() {
-    let startingMinutes = 0;
-    try {
-        const time = startingTime.value;
-        if (!time) return;
+    const time = startingTime.value;
+    updateDailyLessonTime(time, { scheduledLessons: scheduledLessons.value, students: selectedStudents.value });
+    //     let startingMinutes = 0;
+    //     try {
+    //         const time = startingTime.value;
+    //         if (!time) return;
 
-        const hhmm = time.split(":");
-        if (hhmm.length != 2) return;
+    //         const hhmm = time.split(":");
+    //         if (hhmm.length != 2) return;
 
-        const h = parseInt(hhmm[0]);
-        const m = parseInt(hhmm[1]);
+    //         const h = parseInt(hhmm[0]);
+    //         const m = parseInt(hhmm[1]);
 
-        startingMinutes = h * 60 + m;
-        console.log(startingMinutes)
-    } catch (error) {
-        console.log(error)
-        return;
-    }
+    //         startingMinutes = h * 60 + m;
+    //         console.log(startingMinutes)
+    //     } catch (error) {
+    //         console.log(error)
+    //         return;
+    //     }
 
-    scheduledLessons.value.forEach(sl => {
-        sl.time = startingMinutes * 60;
-        // sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
-        const student = selectedStudents.value.find(s => s.id == sl.studentId);
-        if (!student) return;
-        startingMinutes += student.minutesLessonDuration;
-    });
+    //     scheduledLessons.value.forEach(sl => {
+    //         sl.time = startingMinutes * 60;
+    //         // sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
+    //         const student = selectedStudents.value.find(s => s.id == sl.studentId);
+    //         if (!student) return;
+    //         startingMinutes += student.minutesLessonDuration;
+    //     });
 }
 
 function updateWeekLesson() {
