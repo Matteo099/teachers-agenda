@@ -321,7 +321,7 @@ async function save(values: GenericObject) {
         dayOfWeek: days.indexOf(dayOfWeek.value!),
         from: yyyyMMdd.fromDate(from.value!).toIyyyyMMdd(),
         to: yyyyMMdd.fromDate(to.value!).toIyyyyMMdd(),
-        exclude: excludeDates.value.map((d: Date) => yyyyMMdd.fromDate(d).toIyyyyMMdd()),
+        exclude: excludeDates.value?.map((d: Date) => yyyyMMdd.fromDate(d).toIyyyyMMdd()) ?? [],
         schedule: scheduledLessons.value,
         createdAt: props.edit ? props.initialWeekLesson?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now(),
