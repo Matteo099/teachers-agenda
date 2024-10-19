@@ -180,6 +180,15 @@ export interface WeeklyLesson {
     updatedAt: Timestamp;
 }
 
+export interface RecoveryLesson {
+    studentId: string;
+    originalDailyLessonId: string; 
+    originalLessonId: string; 
+    recoveryDailyLessonId: string; 
+    recoveryLessonId: string; 
+    schoolId: string;
+}
+
 export interface ScheduledLesson {
     lessonId: string;
     studentId: string; // relation with the user
