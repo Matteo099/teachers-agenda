@@ -86,3 +86,13 @@ export const timeFormat = function (date?: Date | string | { hour?: number, minu
 
     return ""; // Fallback return in case no condition matches
 }
+
+export const arraysHaveSameElements = function (arr1: string[], arr2: string[]): boolean {
+    if (arr1.length !== arr2.length) return false;
+
+    // Sort both arrays and compare them element by element
+    const sortedArr1 = [...arr1].sort();
+    const sortedArr2 = [...arr2].sort();
+
+    return sortedArr1.every((value, index) => value === sortedArr2[index]);
+}

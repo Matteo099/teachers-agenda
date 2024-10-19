@@ -1,5 +1,5 @@
-import type { Timestamp } from "firebase/firestore";
-import { dateFormat, timeFormat } from "./utils";
+import { Timestamp } from "firebase/firestore";
+import { dateFormat } from "./utils";
 
 export const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 export const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
@@ -19,6 +19,7 @@ export enum DayOfWeek {
  */
 export type ITime = number;
 export class Time {
+
     constructor(private hour: number = 0, private minutes: number = 0, private seconds: number = 0) { }
 
     static fromITime(t: ITime): Time {
@@ -26,6 +27,23 @@ export class Time {
         const m = Math.trunc((t - (h * 3600)) / 60);
         const s = t - (h * 3600 + m * 60);
         return new Time(h, m, s)
+    }
+
+    static fromHHMM(t: string): Time | undefined {
+        try {
+            const hhmm = t.split(":");
+            if (hhmm.length != 2) return;
+            const h = parseInt(hhmm[0]);
+            const m = parseInt(hhmm[1]);
+
+            return new Time(h, m);
+        } catch (error) {
+            return;
+        }
+    }
+
+    getTotalMinutes(): number {
+        return this.hour * 60 + this.minutes;
     }
 
     toITime(): ITime {
@@ -163,6 +181,7 @@ export interface WeeklyLesson {
 }
 
 export interface ScheduledLesson {
+    lessonId: string;
     studentId: string; // relation with the user
     time: ITime; // Could be simplified into one field for easier querying (optional)
 }
@@ -185,15 +204,18 @@ export enum LessonStatus {
 }
 
 export interface Lesson extends ScheduledLesson {
-    // schoolId: string; // relation with the school
     status: LessonStatus;
     trial?: boolean;
     recoveryDate?: IyyyyMMdd;
-    originalScheduledLessonId?: string;  // Link to the original scheduled lesson if rescheduled
+    originalLessonId?: string;  // Link to the original lesson if rescheduled
+    originalDailyLessonId?: string;  // Link to the original daily lesson if rescheduled
 
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }
+
+export type StudentLesson = Lesson & Student;
+
 
 export const updateDailyLessonTime = function (startingTimeInSeconds: number | string | undefined, studentLessons: (Student & Lesson)[] | { scheduledLessons: ScheduledLesson[], students: Student[] }) {
     let startingMinutes = 0;
@@ -202,13 +224,9 @@ export const updateDailyLessonTime = function (startingTimeInSeconds: number | s
         if (time == undefined) return;
 
         if (typeof time == "string") {
-            const hhmm = time.split(":");
-            if (hhmm.length != 2) return;
-
-            const h = parseInt(hhmm[0]);
-            const m = parseInt(hhmm[1]);
-
-            startingMinutes = h * 60 + m;
+            const t = Time.fromHHMM(time);
+            if (!t) return;
+            startingMinutes = t.getTotalMinutes();
         } else {
             startingMinutes = time / 60;
         }

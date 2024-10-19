@@ -56,13 +56,14 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { LessonStatus, months, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type ScheduledLesson, type School, type WeeklyLesson } from '@/models/model';
-import { dateFormat, nameof, nextDay, toDate } from '@/models/utils';
+import { LessonStatus, months, yyyyMMdd, type DailyLesson, type ScheduledLesson, type School, type WeeklyLesson } from '@/models/model';
+import { nameof, nextDay } from '@/models/utils';
 import { addDoc, getDocs, orderBy, query, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useDate } from 'vuetify';
 import WeekLessonEditor from './CalendarLessonEditor.vue';
-import { useRouter } from 'vue-router';
 
 interface LessonViewProps {
     school: School
@@ -109,6 +110,7 @@ async function routeToDailyLesson(lessonGroup: LessonProjection) {
             date: lessonGroup.date.toIyyyyMMdd(),
             schoolId: props.school.id,
             lessons: lessonGroup.lessons.map(l => ({
+                lessonId: uuidv4(),
                 status: LessonStatus.NONE,
                 studentId: l.studentId,
                 time: l.time,

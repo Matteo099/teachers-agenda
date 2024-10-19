@@ -15,7 +15,7 @@
                         <v-btn @click="loadSchoolStudents" v-bind="activatorProps">Aggiungi studente</v-btn>
                     </template>
 
-                    <template v-slot:default="{ isActive }">
+                    <template v-slot:default>
                         <v-card title="Tutti gli studenti della scuola" :loading="loadingAllStudents">
                             <v-card-text>
                                 <VSelectStudents v-model="selectedStudents" :all-students="availableStudents" />
@@ -57,8 +57,7 @@
                                 @click="absent(item)">assente</v-btn>
                             <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
                                 @click="cancel(item)">annulla</v-btn>
-                            <v-btn class="ma-1" v-if="item.status == LessonStatus.ABSENT"
-                                @click="scheduleRecoveryLesson(item)">schedula recupero</v-btn>
+
                             <v-btn class="ma-1" @click="notes(item)">note</v-btn>
 
                             <DeleteDialog :name="`${item.name} ${item.surname}`" objName="Studente"
@@ -83,20 +82,18 @@
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type Student } from '@/models/model';
-import { nameof } from '@/models/utils';
-import { doc, documentId, getDocs, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
+import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type Student, type StudentLesson } from '@/models/model';
+import { arraysHaveSameElements, nameof } from '@/models/utils';
+import { doc, documentId, getDocs, query, setDoc, Timestamp, where } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
 
-type StudentLesson = Lesson & Student;
-
 const route = useRoute()
 const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
 const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
-const subscriptions: Unsubscribe[] = [];
 
 const selectedLessons: Ref<number[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
@@ -152,11 +149,7 @@ function cancel(event: StudentLesson) {
         save();
     }
 }
-function scheduleRecoveryLesson(event: StudentLesson) {
-    doBackup();
-    event.status = LessonStatus.RESCHEDULED
-    save();
-}
+
 function notes(event: StudentLesson) { }
 
 function toggleAll() {
@@ -165,10 +158,6 @@ function toggleAll() {
     } else {
         selectedLessons.value = [];
     }
-}
-
-function addStudent(student: any) {
-    studentLessons.value.push(student);
 }
 
 let backup: string;
@@ -211,6 +200,7 @@ async function saveSelectedStudents() {
     selectedStudents.value.forEach(s => {
         const lastLessonTime = newDailyLesson.lessons?.length == 0 ? 0 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].time;
         newDailyLesson.lessons?.push({
+            lessonId: uuidv4(),
             status: LessonStatus.NONE,
             studentId: s.id,
             time: lastLessonTime + s.minutesLessonDuration * 60,
@@ -232,7 +222,6 @@ async function saveSelectedStudents() {
 }
 
 async function deleteStudent(student: StudentLesson) {
-    debugger;
     const newDailyLesson = { ...dailyLesson.value };
 
     const index = newDailyLesson.lessons?.findIndex(s => s.studentId == student.id) ?? -1;
@@ -278,16 +267,6 @@ async function updateStudentLesson() {
     console.log("Current data: ", snapshot, data);
 }
 
-function arraysHaveSameElements(arr1: string[], arr2: string[]): boolean {
-    if (arr1.length !== arr2.length) return false;
-
-    // Sort both arrays and compare them element by element
-    const sortedArr1 = [...arr1].sort();
-    const sortedArr2 = [...arr2].sort();
-
-    return sortedArr1.every((value, index) => value === sortedArr2[index]);
-}
-
 async function save() {
     saving.value = true;
     const dl = extractDailyLesson();
@@ -314,13 +293,14 @@ function extractDailyLesson(): DailyLesson | undefined {
         const less = studentLessons.value.find(sl => sl.id == l.studentId);
         if (less === undefined) return;
         const newLesson: Lesson = {
+            lessonId: uuidv4(),
             createdAt: l.createdAt,
             studentId: l.studentId,
             time: l.time,
             status: less.status,
             updatedAt: Timestamp.now()
         }
-        if (l.originalScheduledLessonId) newLesson.originalScheduledLessonId = l.originalScheduledLessonId;
+        if (l.originalLessonId) newLesson.originalLessonId = l.originalLessonId;
         if (l.recoveryDate) newLesson.recoveryDate = l.recoveryDate;
         if (l.trial) newLesson.trial = l.trial;
         lessons.push(newLesson);

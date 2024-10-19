@@ -132,6 +132,7 @@ import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import draggableComponent from 'vuedraggable';
 import * as yup from 'yup'
+import { v4 as uuidv4 } from 'uuid';
 
 interface WeekLessonEditorProps {
     school: School;
@@ -222,7 +223,7 @@ function updateScheduledLessons() {
     // add new selected students at the end of the list
     for (const student of selectedStudents.value) {
         const index = scheduledLessons.value.findIndex(s => s.studentId == student.id)
-        if (index == -1) scheduledLessons.value.push({ studentId: student.id, time: 0 });
+        if (index == -1) scheduledLessons.value.push({ lessonId: uuidv4(), studentId: student.id, time: 0 });
     }
 
     // remove de-selected students from the list
