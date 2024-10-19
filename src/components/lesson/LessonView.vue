@@ -2,8 +2,36 @@
     <v-card title="Lezioni" elevation="3" :loading="loading">
 
         <template v-slot:append>
+            <v-dialog transition="dialog-bottom-transition" class="justify-center">
+                <template v-slot:activator="{ props: activatorProps }">
+                    <v-btn icon="mdi-calendar" variant="text" :disabled="!school" v-bind="activatorProps"></v-btn>
+                </template>
+
+                <template v-slot:default="{ isActive }">
+                    <v-card maxWidth="400px">
+                        <v-card-text>
+                            <v-row class="justify-center">
+                                <v-col cols="auto">
+                                    <v-date-picker v-model="dailyLessonDate"></v-date-picker>
+                                </v-col>
+                            </v-row>
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+
+                            <v-btn text="Chiudi" @click="isActive.value = false"></v-btn>
+                            <v-btn text="Ok" color="primary" @click="routeToDailyLesson(dailyLessonDate!)"
+                                :disabled="!dailyLessonDate"></v-btn>
+                        </v-card-actions>
+                    </v-card>
+
+                </template>
+            </v-dialog>
+
+
             <v-btn icon="mdi-refresh" variant="text" :disabled="!school || computingLessonGroups"
                 @click="loadLessonGroup"></v-btn>
+
             <v-dialog transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn icon="mdi-pencil" variant="text" v-bind="activatorProps" :disabled="!school"></v-btn>
@@ -95,38 +123,87 @@ const lessonGroups: Ref<LessonGroup[]> = ref([]);
 const loadingLessons = ref(false);
 const loadingCalendar = ref(false);
 const computingLessonGroups = ref(false);
+const dailyLessonDate: Ref<Date | undefined> = ref();
 
 const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value);
 watch(props.school, () => loadLessonGroup())
 
-async function routeToDailyLesson(lessonGroup: LessonProjection) {
-    let dailyLessonId: string;
+async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
+    if (lessonGroup instanceof Date) {
+        createDailyLesson(lessonGroup);
+    } else {
+        let dailyLessonId: string;
 
-    console.log(lessonGroup);
+        console.log(lessonGroup);
 
-    if (lessonGroup.lessonId == undefined) {
-        // create new daily lesson
-        const dailyLesson: Partial<DailyLesson> = {
-            date: lessonGroup.date.toIyyyyMMdd(),
-            schoolId: props.school.id,
-            lessons: lessonGroup.lessons.map(l => ({
-                lessonId: uuidv4(),
-                status: LessonStatus.NONE,
-                studentId: l.studentId,
-                startTime: l.startTime,
-                endTime: l.endTime,
-                createdAt: Timestamp.now(),
-                updatedAt: Timestamp.now()
-            }))
+        if (lessonGroup.lessonId == undefined) {
+            // create new daily lesson
+            const dailyLesson: Partial<DailyLesson> = {
+                date: lessonGroup.date.toIyyyyMMdd(),
+                schoolId: props.school.id,
+                lessons: lessonGroup.lessons.map(l => ({
+                    lessonId: uuidv4(),
+                    status: LessonStatus.NONE,
+                    studentId: l.studentId,
+                    startTime: l.startTime,
+                    endTime: l.endTime,
+                    createdAt: Timestamp.now(),
+                    updatedAt: Timestamp.now()
+                }))
+            }
+            // store it
+            const docRef = await addDoc(dailyLessonsRef, dailyLesson);
+            console.log("Document (daily lessons) written with ID: ", docRef.id);
+            dailyLessonId = docRef.id;
+        } else {
+            dailyLessonId = lessonGroup.lessonId;
+        }
+        router.push(`/lesson/${dailyLessonId}`);
+    }
+}
+
+async function createDailyLesson(d: Date) {
+    const parseDate = yyyyMMdd.fromDate(d).toIyyyyMMdd();
+    const dailyLessonsQuery = query(
+        dailyLessonsRef,
+        where(nameof<DailyLesson>('schoolId'), '==', props.school.id),
+        where(nameof<DailyLesson>('date'), '==', parseDate),
+    );
+
+    const snapshot = await getDocs(dailyLessonsQuery)
+    const data = snapshot.docs.map(doc => doc.data());
+    console.log(data);
+    let dailyLesson: Partial<DailyLesson> = data?.[0];
+    if (dailyLesson?.id == undefined) {
+        const weeklyLesson = programmedLessons.value.find(l => l.dayOfWeek == d.getDay())
+        if (weeklyLesson) {
+            // create new daily lesson
+            dailyLesson = {
+                date: parseDate,
+                schoolId: props.school.id,
+                lessons: weeklyLesson.schedule.map(l => ({
+                    lessonId: uuidv4(),
+                    status: LessonStatus.NONE,
+                    studentId: l.studentId,
+                    startTime: l.startTime,
+                    endTime: l.endTime,
+                    createdAt: Timestamp.now(),
+                    updatedAt: Timestamp.now()
+                }))
+            }
+        } else {
+            dailyLesson = {
+                date: parseDate,
+                schoolId: props.school.id,
+                lessons: []
+            }
         }
         // store it
         const docRef = await addDoc(dailyLessonsRef, dailyLesson);
+        dailyLesson.id = docRef.id;
         console.log("Document (daily lessons) written with ID: ", docRef.id);
-        dailyLessonId = docRef.id;
-    } else {
-        dailyLessonId = lessonGroup.lessonId;
     }
-    router.push(`/lesson/${dailyLessonId}`);
+    router.push(`/lesson/${dailyLesson.id}`);
 }
 
 async function loadLessonGroup() {
@@ -234,3 +311,9 @@ onUnmounted(() => {
     subscriptions.forEach(u => u?.());
 }) 
 </script>
+
+<style scoped>
+.v-dialog>.v-overlay__content {
+    width: unset !important;
+}
+</style>
