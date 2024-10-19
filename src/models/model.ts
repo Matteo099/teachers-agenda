@@ -50,6 +50,13 @@ export class Time {
         return this.hour * 3600 + this.minutes * 60 + this.seconds;
     }
 
+    add(p: { hour?: number; minutes?: number; seconds?: number; }): Time {
+        this.hour += p.hour ?? 0;
+        this.minutes += p.minutes ?? 0;
+        this.seconds += p.seconds ?? 0;
+        return this;
+    }
+
     format(): string {
         const hours = this.hour.toString().padStart(2, '0') || "00";
         const minutes = this.minutes.toString().padStart(2, '0') || "00";

@@ -19,7 +19,7 @@
             </v-row>
             <v-row v-if="dailyLesson" class="my-1">
                 <DailyLessonStudentList :allStudents="[lessonToRecover]" v-model="dailyLesson.lessons"
-                    :startingTime="dailyLesson.lessons![0].time" />
+                    :startingTime="dailyLesson.lessons![0].startTime" />
             </v-row>
         </v-card-text>
         <v-card-actions>
@@ -120,7 +120,8 @@ async function loadDailyLesson() {
                         lessonId: uuidv4(),
                         status: LessonStatus.NONE,
                         studentId: l.studentId,
-                        time: l.time,
+                        startTime: l.startTime,
+                        endTime: l.endTime,
                         createdAt: Timestamp.now(),
                         updatedAt: Timestamp.now()
                     }))
@@ -177,14 +178,15 @@ function updateDailyLesson() {
         lessonId: uuidv4(),
         status: LessonStatus.NONE,
         studentId: props.lessonToRecover.studentId,
-        time: t.toITime(),
+        startTime: t.toITime(),
+        endTime: t.add({ minutes: props.lessonToRecover.minutesLessonDuration }).toITime(),
         originalLessonId: props.lessonToRecover.lessonId,
         originalDailyLessonId: dailyLesson.value.id,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
     }
     dailyLesson.value.lessons!.push(lesson)
-    dailyLesson.value.lessons!.sort((a, b) => a.time - b.time);
+    dailyLesson.value.lessons!.sort((a, b) => a.startTime - b.startTime);
 }
 
 
