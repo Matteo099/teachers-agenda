@@ -113,7 +113,8 @@ async function routeToDailyLesson(lessonGroup: LessonProjection) {
                 lessonId: uuidv4(),
                 status: LessonStatus.NONE,
                 studentId: l.studentId,
-                time: l.time,
+                startTime: l.startTime,
+                endTime: l.endTime,
                 createdAt: Timestamp.now(),
                 updatedAt: Timestamp.now()
             }))

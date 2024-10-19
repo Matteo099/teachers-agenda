@@ -58,7 +58,8 @@
                                 <template v-slot:prepend>
                                     <p>
                                         <b>
-                                            {{ Time.fromITime(element.time).format() }}
+                                            {{ Time.fromITime(element.startTime).format() }} - 
+                                            {{ Time.fromITime(element.endTime).format() }}
                                         </b>
                                         <span> - </span>
                                         <i>{{ getCompleteStudentName(element.studentId) }}</i>

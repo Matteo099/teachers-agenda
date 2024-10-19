@@ -45,7 +45,7 @@
                         <v-card-title>
                             <v-checkbox v-model="selectedLessons" :value="index" multiple>
                                 <template v-slot:label>
-                                    <span><b>{{ Time.fromITime(item.time).format() }}</b> - <i>{{
+                                    <span><b>{{ Time.fromITime(item.startTime).format() }} - {{ Time.fromITime(item.endTime).format() }}</b> &nbsp; <i>{{
                                         item.name }} {{ item.surname }}</i></span>
                                 </template>
                             </v-checkbox>
@@ -198,12 +198,13 @@ async function saveSelectedStudents() {
 
     const newDailyLesson = { ...dailyLesson.value };
     selectedStudents.value.forEach(s => {
-        const lastLessonTime = newDailyLesson.lessons?.length == 0 ? 0 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].time;
+        const lastLessonEndTime = newDailyLesson.lessons?.length == 0 ? 0 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].endTime;
         newDailyLesson.lessons?.push({
             lessonId: uuidv4(),
             status: LessonStatus.NONE,
             studentId: s.id,
-            time: lastLessonTime + s.minutesLessonDuration * 60,
+            startTime: lastLessonEndTime,
+            endTime: lastLessonEndTime + s.minutesLessonDuration * 60,
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
         });
@@ -227,7 +228,7 @@ async function deleteStudent(student: StudentLesson) {
     const index = newDailyLesson.lessons?.findIndex(s => s.studentId == student.id) ?? -1;
     if (index == -1)
         return false;
-    const startingTime = index == 0 ? newDailyLesson.lessons![index].time : newDailyLesson.lessons![index - 1].time;
+    const startingTime = index == 0 ? newDailyLesson.lessons![index].startTime : newDailyLesson.lessons![index - 1].startTime;
     newDailyLesson.lessons?.splice(index, 1);
     updateDailyLessonTime(startingTime, { scheduledLessons: newDailyLesson.lessons!, students: studentLessons.value });
 
@@ -296,7 +297,8 @@ function extractDailyLesson(): DailyLesson | undefined {
             lessonId: uuidv4(),
             createdAt: l.createdAt,
             studentId: l.studentId,
-            time: l.time,
+            startTime: l.startTime,
+            endTime: l.endTime,
             status: less.status,
             updatedAt: Timestamp.now()
         }

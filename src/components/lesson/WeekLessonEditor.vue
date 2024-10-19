@@ -100,7 +100,8 @@
                             <template v-slot:prepend>
                                 <p>
                                     <b>
-                                        {{ Time.fromITime(element.time).format() }}
+                                        {{ Time.fromITime(element.startTime).format() }} -
+                                        {{ Time.fromITime(element.endTime).format() }}
                                     </b>
                                     <span> - </span>
                                     <i>{{ getCompleteStudentName(element.studentId) }}</i>
@@ -223,7 +224,7 @@ function updateScheduledLessons() {
     // add new selected students at the end of the list
     for (const student of selectedStudents.value) {
         const index = scheduledLessons.value.findIndex(s => s.studentId == student.id)
-        if (index == -1) scheduledLessons.value.push({ lessonId: uuidv4(), studentId: student.id, time: 0 });
+        if (index == -1) scheduledLessons.value.push({ lessonId: uuidv4(), studentId: student.id, startTime: 0, endTime: 0 });
     }
 
     // remove de-selected students from the list
@@ -280,7 +281,7 @@ function updateWeekLesson() {
         selectedStudents.value = allStudents.value.filter(s => studentsId.includes(s.id));
 
         if (scheduledLessons.value.length > 0) {
-            const minTime = scheduledLessons.value[0].time;
+            const minTime = scheduledLessons.value[0].startTime;
             startingTime.value = Time.fromITime(minTime).format();
         }
     }

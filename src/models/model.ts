@@ -182,17 +182,18 @@ export interface WeeklyLesson {
 
 export interface RecoveryLesson {
     studentId: string;
-    originalDailyLessonId: string; 
-    originalLessonId: string; 
-    recoveryDailyLessonId: string; 
-    recoveryLessonId: string; 
+    originalDailyLessonId: string;
+    originalLessonId: string;
+    recoveryDailyLessonId: string;
+    recoveryLessonId: string;
     schoolId: string;
 }
 
 export interface ScheduledLesson {
     lessonId: string;
     studentId: string; // relation with the user
-    time: ITime; // Could be simplified into one field for easier querying (optional)
+    startTime: ITime
+    endTime: ITime;
 }
 
 export interface DailyLesson {
@@ -248,16 +249,18 @@ export const updateDailyLessonTime = function (startingTimeInSeconds: number | s
 
     if (Array.isArray(studentLessons)) {
         studentLessons.forEach(sl => {
-            sl.time = startingMinutes * 60;
+            sl.startTime = startingMinutes * 60;
             startingMinutes += sl.minutesLessonDuration;
+            sl.endTime = startingMinutes * 60;
         })
     } else {
         studentLessons.scheduledLessons.forEach(sl => {
-            sl.time = startingMinutes * 60;
+            sl.startTime = startingMinutes * 60;
             // sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
             const student = studentLessons.students.find(s => s.id == sl.studentId);
             if (!student) return;
             startingMinutes += student.minutesLessonDuration;
+            sl.endTime = startingMinutes * 60;
         });
     }
 }
