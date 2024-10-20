@@ -51,12 +51,12 @@
                 <v-list-item v-for="lesson in lg.lessons" :key="lesson.date.toString()" :title="lesson.date.format()"
                     @click="routeToDailyLesson(lesson)" :baseColor="lesson.next ? 'primary' : ''">
                     <template v-slot:prepend>
-                        <v-avatar :color="lesson.next ? 'primary' : lesson.absent ? 'warning' : 'grey-lighten-1'">
+                        <v-avatar :color="lesson.next ? 'primary' : lesson.pending ? 'warning' : 'grey-lighten-1'">
                             <v-icon color="white">mdi-calendar</v-icon>
                         </v-avatar>
                     </template>
 
-                    <template v-slot:append v-if="lesson.absent">
+                    <template v-slot:append v-if="lesson.pending">
                         <v-icon color="warning">mdi-alert</v-icon>
                     </template>
                 </v-list-item>
@@ -83,33 +83,18 @@
 </template>
 
 <script setup lang="ts">
-import { LessonStatus, months, yyyyMMdd, type DailyLesson, type ScheduledLesson, type School, type WeeklyLesson } from '@/models/model';
-import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
+import { yyyyMMdd, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
+import { LessonGroupService, type LessonGroup, type LessonProjection, type SchoolLessons } from '@/models/services/lesson-group-service';
 import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
-import { nextDay } from '@/models/utils';
-import { Timestamp, type Unsubscribe } from 'firebase/firestore';
-import { v4 as uuidv4 } from 'uuid';
+import { type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useDate } from 'vuetify';
 import WeekLessonEditor from './CalendarLessonEditor.vue';
 
-interface LessonViewProps {
+export interface LessonViewProps {
     school: School
-}
-
-interface LessonGroup {
-    month: string;
-    lessons: LessonProjection[];
-}
-
-interface LessonProjection {
-    date: yyyyMMdd;
-    next: boolean;
-    lessonId?: string;
-    absent?: boolean;
-    lessons: ScheduledLesson[];
 }
 
 const router = useRouter();
@@ -117,146 +102,32 @@ const date = useDate();
 const props = defineProps<LessonViewProps>();
 const subscriptions: Unsubscribe[] = [];
 
-const programmedLessons: Ref<WeeklyLesson[]> = ref([]);
-const dailyLessons: Ref<DailyLesson[]> = ref([]);
 const lessonGroups: Ref<LessonGroup[]> = ref([]);
+const dailyLessonDate: Ref<Date | undefined> = ref();
 const loadingLessons = ref(false);
 const loadingCalendar = ref(false);
 const computingLessonGroups = ref(false);
-const dailyLessonDate: Ref<Date | undefined> = ref();
+
+const schoolLessons: SchoolLessons = {
+    dailyLessons: [],
+    weeklyLessons: [],
+    schoolId: props.school.id
+};
 
 const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value);
 watch(props.school, () => loadLessonGroup())
 
 async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
-    if (lessonGroup instanceof Date) {
-        createDailyLesson(lessonGroup);
-    } else {
-        let dailyLessonId: string;
-
-        console.log(lessonGroup);
-
-        if (lessonGroup.lessonId == undefined) {
-            // create new daily lesson
-            const dailyLesson: Partial<DailyLesson> = {
-                date: lessonGroup.date.toIyyyyMMdd(),
-                schoolId: props.school.id,
-                lessons: lessonGroup.lessons.map(l => ({
-                    lessonId: uuidv4(),
-                    status: LessonStatus.NONE,
-                    studentId: l.studentId,
-                    startTime: l.startTime,
-                    endTime: l.endTime,
-                    createdAt: Timestamp.now(),
-                    updatedAt: Timestamp.now()
-                }))
-            }
-            // store it
-            dailyLessonId = await DailyLessonRepository.instance.create(dailyLesson);
-        } else {
-            dailyLessonId = lessonGroup.lessonId;
-        }
-        router.push(`/lesson/${dailyLessonId}`);
-    }
-}
-
-async function createDailyLesson(d: Date) {
-    const parseDate = yyyyMMdd.fromDate(d).toIyyyyMMdd();
-
-    const data = await DailyLessonService.instance.getDailyLessonOfSchoolInDate(props.school.id, parseDate);
-    console.log(data);
-
-    let dailyLesson: Partial<DailyLesson> = data?.[0];
-    if (dailyLesson?.id == undefined) {
-        const weeklyLesson = programmedLessons.value.find(l => l.dayOfWeek == d.getDay())
-        if (weeklyLesson) {
-            // create new daily lesson
-            dailyLesson = {
-                date: parseDate,
-                schoolId: props.school.id,
-                lessons: weeklyLesson.schedule.map(l => ({
-                    lessonId: uuidv4(),
-                    status: LessonStatus.NONE,
-                    studentId: l.studentId,
-                    startTime: l.startTime,
-                    endTime: l.endTime,
-                    createdAt: Timestamp.now(),
-                    updatedAt: Timestamp.now()
-                }))
-            }
-        } else {
-            dailyLesson = {
-                date: parseDate,
-                schoolId: props.school.id,
-                lessons: []
-            }
-        }
-        // store it
-        dailyLesson.id = await DailyLessonRepository.instance.create(dailyLesson);
-    }
-    router.push(`/lesson/${dailyLesson.id}`);
+    const dailyLessonId = await DailyLessonService.instance.getOrCreateDailyLessonId(schoolLessons, lessonGroup);
+    router.push(`/lesson/${dailyLessonId}`);
 }
 
 async function loadLessonGroup() {
     computingLessonGroups.value = true;
 
-    // 1. Load all the existing lessons and the calendar.
     await loadDailyLessons();
     await loadCalendar();
-
-    const lessonProjections: LessonProjection[] = [];
-
-    // 2. Filter the lessons within each DailyLesson to find those with 'ABSENT' status
-    for (const dailyLesson of dailyLessons.value) {
-        if (dailyLesson.lessons.findIndex(lesson => lesson.status === LessonStatus.ABSENT) != -1) {
-            lessonProjections.push({ lessonId: dailyLesson.id, date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date), absent: true, next: false, lessons: dailyLesson.lessons });
-        }
-    }
-
-    // 3. If lessonProjections is Empty add the last done lesson (if there is)
-    if (lessonProjections.length == 0) {
-        const lastDailyLesson = dailyLessons.value?.[0];
-        if (lastDailyLesson != undefined)
-            lessonProjections.push({ lessonId: lastDailyLesson.id, date: yyyyMMdd.fromIyyyyMMdd(lastDailyLesson.date), absent: false, next: false, lessons: lastDailyLesson.lessons })
-    }
-
-    // 6. Now, let's add the upcoming n lessons from the calendar (week lessons).
-    const n = lessonProjections.length + 4;  // Number of upcoming week lessons to add
-    let startingDay = new Date();
-    while (programmedLessons.value.length > 0 && lessonProjections.length < n) {
-        programmedLessons.value.forEach((weekLesson) => {
-            const d = nextDay(startingDay, weekLesson.dayOfWeek)
-            const date = yyyyMMdd.fromDate(d);
-            if (lessonProjections.find(l => l.date.equals(date)) == undefined)
-                lessonProjections.push({ date, next: false, lessons: weekLesson.schedule })
-        });
-        startingDay = date.addDays(startingDay, 7) as Date;
-    }
-
-    // 7. Now, group the lessons by month.
-    const groupedLessons: { [key: number]: LessonProjection[] } = {}; // Object to group lessons by month
-    let nextFound = false;
-    const today = new Date(new Date().toDateString());
-    lessonProjections.forEach((lesson) => {
-        const lessonMonth = lesson.date.getMonth();
-        if (!groupedLessons[lessonMonth]) {
-            groupedLessons[lessonMonth] = [];
-        }
-        if (!nextFound && lesson.date.toDate() >= today) {
-            nextFound = true;
-            lesson.next = true;
-        }
-        groupedLessons[lessonMonth].push(lesson);
-    });
-
-    // Convert the groupedLessons object into an array of LessonGroup.
-    lessonGroups.value = Object.keys(groupedLessons).map((month) => {
-        const m = parseInt(month);
-        return {
-            month: months[m],
-            lessons: groupedLessons[m]
-        };
-    });
+    lessonGroups.value = await LessonGroupService.instance.getGroupedLessons(schoolLessons);
 
     computingLessonGroups.value = false;
 }
@@ -267,8 +138,7 @@ async function loadDailyLessons() {
     const today = new Date(new Date().toDateString());
     const startingDate = date.addMonths(today, -12) as Date;
     const start = yyyyMMdd.fromDate(startingDate).toIyyyyMMdd();
-    const data = await DailyLessonService.instance.getDailyLessonOfSchoolFromDate(props.school.id, start, 'desc');
-    dailyLessons.value = data;
+    schoolLessons.dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolFromDate(props.school.id, start, 'desc');
 
     loadingLessons.value = false;
 }
@@ -276,8 +146,9 @@ async function loadDailyLessons() {
 
 async function loadCalendar() {
     loadingCalendar.value = true;
-    const data = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(props.school.id);
-    programmedLessons.value = data;
+
+    schoolLessons.weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(props.school.id);
+
     loadingCalendar.value = false;
 }
 
