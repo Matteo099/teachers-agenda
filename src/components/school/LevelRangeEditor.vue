@@ -81,15 +81,6 @@ function deleteLevelRange() {
     }
 }
 
-// function editLevelRange() {
-//     const lr = tab.value;
-//     console.log(lr);
-//     if (lr) {
-//         const index = levelRanges.value.findIndex(t => t.price == lr.price)
-//         levelRangePrice.value = levelRanges.value[index].price;
-//     }
-// }
-
 function addLevelRange() {
     const price = +levelRangePrice.value;
     if (price == undefined || price == null || isNaN(price) || price == 0) return;

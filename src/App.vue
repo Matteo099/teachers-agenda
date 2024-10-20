@@ -150,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, getCurrentInstance, onMounted, ref } from 'vue'
 import { useTheme } from 'vuetify'
 import { useSettingsStore } from './stores/settings'
 import { useDisplay } from 'vuetify'
@@ -189,4 +189,5 @@ function toggleTheme() {
 function signIn() { }
 function signOut() { }
 function hasRole(role: string): boolean { return true; }
+
 </script>

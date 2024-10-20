@@ -58,7 +58,7 @@
                                 <template v-slot:prepend>
                                     <p>
                                         <b>
-                                            {{ Time.fromITime(element.startTime).format() }} - 
+                                            {{ Time.fromITime(element.startTime).format() }} -
                                             {{ Time.fromITime(element.endTime).format() }}
                                         </b>
                                         <span> - </span>
@@ -87,10 +87,11 @@
 </template>
 
 <script setup lang="ts">
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, Time, yyyyMMdd, type School, type Student, type WeeklyLesson } from '@/models/model';
-import { nameof } from '@/models/utils';
-import { deleteDoc, doc, onSnapshot, orderBy, query, where, type Unsubscribe } from 'firebase/firestore';
+import { WeeklyLessonRepository } from '@/models/repositories/weekly-lesson-repository';
+import { StudentService } from '@/models/services/student-service';
+import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
+import type { EventSubscription } from '@/models/utils/event';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import DeleteDialog from '../DeleteDialog.vue';
 import WeekLessonEditor from './WeekLessonEditor.vue';
@@ -101,9 +102,7 @@ interface CalendarLessonEditorProps {
 
 const props = defineProps<CalendarLessonEditorProps>()
 const emit = defineEmits(['close'])
-const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
-const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
-const subscriptions: Unsubscribe[] = [];
+const subscriptions: EventSubscription[] = [];
 
 const programmedLessons: Ref<WeeklyLesson[]> = ref([]);
 const loadingCalendar = ref(false);
@@ -112,8 +111,10 @@ const allStudents: Ref<Student[]> = ref([]);
 const dialog = ref(false);
 
 async function deleteWeeklyLesson(weekLesson?: WeeklyLesson): Promise<boolean> {
+    if (!weekLesson) return false;
+
     try {
-        await deleteDoc(doc(weekLessonsRef, weekLesson?.id));
+        await WeeklyLessonRepository.instance.delete(weekLesson.id);
         return true;
     } catch (error) {
         return false;
@@ -121,35 +122,31 @@ async function deleteWeeklyLesson(weekLesson?: WeeklyLesson): Promise<boolean> {
 }
 
 async function loadCalendar() {
-
     loadingCalendar.value = true;
-    const unsub = onSnapshot(query(weekLessonsRef, where(nameof<WeeklyLesson>('schoolId'), '==', props.school.id), orderBy(nameof<WeeklyLesson>('dayOfWeek'))), (snapshot) => {
-        const data = snapshot.docs.map(doc => doc.data())
-        programmedLessons.value = data;
-        loadingCalendar.value = false;
-        console.log("Current data: ", snapshot, data);
-    }, (error) => {
-        loadingCalendar.value = false;
-        console.error(error);
-    });
 
-    subscriptions.push(unsub);
+    const suscription = WeeklyLessonService.instance.observeWeekLessonOfSchool(props.school.id).subscribe({
+        next: data => {
+            programmedLessons.value = data;
+            loadingCalendar.value = false;
+        },
+        error: _err => loadingCalendar.value = false
+    })
+
+    subscriptions.push(suscription);
 }
 
 async function loadStudents() {
     loadingStudents.value = true;
-    const unsubscribeStudents = onSnapshot(query(studentsRef, where(nameof<Student>('schoolId'), '==', props.school.id), orderBy(nameof<Student>('lessonDay'))), (snapshot) => {
-        const data = snapshot.docs.map(doc => doc.data())
-        allStudents.value = data;
-        loadingStudents.value = false;
-        console.log("Current data: ", snapshot, data);
-    }, (error) => {
-        loadingStudents.value = false;
-        console.error(error);
-    }, () => {
-        console.log("loadStudents completitions")
-    });
-    subscriptions.push(unsubscribeStudents);
+    
+    const subscription = StudentService.instance.observeStudentsOfSchool(props.school.id).subscribe({
+        next: data => {
+            allStudents.value = data;
+            loadingStudents.value = false;
+        },
+        error: _err => loadingStudents.value = false
+    })
+
+    subscriptions.push(subscription);
 }
 
 function getCompleteStudentName(studentId: string): string {
@@ -163,6 +160,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-    subscriptions.forEach(u => u?.());
+    subscriptions.forEach(s => s.unsubscribe());
 }) 
 </script>

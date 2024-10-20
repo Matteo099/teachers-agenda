@@ -83,26 +83,17 @@
 
 <script setup lang="ts">
 import type { LevelRange, ManagerOptions, School } from '@/models/model';
-import { addDoc, doc, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
-import { onMounted, ref, watch, type Ref } from 'vue';
+import { SchoolRepository } from '@/models/repositories/school-repository';
+import { Timestamp } from 'firebase/firestore';
+import { useForm, type GenericObject } from 'vee-validate';
+import { onMounted, ref, watch } from 'vue';
+import { toast } from 'vue3-toastify';
+import * as yup from 'yup';
 import LevelRangeEditor from './LevelRangeEditor.vue';
 import ManagerEditor from './ManagerEditor.vue';
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { toast } from 'vue3-toastify';
-import * as yup from 'yup'
-import { useForm, type GenericObject } from 'vee-validate';
 
-const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 const props = defineProps<{ initialSchool?: School, edit?: boolean }>()
 const emit = defineEmits(['close', 'save'])
-
-// const name = ref("");
-// const city = ref("");
-// const email = ref("");
-// const phoneNumber = ref("");
-// const managed = ref(false);
-// const managerOptions: Ref<ManagerOptions | undefined> = ref();
-// const levelRanges: Ref<LevelRange[]> = ref([]);
 
 const dialogLevels = ref(false)
 const dialogManager = ref(false)
@@ -192,38 +183,16 @@ async function save(values: GenericObject) {
     saving.value = true;
 
     const school: Partial<School> = { ...values };
-
-    // const school: Partial<School> = {
-    //     name: name.value,
-    //     managed: managed.value,
-    //     levelRanges: levelRanges.value,
-    //     city: city.value,
-    //     email: email.value,
-    //     phoneNumber: phoneNumber.value,
-    //     createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),
-    //     updatedAt: Timestamp.now(),
-    // };
     school.createdAt = props.edit ? props.initialSchool?.createdAt : Timestamp.now();
     school.updatedAt = Timestamp.now();
     if (managed.value) school.managerOptions = managerOptions.value;
 
-    console.log(school);
-    // name.value = "";
-    // city.value = "";
-    // email.value = "";
-    // phoneNumber.value = "";
-    // managed.value = false;
-    // levelRanges.value = [];
-    // managerOptions.value = undefined;
-
     try {
         if (props.edit && props.initialSchool?.id != undefined) {
-            const docRef = await setDoc(doc(schoolsRef, props.initialSchool.id), school);
-            console.log("Document (schools) update with ID: ", school.id, docRef);
+            await SchoolRepository.instance.update(school, props.initialSchool.id);
             toast.success("Scuola Aggiornata")
         } else {
-            const docRef = await addDoc(schoolsRef, school);
-            console.log("Document (schools) written with ID: ", docRef.id);
+            await SchoolRepository.instance.create(school);
             toast.success("Scuola Creata")
         }
         emit('save', school);

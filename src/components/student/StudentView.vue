@@ -47,22 +47,20 @@
 
 
 <script setup lang="ts">
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, type School, type Student } from '@/models/model';
-import type { Unsubscribe } from 'firebase/database';
-import { deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
+import { StudentRepository } from '@/models/repositories/student-repository';
+import { StudentService } from '@/models/services/student-service';
+import type { EventSubscription } from '@/models/utils/event';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
-import StudentEditor from './StudentEditor.vue';
 import DeleteDialog from '../DeleteDialog.vue';
-import { nameof } from '@/models/utils';
+import StudentEditor from './StudentEditor.vue';
 
 interface StudentViewProps {
     school: School
 }
 
 const props = defineProps<StudentViewProps>();
-const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
-const subscriptions: Unsubscribe[] = [];
+const subscriptions: EventSubscription[] = [];
 
 const students: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
@@ -90,8 +88,10 @@ function onSaveStudent(student?: Student) {
 }
 
 async function deleteStudent(student?: Student): Promise<boolean> {
+    if(!student) return false;
+
     try {
-        await deleteDoc(doc(studentsRef, student?.id));
+        await StudentRepository.instance.delete(student.id)
         return true;
     } catch (error) {
         return false;
@@ -100,19 +100,14 @@ async function deleteStudent(student?: Student): Promise<boolean> {
 
 async function loadStudents() {
     loadingStudents.value = true;
-    const studentsOfSchool = query(
-        studentsRef,
-        where(nameof<Student>('schoolId'), '==', props.school.id));
-    const uns = onSnapshot(studentsOfSchool, (snapshot) => {
-        const data = snapshot.docs.map(doc => doc.data())
-        students.value = data;
-        loadingStudents.value = false;
-        console.log("Current data: ", snapshot, data);
-    }, (error) => {
-        loadingStudents.value = false;
-        console.error(error);
-    });
-    subscriptions.push(uns);
+    const studentSubscription = StudentService.instance.observeStudentsOfSchool(props.school.id).subscribe({
+        next: data => {
+            students.value = data;
+            loadingStudents.value = false;
+        },
+        error: _err => loadingStudents.value = false
+    })
+    subscriptions.push(studentSubscription);
 }
 
 onMounted(async () => {
@@ -120,7 +115,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-    subscriptions.forEach(u => u?.());
+    subscriptions.forEach(u => u.unsubscribe());
 }) 
 </script>
 

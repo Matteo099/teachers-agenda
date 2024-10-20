@@ -35,9 +35,9 @@
 <script setup lang="ts">
 import type { ManagerOptions } from '@/models/model';
 import { useForm, type GenericObject } from 'vee-validate';
-import { onMounted, ref, watch, type Ref } from 'vue';
+import { onMounted, watch } from 'vue';
 import { toast } from 'vue3-toastify';
-import * as yup from 'yup'
+import * as yup from 'yup';
 
 interface ManagerEditorProps {
     initialManagerOptions?: ManagerOptions;
@@ -45,10 +45,6 @@ interface ManagerEditorProps {
 
 const props = defineProps<ManagerEditorProps>()
 const emit = defineEmits(['close', 'save'])
-
-// const totalStudents: Ref<number> = ref(0);
-// const quotePerStudent: Ref<number> = ref(0);
-// const cashFund: Ref<number> = ref(0);
 
 const schema = yup.object({
     totalStudents: yup.number().required('Il Numero Totale degli Studenti è obbligatorio').positive().label('Numero Totale Studenti'),
@@ -89,14 +85,6 @@ function updateManagerOptions() {
         cashFund.value = props.initialManagerOptions.cashFund;
     }
 }
-
-// function getManagerOptions(): ManagerOptions {
-//     return {
-//         totalStudents: totalStudents.value,
-//         quotePerStudent: quotePerStudent.value,
-//         cashFund: cashFund.value,
-//     }
-// }
 
 onMounted(() => updateManagerOptions())
 </script>

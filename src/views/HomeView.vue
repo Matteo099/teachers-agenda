@@ -38,19 +38,17 @@
 
 <script setup lang="ts">
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import type { School } from '@/models/model';
-import { onSnapshot, type Unsubscribe } from "firebase/firestore";
+import { SchoolRepository } from '@/models/repositories/school-repository';
+import type { EventSubscription } from '@/models/utils/event';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 
-const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
-let unsubscribeSchool: Unsubscribe;
+let schoolSubscription: EventSubscription;
 
 const schools: Ref<School[]> = ref([]);
 const loadingSchools = ref(false);
 const dialog = ref(false)
-
 
 function onSaveSchool(school?: School) {
   if (school)
@@ -65,15 +63,15 @@ function getSchoolName(school: School): string {
 
 async function loadSchools() {
   loadingSchools.value = true;
-  unsubscribeSchool = onSnapshot(schoolsRef, (snapshot) => {
-    const data = snapshot.docs.map(doc => doc.data())
-    schools.value = data;
-    loadingSchools.value = false;
-    console.log("Current data: ", snapshot, data);
-  }, (error) => {
-    toast.warning('Impossibile caricare le scuole...');
-    loadingSchools.value = false;
-    console.error("Impossibile caricare le scuole", error);
+  schoolSubscription = SchoolRepository.instance.observeAll().subscribe({
+    next: data => {
+      schools.value = data
+      loadingSchools.value = false;
+    },
+    error: _ => {
+      toast.warning('Impossibile caricare le scuole...');
+      loadingSchools.value = false
+    }
   });
 }
 
@@ -82,6 +80,6 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  unsubscribeSchool?.();
+  schoolSubscription?.unsubscribe();
 })
 </script>

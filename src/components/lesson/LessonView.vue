@@ -83,10 +83,12 @@
 </template>
 
 <script setup lang="ts">
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, months, yyyyMMdd, type DailyLesson, type ScheduledLesson, type School, type WeeklyLesson } from '@/models/model';
-import { nameof, nextDay } from '@/models/utils';
-import { addDoc, getDocs, orderBy, query, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
+import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
+import { DailyLessonService } from '@/models/services/daily-lesson-service';
+import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
+import { nextDay } from '@/models/utils';
+import { Timestamp, type Unsubscribe } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -111,10 +113,8 @@ interface LessonProjection {
 }
 
 const router = useRouter();
-const date = useDate()
+const date = useDate();
 const props = defineProps<LessonViewProps>();
-const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
-const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
 const subscriptions: Unsubscribe[] = [];
 
 const programmedLessons: Ref<WeeklyLesson[]> = ref([]);
@@ -152,9 +152,7 @@ async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
                 }))
             }
             // store it
-            const docRef = await addDoc(dailyLessonsRef, dailyLesson);
-            console.log("Document (daily lessons) written with ID: ", docRef.id);
-            dailyLessonId = docRef.id;
+            dailyLessonId = await DailyLessonRepository.instance.create(dailyLesson);
         } else {
             dailyLessonId = lessonGroup.lessonId;
         }
@@ -164,15 +162,10 @@ async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
 
 async function createDailyLesson(d: Date) {
     const parseDate = yyyyMMdd.fromDate(d).toIyyyyMMdd();
-    const dailyLessonsQuery = query(
-        dailyLessonsRef,
-        where(nameof<DailyLesson>('schoolId'), '==', props.school.id),
-        where(nameof<DailyLesson>('date'), '==', parseDate),
-    );
 
-    const snapshot = await getDocs(dailyLessonsQuery)
-    const data = snapshot.docs.map(doc => doc.data());
+    const data = await DailyLessonService.instance.getDailyLessonOfSchoolInDate(props.school.id, parseDate);
     console.log(data);
+
     let dailyLesson: Partial<DailyLesson> = data?.[0];
     if (dailyLesson?.id == undefined) {
         const weeklyLesson = programmedLessons.value.find(l => l.dayOfWeek == d.getDay())
@@ -199,9 +192,7 @@ async function createDailyLesson(d: Date) {
             }
         }
         // store it
-        const docRef = await addDoc(dailyLessonsRef, dailyLesson);
-        dailyLesson.id = docRef.id;
-        console.log("Document (daily lessons) written with ID: ", docRef.id);
+        dailyLesson.id = await DailyLessonRepository.instance.create(dailyLesson);
     }
     router.push(`/lesson/${dailyLesson.id}`);
 }
@@ -274,33 +265,20 @@ async function loadDailyLessons() {
     loadingLessons.value = true;
 
     const today = new Date(new Date().toDateString());
-    const startingdate = date.addMonths(today, -12) as Date;
-    const start = yyyyMMdd.fromDate(startingdate).toIyyyyMMdd();
-    // 1. Query to get DailyLesson documents by schoolId from a year ago untill now and order them by date (descending)
-    const dailyLessonsQuery = query(
-        dailyLessonsRef,
-        where(nameof<DailyLesson>('schoolId'), '==', props.school.id),
-        where(nameof<DailyLesson>('date'), '>=', start),
-        // where(nameof<DailyLesson>('date'), '<=', today),
-        orderBy(nameof<DailyLesson>('date'), 'desc')  // Sort by the lesson date in descending order
-    );
-
-    const snapshot = await getDocs(dailyLessonsQuery)
-    const data = snapshot.docs.map(doc => doc.data());
+    const startingDate = date.addMonths(today, -12) as Date;
+    const start = yyyyMMdd.fromDate(startingDate).toIyyyyMMdd();
+    const data = await DailyLessonService.instance.getDailyLessonOfSchoolFromDate(props.school.id, start, 'desc');
     dailyLessons.value = data;
+
     loadingLessons.value = false;
-    console.log("Current data: ", snapshot, data);
 }
 
 
 async function loadCalendar() {
     loadingCalendar.value = true;
-
-    const snapshot = await getDocs(query(weekLessonsRef, where(nameof<WeeklyLesson>('schoolId'), '==', props.school.id)));
-    const data = snapshot.docs.map(doc => doc.data())
+    const data = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(props.school.id);
     programmedLessons.value = data;
     loadingCalendar.value = false;
-    console.log("Current data: ", snapshot, data);
 }
 
 onMounted(async () => {

@@ -50,29 +50,20 @@
 </template>
 
 <script setup lang="ts">
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, type School, type Student } from '@/models/model';
-import { addDoc, doc, setDoc, Timestamp } from 'firebase/firestore';
+import { StudentRepository } from '@/models/repositories/student-repository';
+import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
 import { onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
-import * as yup from 'yup'
+import * as yup from 'yup';
 
-const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
+// const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const props = defineProps<{ school: School, initialStudent?: Student, edit?: boolean }>()
 const emit = defineEmits(['close', 'save'])
 
 const _school: Ref<School | undefined> = ref();
 const _levels: Ref<string[]> = ref([]);
-
-// const name = ref("");
-// const surname = ref("");
-// const contact = ref("");
-// const lessonDay: Ref<string | undefined> = ref();
-// const level: Ref<string | undefined> = ref();
-// const minutesLessonDuration: Ref<number | undefined> = ref();
-// const notes: Ref<string[]> = ref([]);
-
 const saving = ref(false);
 
 watch(() => props.initialStudent, () => updateStudent());
@@ -145,12 +136,10 @@ async function save(values: GenericObject) {
 
     try {
         if (props.edit && props.initialStudent?.id != undefined) {
-            const docRef = await setDoc(doc(studentsRef, props.initialStudent.id), student);
-            console.log("Document (schools) update with ID: ", student.id, docRef);
+            await StudentRepository.instance.update(student, props.initialStudent.id);
             toast.success("Studente Aggiornato")
         } else {
-            const docRef = await addDoc(studentsRef, student);
-            console.log("Document (schools) written with ID: ", docRef.id);
+            await StudentRepository.instance.create(student);
             toast.success("Studente Creato")
         }
         emit('save', student);
