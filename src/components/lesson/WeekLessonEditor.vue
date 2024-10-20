@@ -124,16 +124,18 @@
 </template>
 
 <script setup lang="ts">
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { days, Time, updateDailyLessonTime, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
-import { dateFormat, nameof } from '@/models/utils';
-import { addDoc, doc, onSnapshot, orderBy, query, setDoc, Timestamp, where, type Unsubscribe } from 'firebase/firestore';
+import { WeeklyLessonRepository } from '@/models/repositories/weekly-lesson-repository';
+import { StudentService } from '@/models/services/student-service';
+import { dateFormat } from '@/models/utils';
+import type { EventSubscription } from '@/models/utils/event';
+import { Timestamp } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 import { useForm, type GenericObject } from 'vee-validate';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import draggableComponent from 'vuedraggable';
-import * as yup from 'yup'
-import { v4 as uuidv4 } from 'uuid';
+import * as yup from 'yup';
 
 interface WeekLessonEditorProps {
     school: School;
@@ -143,15 +145,9 @@ interface WeekLessonEditorProps {
 
 const emit = defineEmits(['close', 'save'])
 const props = defineProps<WeekLessonEditorProps>()
-const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
-const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
-const subscriptions: Unsubscribe[] = [];
+const subscriptions: EventSubscription[] = [];
+let studentSubscription: EventSubscription;
 
-// const dayOfWeek: Ref<string | undefined> = ref();
-// const from: Ref<Date | undefined> = ref();
-// const to: Ref<Date | undefined> = ref();
-// const excludeDates: Ref<Date[]> = ref([]);
-// const startingTime: Ref<string | undefined> = ref();
 const scheduledLessons: Ref<ScheduledLesson[]> = ref([]);
 const allDates: Ref<{ name: string, value: Date }[]> = ref([]);
 const allStudents: Ref<Student[]> = ref([]);
@@ -159,7 +155,6 @@ const selectedStudents: Ref<Student[]> = ref([]);
 const modalTimePicker = ref(false);
 const saving = ref(false);
 const loadingStudents = ref(false);
-// const dialogCreateStudent = ref(false);
 
 const schema = yup.object({
     dayOfWeek: yup.string().required('Il Giorno è obbligatorio').label('Giorno'),
@@ -194,8 +189,6 @@ const onSave = handleSubmit(
         console.log(err)
     }
 )
-
-let unsubscribeStudents: Unsubscribe;
 
 watch(() => props.initialWeekLesson, () => updateWeekLesson())
 watch(dayOfWeek, () => updateExcludeDates())
@@ -333,12 +326,10 @@ async function save(values: GenericObject) {
 
     try {
         if (props.edit && props.initialWeekLesson?.id != undefined) {
-            await setDoc(doc(weekLessonsRef, props.initialWeekLesson.id), weekLesson);
-            console.log("Document (week lessons) update with ID: ", props.initialWeekLesson.id);
+            await WeeklyLessonRepository.instance.update(weekLesson, props.initialWeekLesson.id);
             toast.success("Lezione Settimanale Aggiornata")
         } else {
-            const docRef = await addDoc(weekLessonsRef, weekLesson);
-            console.log("Document (week lessons) written with ID: ", docRef.id);
+            await WeeklyLessonRepository.instance.create(weekLesson);
             toast.success("Lezione Settimanale Creata")
         }
         emit('save', weekLesson);
@@ -362,44 +353,32 @@ function getStudentLessonDay(studentId: string): string {
 }
 
 async function loadStudents() {
-    unsubscribeStudents?.();
+    studentSubscription?.unsubscribe();
 
     loadingStudents.value = true;
-
-    // Create a promise that resolves when the first snapshot is received
     const firstSnapshot = new Promise<void>((resolve, reject) => {
-        unsubscribeStudents = onSnapshot(
-            query(
-                studentsRef,
-                where(nameof<Student>('schoolId'), '==', props.school.id),
-                orderBy(nameof<Student>('lessonDay'))
-            ),
-            (snapshot) => {
-                const data = snapshot.docs.map(doc => doc.data());
+        studentSubscription = StudentService.instance.observeStudentsOfSchool(props.school.id).subscribe({
+            next: data => {
                 allStudents.value = data;
                 loadingStudents.value = false;
-                console.log("Current data: ", snapshot, data);
-
-                // Resolve the promise when the first snapshot is received
                 resolve();
             },
-            (error) => {
+            error: err => {
                 loadingStudents.value = false;
-                console.error(error);
-                reject(error); // Reject the promise on error
+                reject(err); // Reject the promise on error
             }
-        );
+        })
     });
 
     // Ensure to add the unsubscribe function for cleanup
-    subscriptions.push(unsubscribeStudents);
+    subscriptions.push(studentSubscription);
 
     // Wait for the first snapshot to be loaded
     await firstSnapshot;
 }
 
 onUnmounted(() => {
-    subscriptions.forEach(u => u?.());
+    subscriptions.forEach(s => s.unsubscribe());
 })
 
 onMounted(async () => {

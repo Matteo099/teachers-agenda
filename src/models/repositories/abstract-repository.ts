@@ -1,10 +1,10 @@
-import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, type CollectionReference, type DocumentData } from "firebase/firestore";
+import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData } from "firebase/firestore";
 import { QueryEvent, type IQueryEvent } from "../utils/event";
 
 export type ID = string;
 
 export abstract class AbstractRepository<T> {
-    protected constructor(public readonly collectionReference: CollectionReference<T, DocumentData>) {}
+    protected constructor(public readonly collectionReference: CollectionReference<T, DocumentData>) { }
 
     public async getDoc(id: ID): Promise<DocumentSnapshot<T, DocumentData>> {
         return await getDoc(doc(this.collectionReference, id));
@@ -21,9 +21,13 @@ export abstract class AbstractRepository<T> {
         return await getDocs(_query);
     }
 
-    public async create(obj: T): Promise<ID> {
+    public async create(obj: Partial<T> | any): Promise<ID> {
         const docRef = await addDoc(this.collectionReference, obj);
         return docRef.id;
+    }
+
+    public async update(obj: Partial<T> | any, id: ID): Promise<void> {
+        return setDoc(doc(this.collectionReference, id), obj);
     }
 
     public observe(id: ID): T {

@@ -45,8 +45,9 @@
                         <v-card-title>
                             <v-checkbox v-model="selectedLessons" :value="index" multiple>
                                 <template v-slot:label>
-                                    <span><b>{{ Time.fromITime(item.startTime).format() }} - {{ Time.fromITime(item.endTime).format() }}</b> &nbsp; <i>{{
-                                        item.name }} {{ item.surname }}</i></span>
+                                    <span><b>{{ Time.fromITime(item.startTime).format() }} - {{
+                                            Time.fromITime(item.endTime).format() }}</b> &nbsp; <i>{{
+                                                item.name }} {{ item.surname }}</i></span>
                                 </template>
                             </v-checkbox>
                         </v-card-title>
@@ -83,8 +84,10 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type Student, type StudentLesson } from '@/models/model';
-import { arraysHaveSameElements, nameof } from '@/models/utils';
-import { doc, documentId, getDocs, query, setDoc, Timestamp, where } from 'firebase/firestore';
+import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
+import { StudentService } from '@/models/services/student-service';
+import { arraysHaveSameElements } from '@/models/utils';
+import { doc, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
@@ -93,7 +96,6 @@ import { useDocument } from 'vuefire';
 
 const route = useRoute()
 const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
-const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 
 const selectedLessons: Ref<number[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
@@ -173,17 +175,11 @@ function doRestore() {
 async function loadSchoolStudents() {
     if (!dailyLesson.value) return;
 
-    loadingAllStudents.value = true;
-
-    const studentIds = dailyLesson.value.lessons.map(l => l.studentId)
-    console.log(studentIds, dailyLesson.value.schoolId)
-    const q = query(
-        studentsRef,
-        where(nameof<Student>('schoolId'), '==', dailyLesson.value.schoolId));
     try {
-        const snapshot = await getDocs(q);
-        console.log(snapshot)
-        availableStudents.value = snapshot.docs.map(doc => doc.data()).filter(s => !studentIds.includes(s.id))
+        loadingAllStudents.value = true;
+        const studentIds = dailyLesson.value.lessons.map(l => l.studentId)
+        const students = await StudentService.instance.getStudentsOfSchool(dailyLesson.value.schoolId);
+        availableStudents.value = students.filter(s => !studentIds.includes(s.id))
         selectedStudents.value = [];
     } catch (error) {
         toast.warn("Impossibile caricare gli studenti...")
@@ -211,7 +207,7 @@ async function saveSelectedStudents() {
     })
     try {
         // save it
-        await setDoc(doc(dailyLessonsRef, newDailyLesson.id), newDailyLesson);
+        await DailyLessonRepository.instance.update(newDailyLesson, newDailyLesson.id!);
         toast.success("Studenti aggiunti!");
         studentsDialog.value = false;
         console.log("Document (daily lessons) update with ID: ", newDailyLesson.id);
@@ -233,7 +229,7 @@ async function deleteStudent(student: StudentLesson) {
     updateDailyLessonTime(startingTime, { scheduledLessons: newDailyLesson.lessons!, students: studentLessons.value });
 
     try {
-        await setDoc(doc(dailyLessonsRef, newDailyLesson.id), newDailyLesson);
+        await DailyLessonRepository.instance.update(newDailyLesson, newDailyLesson.id!);
         return true;
     } catch (error) {
         return false;
@@ -251,21 +247,13 @@ async function updateStudentLesson() {
 
     loadingStudents.value = true;
 
-    const q = query(
-        studentsRef,
-        where(nameof<Student>('schoolId'), '==', dailyLesson.value.schoolId),
-        where(documentId(), 'in', newStudentsId));
-
-    const snapshot = await getDocs(q);
-    const data = snapshot.docs.map(doc => doc.data())
-
+    const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.value.schoolId, newStudentsId);
     studentLessons.value = dailyLesson.value.lessons.map(l => {
         const s = data.find(st => st.id == l.studentId)!;
         return { ...l, ...s };
     });
 
     loadingStudents.value = false;
-    console.log("Current data: ", snapshot, data);
 }
 
 async function save() {
@@ -276,8 +264,7 @@ async function save() {
         return;
     }
     try {
-        const docRef = await setDoc(doc(dailyLessonsRef, dl.id), dl);
-        console.log("Document (dailyLesson) update with ID: ", dl.id, docRef);
+        await DailyLessonRepository.instance.update(dl, dl.id);
         saving.value = false;
     } catch (e) {
         console.error("Error adding document (dailyLesson): ", e);
