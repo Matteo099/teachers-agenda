@@ -1,6 +1,4 @@
-import { addDoc, deleteDoc, doc, getDocs, onSnapshot, query, QueryConstraint, type CollectionReference, type DocumentData } from "firebase/firestore";
-import type { Ref } from "vue";
-import { useDocument } from "vuefire";
+import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, type CollectionReference, type DocumentData } from "firebase/firestore";
 import { QueryEvent, type IQueryEvent } from "../utils/event";
 
 export type ID = string;
@@ -8,14 +6,19 @@ export type ID = string;
 export abstract class AbstractRepository<T> {
     protected constructor(public readonly collectionReference: CollectionReference<T, DocumentData>) {}
 
-    public get(id: ID): Ref<T | undefined> {
-        return useDocument(doc(this.collectionReference, id))
+    public async getDoc(id: ID): Promise<DocumentSnapshot<T, DocumentData>> {
+        return await getDoc(doc(this.collectionReference, id));
     }
 
     public async getAll(...queries: QueryConstraint[]): Promise<T[]> {
         const _query = query(this.collectionReference, ...queries);
         const snapshot = await getDocs(_query);
         return snapshot.docs.map(doc => doc.data());
+    }
+
+    public async getAllDocs(...queries: QueryConstraint[]): Promise<QuerySnapshot<T, DocumentData>> {
+        const _query = query(this.collectionReference, ...queries);
+        return await getDocs(_query);
     }
 
     public async create(obj: T): Promise<ID> {
