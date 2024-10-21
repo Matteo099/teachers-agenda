@@ -35,6 +35,15 @@
                     :indeterminate="selectedLessons.length != 0 && selectedLessons.length != studentLessons.length"
                     @click="toggleAll"></v-checkbox>
             </v-col>
+            <v-col>
+
+                <DeleteDialog :name="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()" objName="Lezione Giornaliera"
+                    :onDelete="async () => await deleteDailyLesson()">
+                    <template v-slot:activator="{ props: activatorProps }">
+                        <v-btn color="error" v-bind="activatorProps">elimina lezione</v-btn>
+                    </template>
+                </DeleteDialog>
+            </v-col>
         </v-row>
 
         <v-container fluid>
@@ -46,7 +55,7 @@
                             <v-checkbox v-model="selectedLessons" :value="index" multiple>
                                 <template v-slot:label>
                                     <span><b>{{ Time.fromITime(item.startTime).format() }} - {{
-                                            Time.fromITime(item.endTime).format() }}</b> &nbsp; <i>{{
+                                        Time.fromITime(item.endTime).format() }}</b> &nbsp; <i>{{
                                                 item.name }} {{ item.surname }}</i></span>
                                 </template>
                             </v-checkbox>
@@ -90,11 +99,12 @@ import { arraysHaveSameElements } from '@/models/utils';
 import { doc, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
 
-const route = useRoute()
+const route = useRoute();
+const router = useRouter();
 const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
 
 const selectedLessons: Ref<number[]> = ref([])
@@ -215,6 +225,18 @@ async function saveSelectedStudents() {
         toast.warning("Impossibile aggiungere gli studenti alla lezione giornaliera")
     } finally {
         savingSelectedStudents.value = false;
+    }
+}
+
+async function deleteDailyLesson() {
+    if (!dailyLesson.value) return false;
+
+    try {
+        await DailyLessonRepository.instance.delete(dailyLesson.value.id);
+        router.go(-1)
+        return true;
+    } catch (error) {
+        return false;
     }
 }
 
