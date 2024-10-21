@@ -1,15 +1,12 @@
 <template>
-
-  https://github.com/will-lucena/vue3-pwa-tutorial
-
   <v-app>
     <v-navigation-drawer v-if="!mobile" permanent v-model="drawer">
       <v-list-item height="64">
         <template v-slot:prepend>
           <v-img contain :src="appLogo" height="45" width="45"></v-img>
         </template>
-        <v-list-item-title class="text-h6 ml-3">Le Ricette</v-list-item-title>
-        <v-list-item-subtitle class="text-h6 ml-3 pb-1">Della Casa</v-list-item-subtitle>
+        <v-list-item-title class="text-h6 ml-3">Agenda</v-list-item-title>
+        <v-list-item-subtitle class="text-h6 ml-3 pb-1">Del Maestro</v-list-item-subtitle>
       </v-list-item>
 
       <v-divider></v-divider>
@@ -22,14 +19,42 @@
           <v-list-item-title>Home</v-list-item-title>
         </v-list-item>
 
-        <v-list-item v-if="hasRole('HANDLE_ORDER')" to="/order-dashboard" color="lime-darken-4">
+        <v-list-item to="/schools" color="lime-darken-4">
+          <template v-slot:prepend>
+            <v-icon icon="mdi-town-hall"></v-icon>
+          </template>
+          <v-list-item-title>Gestisci Scuole</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item to="/calendar" color="lime-darken-4">
+          <template v-slot:prepend>
+            <v-icon icon="mdi-calendar"></v-icon>
+          </template>
+          <v-list-item-title>Calendario</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item :to="'/lesson/' + new Date()" color="lime-darken-4">
+          <template v-slot:prepend>
+            <v-icon icon="mdi-book-account"></v-icon>
+          </template>
+          <v-list-item-title>Lezioni</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item to="/recoveries" color="lime-darken-4">
+          <template v-slot:prepend>
+            <v-icon icon="mdi-repeat"></v-icon>
+          </template>
+          <v-list-item-title>Recuperi</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item to="/reports" color="lime-darken-4">
           <template v-slot:prepend>
             <v-icon icon="mdi-chart-bar"></v-icon>
           </template>
           <v-list-item-title>Statistiche</v-list-item-title>
         </v-list-item>
 
-        <v-list-item v-if="hasRole('HANDLE_DIE')" to="/die-dashboard" color="lime-darken-4">
+        <v-list-item v-if="hasRole('HANDLE_DIE')" to="/settings" color="lime-darken-4">
           <template v-slot:prepend>
             <v-icon icon="mdi-cog"></v-icon>
           </template>
@@ -65,28 +90,21 @@
         <v-icon right>mdi-theme-light-dark</v-icon>
       </v-btn>
 
-      <v-tooltip location="bottom">
+      <v-menu transition="slide-y-transition">
         <template v-slot:activator="{ props }">
-          <v-avatar size="40" color="lime-darken-4" v-bind="props" key="Default" class="mr-2">
-            <span>{{ userInitials }}</span>
-          </v-avatar>
+          <v-btn icon class="mr-2" v-bind="props">
+            <v-icon right>mdi-bell</v-icon>
+          </v-btn>
         </template>
-        <span>
-          <v-list bg-color="surface-variant" v-if="userRoles && userRoles.length > 0" density="compact">
-            <div v-for="(userRole, index) in userRoles" :key="index">
-              <v-list-item prepend-icon="mdi-account-check">
-                {{ userRole }}
-              </v-list-item>
-            </div>
-          </v-list>
-          <v-list v-else bg-color="surface-variant">
-            <v-list-item prepend-icon="mdi-account-off"> No roles found </v-list-item>
-          </v-list>
-        </span>
-      </v-tooltip>
+        <v-list>
+          <v-list-item v-for="(item, i) in notifications" :key="i">
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
       <div>
         <v-btn class="mx-5" variant="outlined" v-if="!user" @click="signIn">Accedi
-          <v-icon right class="ml-2">mdi-signin</v-icon></v-btn>
+          <v-icon right class="ml-2">mdi-login</v-icon></v-btn>
         <v-btn class="mx-5" variant="outlined" v-if="user" @click="signOut">Esci
           <v-icon right class="ml-2">mdi-logout</v-icon></v-btn>
       </div>
@@ -94,47 +112,51 @@
 
     <v-main>
       <v-container fluid>
-        <RouterView />
+        <router-view v-slot="{ Component, route }">
+          <!-- <component :is="route.meta?.transition?.toString() || 'v-fade-transition'" leave-absolute>
+            <component :is="Component" />
+          </component> -->
+          <v-slide-x-transition leave-absolute>
+            <component :is="Component" />
+          </v-slide-x-transition>
+        </router-view>
       </v-container>
     </v-main>
 
     <v-layout v-if="mobile" class="overflow-visible position-relative" style="height: 56px;">
       <v-bottom-navigation class="position-fixed bottom-0" v-model="data" :bg-color="color" mode="shift">
-        <v-btn>
-          <v-icon>mdi-television-play</v-icon>
-
-          <span>Video</span>
+        <v-btn to="/">
+          <v-icon>mdi-home</v-icon>
+          <span>Home</span>
         </v-btn>
-
+        <!-- 
         <v-btn>
           <v-icon>mdi-music-note</v-icon>
-
           <span>Music</span>
         </v-btn>
 
         <v-btn>
           <v-icon>mdi-book</v-icon>
-
           <span>Book</span>
         </v-btn>
 
         <v-btn>
           <v-icon>mdi-image</v-icon>
-
           <span>Image</span>
-        </v-btn>
+        </v-btn> -->
       </v-bottom-navigation>
     </v-layout>
   </v-app>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, getCurrentInstance, onMounted, ref } from 'vue'
 import { useTheme } from 'vuetify'
 import { useSettingsStore } from './stores/settings'
 import { useDisplay } from 'vuetify'
+import { toast } from 'vue3-toastify';
 
-const { mobile } = useDisplay({ mobileBreakpoint: 'sm' })
+const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);
 const color = computed(() => {
   switch (data.value) {
@@ -147,10 +169,11 @@ const color = computed(() => {
 })
 
 const user = ref(false);
+const notifications: any[] = [];
 
 const settingsStore = useSettingsStore()
 const theme = useTheme()
-const appLogo = new URL('@/assets/images/logo.png', import.meta.url).href
+const appLogo = new URL('@/assets/images/logor.png', import.meta.url).href
 const companyLogo = new URL('@/assets/images/logo.png', import.meta.url).href
 const drawer = ref(true)
 const userInitials = ref<string>()
@@ -166,4 +189,5 @@ function toggleTheme() {
 function signIn() { }
 function signOut() { }
 function hasRole(role: string): boolean { return true; }
+
 </script>

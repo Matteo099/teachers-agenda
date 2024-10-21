@@ -1,0 +1,68 @@
+<template>
+    <v-row class="fill-height">
+        <v-col>
+            <v-sheet height="600">
+                <v-calendar ref="calendar" v-model="today" :events="events" color="primary" type="month">
+                    <!-- <template v-slot:event="{ event }">
+                        {{ event.title }}
+                    </template> -->
+                </v-calendar>
+            </v-sheet>
+        </v-col>
+    </v-row>
+</template>
+
+<script setup lang="ts">
+import { onMounted, ref, type Ref } from 'vue';
+import { useDate } from 'vuetify'
+
+const today = ref<any>();
+const focus = '';
+const events: Ref<any[]> = ref([]);
+
+
+function getEventColor(event: any) {
+    return event.color
+}
+async function fetchEvents({ start, end }: { start: Date, end: Date }) {
+    const res = []
+
+    const min = start
+    const max = end
+    const days = (max.getTime() - min.getTime()) / 86400000
+    const eventCount = rnd(days, days + 20)
+
+    const colors = ['blue', 'indigo', 'deep-purple', 'cyan', 'green', 'orange', 'grey darken-1'];
+    const names = ['La Fenice', 'Lizard', 'Lizard'];
+
+    for (let i = 0; i < eventCount; i++) {
+        const allDay = rnd(0, 3) === 0
+        const firstTimestamp = rnd(min.getTime(), max.getTime())
+        const first = new Date(firstTimestamp - (firstTimestamp % 900000))
+        const secondTimestamp = rnd(2, allDay ? 288 : 8) * 900000
+        const second = new Date(first.getTime() + secondTimestamp)
+
+        res.push({
+            title: names[rnd(0, names.length - 1)],
+            start: first,
+            end: second,
+            color: colors[rnd(0, colors.length - 1)],
+            allDay: !allDay,
+        })
+    }
+
+    events.value = res;
+}
+function rnd(a: number, b: number) {
+    return Math.floor((b - a + 1) * Math.random()) + a
+}
+
+function day({ date }: any) {
+    console.log("day", date);
+}
+
+onMounted(async () => {
+    const adapter = useDate()
+    await fetchEvents({ start: adapter.startOfDay(adapter.startOfMonth(new Date())) as Date, end: adapter.endOfDay(adapter.endOfMonth(new Date())) as Date })
+});
+</script>
