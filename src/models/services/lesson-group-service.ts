@@ -12,6 +12,7 @@ export interface LessonProjection {
     next: boolean;
     lessonId?: string;
     pending?: boolean;
+    recovery?: boolean;
     lessons: ScheduledLesson[];
 }
 
@@ -40,9 +41,9 @@ export class LessonGroupService {
         const asyyyyMMdd = yyyyMMdd.fromDate(asDate);
         this.today = {
             asDate,
-            asString: asyyyyMMdd.toIyyyyMMdd(), 
-            asyyyyMMdd: asyyyyMMdd, 
-            asIyyyyMMdd: asyyyyMMdd.toIyyyyMMdd(), 
+            asString: asyyyyMMdd.toIyyyyMMdd(),
+            asyyyyMMdd: asyyyyMMdd,
+            asIyyyyMMdd: asyyyyMMdd.toIyyyyMMdd(),
         }
     }
 
@@ -91,7 +92,7 @@ export class LessonGroupService {
         // Step 2: Loop until we have the required number of upcoming lessons (or run out of lessons)
         while ((weeklyLessons.length > 0 || futureDailyLessons.length > dailyLessonIndex) && lessonProjections.length < totalLessons) {
             weeklyLessons.forEach(weekLesson => {
-                if(lessonProjections.length >= totalLessons) return;
+                if (lessonProjections.length >= totalLessons) return;
 
                 const nextLessonDate = nextDay(startingDay, weekLesson.dayOfWeek);
                 const formattedDate = yyyyMMdd.fromDate(nextLessonDate);
@@ -149,10 +150,12 @@ export class LessonGroupService {
 
     private createLessonProjection(dailyLesson: DailyLesson, next: boolean): LessonProjection {
         const pending = dailyLesson.date <= this.today.asString && dailyLesson.lessons.some(l => l.status == LessonStatus.NONE);
+        const recovery = dailyLesson.lessons.some(l => l.status == LessonStatus.RECOVERY);
 
         return {
             lessonId: dailyLesson.id,
             date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date),
+            recovery,
             pending,
             next,
             lessons: dailyLesson.lessons

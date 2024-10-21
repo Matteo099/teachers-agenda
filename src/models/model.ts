@@ -217,7 +217,7 @@ export enum LessonStatus {
     PRESENT,
     ABSENT,
     CANCELLED,
-    RESCHEDULED
+    RECOVERY
 }
 
 export interface Lesson extends ScheduledLesson {

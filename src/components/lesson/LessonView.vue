@@ -51,13 +51,14 @@
                 <v-list-item v-for="lesson in lg.lessons" :key="lesson.date.toString()" :title="lesson.date.format()"
                     @click="routeToDailyLesson(lesson)" :baseColor="lesson.next ? 'primary' : ''">
                     <template v-slot:prepend>
-                        <v-avatar :color="lesson.next ? 'primary' : lesson.pending ? 'warning' : 'grey-lighten-1'">
+                        <v-avatar :color="getColor(lesson)">
                             <v-icon color="white">mdi-calendar</v-icon>
                         </v-avatar>
                     </template>
 
-                    <template v-slot:append v-if="lesson.pending">
-                        <v-icon color="warning">mdi-alert</v-icon>
+                    <template v-slot:append v-if="lesson.pending || lesson.recovery">
+                        <v-icon v-if="lesson.pending" color="warning">mdi-alert</v-icon>
+                        <v-icon v-if="lesson.recovery" color="info">mdi-alpha-r-circle</v-icon>
                     </template>
                 </v-list-item>
             </template>
@@ -83,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { yyyyMMdd, type School } from '@/models/model';
+import { yyyyMMdd, type Lesson, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { LessonGroupService, type LessonGroup, type LessonProjection, type SchoolLessons } from '@/models/services/lesson-group-service';
 import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
@@ -116,6 +117,14 @@ const schoolLessons: SchoolLessons = {
 
 const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value);
 watch(props.school, () => loadLessonGroup())
+
+function getColor(lesson: LessonProjection) {
+    if (lesson.next) return "primary";
+    if (lesson.pending) return "warning";
+    if (lesson.recovery) return "info";
+
+    return 'grey-lighten-1';
+}
 
 async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
     const dailyLessonId = await DailyLessonService.instance.getOrCreateDailyLessonId(schoolLessons, lessonGroup);

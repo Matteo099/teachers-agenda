@@ -24,7 +24,7 @@ const recoveryLessonDialog = ref(false);
 function saveRecoveryLesson(event: DailyLesson, sl: StudentLesson) {
     recoveryLessonDialog.value = false;
     // doBackup();
-    sl.status = LessonStatus.RESCHEDULED;
+    sl.status = LessonStatus.RECOVERY;
     sl.recoveryDate = event.date;
     // save();
 }
