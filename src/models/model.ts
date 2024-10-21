@@ -216,19 +216,40 @@ export enum LessonStatus {
     NONE,
     PRESENT,
     ABSENT,
-    CANCELLED,
-    RECOVERY
+    CANCELLED
 }
 
 export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
     trial?: boolean;
-    recoveryDate?: IyyyyMMdd;
-    originalLessonId?: string;  // Link to the original lesson if rescheduled
-    originalDailyLessonId?: string;  // Link to the original daily lesson if rescheduled
+    recovery?: RecoveryLessonInfo;
 
     createdAt: Timestamp;
     updatedAt: Timestamp;
+}
+
+export interface RecoveryLessonInfo {
+    /**
+     * Describes the context of the recovery lesson.
+     * 
+     * - 'original': Refers to the original lesson where the student was absent.
+     * - 'recovery': Refers to the recovery lesson that has been scheduled to make up for the missed original lesson.
+     */
+    origin: 'original' | 'recovery';
+
+    /**
+     * The `lessonId` links to:
+     * - The original lesson, if `origin` is 'original'.
+     * - The recovery lesson, if `origin` is 'recovery'.
+     */
+    lessonId: string;
+
+    /**
+     * The `dailyLessonId` refers to:
+     * - The original daily lesson, if `origin` is 'original'.
+     * - The recovery daily lesson, if `origin` is 'recovery'.
+     */
+    dailyLessonId: string;
 }
 
 export type StudentLesson = Lesson & Student;

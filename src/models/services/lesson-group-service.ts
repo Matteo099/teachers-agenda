@@ -150,7 +150,7 @@ export class LessonGroupService {
 
     private createLessonProjection(dailyLesson: DailyLesson, next: boolean): LessonProjection {
         const pending = dailyLesson.date <= this.today.asString && dailyLesson.lessons.some(l => l.status == LessonStatus.NONE);
-        const recovery = dailyLesson.lessons.some(l => l.status == LessonStatus.RECOVERY);
+        const recovery = dailyLesson.lessons.some(l => l.recovery?.origin == 'original');
 
         return {
             lessonId: dailyLesson.id,

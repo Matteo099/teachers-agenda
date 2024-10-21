@@ -63,10 +63,13 @@
                         <v-card-text>
                             <v-btn class="ma-1" v-if="item.status != LessonStatus.PRESENT"
                                 @click="present(item)">presente</v-btn>
-                            <v-btn class="ma-1" v-if="item.status != LessonStatus.ABSENT"
+                            <v-btn class="ma-1"
+                                v-if="item.status != LessonStatus.ABSENT && item.recovery?.origin != 'original'"
                                 @click="absent(item)">assente</v-btn>
+                            <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
+                                @click="cancel(item)">cancella</v-btn>
                             <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
-                                @click="cancel(item)">annulla</v-btn>
+                                @click="reset(item)">reset</v-btn>
 
                             <v-btn class="ma-1" @click="notes(item)">note</v-btn>
 
@@ -155,6 +158,13 @@ function absent(event: StudentLesson) {
     save();
 }
 function cancel(event: StudentLesson) {
+    if (event) {
+        doBackup();
+        event.status = LessonStatus.CANCELLED
+        save();
+    }
+}
+function reset(event: StudentLesson) {
     if (event) {
         doBackup();
         event.status = LessonStatus.NONE
@@ -311,8 +321,7 @@ function extractDailyLesson(): DailyLesson | undefined {
             status: less.status,
             updatedAt: Timestamp.now()
         }
-        if (l.originalLessonId) newLesson.originalLessonId = l.originalLessonId;
-        if (l.recoveryDate) newLesson.recoveryDate = l.recoveryDate;
+        if (l.recovery) newLesson.recovery = l.recovery;
         if (l.trial) newLesson.trial = l.trial;
         lessons.push(newLesson);
     })
