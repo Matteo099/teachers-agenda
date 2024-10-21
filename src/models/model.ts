@@ -235,21 +235,40 @@ export interface RecoveryLessonInfo {
      * - 'original': Refers to the original lesson where the student was absent.
      * - 'recovery': Refers to the recovery lesson that has been scheduled to make up for the missed original lesson.
      */
-    origin: 'original' | 'recovery';
+    ref: 'original' | 'recovery';
 
     /**
      * The `lessonId` links to:
-     * - The original lesson, if `origin` is 'original'.
-     * - The recovery lesson, if `origin` is 'recovery'.
+     * - The original lesson, if `ref` is 'original'.
+     * - The recovery lesson, if `ref` is 'recovery'.
      */
     lessonId: string;
 
     /**
      * The `dailyLessonId` refers to:
-     * - The original daily lesson, if `origin` is 'original'.
-     * - The recovery daily lesson, if `origin` is 'recovery'.
+     * - The original daily lesson, if `ref` is 'original'.
+     * - The recovery daily lesson, if `ref` is 'recovery'.
      */
     dailyLessonId: string;
+}
+
+export interface SchoolRecoveryLesson {
+    /**
+     * List of dailyLessonIds containing lesson with ABSENT status and no recovery object
+     */
+    unsetRecoveries: { lessonId: string; dailyLessonId: string }[];
+
+    /**
+     * List of dailyLessonIds containing lesson with ABSENT status and recovery lesson defined, but lesson is not yet done (status = NONE)
+     */
+    pendingRecoveries: { lessonId: string; dailyLessonId: string }[];
+
+    /**
+     * List of dailyLessonIds containing lesson with a recovery object (origin = 'original') and status = PRESENT
+     */
+    doneRecoveries: { lessonId: string; dailyLessonId: string }[];
+
+    schoolId: string;
 }
 
 export type StudentLesson = Lesson & Student;

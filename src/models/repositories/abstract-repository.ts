@@ -6,6 +6,10 @@ export type ID = string;
 export abstract class AbstractRepository<T> {
     protected constructor(public readonly collectionReference: CollectionReference<T, DocumentData>) { }
 
+    public async get(id: ID): Promise<T | undefined> {
+        return (await getDoc(doc(this.collectionReference, id))).data();
+    }
+
     public async getDoc(id: ID): Promise<DocumentSnapshot<T, DocumentData>> {
         return await getDoc(doc(this.collectionReference, id));
     }

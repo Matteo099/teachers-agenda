@@ -64,7 +64,7 @@
                             <v-btn class="ma-1" v-if="item.status != LessonStatus.PRESENT"
                                 @click="present(item)">presente</v-btn>
                             <v-btn class="ma-1"
-                                v-if="item.status != LessonStatus.ABSENT && item.recovery?.origin != 'original'"
+                                v-if="item.status != LessonStatus.ABSENT && item.recovery?.ref != 'original'"
                                 @click="absent(item)">assente</v-btn>
                             <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
                                 @click="cancel(item)">cancella</v-btn>
@@ -97,6 +97,8 @@ import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type Student, type StudentLesson } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
+import { SchoolRecoveryLessonRepository } from '@/models/repositories/school-recovery-lesson-repository';
+import { SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
 import { doc, Timestamp } from 'firebase/firestore';
@@ -146,29 +148,31 @@ async function present(event: StudentLesson) {
         studentLessons.value[s].status = LessonStatus.PRESENT
     });
     selectedLessons.value = []
-    save();
+    await save();
 }
-function absent(event: StudentLesson) {
+async function absent(event: StudentLesson) {
     doBackup();
     selectedLessons.value.forEach(s => {
         studentLessons.value[s].status = LessonStatus.ABSENT
     });
     selectedLessons.value = []
     if (event) event.status = LessonStatus.ABSENT;
-    save();
+    await save();
+
+    SchoolRecoveryLessonService.instance.setUnsetRecovery(event.lessonId, dailyLesson.value!.id, event.schoolId);
 }
-function cancel(event: StudentLesson) {
+async function cancel(event: StudentLesson) {
     if (event) {
         doBackup();
         event.status = LessonStatus.CANCELLED
-        save();
+        await save();
     }
 }
-function reset(event: StudentLesson) {
+async function reset(event: StudentLesson) {
     if (event) {
         doBackup();
         event.status = LessonStatus.NONE
-        save();
+        await save();
     }
 }
 
