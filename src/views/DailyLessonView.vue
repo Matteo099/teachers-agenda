@@ -143,29 +143,29 @@ function getColor(event: StudentLesson): string {
 
 async function present(event: StudentLesson) {
     doBackup();
-    if (event) event.status = LessonStatus.PRESENT;
-    selectedLessons.value.forEach(s => {
-        studentLessons.value[s].status = LessonStatus.PRESENT
-    });
+    const _studentLessons = selectedLessons.value.map(s => studentLessons.value[s]);
+    _studentLessons.push(event);
+    _studentLessons.forEach(s => s.status = LessonStatus.PRESENT)
     selectedLessons.value = []
     await save();
+    SchoolRecoveryLessonService.instance.removeFromRecovery(dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons.map(l => l.id));
 }
 async function absent(event: StudentLesson) {
     doBackup();
-    selectedLessons.value.forEach(s => {
-        studentLessons.value[s].status = LessonStatus.ABSENT
-    });
+    const _studentLessons = selectedLessons.value.map(s => studentLessons.value[s]);
+    _studentLessons.push(event);
+    _studentLessons.forEach(s => s.status = LessonStatus.ABSENT)
     selectedLessons.value = []
-    if (event) event.status = LessonStatus.ABSENT;
     await save();
 
-    SchoolRecoveryLessonService.instance.setUnsetRecovery(event.lessonId, dailyLesson.value!.id, event.schoolId);
+    SchoolRecoveryLessonService.instance.setUnsetRecovery(dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons.map(l => l.id));
 }
 async function cancel(event: StudentLesson) {
     if (event) {
         doBackup();
         event.status = LessonStatus.CANCELLED
         await save();
+        SchoolRecoveryLessonService.instance.removeFromRecovery(dailyLesson.value!.id, dailyLesson.value!.schoolId, event.lessonId);
     }
 }
 async function reset(event: StudentLesson) {
@@ -173,6 +173,7 @@ async function reset(event: StudentLesson) {
         doBackup();
         event.status = LessonStatus.NONE
         await save();
+        SchoolRecoveryLessonService.instance.removeFromRecovery(dailyLesson.value!.id, dailyLesson.value!.schoolId, event.lessonId);
     }
 }
 

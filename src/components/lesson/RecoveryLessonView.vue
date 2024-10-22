@@ -1,8 +1,27 @@
 <template>
-    <v-card title="Recuperi" elevation="3" :loading="!extendedRecoveries">
-        <v-list lines="three" :items="extendedRecoveries?.pendingRecoveries" item-props>
+    <v-card title="Recuperi" elevation="3" :loading="!loadingExtendedRecoveries">
+        <v-list lines="two">
+            <template v-for="extRecovery of extendedRecoveries?.recoveryMap" :key="extRecovery.type">
+                <v-list-subheader inset>{{ extRecovery.type }}</v-list-subheader>
+
+                <v-list-item v-for="recovery in extRecovery.recoveries" :key="recovery.lessonId"
+                    :title="`${recovery.name} ${recovery.surname}`" :baseColor="lesson.next ? 'primary' : ''">
+                    <template v-slot:prepend>
+                        <v-avatar :color="getColor(lesson)">
+                            <v-icon color="white">mdi-calendar</v-icon>
+                        </v-avatar>
+                    </template>
+
+                    <template v-slot:append v-if="lesson.pending || lesson.recovery">
+                        <v-icon v-if="lesson.pending" color="warning">mdi-alert</v-icon>
+                        <v-icon v-if="lesson.recovery" color="info">mdi-alpha-r-circle</v-icon>
+                    </template>
+                </v-list-item>
+            </template>
+        </v-list>
+        <!-- <v-list lines="three" :items="extendedRecoveries?.pendingRecoveries" item-props>
             <template v-slot:title="{ item }">
-                {{ item.name }}
+                {{ item.name }} {{ item.surname }}
             </template>
             <template v-slot:subtitle="{ item }">
                 <div v-if="item.status == 'NOT_RECOVERED'">
@@ -17,18 +36,6 @@
                 </div>
             </template>
             <template v-slot:append="{ item }">
-                <!-- <v-dialog v-if="dailyLesson && item" v-model="recoveryLessonDialog"
-                    transition="dialog-bottom-transition" fullscreen persistent>
-                    <template v-slot:activator="{ props: activatorProps }">
-                        <v-btn class="ma-1" v-if="item.status == LessonStatus.ABSENT" v-bind="activatorProps">schedula
-                            recupero</v-btn>
-                    </template>
-
-<template v-slot:default>
-                        <RecoveryLessonEditor :schoolId="dailyLesson.schoolId" :lessonToRecover="item"
-                            @close="recoveryLessonDialog = false" @save="saveRecoveryLesson($event, item)" />
-                    </template>
-</v-dialog> -->
                 <v-dialog width="auto" scrollable v-if="item.status == 'NOT_RECOVERED'" persistent>
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn v-bind="activatorProps">programma</v-btn>
@@ -51,17 +58,17 @@
 
                 <v-btn v-if="item.status == 'RECOVERY_SCHEDULED'" @click="cancelScheduleRecovery(item)">annulla</v-btn>
             </template>
-        </v-list>
+        </v-list> -->
     </v-card>
 </template>
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { LessonStatus, type DailyLesson, type School, type SchoolRecoveryLesson, type StudentLesson } from '@/models/model';
-import { SchoolRecoveryLessonRepository } from '@/models/repositories/school-recovery-lesson-repository';
+import { type School, type SchoolRecoveryLesson, type StudentLesson } from '@/models/model';
 import { SchoolRecoveryLessonService, type ExtendedSchoolRecoveryLesson } from '@/models/services/school-recovery-lesson-service';
 import { doc } from 'firebase/firestore';
-import { computed, onMounted, ref, watch, type Ref } from 'vue';
+import { computed, ref, watch, type Ref } from 'vue';
+import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
 
 export interface RecoveryLessonViewProps {
@@ -75,6 +82,7 @@ const extendedRecoveries: Ref<ExtendedSchoolRecoveryLesson | undefined> = ref();
 const datePicker: Ref<Date | undefined> = ref();
 const item: Ref<StudentLesson | undefined> = ref();
 const recoveryLessonDialog = ref(false);
+const loadingExtendedRecoveries = ref(false);
 
 const schoolRecoveryLessonsSource = computed(() =>
     doc(schoolRecoveryLessonsRef, props.school.id as string)
@@ -103,26 +111,16 @@ function scheduleRecovery(event: any) {
     event.status = 'RECOVERY_SCHEDULED';
 }
 
-
 async function computeDailyLessons() {
     if (!recoveries.value) return;
 
-    extendedRecoveries.value = await SchoolRecoveryLessonService.instance.computeDailyLessons(recoveries.value);
-    // const res = [
-    //     {
-    //         name: 'Luca Verdi',
-    //         date: new Date('10/09/2024 14:00'),
-    //         status: 'NOT_RECOVERED',
-    //         id: 1,
-    //     },
-    //     {
-    //         name: 'Alessio Rossi',
-    //         date: new Date('10/09/2024 18:00'),
-    //         status: 'NOT_RECOVERED',
-    //         id: 2,
-    //     }
-    // ];
-
-    // recoveries.value = res;
+    try {
+        loadingExtendedRecoveries.value = true;
+        extendedRecoveries.value = await SchoolRecoveryLessonService.instance.computeDailyLessons(recoveries.value);
+    } catch (error) {
+        toast.warning("Impossibile caricare le Lezioni di Recupero");
+    } finally {
+        loadingExtendedRecoveries.value = false;
+    }
 }
 </script>
