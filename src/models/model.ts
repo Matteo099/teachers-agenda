@@ -271,6 +271,12 @@ export interface SchoolRecoveryLesson {
     schoolId: string;
 }
 
+export const recoveryTypes = {
+    "unset": "Lezioni di Recupero da Programmare",
+    "pending": "Lezioni di Recupero Programmate",
+    "done": "Lezioni di Recupero Completate",
+}
+
 export type StudentLesson = Lesson & Student;
 
 
