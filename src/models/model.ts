@@ -256,6 +256,8 @@ export interface RecoveryLessonInfo {
 export interface RecoverySchedule {
     studentId: ID;
     schoolId: ID;
+    originalDailyLessonId: ID,
+    originalLessonId: ID,
     date: Date;
     startTime: ITime;
     endTime: ITime;

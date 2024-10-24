@@ -147,6 +147,11 @@ export class DailyLessonService {
             studentId: schedule.studentId,
             startTime: schedule.startTime,
             endTime: schedule.endTime,
+            recovery: {
+                ref: 'original',
+                dailyLessonId: schedule.originalDailyLessonId,
+                lessonId: schedule.originalLessonId,
+            },
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
         }

@@ -180,6 +180,8 @@ async function scheduleRecovery() {
         const schedule: RecoverySchedule = {
             studentId: recovery.studentId,
             schoolId: props.school.id,
+            originalDailyLessonId: recovery.dailyLessonId,
+            originalLessonId: recovery.lessonId,
             date: date.value,
             startTime: startTime.toITime(),
             endTime: startTime.add({ minutes: recovery.minutesLessonDuration }).toITime()
@@ -201,7 +203,7 @@ async function scheduleRecovery() {
             }
         } else console.warn("")
         // Step 3: update school recovery lesson status
-        await SchoolRecoveryLessonService.instance.setPendingRecovery(recovery.dailyLessonId, recovery.schoolId, recovery.lessonId);
+        await SchoolRecoveryLessonService.instance.setPendingRecovery(props.school.id, recovery.dailyLessonId, recovery.lessonId);
         scheduleRecoveryDialog.value = false
     } catch (error) {
         toast.error("Impossibile schedulare la lezione di recupero")

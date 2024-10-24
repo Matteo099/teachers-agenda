@@ -129,7 +129,7 @@ export class SchoolRecoveryLessonService {
             if (unsetI == -1) recovery.unsetRecoveries.push({ lessonId, dailyLessonId });
         })
 
-        if (update) SchoolRecoveryLessonRepository.instance.save(recovery, recovery.schoolId);
+        if (update) SchoolRecoveryLessonRepository.instance.save(recovery, recoveryOrSchoolId);
     }
 
     public async setPendingRecovery(recoveryOrSchoolId: ID | SchoolRecoveryLesson, dailyLessonId: ID, ...lessonIds: ID[]) {
@@ -149,7 +149,7 @@ export class SchoolRecoveryLessonService {
             }
         })
 
-        if (update) SchoolRecoveryLessonRepository.instance.save(recovery, recovery.schoolId);
+        if (update) SchoolRecoveryLessonRepository.instance.save(recovery, recoveryOrSchoolId);
     }
 
     public async setDoneRecovery(recoveryOrSchoolId: ID | SchoolRecoveryLesson, dailyLessonId: ID, ...lessonIds: ID[]) {
@@ -169,7 +169,7 @@ export class SchoolRecoveryLessonService {
             }
         })
 
-        if (update) SchoolRecoveryLessonRepository.instance.save(recovery, recovery.schoolId);
+        if (update) SchoolRecoveryLessonRepository.instance.save(recovery, recoveryOrSchoolId);
     }
 
     async updateRecovery(action: LessonStatusAction, dailyLessonId: ID, schoolId: ID, ...lessons: StudentLesson[]) {
