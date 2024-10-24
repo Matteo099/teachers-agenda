@@ -40,21 +40,39 @@
                     </template>
 
                     <template v-slot:append>
-                        <v-dialog width="auto" scrollable v-if="extRecovery.type == 'unset'" persistent>
+                        <v-dialog v-model="scheduleRecoveryDialog" width="auto" scrollable
+                            v-if="extRecovery.type == 'unset'" persistent>
                             <template v-slot:activator="{ props: activatorProps }">
                                 <v-btn v-bind="activatorProps">programma</v-btn>
                             </template>
 
-                            <template v-slot:default="{ isActive }">
-                                <v-card>
+                            <template v-slot:default>
+                                <v-card title="Programma Lezione di Recupero" :loading="loadingSchedulingRecovery">
                                     <v-card-text class="pa-6">
-                                        <v-date-picker :min="new Date()" v-model="datePicker"></v-date-picker>
+                                        <v-row>
+                                            <v-col cols="12" md="12">
+                                                <v-date-input v-model="date" v-bind="dateProps"
+                                                    label="Data della Lezione di Recupero"
+                                                    inputmode="none"></v-date-input>
+                                            </v-col>
+                                            <v-col cols="12" lg="12">
+                                                <v-text-field v-model="time" v-bind="timeProps"
+                                                    :active="modalTimePicker" :focused="modalTimePicker"
+                                                    inputmode="none" label="Orario della prima Lezione"
+                                                    prepend-icon="mdi-clock-time-four-outline" readonly>
+                                                    <v-dialog v-model="modalTimePicker" activator="parent" width="auto">
+                                                        <v-time-picker v-if="modalTimePicker" v-model="time"
+                                                            format="24hr"></v-time-picker>
+                                                    </v-dialog>
+                                                </v-text-field>
+                                            </v-col>
+                                        </v-row>
                                     </v-card-text>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
-                                        <v-btn text="Annulla" @click="isActive.value = false"></v-btn>
+                                        <v-btn text="Annulla" @click="close"></v-btn>
                                         <v-btn color="primary" text="Salva"
-                                            @click="isActive.value = false; scheduleRecovery(recovery)"></v-btn>
+                                            @click="saveTrigger($event, recovery)"></v-btn>
                                     </v-card-actions>
                                 </v-card>
                             </template>
@@ -76,12 +94,17 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { recoveryTypes, yyyyMMdd, type School, type SchoolRecoveryLesson, type StudentLesson } from '@/models/model';
+import { recoveryTypes, Time, yyyyMMdd, type Lesson, type RecoverySchedule, type School, type SchoolRecoveryLesson } from '@/models/model';
+import type { ID } from '@/models/repositories/abstract-repository';
+import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
+import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { SchoolRecoveryLessonService, type ExtendedSchoolRecoveryLesson, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
 import { doc } from 'firebase/firestore';
+import { useForm, type GenericObject } from 'vee-validate';
 import { computed, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
+import * as yup from 'yup';
 
 export interface RecoveryLessonViewProps {
     school: School
@@ -91,44 +114,105 @@ const props = defineProps<RecoveryLessonViewProps>();
 const schoolRecoveryLessonsRef = useDB<SchoolRecoveryLesson>(DatabaseRef.SCHOOL_RECOVERY_LESSONS);
 
 const extendedRecoveries: Ref<ExtendedSchoolRecoveryLesson | undefined> = ref();
-const datePicker: Ref<Date | undefined> = ref();
-const recoveryLessonDialog = ref(false);
 const loadingExtendedRecoveries = ref(false);
+const loadingSchedulingRecovery = ref(false);
+const modalTimePicker = ref(false);
+const scheduleRecoveryDialog = ref(false);
 
 const schoolRecoveryLessonsSource = computed(() =>
     doc(schoolRecoveryLessonsRef, props.school.id as string)
 )
 const recoveries = useDocument(schoolRecoveryLessonsSource)
+const schema = yup.object({
+    date: yup.date().required('La Data della Lezione di Recupero è obbligatoria').label('Data della Lezione di Recupero'),
+    time: yup.string().required(`L'Orario della Lezione di Recupero è obbligatorio`).label('Orario della Lezione di Recupero'),
+})
+
+const { defineField, handleSubmit } = useForm({
+    validationSchema: schema
+})
+
+const vuetifyConfig = (state: any) => ({
+    props: {
+        'error-messages': state.errors
+    }
+})
+
+const [date, dateProps] = defineField('date', vuetifyConfig);
+const [time, timeProps] = defineField('time', vuetifyConfig);
 
 watch(recoveries, async () => computeDailyLessons());
-
-// function saveRecoveryLesson(event: DailyLesson, sl: StudentLesson) {
-//     recoveryLessonDialog.value = false;
-//     // doBackup();
-//     sl.status = LessonStatus.RECOVERY;
-//     sl.recoveryDate = event.date;
-//     // save();
-// }
 
 function cancelScheduleRecovery(event: any) {
     event.recoveryDate = undefined;
     event.status = 'NOT_RECOVERED';
 }
 
-function scheduleRecovery(recovery: ExtendedStudentLesson) {
-    if (!datePicker.value) return;
+const onSave = handleSubmit(
+    async (_: GenericObject) => {
+        scheduleRecovery();
+    },
+    (err) => {
+        toast.warn('Ci sono alcuni errori! Inserisci correttamente i dati')
+        console.log(err)
+    }
+)
 
-    // cconst recoveryLesson = createOrGetDailyLesson(datePicker.value).addLesson().setRecovery({'original': recovery.value}).save()
-    // createOrGetDailyLesson(recovery.value).getLesson().setRecovery({'recovery': recoveryLesson}).save()
-    // setPendingRecovery(recovery)
+let currentRecovery: ExtendedStudentLesson;
+function saveTrigger(event: any, recovery: ExtendedStudentLesson) {
+    currentRecovery = recovery;
+    onSave(event)
+}
 
-    event.recoveryDate = datePicker.value;
-    event.status = 'RECOVERY_SCHEDULED';
+function close() {
+    scheduleRecoveryDialog.value = false
+    date.value = undefined;
+    time.value = undefined;
+}
+
+async function scheduleRecovery() {
+    if (!date.value || !time.value || !currentRecovery) return;
+
+    const recovery: ExtendedStudentLesson = currentRecovery;
+    try {
+        loadingSchedulingRecovery.value = true;
+        const startTime = Time.fromHHMM(time.value)!;
+        const schedule: RecoverySchedule = {
+            studentId: recovery.studentId,
+            schoolId: props.school.id,
+            date: date.value,
+            startTime: startTime.toITime(),
+            endTime: startTime.add({ minutes: recovery.minutesLessonDuration }).toITime()
+        }
+        // Step 1: create a new lesson R with recoveryReference to Original Lesson
+        const recoveryDailyLesson: Lesson & { dailyLessonId: ID } = await DailyLessonService.instance.createRecoveryLesson(schedule);
+        // Step 2: update original lesson O with recoveryReference to R Lesson
+        const originalDaillyLessonDoc = await DailyLessonRepository.instance.getDoc(recovery.dailyLessonId);
+        if (originalDaillyLessonDoc.exists()) {
+            const originalDaillyLesson = originalDaillyLessonDoc.data();
+            const lesson = originalDaillyLesson.lessons.find(l => l.lessonId == recovery.lessonId);
+            if (lesson) {
+                lesson.recovery = {
+                    ref: 'recovery',
+                    dailyLessonId: recoveryDailyLesson.dailyLessonId,
+                    lessonId: recoveryDailyLesson.lessonId
+                }
+                await DailyLessonRepository.instance.save(originalDaillyLesson, originalDaillyLesson.id);
+            }
+        } else console.warn("")
+        // Step 3: update school recovery lesson status
+        await SchoolRecoveryLessonService.instance.setPendingRecovery(recovery.dailyLessonId, recovery.schoolId, recovery.lessonId);
+        scheduleRecoveryDialog.value = false
+    } catch (error) {
+        toast.error("Impossibile schedulare la lezione di recupero")
+    } finally {
+        loadingSchedulingRecovery.value = false;
+    }
 }
 
 async function computeDailyLessons() {
     if (!recoveries.value) return;
-    console.log("computeDailyLessons")
+
     try {
         loadingExtendedRecoveries.value = true;
         extendedRecoveries.value = await SchoolRecoveryLessonService.instance.computeDailyLessons(recoveries.value);

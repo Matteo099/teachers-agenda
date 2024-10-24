@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { yyyyMMdd, type Lesson, type School } from '@/models/model';
+import { yyyyMMdd, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { LessonGroupService, type LessonGroup, type LessonProjection, type SchoolLessons } from '@/models/services/lesson-group-service';
 import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
@@ -93,6 +93,7 @@ import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useDate } from 'vuetify';
 import WeekLessonEditor from './CalendarLessonEditor.vue';
+import { SchoolService } from '@/models/services/school-service';
 
 export interface LessonViewProps {
     school: School
@@ -134,31 +135,13 @@ async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
 async function loadLessonGroup() {
     computingLessonGroups.value = true;
 
-    await loadDailyLessons();
-    await loadCalendar();
-    lessonGroups.value = await LessonGroupService.instance.getGroupedLessons(schoolLessons);
-
-    computingLessonGroups.value = false;
-}
-
-async function loadDailyLessons() {
-    loadingLessons.value = true;
-
     const today = new Date(new Date().toDateString());
     const startingDate = date.addMonths(today, -12) as Date;
-    const start = yyyyMMdd.fromDate(startingDate).toIyyyyMMdd();
-    schoolLessons.dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolFromDate(props.school.id, start, 'desc');
 
-    loadingLessons.value = false;
-}
+    const _schoolLessons = await SchoolService.instance.getSchoolLessons(props.school.id, startingDate);
+    lessonGroups.value = await LessonGroupService.instance.getGroupedLessons(_schoolLessons);
 
-
-async function loadCalendar() {
-    loadingCalendar.value = true;
-
-    schoolLessons.weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(props.school.id);
-
-    loadingCalendar.value = false;
+    computingLessonGroups.value = false;
 }
 
 onMounted(async () => {

@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { dateFormat } from "./utils";
+import type { ID } from "./repositories/abstract-repository";
 
 export const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 export const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
@@ -252,21 +253,34 @@ export interface RecoveryLessonInfo {
     dailyLessonId: string;
 }
 
+export interface RecoverySchedule {
+    studentId: ID;
+    schoolId: ID;
+    date: Date;
+    startTime: ITime;
+    endTime: ITime;
+}
+
+export interface RecoveryRef {
+    lessonId: string; 
+    dailyLessonId: string;
+}
+
 export interface SchoolRecoveryLesson {
     /**
      * List of dailyLessonIds containing lesson with ABSENT status and no recovery object
      */
-    unsetRecoveries: { lessonId: string; dailyLessonId: string }[];
+    unsetRecoveries: RecoveryRef[];
 
     /**
      * List of dailyLessonIds containing lesson with ABSENT status and recovery lesson defined, but lesson is not yet done (status = NONE)
      */
-    pendingRecoveries: { lessonId: string; dailyLessonId: string }[];
+    pendingRecoveries: RecoveryRef[];
 
     /**
      * List of dailyLessonIds containing lesson with a recovery object (origin = 'original') and status = PRESENT
      */
-    doneRecoveries: { lessonId: string; dailyLessonId: string }[];
+    doneRecoveries: RecoveryRef[];
 
     schoolId: string;
 }
@@ -280,7 +294,7 @@ export const recoveryTypes = {
 export type StudentLesson = Lesson & Student;
 
 
-export const updateDailyLessonTime = function (startingTimeInSeconds: number | string | undefined, studentLessons: (Student & Lesson)[] | { scheduledLessons: ScheduledLesson[], students: Student[] }) {
+export const updateDailyLessonTime = function (startingTimeInSeconds: number | string | undefined, studentLessons: StudentLesson[] | { scheduledLessons: ScheduledLesson[], students: Student[] }) {
     let startingMinutes = 0;
     try {
         const time = startingTimeInSeconds;

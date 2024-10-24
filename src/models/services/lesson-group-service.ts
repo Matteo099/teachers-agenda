@@ -10,7 +10,7 @@ export interface LessonGroup {
 export interface LessonProjection {
     date: yyyyMMdd;
     next: boolean;
-    lessonId?: string;
+    dailyLessonId?: string;
     pending?: boolean;
     recovery?: boolean;
     lessons: ScheduledLesson[];
@@ -153,7 +153,7 @@ export class LessonGroupService {
         const recovery = dailyLesson.lessons.some(l => l.recovery?.ref == 'original');
 
         return {
-            lessonId: dailyLesson.id,
+            dailyLessonId: dailyLesson.id,
             date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date),
             recovery,
             pending,

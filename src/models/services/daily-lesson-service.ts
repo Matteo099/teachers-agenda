@@ -1,10 +1,11 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd } from "../model";
+import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type RecoveryRef, type RecoverySchedule } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
 import type { LessonProjection, SchoolLessons } from "./lesson-group-service";
+import { SchoolService } from "./school-service";
 
 export class DailyLessonService {
 
@@ -15,7 +16,7 @@ export class DailyLessonService {
         return this._instance;
     }
 
-    public async getDailyLessonOfSchoolInDate(schoolId: ID, date: IyyyyMMdd): Promise<DailyLesson[]> {
+    public async getDailyLessonOfSchoolByDate(schoolId: ID, date: IyyyyMMdd): Promise<DailyLesson[]> {
         const _query1 = where(nameof<DailyLesson>('schoolId'), '==', schoolId);
         const _query2 = where(nameof<DailyLesson>('date'), '==', date);
         return DailyLessonRepository.instance.getAll(_query1, _query2);
@@ -47,14 +48,14 @@ export class DailyLessonService {
         schoolLessons: SchoolLessons,
         lessonGroup: LessonProjection
     ): Promise<ID> {
-        if (!lessonGroup.lessonId) {
+        if (!lessonGroup.dailyLessonId) {
             // If lessonId is undefined, create a new daily lesson
             const newDailyLesson = this.buildDailyLessonFromProjection(schoolLessons.schoolId, lessonGroup);
-            return DailyLessonRepository.instance.create(newDailyLesson);
+            return DailyLessonRepository.instance.save(newDailyLesson);
         }
 
         // If lessonId exists, return it directly
-        return lessonGroup.lessonId;
+        return lessonGroup.dailyLessonId;
     }
 
     public buildDailyLessonFromProjection(
@@ -83,7 +84,7 @@ export class DailyLessonService {
         const parseDate = yyyyMMdd.fromDate(lessonDate).toIyyyyMMdd();
 
         // Try to retrieve the daily lesson for the given date
-        const existingData = await DailyLessonService.instance.getDailyLessonOfSchoolInDate(schoolLessons.schoolId, parseDate);
+        const existingData = await DailyLessonService.instance.getDailyLessonOfSchoolByDate(schoolLessons.schoolId, parseDate);
 
         if (existingData?.[0]?.id) {
             return existingData[0].id; // If found, return the existing ID
@@ -91,7 +92,7 @@ export class DailyLessonService {
 
         // If no daily lesson found, create a new one from weekly lessons
         const newDailyLesson = this.buildDailyLessonFromWeeklyOrEmpty(schoolLessons, lessonDate, parseDate);
-        return DailyLessonRepository.instance.create(newDailyLesson);
+        return DailyLessonRepository.instance.save(newDailyLesson);
     }
 
     public buildDailyLessonFromWeeklyOrEmpty(
@@ -124,5 +125,36 @@ export class DailyLessonService {
             schoolId: schoolLessons.schoolId,
             lessons: [],
         };
+    }
+
+    async removeRecoveryLesson(recoveryRef: RecoveryRef) {
+        const recoveryDailyLessonDoc = await DailyLessonRepository.instance.getDoc(recoveryRef.dailyLessonId);
+        if (recoveryDailyLessonDoc.exists()) {
+            const recoveryDailyLesson = recoveryDailyLessonDoc.data();
+            const recoveryLessonIndex = recoveryDailyLesson.lessons.findIndex(l => l.lessonId == recoveryRef.lessonId);
+            if (recoveryLessonIndex != -1) {
+                const deleteLesson = recoveryDailyLesson.lessons.splice(recoveryLessonIndex, 1)[0];
+                if (!deleteLesson.recovery) console.warn("Deleting a lesson not marked as recovery lesson!", deleteLesson);
+                DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
+            }
+        }
+    }
+
+    async createRecoveryLesson(schedule: RecoverySchedule): Promise<Lesson & { dailyLessonId: ID }> {
+        const recoveryLesson: Lesson = {
+            lessonId: uuidv4(),
+            status: LessonStatus.NONE,
+            studentId: schedule.studentId,
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now()
+        }
+        const schoolLessons = await SchoolService.instance.getSchoolLessons(schedule.schoolId, schedule.date)
+        const recoveryDailyLessonId = await this.getOrCreateDailyLessonId(schoolLessons, schedule.date);
+        const recoveryDailyLesson = (await DailyLessonRepository.instance.get(recoveryDailyLessonId))!;
+        recoveryDailyLesson.lessons.push(recoveryLesson)
+        await DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
+        return { ...recoveryLesson, dailyLessonId: recoveryDailyLesson.id };
     }
 }

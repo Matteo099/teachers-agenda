@@ -136,10 +136,10 @@ async function save(values: GenericObject) {
 
     try {
         if (props.edit && props.initialStudent?.id != undefined) {
-            await StudentRepository.instance.update(student, props.initialStudent.id);
+            await StudentRepository.instance.save(student, props.initialStudent.id);
             toast.success("Studente Aggiornato")
         } else {
-            await StudentRepository.instance.create(student);
+            await StudentRepository.instance.save(student);
             toast.success("Studente Creato")
         }
         emit('save', student);

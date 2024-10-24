@@ -326,10 +326,10 @@ async function save(values: GenericObject) {
 
     try {
         if (props.edit && props.initialWeekLesson?.id != undefined) {
-            await WeeklyLessonRepository.instance.update(weekLesson, props.initialWeekLesson.id);
+            await WeeklyLessonRepository.instance.save(weekLesson, props.initialWeekLesson.id);
             toast.success("Lezione Settimanale Aggiornata")
         } else {
-            await WeeklyLessonRepository.instance.create(weekLesson);
+            await WeeklyLessonRepository.instance.save(weekLesson);
             toast.success("Lezione Settimanale Creata")
         }
         emit('save', weekLesson);

@@ -61,10 +61,11 @@
                             </v-checkbox>
                         </v-card-title>
                         <v-card-text>
-                            <v-btn class="ma-1" v-if="item.status != LessonStatus.PRESENT"
+                            <v-btn class="ma-1"
+                                v-if="item.status != LessonStatus.PRESENT && item.status != LessonStatus.CANCELLED"
                                 @click="present(item)">presente</v-btn>
                             <v-btn class="ma-1"
-                                v-if="item.status != LessonStatus.ABSENT && item.recovery?.ref != 'original'"
+                                v-if="item.status != LessonStatus.ABSENT && item.status != LessonStatus.CANCELLED && item.recovery?.ref != 'original'"
                                 @click="absent(item)">assente</v-btn>
                             <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
                                 @click="cancel(item)">cancella</v-btn>
@@ -97,8 +98,7 @@ import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type Student, type StudentLesson } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
-import { SchoolRecoveryLessonRepository } from '@/models/repositories/school-recovery-lesson-repository';
-import { SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
+import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
 import { doc, Timestamp } from 'firebase/firestore';
@@ -148,7 +148,7 @@ async function present(event: StudentLesson) {
     _studentLessons.forEach(s => s.status = LessonStatus.PRESENT)
     selectedLessons.value = []
     await save();
-    SchoolRecoveryLessonService.instance.removeFromRecovery(dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons.map(l => l.id));
+    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons);
 }
 async function absent(event: StudentLesson) {
     doBackup();
@@ -157,15 +157,16 @@ async function absent(event: StudentLesson) {
     _studentLessons.forEach(s => s.status = LessonStatus.ABSENT)
     selectedLessons.value = []
     await save();
+    console.log(event, LessonStatusAction.SET_ABSENT, dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons)
 
-    SchoolRecoveryLessonService.instance.setUnsetRecovery(dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons.map(l => l.id));
+    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons);
 }
 async function cancel(event: StudentLesson) {
     if (event) {
         doBackup();
         event.status = LessonStatus.CANCELLED
         await save();
-        SchoolRecoveryLessonService.instance.removeFromRecovery(dailyLesson.value!.id, dailyLesson.value!.schoolId, event.lessonId);
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, dailyLesson.value!.id, dailyLesson.value!.schoolId, event);
     }
 }
 async function reset(event: StudentLesson) {
@@ -173,7 +174,7 @@ async function reset(event: StudentLesson) {
         doBackup();
         event.status = LessonStatus.NONE
         await save();
-        SchoolRecoveryLessonService.instance.removeFromRecovery(dailyLesson.value!.id, dailyLesson.value!.schoolId, event.lessonId);
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.id, dailyLesson.value!.schoolId, event);
     }
 }
 
@@ -232,7 +233,7 @@ async function saveSelectedStudents() {
     })
     try {
         // save it
-        await DailyLessonRepository.instance.update(newDailyLesson, newDailyLesson.id!);
+        await DailyLessonRepository.instance.save(newDailyLesson, newDailyLesson.id!);
         toast.success("Studenti aggiunti!");
         studentsDialog.value = false;
         console.log("Document (daily lessons) update with ID: ", newDailyLesson.id);
@@ -266,7 +267,7 @@ async function deleteStudent(student: StudentLesson) {
     updateDailyLessonTime(startingTime, { scheduledLessons: newDailyLesson.lessons!, students: studentLessons.value });
 
     try {
-        await DailyLessonRepository.instance.update(newDailyLesson, newDailyLesson.id!);
+        await DailyLessonRepository.instance.save(newDailyLesson, newDailyLesson.id!);
         return true;
     } catch (error) {
         return false;
@@ -301,7 +302,7 @@ async function save() {
         return;
     }
     try {
-        await DailyLessonRepository.instance.update(dl, dl.id);
+        await DailyLessonRepository.instance.save(dl, dl.id);
         saving.value = false;
     } catch (e) {
         console.error("Error adding document (dailyLesson): ", e);
@@ -318,7 +319,8 @@ function extractDailyLesson(): DailyLesson | undefined {
         const less = studentLessons.value.find(sl => sl.id == l.studentId);
         if (less === undefined) return;
         const newLesson: Lesson = {
-            lessonId: uuidv4(),
+            // lessonId: uuidv4(),
+            lessonId: l.lessonId,
             createdAt: l.createdAt,
             studentId: l.studentId,
             startTime: l.startTime,
