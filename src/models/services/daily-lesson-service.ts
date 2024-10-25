@@ -1,6 +1,6 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type RecoveryRef, type RecoverySchedule } from "../model";
+import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoverySchedule } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
@@ -127,7 +127,7 @@ export class DailyLessonService {
         };
     }
 
-    async removeRecoveryLesson(recoveryRef: RecoveryRef) {
+    async removeRecoveryLesson(recoveryRef: LessonRef) {
         const recoveryDailyLessonDoc = await DailyLessonRepository.instance.getDoc(recoveryRef.dailyLessonId);
         if (recoveryDailyLessonDoc.exists()) {
             const recoveryDailyLesson = recoveryDailyLessonDoc.data();

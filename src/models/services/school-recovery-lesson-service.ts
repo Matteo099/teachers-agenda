@@ -1,26 +1,13 @@
-import { yyyyMMdd, type DailyLesson, type SchoolRecoveryLesson, type StudentLesson } from "../model";
+import { yyyyMMdd, type DailyLesson, type Lesson, type SchoolRecoveryLesson, type Student, type StudentLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { SchoolRecoveryLessonRepository } from "../repositories/school-recovery-lesson-repository";
 import { StudentService } from "./student-service";
 
-export type ExtendedStudentLesson = StudentLesson & { date: yyyyMMdd; dailyLessonId: ID, originalDailyLesson?: DailyLesson };
+export type RecoveryReference = { originalDailyLesson: DailyLesson, recoveryDailyLesson?: DailyLesson };
+export type ExtendedStudentLesson = StudentLesson & RecoveryReference;
 export interface ExtendedSchoolRecoveryLesson {
     recoveryMap: { type: 'unset' | 'pending' | 'done'; recoveries: ExtendedStudentLesson[] }[]
-    // /**
-    //  * List of dailyLessonIds containing lesson with ABSENT status and no recovery object
-    //  */
-    // unsetRecoveries: StudentLesson[];
-
-    // /**
-    //  * List of dailyLessonIds containing lesson with ABSENT status and recovery lesson defined, but lesson is not yet done (status = NONE)
-    //  */
-    // pendingRecoveries: StudentLesson[];
-
-    // /**
-    //  * List of dailyLessonIds containing lesson with a recovery object (origin = 'original') and status = PRESENT
-    //  */
-    // doneRecoveries: StudentLesson[];
 
     schoolId: string;
 }
@@ -39,59 +26,52 @@ export class SchoolRecoveryLessonService {
     }
 
     public async computeDailyLessons(recoveries: SchoolRecoveryLesson): Promise<ExtendedSchoolRecoveryLesson> {
-        const unsetRecoveryLessons = await Promise.all(
-            recoveries.unsetRecoveries.map(async (ref) => {
-                const dailyLesson = await DailyLessonRepository.instance.get(ref.dailyLessonId);
-                return { ref, dailyLesson };
-            })
-        );
-        const pendingRecoveryLessons = await Promise.all(
-            recoveries.pendingRecoveries.map(async (ref) => {
-                const dailyLesson = await DailyLessonRepository.instance.get(ref.dailyLessonId);
-                return { ref, dailyLesson };
-            })
-        );
-        const doneRecoveryLessons = await Promise.all(
-            recoveries.doneRecoveries.map(async (ref) => {
-                const dailyLesson = await DailyLessonRepository.instance.get(ref.dailyLessonId);
-                return { ref, dailyLesson };
-            })
-        );
+        // Collect all unique daily lesson IDs from recoveries
+        const dailyLessonIds = Array.from(new Set(recoveries.recoveries.flatMap(r => [r.originalLesson.dailyLessonId, r.recoveryLesson?.dailyLessonId]).filter(Boolean)));
+
+        // Retrieve all required daily lessons and students
+        const dailyLessons = await Promise.all(dailyLessonIds.map(id => DailyLessonRepository.instance.get(id!)));
+        const validDailyLessons = dailyLessons.filter(Boolean);
         const students = await StudentService.instance.getStudentsOfSchool(recoveries.schoolId);
 
+        // Initialize categorized recovery arrays
         const unsetRecoveries: ExtendedStudentLesson[] = [];
         const pendingRecoveries: ExtendedStudentLesson[] = [];
         const doneRecoveries: ExtendedStudentLesson[] = [];
-        for (const unsetLesson of unsetRecoveryLessons) {
-            const dailyLesson = unsetLesson.dailyLesson;
-            if (!dailyLesson) continue;
-            dailyLesson.lessons.forEach(l => {
-                if (l.lessonId != unsetLesson.ref.lessonId) return;
-                const s = students.find(st => st.id == l.studentId);
-                if (!s) return;
-                unsetRecoveries.push({ ...l, ...s, date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date), dailyLessonId: dailyLesson.id });
-            })
-        }
-        for (const pendingLesson of pendingRecoveryLessons) {
-            const dailyLesson = pendingLesson.dailyLesson;
-            if (!dailyLesson) continue;
-            dailyLesson.lessons.forEach(l => {
-                if (l.lessonId != pendingLesson.ref.lessonId) return;
-                const s = students.find(st => st.id == l.studentId);
-                if (!s) return;
-                pendingRecoveries.push({ ...l, ...s, date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date), dailyLessonId: dailyLesson.id });
-            })
-        }
-        for (const doneLesson of doneRecoveryLessons.filter(l => !!l)) {
-            const dailyLesson = doneLesson.dailyLesson;
-            if (!dailyLesson) continue;
-            dailyLesson.lessons.forEach(l => {
-                if (l.lessonId != doneLesson.ref.lessonId) return;
-                const s = students.find(st => st.id == l.studentId);
-                if (!s) return;
-                doneRecoveries.push({ ...l, ...s, date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date), dailyLessonId: dailyLesson.id });
-            })
-        }
+
+        // Helper function to add recovery to the respective category
+        const addRecovery = (lesson: Lesson, student: Student, statusArray: ExtendedStudentLesson[], recoveryLessons: RecoveryReference) => {
+            statusArray.push({ ...lesson, ...student, ...recoveryLessons });
+        };
+
+        // Process each recovery
+        recoveries.recoveries.forEach(recovery => {
+            const { originalLesson, recoveryLesson, done } = recovery;
+
+            const originalDailyLesson = validDailyLessons.find(d => d!.id === originalLesson.dailyLessonId);
+            const recoveryDailyLesson = recoveryLesson ? validDailyLessons.find(d => d!.id === recoveryLesson.dailyLessonId) : undefined;
+
+            if (!originalDailyLesson) {
+                console.warn("Unable to load original daily lesson of a recovery...");
+                return;
+            }
+
+            const recoveryReferences = { originalDailyLesson, recoveryDailyLesson };
+
+            originalDailyLesson.lessons.forEach(lesson => {
+                if (lesson.lessonId !== originalLesson.lessonId) return;
+
+                const student = students.find(st => st.id === lesson.studentId);
+                if (!student) return;
+
+                if (recoveryDailyLesson) {
+                    done ? addRecovery(lesson, student, doneRecoveries, recoveryReferences)
+                        : addRecovery(lesson, student, pendingRecoveries, recoveryReferences);
+                } else {
+                    addRecovery(lesson, student, unsetRecoveries, recoveryReferences);
+                }
+            });
+        });
 
         return {
             recoveryMap: [
@@ -100,7 +80,7 @@ export class SchoolRecoveryLessonService {
                 { type: 'done', recoveries: doneRecoveries },
             ],
             schoolId: recoveries.schoolId
-        }
+        };
     }
 
     public async getOrCreate(schoolId: ID): Promise<SchoolRecoveryLesson> {
@@ -108,9 +88,7 @@ export class SchoolRecoveryLessonService {
         if (doc.exists()) return doc.data();
 
         const srl: SchoolRecoveryLesson = {
-            unsetRecoveries: [],
-            pendingRecoveries: [],
-            doneRecoveries: [],
+            recoveries: [],
             schoolId
         }
         await SchoolRecoveryLessonRepository.instance.save(srl, schoolId);
@@ -125,8 +103,8 @@ export class SchoolRecoveryLessonService {
         else recovery = recoveryOrSchoolId;
 
         lessonIds.forEach(lessonId => {
-            const unsetI = recovery.unsetRecoveries.findIndex(l => l.dailyLessonId == dailyLessonId && l.lessonId == lessonId);
-            if (unsetI == -1) recovery.unsetRecoveries.push({ lessonId, dailyLessonId });
+            const unsetI = recovery.recoveries.findIndex(l => !l.done && !l.recoveryLesson && l.originalLesson.dailyLessonId == dailyLessonId && l.originalLesson.lessonId == lessonId);
+            if (unsetI == -1) recovery.recoveries.push({ originalLesson: { lessonId, dailyLessonId } });
         })
 
         if (update) SchoolRecoveryLessonRepository.instance.save(recovery, recoveryOrSchoolId);
@@ -140,12 +118,12 @@ export class SchoolRecoveryLessonService {
         else recovery = recoveryOrSchoolId;
 
         lessonIds.forEach(lessonId => {
-            const unsetI = recovery.unsetRecoveries.findIndex(l => l.dailyLessonId == dailyLessonId && l.lessonId == lessonId);
-            const pendingI = recovery.pendingRecoveries.findIndex(l => l.dailyLessonId == dailyLessonId && l.lessonId == lessonId);
-            if (unsetI != -1) recovery.unsetRecoveries.splice(unsetI, 1)[0];
+            const unsetI = recovery.recoveries.findIndex(l => !l.done && !l.recoveryLesson && l.originalLesson.dailyLessonId == dailyLessonId && l.originalLesson.lessonId == lessonId);
+            if (unsetI != -1) recovery.recoveries.splice(unsetI, 1)[0];
             else console.warn("Set pending recovery but not found in unset recovery list...");
+            const pendingI = recovery.recoveries.findIndex(l => !l.done && !!l.recoveryLesson && l.originalLesson.dailyLessonId == dailyLessonId && l.originalLesson.lessonId == lessonId);
             if (pendingI == -1) {
-                recovery.pendingRecoveries.push({ lessonId, dailyLessonId });
+                recovery.recoveries.push({ originalLesson: { lessonId, dailyLessonId } });
             }
         })
 
@@ -189,6 +167,8 @@ export class SchoolRecoveryLessonService {
                 } else console.warn("Trying to set absent a recovery lesson. A recovery lesson can be only CANCELLED!");
             }
             else if (action == LessonStatusAction.CANCEL) {
+                console.log(lesson);
+
                 if (lesson.recovery) {
                     // remove recoveryRef from originalDailyLesson
                     const originalDailyLessonDoc = await DailyLessonRepository.instance.getDoc(lesson.recovery.dailyLessonId);

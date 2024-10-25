@@ -188,15 +188,6 @@ export interface WeeklyLesson {
     updatedAt: Timestamp;
 }
 
-export interface RecoveryLesson {
-    studentId: string;
-    originalDailyLessonId: string;
-    originalLessonId: string;
-    recoveryDailyLessonId: string;
-    recoveryLessonId: string;
-    schoolId: string;
-}
-
 export interface ScheduledLesson {
     lessonId: string;
     studentId: string; // relation with the user
@@ -239,18 +230,11 @@ export interface RecoveryLessonInfo {
     ref: 'original' | 'recovery';
 
     /**
-     * The `lessonId` links to:
-     * - The original lesson, if `ref` is 'original'.
-     * - The recovery lesson, if `ref` is 'recovery'.
-     */
-    lessonId: string;
-
-    /**
-     * The `dailyLessonId` refers to:
+     * The `lessonRef` refers to:
      * - The original daily lesson, if `ref` is 'original'.
      * - The recovery daily lesson, if `ref` is 'recovery'.
      */
-    dailyLessonId: string;
+    lessonRef: LessonRef;
 }
 
 export interface RecoverySchedule {
@@ -263,28 +247,20 @@ export interface RecoverySchedule {
     endTime: ITime;
 }
 
-export interface RecoveryRef {
-    lessonId: string; 
+export interface LessonRef {
+    lessonId: string;
     dailyLessonId: string;
 }
 
 export interface SchoolRecoveryLesson {
-    /**
-     * List of dailyLessonIds containing lesson with ABSENT status and no recovery object
-     */
-    unsetRecoveries: RecoveryRef[];
-
-    /**
-     * List of dailyLessonIds containing lesson with ABSENT status and recovery lesson defined, but lesson is not yet done (status = NONE)
-     */
-    pendingRecoveries: RecoveryRef[];
-
-    /**
-     * List of dailyLessonIds containing lesson with a recovery object (origin = 'original') and status = PRESENT
-     */
-    doneRecoveries: RecoveryRef[];
-
+    recoveries: RecoveryInfo[];
     schoolId: string;
+}
+
+export interface RecoveryInfo {
+    originalLesson: LessonRef;
+    recoveryLesson?: LessonRef;
+    done?: boolean;
 }
 
 export const recoveryTypes = {
