@@ -238,3 +238,59 @@ export class SchoolRecoveryLessonService {
         SchoolRecoveryLessonRepository.instance.save(recovery, schoolId);
     }
 }
+
+/**
+ * 
+ * ORIGINAL DAILY LESSON (O)
+ * - pippo: PRESENT
+ *      -> nothing to do
+ * 
+ * - pippo: ABSENT
+ *      -> add unset recovery (O)
+ * 
+ * - pippo: RESET
+ *      -> (try) remove from unset recovery (O)
+ * 
+ * - pippo: CANCEL
+ *      -> (try) remove from unset recovery (O)
+ * 
+ * 
+ * RECOVERY DAILY LESSON (O, R)
+ * - pippo: PRESENT
+ *      -> remove from pending recovery (O, R) 
+ *      -> add to done recovery (O, R)
+ * 
+ * - pippo: ABSENT => NOT POSSIBLE!!! 
+ * 
+ * - pippo: RESET
+ *      -> (try) remove from done recovery (O, R)
+ *      -> add (if not present) to pending recovery (O, R)
+ * 
+ * - pippo: CANCEL
+ *      -> remove from pending recovery (O, R)
+ *      -> add to unset recevery (O)
+ *      -> remove recoveryRef from O
+ *      -> remove recoveryRef from R
+ * 
+ * 
+ * SCHEDULE RECOVERY LESSON (O)
+ *      : pippo
+ *      : date
+ *      : time
+ * 
+ *      -> create recovery lesson R
+ *      --> add recoveryRef 'original' to R
+ *      -> add recoveryRef 'recovery' to O
+ *      -> remove from unset recovery (O)
+ *      -> add to pending recovery (O, R)
+ *      
+ * 
+ * CANCEL RECOVERY LESSON (O, R)
+ *      -> add to unset recovery (O)
+ *      -> remove from pending recovery (O, R)
+ *      -> remove recoveryRef from O
+ *      -> delete recovery lesson R
+ *      --> remove recoveryRef from R (*obsolete)
+ * 
+ * 
+ */
