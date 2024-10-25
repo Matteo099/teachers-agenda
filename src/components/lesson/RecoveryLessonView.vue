@@ -78,8 +78,8 @@
                             </template>
                         </v-dialog>
 
-                        <v-btn v-if="extRecovery.type == 'pending'"
-                            @click="cancelScheduleRecovery(recovery)">annulla</v-btn>
+                        <v-btn v-if="extRecovery.type == 'pending'" @click="cancelScheduleRecovery(recovery)"
+                            :loading="cancellingScheduleRecovery" :disabled="cancellingScheduleRecovery">annulla</v-btn>
                     </template>
                 </v-list-item>
 
@@ -98,7 +98,7 @@ import { recoveryTypes, Time, yyyyMMdd, type Lesson, type RecoverySchedule, type
 import type { ID } from '@/models/repositories/abstract-repository';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
-import { SchoolRecoveryLessonService, type ExtendedSchoolRecoveryLesson, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
+import { LessonStatusAction, SchoolRecoveryLessonService, type ExtendedSchoolRecoveryLesson, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
 import { doc } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
 import { computed, ref, watch, type Ref } from 'vue';
@@ -118,6 +118,7 @@ const loadingExtendedRecoveries = ref(false);
 const loadingSchedulingRecovery = ref(false);
 const modalTimePicker = ref(false);
 const scheduleRecoveryDialog = ref(false);
+const cancellingScheduleRecovery = ref(false);
 
 const schoolRecoveryLessonsSource = computed(() =>
     doc(schoolRecoveryLessonsRef, props.school.id as string)
@@ -143,9 +144,15 @@ const [time, timeProps] = defineField('time', vuetifyConfig);
 
 watch(recoveries, async () => computeDailyLessons());
 
-function cancelScheduleRecovery(event: any) {
-    event.recoveryDate = undefined;
-    event.status = 'NOT_RECOVERED';
+async function cancelScheduleRecovery(recovery: ExtendedStudentLesson) {
+    try {
+        cancellingScheduleRecovery.value = true;
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, recovery.dailyLessonId, recovery.schoolId, recovery);
+    } catch (error) {
+        toast.warn("Impossibile annullare la lezione di recupero")
+    } finally {
+        cancellingScheduleRecovery.value = false;
+    }
 }
 
 const onSave = handleSubmit(
