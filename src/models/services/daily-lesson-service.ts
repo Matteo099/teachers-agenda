@@ -6,6 +6,7 @@ import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
 import type { LessonProjection, SchoolLessons } from "./lesson-group-service";
 import { SchoolService } from "./school-service";
+import type { RecoveryReference } from "./school-recovery-lesson-service";
 
 export class DailyLessonService {
 
@@ -162,4 +163,34 @@ export class DailyLessonService {
         await DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
         return { ...recoveryLesson, dailyLessonId: recoveryDailyLesson.id };
     }
+
+    public async removeRecoveryRef(O: RecoveryReference) {
+        // remove recoveryRef from originalDailyLesson
+        // const originalDailyLessonDoc = await DailyLessonRepository.instance.getDoc(lesson.recovery.dailyLessonId);
+        // if (originalDailyLessonDoc.exists()) {
+        //     const originalDailyLesson = originalDailyLessonDoc.data();
+        //     const l = originalDailyLesson.lessons.find(l => l.lessonId == lesson.recovery!.lessonId);
+        //     if (l && l.recovery) {
+        //         delete l.recovery;
+        //         await DailyLessonRepository.instance.save(originalDailyLesson, lesson.recovery.dailyLessonId)
+        //     }
+        // } else console.warn("Trying to cancel recovery lesson but original lesson does not present recovery reference")
+    }
+
+    public async addRecoveryRef(O: RecoveryReference) {
+        O.originalDailyLesson
+        // const originalDailyLessonDoc = await DailyLessonRepository.instance.getDoc(dailyLessonId);
+        // if (originalDailyLessonDoc.exists()) {
+        //     const originalDailyLesson = originalDailyLessonDoc.data();
+        //     const l = originalDailyLesson.lessons.find(l => l.lessonId == lesson.recovery!.lessonId);
+        //     if (l) {
+        //         l.recovery = {
+        //             lessonId: lesson.lessonId,
+        //             dailyLessonId: dailyLessonId,
+        //             ref: 'recovery'
+        //         };
+        //         await DailyLessonRepository.instance.save(originalDailyLesson, dailyLessonId)
+        //     }
+        // }
+}
 }
