@@ -1,10 +1,11 @@
-import { type DailyLesson, type Lesson, type SchoolRecoveryLesson, type Student, type StudentLesson } from "../model";
+import { type DailyLesson, type Lesson, type RecoveryInfo, type RecoveryLessonInfo, type SchoolRecoveryLesson, type Student, type StudentLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { SchoolRecoveryLessonRepository } from "../repositories/school-recovery-lesson-repository";
 import { DailyLessonService } from "./daily-lesson-service";
 import { StudentService } from "./student-service";
 
+export type DailyLessonOrIDs = DailyLesson | { dailyLessonId: ID, schoolId: ID };
 export type RecoveryReference = { originalDailyLesson: DailyLesson, recoveryDailyLesson?: DailyLesson };
 export type ExtendedStudentLesson = StudentLesson & RecoveryReference;
 export interface ExtendedSchoolRecoveryLesson {
@@ -96,21 +97,64 @@ export class SchoolRecoveryLessonService {
         return srl;
     }
 
-    private addUnsetRecovery(recovery: SchoolRecoveryLesson, dailyLessonId: ID, lesson: StudentLesson) {
-        const unsetI = recovery.unsetRecoveries.findIndex(l => l.dailyLessonId == dailyLessonId && l.lessonId == lesson.lessonId);
-        if (unsetI == -1) recovery.unsetRecoveries.push({ dailyLessonId, lessonId: lesson.lessonId });
+    /**
+     * Lesson is UNSET when !done && !recoveryLesson
+     * Lesson is PENDING when !done && !!recoveryLesson
+     * Lesson is DONE when done && !!recoveryLesson
+     */
+
+    private getRecoveryType(ri: RecoveryInfo): 'UNSET' | 'PENDING' | 'DONE' {
+        if (!ri.done && !ri.recoveryLesson) return 'UNSET';
+        if (!ri.done && !!ri.recoveryLesson) return 'PENDING';
+        return 'DONE'
     }
 
-    private removeUnsetRecovery(recovery: SchoolRecoveryLesson, dailyLessonId: ID, lesson: StudentLesson) {
-        const unsetI = recovery.unsetRecoveries.findIndex(l => l.dailyLessonId == dailyLessonId && l.lessonId == lesson.lessonId);
-        if (unsetI != -1) recovery.unsetRecoveries.splice(unsetI, 1);
+    private addUnsetRecovery(recovery: SchoolRecoveryLesson, dailyLessonId: ID, lessonId: ID | StudentLesson) {
+        lessonId = typeof (lessonId) == "string" ? lessonId : lessonId.lessonId;
+        const index = recovery.recoveries.findIndex(l => this.getRecoveryType(l) == 'UNSET' && l.originalLesson.dailyLessonId == dailyLessonId && l.originalLesson.lessonId == lessonId);
+        if (index == -1) recovery.recoveries.push({ originalLesson: { dailyLessonId, lessonId } });
     }
 
-    async updateRecovery(action: LessonStatusAction, dailyLessonId: ID, schoolId: ID, ...lessons: StudentLesson[]) {
+    private removeUnsetRecovery(recovery: SchoolRecoveryLesson, dailyLessonId: ID, lessonId: ID | StudentLesson): RecoveryInfo[] {
+        lessonId = typeof (lessonId) == "string" ? lessonId : lessonId.lessonId;
+        const index = recovery.recoveries.findIndex(l => this.getRecoveryType(l) == 'UNSET' && l.originalLesson.dailyLessonId == dailyLessonId && l.originalLesson.lessonId == lessonId);
+        if (index != -1) return recovery.recoveries.splice(index, 1);
+        return [];
+    }
+
+    private addPendingRecovery(recovery: SchoolRecoveryLesson, dailyLessonId: ID, lessonId: ID | StudentLesson) {
+        lessonId = typeof (lessonId) == "string" ? lessonId : lessonId.lessonId;
+        const index = recovery.recoveries.findIndex(l => this.getRecoveryType(l) == 'PENDING' && l.originalLesson.dailyLessonId == dailyLessonId && l.originalLesson.lessonId == lessonId);
+        if (index == -1) recovery.recoveries.push({ originalLesson: { dailyLessonId, lessonId } });
+    }
+
+    private removePendingRecovery(recovery: SchoolRecoveryLesson, dailyLessonId: ID, lessonId: ID | StudentLesson): RecoveryInfo[] {
+        lessonId = typeof (lessonId) == "string" ? lessonId : lessonId.lessonId;
+        const index = recovery.recoveries.findIndex(l => this.getRecoveryType(l) == 'PENDING' && l.originalLesson.dailyLessonId == dailyLessonId && l.originalLesson.lessonId == lessonId);
+        if (index != -1) return recovery.recoveries.splice(index, 1);
+        return [];
+    }
+
+    private addDoneRecovery(recovery: SchoolRecoveryLesson, dailyLessonId: ID, lessonId: ID | StudentLesson) {
+        lessonId = typeof (lessonId) == "string" ? lessonId : lessonId.lessonId;
+        const index = recovery.recoveries.findIndex(l => this.getRecoveryType(l) == 'DONE' && l.originalLesson.dailyLessonId == dailyLessonId && l.originalLesson.lessonId == lessonId);
+        if (index == -1) recovery.recoveries.push({ originalLesson: { dailyLessonId, lessonId } });
+    }
+
+    private removeDoneRecovery(recovery: SchoolRecoveryLesson, dailyLessonId: ID, lessonId: ID | StudentLesson): RecoveryInfo[] {
+        lessonId = typeof (lessonId) == "string" ? lessonId : lessonId.lessonId;
+        const index = recovery.recoveries.findIndex(l => this.getRecoveryType(l) == 'DONE' && l.originalLesson.dailyLessonId == dailyLessonId && l.originalLesson.lessonId == lessonId);
+        if (index != -1) return recovery.recoveries.splice(index, 1);
+        return [];
+    }
+
+    async updateRecovery(action: LessonStatusAction, dailyLessonInfo: DailyLessonOrIDs, ...lessons: StudentLesson[]) {
+        const schoolId = dailyLessonInfo.schoolId;
+        const dailyLessonId = "id" in dailyLessonInfo ? dailyLessonInfo.id : dailyLessonInfo.dailyLessonId;
+        const O: DailyLesson = "id" in dailyLessonInfo ? dailyLessonInfo : (await DailyLessonRepository.instance.get(dailyLessonId))!;
+
         const recovery = await SchoolRecoveryLessonService.instance.getOrCreate(schoolId);
         for await (const lesson of lessons) {
-            const O: RecoveryReference = { originalDailyLesson: { dailyLessonId, lesson.lessonId}} 
-            const R: RecoveryReference = { originalDailyLesson: { dailyLessonId, lesson.lessonId}} 
             if (action == LessonStatusAction.SET_PRESENT) {
                 if (!lesson.recovery) {
                     this.removeUnsetRecovery(recovery, dailyLessonId, lesson);
@@ -130,25 +174,30 @@ export class SchoolRecoveryLessonService {
                 if (!lesson.recovery) {
                     this.removeUnsetRecovery(recovery, dailyLessonId, lesson);
                 } else {
+                    const R: DailyLesson = (await DailyLessonRepository.instance.get(lesson.recovery.lessonRef.dailyLessonId))!;
                     this.removePendingRecovery(recovery, dailyLessonId, lesson);
                     this.addUnsetRecovery(recovery, dailyLessonId, lesson);
-                    await DailyLessonService.instance.removeRecoveryRef(O);
-                    await DailyLessonService.instance.removeRecoveryRef(R);
+                    await DailyLessonService.instance.removeRecoveryRef(O, lesson);
+                    await DailyLessonService.instance.removeRecoveryRef(R, lesson);
                 }
             } else if (action == LessonStatusAction.RESET) {
                 if (!lesson.recovery) {
                     this.removeUnsetRecovery(recovery, dailyLessonId, lesson);
                 } else {
-                    const removed =this.removeDoneRecovery(recovery, dailyLessonId, lesson);
+                    const removed = this.removeDoneRecovery(recovery, dailyLessonId, lesson);
                     // if lesson is in done status remove from done and add to pending state
-                    if(removed) {
+                    if (removed.length == 1) {
                         this.addPendingRecovery(recovery, dailyLessonId, lesson);
                     }
                     // otherwise, if the lesson was cancelled restore recoveryRef in the originalDailyLesson
-                    else{
+                    else {
+                        const R: DailyLesson = (await DailyLessonRepository.instance.get(lesson.recovery.lessonRef.dailyLessonId))!;
                         this.addPendingRecovery(recovery, dailyLessonId, lesson);
-                        await DailyLessonService.instance.addRecoveryRef(O, R);
-                        await DailyLessonService.instance.addRecoveryRef(R, O);
+
+                        const rRef: RecoveryLessonInfo = {}
+                        const oRef: RecoveryLessonInfo = {}
+                        await DailyLessonService.instance.addRecoveryRef(O, lesson, rRef);
+                        await DailyLessonService.instance.addRecoveryRef(R, oRef);
                     }
                 }
             }

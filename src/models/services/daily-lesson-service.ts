@@ -1,6 +1,6 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoverySchedule } from "../model";
+import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule, type StudentLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
@@ -164,33 +164,28 @@ export class DailyLessonService {
         return { ...recoveryLesson, dailyLessonId: recoveryDailyLesson.id };
     }
 
-    public async removeRecoveryRef(O: RecoveryReference) {
+    public async removeRecoveryRef(originalDailyLesson: DailyLesson, lesson: StudentLesson) {
         // remove recoveryRef from originalDailyLesson
-        // const originalDailyLessonDoc = await DailyLessonRepository.instance.getDoc(lesson.recovery.dailyLessonId);
-        // if (originalDailyLessonDoc.exists()) {
-        //     const originalDailyLesson = originalDailyLessonDoc.data();
-        //     const l = originalDailyLesson.lessons.find(l => l.lessonId == lesson.recovery!.lessonId);
-        //     if (l && l.recovery) {
-        //         delete l.recovery;
-        //         await DailyLessonRepository.instance.save(originalDailyLesson, lesson.recovery.dailyLessonId)
-        //     }
-        // } else console.warn("Trying to cancel recovery lesson but original lesson does not present recovery reference")
+        const l = originalDailyLesson.lessons.find(l => l.lessonId == lesson.recovery!.lessonRef.lessonId);
+        if (l && l.recovery) {
+            delete l.recovery;
+            await DailyLessonRepository.instance.save(originalDailyLesson, originalDailyLesson.id)
+        }
     }
 
-    public async addRecoveryRef(O: RecoveryReference) {
-        O.originalDailyLesson
+    public async addRecoveryRef(originalDailyLesson: DailyLesson, lesson: StudentLesson, ref: RecoveryLessonInfo) {
         // const originalDailyLessonDoc = await DailyLessonRepository.instance.getDoc(dailyLessonId);
         // if (originalDailyLessonDoc.exists()) {
         //     const originalDailyLesson = originalDailyLessonDoc.data();
-        //     const l = originalDailyLesson.lessons.find(l => l.lessonId == lesson.recovery!.lessonId);
-        //     if (l) {
-        //         l.recovery = {
-        //             lessonId: lesson.lessonId,
-        //             dailyLessonId: dailyLessonId,
-        //             ref: 'recovery'
-        //         };
-        //         await DailyLessonRepository.instance.save(originalDailyLesson, dailyLessonId)
-        //     }
+        const l = originalDailyLesson.lessons.find(l => l.lessonId == lesson.recovery!.lessonId);
+        if (l) {
+            l.recovery = {
+                lessonId: lesson.lessonId,
+                dailyLessonId: dailyLessonId,
+                ref: 'recovery'
+            };
+            await DailyLessonRepository.instance.save(originalDailyLesson, dailyLessonId)
+        }
         // }
-}
+    }
 }

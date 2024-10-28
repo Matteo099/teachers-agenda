@@ -257,6 +257,11 @@ export interface SchoolRecoveryLesson {
     schoolId: string;
 }
 
+/**
+ * Lesson is UNSET when !done && !recoveryLesson
+ * Lesson is PENDING when !done && !!recoveryLesson
+ * Lesson is DONE when done && !!recoveryLesson
+ */
 export interface RecoveryInfo {
     originalLesson: LessonRef;
     recoveryLesson?: LessonRef;
