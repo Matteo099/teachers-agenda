@@ -148,7 +148,7 @@ async function present(event: StudentLesson) {
     _studentLessons.forEach(s => s.status = LessonStatus.PRESENT)
     selectedLessons.value = []
     await save();
-    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons);
+    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id, schoolId: dailyLesson.value!.schoolId })));
 }
 async function absent(event: StudentLesson) {
     doBackup();

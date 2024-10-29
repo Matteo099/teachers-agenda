@@ -150,8 +150,10 @@ export class DailyLessonService {
             endTime: schedule.endTime,
             recovery: {
                 ref: 'original',
-                dailyLessonId: schedule.originalDailyLessonId,
-                lessonId: schedule.originalLessonId,
+                lessonRef: {
+                    dailyLessonId: schedule.originalDailyLessonId,
+                    lessonId: schedule.originalLessonId,
+                }
             },
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
@@ -164,27 +166,23 @@ export class DailyLessonService {
         return { ...recoveryLesson, dailyLessonId: recoveryDailyLesson.id };
     }
 
-    public async removeRecoveryRef(originalDailyLesson: DailyLesson, lesson: StudentLesson) {
+    public async removeRecoveryRef(dailyLesson: DailyLesson, lessonId: ID) {
         // remove recoveryRef from originalDailyLesson
-        const l = originalDailyLesson.lessons.find(l => l.lessonId == lesson.recovery!.lessonRef.lessonId);
+        const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
         if (l && l.recovery) {
             delete l.recovery;
-            await DailyLessonRepository.instance.save(originalDailyLesson, originalDailyLesson.id)
+            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
         }
     }
 
-    public async addRecoveryRef(originalDailyLesson: DailyLesson, lesson: StudentLesson, ref: RecoveryLessonInfo) {
+    public async addRecoveryRef(dailyLesson: DailyLesson, lessonId: ID, recovery: RecoveryLessonInfo) {
         // const originalDailyLessonDoc = await DailyLessonRepository.instance.getDoc(dailyLessonId);
         // if (originalDailyLessonDoc.exists()) {
         //     const originalDailyLesson = originalDailyLessonDoc.data();
-        const l = originalDailyLesson.lessons.find(l => l.lessonId == lesson.recovery!.lessonId);
+        const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
         if (l) {
-            l.recovery = {
-                lessonId: lesson.lessonId,
-                dailyLessonId: dailyLessonId,
-                ref: 'recovery'
-            };
-            await DailyLessonRepository.instance.save(originalDailyLesson, dailyLessonId)
+            l.recovery = recovery;
+            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
         }
         // }
     }
