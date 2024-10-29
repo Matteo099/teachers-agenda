@@ -6,7 +6,7 @@ import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
 import type { LessonProjection, SchoolLessons } from "./lesson-group-service";
 import { SchoolService } from "./school-service";
-import type { RecoveryReference } from "./school-recovery-lesson-service";
+import type { ExpandedLesson, RecoveryReference } from "./school-recovery-lesson-service";
 
 export class DailyLessonService {
 
@@ -141,7 +141,7 @@ export class DailyLessonService {
         }
     }
 
-    async createRecoveryLesson(schedule: RecoverySchedule): Promise<Lesson & { dailyLessonId: ID }> {
+    async createRecoveryLesson(schedule: RecoverySchedule): Promise<ExpandedLesson> {
         const recoveryLesson: Lesson = {
             lessonId: uuidv4(),
             status: LessonStatus.NONE,

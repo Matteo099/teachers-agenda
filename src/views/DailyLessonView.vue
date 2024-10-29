@@ -148,7 +148,7 @@ async function present(event: StudentLesson) {
     _studentLessons.forEach(s => s.status = LessonStatus.PRESENT)
     selectedLessons.value = []
     await save();
-    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id, schoolId: dailyLesson.value!.schoolId })));
+    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
 async function absent(event: StudentLesson) {
     doBackup();
@@ -157,16 +157,14 @@ async function absent(event: StudentLesson) {
     _studentLessons.forEach(s => s.status = LessonStatus.ABSENT)
     selectedLessons.value = []
     await save();
-    console.log(event, LessonStatusAction.SET_ABSENT, dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons)
-
-    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons);
+    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
 async function cancel(event: StudentLesson) {
     if (event) {
         doBackup();
         event.status = LessonStatus.CANCELLED
         await save();
-        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, dailyLesson.value!.id, dailyLesson.value!.schoolId, event);
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
     }
 }
 async function reset(event: StudentLesson) {
@@ -174,7 +172,7 @@ async function reset(event: StudentLesson) {
         doBackup();
         event.status = LessonStatus.NONE
         await save();
-        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.id, dailyLesson.value!.schoolId, event);
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
     }
 }
 

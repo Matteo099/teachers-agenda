@@ -17,25 +17,25 @@
                 </v-list-item>
 
                 <v-list-item v-for="recovery in extRecovery.recoveries"
-                    :key="`${recovery.lessonId}_${recovery.dailyLessonId}`">
+                    :key="`${recovery.lessonId}_${recovery.originalDailyLesson.id}`">
                     <template v-slot:title>
                         {{ recovery.name }} {{ recovery.surname }}
                     </template>
                     <template v-slot:subtitle>
                         <div v-if="extRecovery.type == 'unset'">
-                            Da recuperare la lezione del {{ recovery.date.format() }}
+                            Da recuperare la lezione del {{
+                                yyyyMMdd.fromIyyyyMMdd(recovery.originalDailyLesson.date).format() }}
                         </div>
                         <div v-else-if="extRecovery.type == 'pending'">
-                            Recupero programmato per il {{ recovery.date.format() }}
-                        </div>
-                        <div v-else-if="recovery.originalDailyLesson?.date">
-                            Recupero della lezione del {{
-                                yyyyMMdd.fromIyyyyMMdd(recovery.originalDailyLesson.date).format() }} effettuato il {{
-                                recovery.date.format() }}
+                            Recupero programmato
+                            <span v-if="recovery.recoveryDailyLesson"> per il {{
+                                yyyyMMdd.fromIyyyyMMdd(recovery.recoveryDailyLesson.date).format() }}</span>
                         </div>
                         <div v-else>
-                            Recupero della lezione del {{ recovery.recovery?.dailyLessonId }} effettuato il {{
-                                recovery.date.format() }}
+                            Recupero della lezione del {{
+                                yyyyMMdd.fromIyyyyMMdd(recovery.originalDailyLesson.date).format() }} effettuato
+                            <span v-if="recovery.recoveryDailyLesson"> il {{
+                                yyyyMMdd.fromIyyyyMMdd(recovery.recoveryDailyLesson.date).format() }}</span>
                         </div>
                     </template>
 
@@ -98,7 +98,7 @@ import { recoveryTypes, Time, yyyyMMdd, type Lesson, type RecoverySchedule, type
 import type { ID } from '@/models/repositories/abstract-repository';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
-import { LessonStatusAction, SchoolRecoveryLessonService, type ExtendedSchoolRecoveryLesson, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
+import { LessonStatusAction, SchoolRecoveryLessonService, type ExpandedLesson, type ExtendedSchoolRecoveryLesson, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
 import { doc } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
 import { computed, ref, watch, type Ref } from 'vue';
@@ -147,7 +147,7 @@ watch(recoveries, async () => computeDailyLessons());
 async function cancelScheduleRecovery(recovery: ExtendedStudentLesson) {
     try {
         cancellingScheduleRecovery.value = true;
-        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, recovery.dailyLessonId, recovery.schoolId, recovery);
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, recovery.schoolId, { ...recovery, dailyLessonId: recovery.originalDailyLesson.id });
     } catch (error) {
         toast.warn("Impossibile annullare la lezione di recupero")
     } finally {
@@ -187,30 +187,13 @@ async function scheduleRecovery() {
         const schedule: RecoverySchedule = {
             studentId: recovery.studentId,
             schoolId: props.school.id,
-            originalDailyLessonId: recovery.dailyLessonId,
+            originalDailyLessonId: recovery.originalDailyLesson.id,
             originalLessonId: recovery.lessonId,
             date: date.value,
             startTime: startTime.toITime(),
             endTime: startTime.add({ minutes: recovery.minutesLessonDuration }).toITime()
         }
-        // Step 1: create a new lesson R with recoveryReference to Original Lesson
-        const recoveryDailyLesson: Lesson & { dailyLessonId: ID } = await DailyLessonService.instance.createRecoveryLesson(schedule);
-        // Step 2: update original lesson O with recoveryReference to R Lesson
-        const originalDaillyLessonDoc = await DailyLessonRepository.instance.getDoc(recovery.dailyLessonId);
-        if (originalDaillyLessonDoc.exists()) {
-            const originalDaillyLesson = originalDaillyLessonDoc.data();
-            const lesson = originalDaillyLesson.lessons.find(l => l.lessonId == recovery.lessonId);
-            if (lesson) {
-                lesson.recovery = {
-                    ref: 'recovery',
-                    dailyLessonId: recoveryDailyLesson.dailyLessonId,
-                    lessonId: recoveryDailyLesson.lessonId
-                }
-                await DailyLessonRepository.instance.save(originalDaillyLesson, originalDaillyLesson.id);
-            }
-        } else console.warn("")
-        // Step 3: update school recovery lesson status
-        await SchoolRecoveryLessonService.instance.setPendingRecovery(props.school.id, recovery.dailyLessonId, recovery.lessonId);
+        await SchoolRecoveryLessonService.instance.scheduleRecovery(recovery, schedule);
         scheduleRecoveryDialog.value = false
     } catch (error) {
         toast.error("Impossibile schedulare la lezione di recupero")
@@ -225,6 +208,7 @@ async function computeDailyLessons() {
     try {
         loadingExtendedRecoveries.value = true;
         extendedRecoveries.value = await SchoolRecoveryLessonService.instance.computeDailyLessons(recoveries.value);
+        console.log(extendedRecoveries);
     } catch (error) {
         toast.warning("Impossibile caricare le Lezioni di Recupero");
     } finally {
