@@ -141,6 +141,8 @@ async function loadLessonGroup() {
     const _schoolLessons = await SchoolService.instance.getSchoolLessons(props.school.id, startingDate);
     lessonGroups.value = await LessonGroupService.instance.getGroupedLessons(_schoolLessons);
 
+    console.log(_schoolLessons, lessonGroups);
+
     computingLessonGroups.value = false;
 }
 
