@@ -175,6 +175,18 @@ export class DailyLessonService {
         }
     }
 
+    public async moveRecoveryRefToUndoneList(dailyLesson: DailyLesson, lessonId: ID) {
+        // remove recoveryRef from originalDailyLesson
+        const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
+        if (l && l.recovery) {
+            const toMove = { ...l.recovery.lessonRef }
+            if (!l.undoneRecoveryRef) l.undoneRecoveryRef = [];
+            l.undoneRecoveryRef.push(toMove);
+            delete l.recovery;
+            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
+        }
+    }
+
     public async addRecoveryRef(dailyLesson: DailyLesson, lessonId: ID, recovery: RecoveryLessonInfo) {
         // const originalDailyLessonDoc = await DailyLessonRepository.instance.getDoc(dailyLessonId);
         // if (originalDailyLessonDoc.exists()) {

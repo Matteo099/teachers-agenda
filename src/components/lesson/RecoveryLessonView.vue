@@ -12,7 +12,7 @@
                         Nessuna lezione di recupero programmata
                     </div>
                     <div v-else>
-                        Nessuna lezione da recuperaro effettuata
+                        Nessuna lezione di recupero effettuata
                     </div>
                 </v-list-item>
 
@@ -78,8 +78,14 @@
                             </template>
                         </v-dialog>
 
-                        <v-btn v-if="extRecovery.type == 'pending'" @click="cancelScheduleRecovery(recovery)"
+                        <v-btn v-else-if="extRecovery.type == 'pending'" @click="cancelScheduleRecovery(recovery)"
                             :loading="cancellingScheduleRecovery" :disabled="cancellingScheduleRecovery">annulla</v-btn>
+                        <v-icon v-else-if="recovery.recoveryStatus == LessonStatus.CANCELLED" color="warning">
+                            mdi-cancel
+                        </v-icon>
+                        <v-icon v-else color="success">
+                            mdi-check-all
+                        </v-icon>
                     </template>
                 </v-list-item>
 
@@ -94,7 +100,7 @@
 
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { recoveryTypes, Time, yyyyMMdd, type Lesson, type RecoverySchedule, type School, type SchoolRecoveryLesson } from '@/models/model';
+import { LessonStatus, recoveryTypes, Time, yyyyMMdd, type Lesson, type RecoverySchedule, type School, type SchoolRecoveryLesson } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';

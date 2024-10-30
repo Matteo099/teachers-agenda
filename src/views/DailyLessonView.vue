@@ -61,20 +61,37 @@
                             </v-checkbox>
                         </v-card-title>
                         <v-card-text>
-                            <v-btn class="ma-1"
-                                v-if="item.status != LessonStatus.PRESENT && item.status != LessonStatus.CANCELLED"
-                                @click="present(item)">presente</v-btn>
-                            <v-btn class="ma-1"
-                                v-if="item.status != LessonStatus.ABSENT && item.status != LessonStatus.CANCELLED && item.recovery?.ref != 'original'"
-                                @click="absent(item)">assente</v-btn>
-                            <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
-                                @click="cancel(item)">cancella</v-btn>
-                            <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
-                                @click="reset(item)">reset</v-btn>
+                            <template v-if="!item.recovery || item.recovery.ref == 'original'">
+                                <v-btn class="ma-1"
+                                    v-if="item.status != LessonStatus.PRESENT && item.status != LessonStatus.CANCELLED"
+                                    @click="present(item)">presente</v-btn>
+                                <v-btn class="ma-1"
+                                    v-if="item.status != LessonStatus.ABSENT && item.status != LessonStatus.CANCELLED"
+                                    @click="absent(item)">assente</v-btn>
+                                <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
+                                    @click="cancel(item)">cancella</v-btn>
+                                <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
+                                    @click="reset(item)">reset</v-btn>
+
+                                <v-btn v-if="item.recovery?.ref == 'original'" class="ma-1"
+                                    :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
+                                    <template v-slot:prepend>
+                                        <v-icon>mdi-eye-arrow-left-outline</v-icon>
+                                    </template>
+                                    origine</v-btn>
+                            </template>
+                            <template v-else>
+                                <v-btn class="ma-1" :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
+                                    <template v-slot:prepend>
+                                        <v-icon>mdi-eye-arrow-right-outline</v-icon>
+                                    </template>recupero</v-btn>
+                            </template>
+
 
                             <v-btn class="ma-1" @click="notes(item)">note</v-btn>
 
-                            <DeleteDialog :name="`${item.name} ${item.surname}`" objName="Studente"
+                            <DeleteDialog v-if="!item.recovery || item.recovery.ref == 'original'"
+                                :name="`${item.name} ${item.surname}`" objName="Studente"
                                 :onDelete="async () => await deleteStudent(item)">
                                 <template v-slot:activator="{ props: activatorProps }">
                                     <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
@@ -138,6 +155,7 @@ watch(selectedLessons, () => {
 
 function getColor(event: StudentLesson): string {
     if (event.trial) return 'yellow';
+    if (event.recovery && event.recovery.ref == 'recovery') return "blue";
     return lessonStatusColor[event.status];
 }
 

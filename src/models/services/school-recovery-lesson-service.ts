@@ -1,4 +1,4 @@
-import { type DailyLesson, type Lesson, type LessonRef, type RecoveryInfo, type RecoveryLessonInfo, type RecoverySchedule, type SchoolRecoveryLesson, type Student, type StudentLesson } from "../model";
+import { LessonStatus, type DailyLesson, type Lesson, type LessonRef, type RecoveryInfo, type RecoveryLessonInfo, type RecoverySchedule, type SchoolRecoveryLesson, type Student, type StudentLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { SchoolRecoveryLessonRepository } from "../repositories/school-recovery-lesson-repository";
@@ -8,7 +8,7 @@ import { StudentService } from "./student-service";
 export enum RecoveryType { UNSET, PENDING, DONE }
 export type ExpandedLesson = Lesson & { dailyLessonId: ID }
 export type DailyLessonOrIDs = DailyLesson | { dailyLessonId: ID, schoolId: ID };
-export type RecoveryReference = { originalDailyLesson: DailyLesson, recoveryDailyLesson?: DailyLesson };
+export type RecoveryReference = { originalDailyLesson: DailyLesson, recoveryDailyLesson?: DailyLesson, recoveryStatus?: LessonStatus };
 export type ExtendedStudentLesson = StudentLesson & RecoveryReference;
 export interface ExtendedSchoolRecoveryLesson {
     recoveryMap: { type: 'unset' | 'pending' | 'done'; recoveries: ExtendedStudentLesson[] }[]
@@ -44,13 +44,13 @@ export class SchoolRecoveryLessonService {
         const doneRecoveries: ExtendedStudentLesson[] = [];
 
         // Helper function to add recovery to the respective category
-        const addRecovery = (lesson: Lesson, student: Student, statusArray: ExtendedStudentLesson[], recoveryLessons: RecoveryReference) => {
-            statusArray.push({ ...lesson, ...student, ...recoveryLessons });
+        const addRecovery = (lesson: Lesson, student: Student, statusArray: ExtendedStudentLesson[], recoveryLessons: RecoveryReference, recoveryStatus?: LessonStatus) => {
+            statusArray.push({ ...lesson, ...student, ...recoveryLessons, recoveryStatus });
         };
 
         // Process each recovery
         recoveries.recoveries.forEach(recovery => {
-            const { originalLesson, recoveryLesson, done } = recovery;
+            const { originalLesson, recoveryLesson, status } = recovery;
 
             const originalDailyLesson = validDailyLessons.find(d => d!.id === originalLesson.dailyLessonId);
             const recoveryDailyLesson = recoveryLesson ? validDailyLessons.find(d => d!.id === recoveryLesson.dailyLessonId) : undefined;
@@ -69,7 +69,7 @@ export class SchoolRecoveryLessonService {
                 if (!student) return;
 
                 if (recoveryDailyLesson) {
-                    done ? addRecovery(lesson, student, doneRecoveries, recoveryReferences)
+                    status ? addRecovery(lesson, student, doneRecoveries, recoveryReferences, status)
                         : addRecovery(lesson, student, pendingRecoveries, recoveryReferences);
                 } else {
                     addRecovery(lesson, student, unsetRecoveries, recoveryReferences);
@@ -106,12 +106,12 @@ export class SchoolRecoveryLessonService {
      */
 
     private getRecoveryType(ri: RecoveryInfo): RecoveryType {
-        if (!ri.done && !ri.recoveryLesson) return RecoveryType.UNSET;
-        if (!ri.done && !!ri.recoveryLesson) return RecoveryType.PENDING;
+        if (!ri.status && !ri.recoveryLesson) return RecoveryType.UNSET;
+        if (!ri.status && !!ri.recoveryLesson) return RecoveryType.PENDING;
         return RecoveryType.DONE;
     }
 
-    private addRecoveryByType(recovery: SchoolRecoveryLesson, originalLessonRef: LessonRef, type: RecoveryType, info: LessonRef | boolean) {
+    private addRecoveryByType(recovery: SchoolRecoveryLesson, originalLessonRef: LessonRef, type: RecoveryType, info: LessonRef | LessonStatus) {
         let index = recovery.recoveries.findIndex(l => l.originalLesson.dailyLessonId == originalLessonRef.dailyLessonId && l.originalLesson.lessonId == originalLessonRef.lessonId);
         if (index == -1) {
             recovery.recoveries.push({ originalLesson: originalLessonRef })
@@ -126,7 +126,7 @@ export class SchoolRecoveryLessonService {
             ri.recoveryLesson = info as LessonRef;
         }
         else {
-            ri.done = info as boolean;
+            ri.status = info as LessonStatus;
         }
     }
 
@@ -144,8 +144,8 @@ export class SchoolRecoveryLessonService {
                 }
             }
             else {
-                if (recovery.recoveries[index].done) {
-                    delete recovery.recoveries[index].done;
+                if (recovery.recoveries[index].status) {
+                    delete recovery.recoveries[index].status;
                     return true;
                 }
             }
@@ -166,7 +166,7 @@ export class SchoolRecoveryLessonService {
                     this.removeRecoveryByType(recovery, originalLessonRef, RecoveryType.UNSET);
                 } else {
                     // const ref: LessonRef = { dailyLessonId: lesson.recovery!.lessonRef.dailyLessonId, lessonId: lesson.recovery!.lessonRef.lessonId }
-                    const info = true;
+                    const info = LessonStatus.PRESENT;
                     // this.removeRecoveryByType(recovery, ref, RecoveryType.PENDING);
                     this.addRecoveryByType(recovery, originalLessonRef, RecoveryType.DONE, info);
                 }
@@ -177,7 +177,14 @@ export class SchoolRecoveryLessonService {
                     const info = { ...originalLessonRef };
                     this.addRecoveryByType(recovery, originalLessonRef, RecoveryType.UNSET, info);
                 } else {
-                    console.warn("Trying to set absent a recovery lesson. A recovery lesson can be only CANCELLED!");
+                    // const ref: LessonRef = { dailyLessonId: lesson.recovery!.lessonRef.dailyLessonId, lessonId: lesson.recovery!.lessonRef.lessonId }
+                    const info = { ...originalLessonRef };
+                    this.removeRecoveryByType(recovery, originalLessonRef, RecoveryType.PENDING);
+                    this.addRecoveryByType(recovery, originalLessonRef, RecoveryType.UNSET, info);
+
+                    const originalLessonId = originalLessonRef.lessonId;
+                    const O: DailyLesson = (await DailyLessonRepository.instance.get(originalLessonRef.dailyLessonId))!;
+                    await DailyLessonService.instance.moveRecoveryRefToUndoneList(O, originalLessonId);
                 }
             }
             else if (action == LessonStatusAction.CANCEL) {
@@ -186,13 +193,9 @@ export class SchoolRecoveryLessonService {
                     this.removeRecoveryByType(recovery, originalLessonRef, RecoveryType.UNSET);
                 } else {
                     // const ref: LessonRef = { dailyLessonId: lesson.recovery!.lessonRef.dailyLessonId, lessonId: lesson.recovery!.lessonRef.lessonId }
-                    const info = { ...originalLessonRef };
-                    this.removeRecoveryByType(recovery, originalLessonRef, RecoveryType.PENDING);
-                    this.addRecoveryByType(recovery, originalLessonRef, RecoveryType.UNSET, info);
-
-                    const originalLessonId = originalLessonRef.lessonId;
-                    const O: DailyLesson = (await DailyLessonRepository.instance.get(originalLessonRef.dailyLessonId))!;
-                    await DailyLessonService.instance.removeRecoveryRef(O, originalLessonId);
+                    const info = LessonStatus.CANCELLED;
+                    // this.removeRecoveryByType(recovery, ref, RecoveryType.PENDING);
+                    this.addRecoveryByType(recovery, originalLessonRef, RecoveryType.DONE, info);
                 }
             } else if (action == LessonStatusAction.RESET) {
                 if (!isRecoveryLesson) {

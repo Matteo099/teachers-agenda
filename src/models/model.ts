@@ -202,8 +202,8 @@ export interface DailyLesson {
     lessons: Lesson[];
 }
 
-export const lessonStatusName = ["", "presente", "assente", "cancellata", "recuperata"]
-export const lessonStatusColor = ["gray", "green", "red", "orange", "blue"]
+export const lessonStatusName = ["", "presente", "assente", "cancellata"]
+export const lessonStatusColor = ["gray", "green", "red", "orange"]
 export enum LessonStatus {
     NONE,
     PRESENT,
@@ -215,6 +215,7 @@ export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
     trial?: boolean;
     recovery?: RecoveryLessonInfo;
+    undoneRecoveryRef?: LessonRef[];
 
     createdAt: Timestamp;
     updatedAt: Timestamp;
@@ -265,7 +266,7 @@ export interface SchoolRecoveryLesson {
 export interface RecoveryInfo {
     originalLesson: LessonRef;
     recoveryLesson?: LessonRef;
-    done?: boolean;
+    status?: LessonStatus;
 }
 
 export const recoveryTypes = {
