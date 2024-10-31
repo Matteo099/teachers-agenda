@@ -67,7 +67,7 @@ export class SchoolService {
         const start = from instanceof Date ? yyyyMMdd.fromDate(from).toIyyyyMMdd() : from;
         const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolFromDate(schoolId, start, 'desc');
         const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(schoolId);
-        
+
         return {
             dailyLessons,
             weeklyLessons,
