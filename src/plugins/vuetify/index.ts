@@ -4,6 +4,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import * as labsComponents from 'vuetify/labs/components'
+import { en, it } from 'vuetify/locale'
 // import { aliases, mdi } from 'vuetify/iconsets/mdi'
 
 const myCustomLightTheme = {
@@ -34,7 +35,7 @@ const myCustomDarkTheme = {
 }
 
 const vuetify = createVuetify({
-    components:{
+    components: {
         ...components,
         ...labsComponents
     },
@@ -52,7 +53,17 @@ const vuetify = createVuetify({
             myCustomLightTheme,
             myCustomDarkTheme
         }
-    }
+    },
+    locale: {
+        locale: 'it',
+        fallback: 'en',
+        messages: { en, it },
+    },
+    date: {
+        locale: {
+            it: 'it-IT',
+        },
+    },
 })
 
 export default vuetify
