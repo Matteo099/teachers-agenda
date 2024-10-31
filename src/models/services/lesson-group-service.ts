@@ -65,10 +65,10 @@ export class LessonGroupService {
         // Filter only lessons that are done (i.e., on or before today)
         const pastLessons = dailyLessons.filter(dailyLesson => dailyLesson.date <= this.today.asString);
 
-        // Sort the past lessons by date in ascending order to get the most recent ones
-        pastLessons.sort((a, b) => a.date.localeCompare(b.date));
+        // Sort the past lessons by date in descending order to get the most recent ones
+        pastLessons.sort((a, b) => b.date.localeCompare(a.date));
 
-        const lastLessons = pastLessons.slice(0, count);
+        const lastLessons = pastLessons.slice(0, count).reverse();
         lastLessons.forEach(dailyLesson => {
             lessonProjections.push(this.createLessonProjection(dailyLesson, false));
         });

@@ -182,8 +182,10 @@ function updateDailyLesson() {
         endTime: t.add({ minutes: props.lessonToRecover.minutesLessonDuration }).toITime(),
         recovery: {
             ref: "original",
-            lessonId: props.lessonToRecover.lessonId,
-            dailyLessonId: dailyLesson.value.id!,
+            lessonRef: {
+                lessonId: props.lessonToRecover.lessonId,
+                dailyLessonId: dailyLesson.value.id!,
+            }
         },
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),

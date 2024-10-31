@@ -1,5 +1,6 @@
 import { DatabaseRef, useDB } from "../firestore-utils";
 import type { DailyLesson } from "../model";
+import type { RecoveryReference } from "../services/school-recovery-lesson-service";
 import { AbstractRepository } from "./abstract-repository";
 
 export class DailyLessonRepository extends AbstractRepository<DailyLesson> {

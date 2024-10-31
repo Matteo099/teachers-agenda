@@ -1,11 +1,12 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type RecoveryRef, type RecoverySchedule } from "../model";
+import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule, type StudentLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
 import type { LessonProjection, SchoolLessons } from "./lesson-group-service";
 import { SchoolService } from "./school-service";
+import type { ExpandedLesson, RecoveryReference } from "./school-recovery-lesson-service";
 
 export class DailyLessonService {
 
@@ -127,7 +128,7 @@ export class DailyLessonService {
         };
     }
 
-    async removeRecoveryLesson(recoveryRef: RecoveryRef) {
+    async removeRecoveryLesson(recoveryRef: LessonRef) {
         const recoveryDailyLessonDoc = await DailyLessonRepository.instance.getDoc(recoveryRef.dailyLessonId);
         if (recoveryDailyLessonDoc.exists()) {
             const recoveryDailyLesson = recoveryDailyLessonDoc.data();
@@ -140,7 +141,7 @@ export class DailyLessonService {
         }
     }
 
-    async createRecoveryLesson(schedule: RecoverySchedule): Promise<Lesson & { dailyLessonId: ID }> {
+    async createRecoveryLesson(schedule: RecoverySchedule): Promise<ExpandedLesson> {
         const recoveryLesson: Lesson = {
             lessonId: uuidv4(),
             status: LessonStatus.NONE,
@@ -149,8 +150,10 @@ export class DailyLessonService {
             endTime: schedule.endTime,
             recovery: {
                 ref: 'original',
-                dailyLessonId: schedule.originalDailyLessonId,
-                lessonId: schedule.originalLessonId,
+                lessonRef: {
+                    dailyLessonId: schedule.originalDailyLessonId,
+                    lessonId: schedule.originalLessonId,
+                }
             },
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
@@ -161,5 +164,38 @@ export class DailyLessonService {
         recoveryDailyLesson.lessons.push(recoveryLesson)
         await DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
         return { ...recoveryLesson, dailyLessonId: recoveryDailyLesson.id };
+    }
+
+    public async removeRecoveryRef(dailyLesson: DailyLesson, lessonId: ID) {
+        // remove recoveryRef from originalDailyLesson
+        const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
+        if (l && l.recovery) {
+            delete l.recovery;
+            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
+        }
+    }
+
+    public async moveRecoveryRefToUndoneList(dailyLesson: DailyLesson, lessonId: ID) {
+        // remove recoveryRef from originalDailyLesson
+        const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
+        if (l && l.recovery) {
+            const toMove = { ...l.recovery.lessonRef }
+            if (!l.undoneRecoveryRef) l.undoneRecoveryRef = [];
+            l.undoneRecoveryRef.push(toMove);
+            delete l.recovery;
+            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
+        }
+    }
+
+    public async addRecoveryRef(dailyLesson: DailyLesson, lessonId: ID, recovery: RecoveryLessonInfo) {
+        // const originalDailyLessonDoc = await DailyLessonRepository.instance.getDoc(dailyLessonId);
+        // if (originalDailyLessonDoc.exists()) {
+        //     const originalDailyLesson = originalDailyLessonDoc.data();
+        const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
+        if (l) {
+            l.recovery = recovery;
+            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
+        }
+        // }
     }
 }

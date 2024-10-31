@@ -61,20 +61,37 @@
                             </v-checkbox>
                         </v-card-title>
                         <v-card-text>
-                            <v-btn class="ma-1"
-                                v-if="item.status != LessonStatus.PRESENT && item.status != LessonStatus.CANCELLED"
-                                @click="present(item)">presente</v-btn>
-                            <v-btn class="ma-1"
-                                v-if="item.status != LessonStatus.ABSENT && item.status != LessonStatus.CANCELLED && item.recovery?.ref != 'original'"
-                                @click="absent(item)">assente</v-btn>
-                            <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
-                                @click="cancel(item)">cancella</v-btn>
-                            <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
-                                @click="reset(item)">reset</v-btn>
+                            <template v-if="!item.recovery || item.recovery.ref == 'original'">
+                                <v-btn class="ma-1"
+                                    v-if="item.status != LessonStatus.PRESENT && item.status != LessonStatus.CANCELLED"
+                                    @click="present(item)">presente</v-btn>
+                                <v-btn class="ma-1"
+                                    v-if="item.status != LessonStatus.ABSENT && item.status != LessonStatus.CANCELLED"
+                                    @click="absent(item)">assente</v-btn>
+                                <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
+                                    @click="cancel(item)">cancella</v-btn>
+                                <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
+                                    @click="reset(item)">reset</v-btn>
+
+                                <v-btn v-if="item.recovery?.ref == 'original'" class="ma-1"
+                                    :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
+                                    <template v-slot:prepend>
+                                        <v-icon>mdi-eye-arrow-left-outline</v-icon>
+                                    </template>
+                                    origine</v-btn>
+                            </template>
+                            <template v-else>
+                                <v-btn class="ma-1" :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
+                                    <template v-slot:prepend>
+                                        <v-icon>mdi-eye-arrow-right-outline</v-icon>
+                                    </template>recupero</v-btn>
+                            </template>
+
 
                             <v-btn class="ma-1" @click="notes(item)">note</v-btn>
 
-                            <DeleteDialog :name="`${item.name} ${item.surname}`" objName="Studente"
+                            <DeleteDialog v-if="!item.recovery || item.recovery.ref == 'original'"
+                                :name="`${item.name} ${item.surname}`" objName="Studente"
                                 :onDelete="async () => await deleteStudent(item)">
                                 <template v-slot:activator="{ props: activatorProps }">
                                     <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
@@ -138,6 +155,7 @@ watch(selectedLessons, () => {
 
 function getColor(event: StudentLesson): string {
     if (event.trial) return 'yellow';
+    if (event.recovery && event.recovery.ref == 'recovery') return "blue";
     return lessonStatusColor[event.status];
 }
 
@@ -148,7 +166,7 @@ async function present(event: StudentLesson) {
     _studentLessons.forEach(s => s.status = LessonStatus.PRESENT)
     selectedLessons.value = []
     await save();
-    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons);
+    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
 async function absent(event: StudentLesson) {
     doBackup();
@@ -157,16 +175,14 @@ async function absent(event: StudentLesson) {
     _studentLessons.forEach(s => s.status = LessonStatus.ABSENT)
     selectedLessons.value = []
     await save();
-    console.log(event, LessonStatusAction.SET_ABSENT, dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons)
-
-    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.id, dailyLesson.value!.schoolId, ..._studentLessons);
+    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
 async function cancel(event: StudentLesson) {
     if (event) {
         doBackup();
         event.status = LessonStatus.CANCELLED
         await save();
-        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, dailyLesson.value!.id, dailyLesson.value!.schoolId, event);
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
     }
 }
 async function reset(event: StudentLesson) {
@@ -174,7 +190,7 @@ async function reset(event: StudentLesson) {
         doBackup();
         event.status = LessonStatus.NONE
         await save();
-        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.id, dailyLesson.value!.schoolId, event);
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
     }
 }
 
