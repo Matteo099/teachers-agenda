@@ -225,4 +225,39 @@ export class SchoolRecoveryLessonService {
         }
         SchoolRecoveryLessonRepository.instance.save(recovery, schoolId);
     }
+
+    public async scheduleRecovery(lesson: ExtendedStudentLesson, schedule: RecoverySchedule) {
+        const recovery = await SchoolRecoveryLessonService.instance.getOrCreate(lesson.schoolId);
+
+        // Step 1: create a new lesson R with recoveryReference to Original Lesson
+        const recoveryDailyLesson: ExpandedLesson = await DailyLessonService.instance.createRecoveryLesson(schedule);
+        // Step 2: update original lesson O with recoveryReference to R Lesson
+        const originalDaillyLessonDoc = await DailyLessonRepository.instance.getDoc(lesson.originalDailyLesson.id);
+        if (originalDaillyLessonDoc.exists()) {
+            const originalDaillyLesson = originalDaillyLessonDoc.data();
+
+            const _lesson = originalDaillyLesson.lessons.find(l => l.lessonId == lesson.lessonId);
+            if (_lesson) {
+                _lesson.recovery = {
+                    ref: 'recovery',
+                    lessonRef: {
+                        dailyLessonId: recoveryDailyLesson.dailyLessonId,
+                        lessonId: recoveryDailyLesson.lessonId
+                    }
+                }
+                await DailyLessonRepository.instance.save(originalDaillyLesson, originalDaillyLesson.id);
+            }
+        } else console.warn("")
+        // Step 3: update school recovery lesson status
+        const ref: LessonRef = {
+            dailyLessonId: lesson.originalDailyLesson.id,
+            lessonId: lesson.lessonId
+        }
+        const info: LessonRef = {
+            dailyLessonId: recoveryDailyLesson.dailyLessonId,
+            lessonId: recoveryDailyLesson.lessonId
+        }
+        this.addRecoveryByType(recovery, ref, RecoveryType.PENDING, info);
+        SchoolRecoveryLessonRepository.instance.save(recovery, lesson.schoolId);
+    }
 }
