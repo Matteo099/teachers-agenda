@@ -65,11 +65,11 @@
       <template v-slot:append>
         <v-footer height="45" class="px-0">
           <v-row align-content="center" no-gutters class="text-caption">
-            <v-col align-self="center" cols="7">
+            <v-col align-self="center" cols="5">
               <v-img :src="companyLogo" height="45" />
             </v-col>
-            <v-col align-self="center" cols="1"></v-col>
-            <v-col align-self="center" class="d-flex" cols="3">
+            <v-col align-self="center" cols="2"></v-col>
+            <v-col align-self="center" class="d-flex" cols="5">
               <v-icon start>mdi-alpha-v-circle</v-icon>
               <span>{{ appVersion }}</span>
             </v-col>
