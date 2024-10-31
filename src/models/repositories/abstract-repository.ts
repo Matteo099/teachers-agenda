@@ -6,6 +6,10 @@ export type ID = string;
 export abstract class AbstractRepository<T> {
     protected constructor(public readonly collectionReference: CollectionReference<T, DocumentData>) { }
 
+    public async get(id: ID): Promise<T | undefined> {
+        return (await this.getDoc(id)).data();
+    }
+
     public async getDoc(id: ID): Promise<DocumentSnapshot<T, DocumentData>> {
         return await getDoc(doc(this.collectionReference, id));
     }
@@ -21,17 +25,13 @@ export abstract class AbstractRepository<T> {
         return await getDocs(_query);
     }
 
-    public async create(obj: Partial<T> | any): Promise<ID> {
+    public async save(obj: Partial<T> | any, id?: ID): Promise<ID> {
+        if (id != undefined) {
+            setDoc(doc(this.collectionReference, id), obj);
+            return id;
+        }
         const docRef = await addDoc(this.collectionReference, obj);
         return docRef.id;
-    }
-
-    public async update(obj: Partial<T> | any, id: ID): Promise<void> {
-        return setDoc(doc(this.collectionReference, id), obj);
-    }
-
-    public observe(id: ID): T {
-        throw new Error("Method not implemented.");
     }
 
     public observeAll(...queries: QueryConstraint[]): IQueryEvent<T[]> {

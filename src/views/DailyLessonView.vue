@@ -61,19 +61,37 @@
                             </v-checkbox>
                         </v-card-title>
                         <v-card-text>
-                            <v-btn class="ma-1" v-if="item.status != LessonStatus.PRESENT"
-                                @click="present(item)">presente</v-btn>
-                            <v-btn class="ma-1"
-                                v-if="item.status != LessonStatus.ABSENT && item.recovery?.origin != 'original'"
-                                @click="absent(item)">assente</v-btn>
-                            <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
-                                @click="cancel(item)">cancella</v-btn>
-                            <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
-                                @click="reset(item)">reset</v-btn>
+                            <template v-if="!item.recovery || item.recovery.ref == 'original'">
+                                <v-btn class="ma-1"
+                                    v-if="item.status != LessonStatus.PRESENT && item.status != LessonStatus.CANCELLED"
+                                    @click="present(item)">presente</v-btn>
+                                <v-btn class="ma-1"
+                                    v-if="item.status != LessonStatus.ABSENT && item.status != LessonStatus.CANCELLED"
+                                    @click="absent(item)">assente</v-btn>
+                                <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
+                                    @click="cancel(item)">cancella</v-btn>
+                                <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
+                                    @click="reset(item)">reset</v-btn>
+
+                                <v-btn v-if="item.recovery?.ref == 'original'" class="ma-1"
+                                    :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
+                                    <template v-slot:prepend>
+                                        <v-icon>mdi-eye-arrow-left-outline</v-icon>
+                                    </template>
+                                    origine</v-btn>
+                            </template>
+                            <template v-else>
+                                <v-btn class="ma-1" :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
+                                    <template v-slot:prepend>
+                                        <v-icon>mdi-eye-arrow-right-outline</v-icon>
+                                    </template>recupero</v-btn>
+                            </template>
+
 
                             <v-btn class="ma-1" @click="notes(item)">note</v-btn>
 
-                            <DeleteDialog :name="`${item.name} ${item.surname}`" objName="Studente"
+                            <DeleteDialog v-if="!item.recovery || item.recovery.ref == 'original'"
+                                :name="`${item.name} ${item.surname}`" objName="Studente"
                                 :onDelete="async () => await deleteStudent(item)">
                                 <template v-slot:activator="{ props: activatorProps }">
                                     <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
@@ -97,6 +115,7 @@ import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type Student, type StudentLesson } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
+import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
 import { doc, Timestamp } from 'firebase/firestore';
@@ -136,39 +155,42 @@ watch(selectedLessons, () => {
 
 function getColor(event: StudentLesson): string {
     if (event.trial) return 'yellow';
+    if (event.recovery && event.recovery.ref == 'recovery') return "blue";
     return lessonStatusColor[event.status];
 }
 
 async function present(event: StudentLesson) {
     doBackup();
-    if (event) event.status = LessonStatus.PRESENT;
-    selectedLessons.value.forEach(s => {
-        studentLessons.value[s].status = LessonStatus.PRESENT
-    });
+    const _studentLessons = selectedLessons.value.map(s => studentLessons.value[s]);
+    _studentLessons.push(event);
+    _studentLessons.forEach(s => s.status = LessonStatus.PRESENT)
     selectedLessons.value = []
-    save();
+    await save();
+    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
-function absent(event: StudentLesson) {
+async function absent(event: StudentLesson) {
     doBackup();
-    selectedLessons.value.forEach(s => {
-        studentLessons.value[s].status = LessonStatus.ABSENT
-    });
+    const _studentLessons = selectedLessons.value.map(s => studentLessons.value[s]);
+    _studentLessons.push(event);
+    _studentLessons.forEach(s => s.status = LessonStatus.ABSENT)
     selectedLessons.value = []
-    if (event) event.status = LessonStatus.ABSENT;
-    save();
+    await save();
+    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
-function cancel(event: StudentLesson) {
+async function cancel(event: StudentLesson) {
     if (event) {
         doBackup();
         event.status = LessonStatus.CANCELLED
-        save();
+        await save();
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
     }
 }
-function reset(event: StudentLesson) {
+async function reset(event: StudentLesson) {
     if (event) {
         doBackup();
         event.status = LessonStatus.NONE
-        save();
+        await save();
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
     }
 }
 
@@ -227,7 +249,7 @@ async function saveSelectedStudents() {
     })
     try {
         // save it
-        await DailyLessonRepository.instance.update(newDailyLesson, newDailyLesson.id!);
+        await DailyLessonRepository.instance.save(newDailyLesson, newDailyLesson.id!);
         toast.success("Studenti aggiunti!");
         studentsDialog.value = false;
         console.log("Document (daily lessons) update with ID: ", newDailyLesson.id);
@@ -261,7 +283,7 @@ async function deleteStudent(student: StudentLesson) {
     updateDailyLessonTime(startingTime, { scheduledLessons: newDailyLesson.lessons!, students: studentLessons.value });
 
     try {
-        await DailyLessonRepository.instance.update(newDailyLesson, newDailyLesson.id!);
+        await DailyLessonRepository.instance.save(newDailyLesson, newDailyLesson.id!);
         return true;
     } catch (error) {
         return false;
@@ -296,7 +318,7 @@ async function save() {
         return;
     }
     try {
-        await DailyLessonRepository.instance.update(dl, dl.id);
+        await DailyLessonRepository.instance.save(dl, dl.id);
         saving.value = false;
     } catch (e) {
         console.error("Error adding document (dailyLesson): ", e);
@@ -313,7 +335,8 @@ function extractDailyLesson(): DailyLesson | undefined {
         const less = studentLessons.value.find(sl => sl.id == l.studentId);
         if (less === undefined) return;
         const newLesson: Lesson = {
-            lessonId: uuidv4(),
+            // lessonId: uuidv4(),
+            lessonId: l.lessonId,
             createdAt: l.createdAt,
             studentId: l.studentId,
             startTime: l.startTime,

@@ -1,12 +1,13 @@
 import { collection, CollectionReference, type DocumentData, type FirestoreDataConverter, type QueryDocumentSnapshot } from "firebase/firestore";
 import { useFirestore } from "vuefire";
-import type { DailyLesson, Lesson, School, Student, WeeklyLesson } from "./model";
+import type { DailyLesson, Lesson, School, SchoolRecoveryLesson, Student, WeeklyLesson } from "./model";
 
 export enum DatabaseRef {
     SCHOOLS = "schools",
     STUDENTS = "students",
     WEEKLY_LESSONS = "weeklyLessons",
-    DAILY_LESSONS = "dailyLessons"
+    DAILY_LESSONS = "dailyLessons",
+    SCHOOL_RECOVERY_LESSONS = "schoolRecoveryLessons",
 }
 
 interface Database {
@@ -14,6 +15,7 @@ interface Database {
     [DatabaseRef.STUDENTS]: CollectionReference<Student, DocumentData>;
     [DatabaseRef.WEEKLY_LESSONS]: CollectionReference<WeeklyLesson, DocumentData>;
     [DatabaseRef.DAILY_LESSONS]: CollectionReference<DailyLesson, DocumentData>;
+    [DatabaseRef.SCHOOL_RECOVERY_LESSONS]: CollectionReference<SchoolRecoveryLesson, DocumentData>;
 }
 
 const db: Partial<Database> = {};
@@ -35,6 +37,7 @@ function init() {
     db[DatabaseRef.STUDENTS] = dataPoint<Student>(DatabaseRef.STUDENTS)
     db[DatabaseRef.WEEKLY_LESSONS] = dataPoint<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS)
     db[DatabaseRef.DAILY_LESSONS] = dataPoint<DailyLesson>(DatabaseRef.DAILY_LESSONS)
+    db[DatabaseRef.SCHOOL_RECOVERY_LESSONS] = dataPoint<SchoolRecoveryLesson>(DatabaseRef.SCHOOL_RECOVERY_LESSONS)
 }
 
 export function useDB<T>(ref: DatabaseRef): CollectionReference<T, DocumentData> {

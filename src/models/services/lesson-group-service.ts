@@ -10,7 +10,7 @@ export interface LessonGroup {
 export interface LessonProjection {
     date: yyyyMMdd;
     next: boolean;
-    lessonId?: string;
+    dailyLessonId?: string;
     pending?: boolean;
     recovery?: boolean;
     lessons: ScheduledLesson[];
@@ -65,10 +65,10 @@ export class LessonGroupService {
         // Filter only lessons that are done (i.e., on or before today)
         const pastLessons = dailyLessons.filter(dailyLesson => dailyLesson.date <= this.today.asString);
 
-        // Sort the past lessons by date in ascending order to get the most recent ones
-        pastLessons.sort((a, b) => a.date.localeCompare(b.date));
+        // Sort the past lessons by date in descending order to get the most recent ones
+        pastLessons.sort((a, b) => b.date.localeCompare(a.date));
 
-        const lastLessons = pastLessons.slice(0, count);
+        const lastLessons = pastLessons.slice(0, count).reverse();
         lastLessons.forEach(dailyLesson => {
             lessonProjections.push(this.createLessonProjection(dailyLesson, false));
         });
@@ -150,10 +150,10 @@ export class LessonGroupService {
 
     private createLessonProjection(dailyLesson: DailyLesson, next: boolean): LessonProjection {
         const pending = dailyLesson.date <= this.today.asString && dailyLesson.lessons.some(l => l.status == LessonStatus.NONE);
-        const recovery = dailyLesson.lessons.some(l => l.recovery?.origin == 'original');
+        const recovery = dailyLesson.lessons.some(l => l.recovery?.ref == 'original');
 
         return {
-            lessonId: dailyLesson.id,
+            dailyLessonId: dailyLesson.id,
             date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date),
             recovery,
             pending,

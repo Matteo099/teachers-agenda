@@ -31,50 +31,7 @@
                 <LessonView :school="school"></LessonView>
             </v-col>
             <v-col class="pa-2" cols="12" md="6">
-                <v-card title="Recuperi" elevation="3">
-                    <v-list lines="three" :items="recoveries" item-props>
-                        <template v-slot:title="{ item }">
-                            {{ item.name }}
-                        </template>
-                        <template v-slot:subtitle="{ item }">
-                            <div v-if="item.status == 'NOT_RECOVERED'">
-                                Da recuperare la lezione del {{ dateFormat(item.date) }}
-                            </div>
-                            <div v-else-if="item.status == 'RECOVERY_SCHEDULED'">
-                                Recupero programmato per il {{ dateFormat(item.recoveryDate) }}
-                            </div>
-                            <div v-else>
-                                Recupero della lezione del {{ dateFormat(item.date) }} effettuato il {{
-                                    dateFormat(item.recoveryDate) }}
-                            </div>
-                        </template>
-                        <template v-slot:append="{ item }">
-
-                            <v-dialog width="auto" scrollable v-if="item.status == 'NOT_RECOVERED'" persistent>
-                                <template v-slot:activator="{ props: activatorProps }">
-                                    <v-btn v-bind="activatorProps">programma</v-btn>
-                                </template>
-
-                                <template v-slot:default="{ isActive }">
-                                    <v-card>
-                                        <v-card-text class="pa-6">
-                                            <v-date-picker :min="new Date()" v-model="datePicker"></v-date-picker>
-                                        </v-card-text>
-                                        <v-card-actions>
-                                            <v-btn text="Annulla" @click="isActive.value = false"></v-btn>
-                                            <v-spacer></v-spacer>
-                                            <v-btn color="surface-variant" text="Salva" variant="flat"
-                                                @click="isActive.value = false; scheduleRecovery(item)"></v-btn>
-                                        </v-card-actions>
-                                    </v-card>
-                                </template>
-                            </v-dialog>
-
-                            <v-btn v-if="item.status == 'RECOVERY_SCHEDULED'"
-                                @click="cancelScheduleRecovery(item)">annulla</v-btn>
-                        </template>
-                    </v-list>
-                </v-card>
+                <RecoveryLessonView :school="school"></RecoveryLessonView>
             </v-col>
         </v-row>
         <v-row>
@@ -115,6 +72,7 @@
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import LessonView from '@/components/lesson/LessonView.vue';
+import RecoveryLessonView from '@/components/lesson/RecoveryLessonView.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import StudentView from '@/components/student/StudentView.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
@@ -132,8 +90,6 @@ const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 
 const subscriptions: Unsubscribe[] = [];
 
-const datePicker: Ref<Date | undefined> = ref();
-const recoveries: Ref<any[]> = ref([]);
 const notes: Ref<any[]> = ref([]);
 const schoolDialog = ref(false);
 
@@ -141,19 +97,6 @@ const schoolSource = computed(() =>
     doc(schoolsRef, route.params.id as string)
 )
 const school = useDocument(schoolSource)
-
-
-function cancelScheduleRecovery(event: any) {
-    event.recoveryDate = undefined;
-    event.status = 'NOT_RECOVERED';
-}
-
-function scheduleRecovery(event: any) {
-    if (!datePicker.value) return;
-
-    event.recoveryDate = datePicker.value;
-    event.status = 'RECOVERY_SCHEDULED';
-}
 
 async function deleteSchool(): Promise<boolean> {
     if (!school.value) return false;
@@ -167,26 +110,6 @@ async function deleteSchool(): Promise<boolean> {
     }
 }
 
-async function loadRecoveryLessons() {
-    const res = [
-        {
-            name: 'Luca Verdi',
-            date: new Date('10/09/2024 14:00'),
-            status: 'NOT_RECOVERED',
-            id: 1,
-        },
-        {
-            name: 'Alessio Rossi',
-            date: new Date('10/09/2024 18:00'),
-            status: 'NOT_RECOVERED',
-            id: 2,
-        }
-    ];
-
-    recoveries.value = res;
-}
-
-
 async function loadNotes() {
     const res = [
         { id: 0, title: "Questa è una nota molto carina e paffutella", description: "", student: "Matteo Rossi" },
@@ -197,7 +120,6 @@ async function loadNotes() {
 }
 
 onMounted(async () => {
-    await loadRecoveryLessons();
     await loadNotes();
 })
 

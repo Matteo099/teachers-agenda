@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { dateFormat } from "./utils";
+import type { ID } from "./repositories/abstract-repository";
 
 export const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 export const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
@@ -187,15 +188,6 @@ export interface WeeklyLesson {
     updatedAt: Timestamp;
 }
 
-export interface RecoveryLesson {
-    studentId: string;
-    originalDailyLessonId: string;
-    originalLessonId: string;
-    recoveryDailyLessonId: string;
-    recoveryLessonId: string;
-    schoolId: string;
-}
-
 export interface ScheduledLesson {
     lessonId: string;
     studentId: string; // relation with the user
@@ -210,8 +202,8 @@ export interface DailyLesson {
     lessons: Lesson[];
 }
 
-export const lessonStatusName = ["", "presente", "assente", "cancellata", "recuperata"]
-export const lessonStatusColor = ["gray", "green", "red", "orange", "blue"]
+export const lessonStatusName = ["", "presente", "assente", "cancellata"]
+export const lessonStatusColor = ["gray", "green", "red", "orange"]
 export enum LessonStatus {
     NONE,
     PRESENT,
@@ -223,6 +215,7 @@ export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
     trial?: boolean;
     recovery?: RecoveryLessonInfo;
+    undoneRecoveryRef?: LessonRef[];
 
     createdAt: Timestamp;
     updatedAt: Timestamp;
@@ -235,27 +228,57 @@ export interface RecoveryLessonInfo {
      * - 'original': Refers to the original lesson where the student was absent.
      * - 'recovery': Refers to the recovery lesson that has been scheduled to make up for the missed original lesson.
      */
-    origin: 'original' | 'recovery';
+    ref: 'original' | 'recovery';
 
     /**
-     * The `lessonId` links to:
-     * - The original lesson, if `origin` is 'original'.
-     * - The recovery lesson, if `origin` is 'recovery'.
+     * The `lessonRef` refers to:
+     * - The original daily lesson, if `ref` is 'original'.
+     * - The recovery daily lesson, if `ref` is 'recovery'.
      */
+    lessonRef: LessonRef;
+}
+
+export interface RecoverySchedule {
+    studentId: ID;
+    schoolId: ID;
+    originalDailyLessonId: ID,
+    originalLessonId: ID,
+    date: Date;
+    startTime: ITime;
+    endTime: ITime;
+}
+
+export interface LessonRef {
     lessonId: string;
-
-    /**
-     * The `dailyLessonId` refers to:
-     * - The original daily lesson, if `origin` is 'original'.
-     * - The recovery daily lesson, if `origin` is 'recovery'.
-     */
     dailyLessonId: string;
+}
+
+export interface SchoolRecoveryLesson {
+    recoveries: RecoveryInfo[];
+    schoolId: string;
+}
+
+/**
+ * Lesson is UNSET when !done && !recoveryLesson
+ * Lesson is PENDING when !done && !!recoveryLesson
+ * Lesson is DONE when done && !!recoveryLesson
+ */
+export interface RecoveryInfo {
+    originalLesson: LessonRef;
+    recoveryLesson?: LessonRef;
+    status?: LessonStatus;
+}
+
+export const recoveryTypes = {
+    "unset": "Lezioni di Recupero da Programmare",
+    "pending": "Lezioni di Recupero Programmate",
+    "done": "Lezioni di Recupero Completate",
 }
 
 export type StudentLesson = Lesson & Student;
 
 
-export const updateDailyLessonTime = function (startingTimeInSeconds: number | string | undefined, studentLessons: (Student & Lesson)[] | { scheduledLessons: ScheduledLesson[], students: Student[] }) {
+export const updateDailyLessonTime = function (startingTimeInSeconds: number | string | undefined, studentLessons: StudentLesson[] | { scheduledLessons: ScheduledLesson[], students: Student[] }) {
     let startingMinutes = 0;
     try {
         const time = startingTimeInSeconds;
