@@ -1,5 +1,8 @@
 <template>
     <v-card v-if="school" class="pa-3" :title="school.name" elevation="0">
+        <template v-slot:prepend>
+            <BackButton></BackButton>
+        </template>
         <!-- <p class="text-h5 text-center mb-6">{{ school.name }}</p> -->
         <template v-slot:append>
             <v-menu transition="slide-y-transition">
@@ -71,6 +74,7 @@
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
+import BackButton from '@/components/inputs/BackButton.vue';
 import LessonView from '@/components/lesson/LessonView.vue';
 import RecoveryLessonView from '@/components/lesson/RecoveryLessonView.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';

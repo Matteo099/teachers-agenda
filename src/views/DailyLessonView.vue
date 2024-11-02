@@ -1,7 +1,15 @@
 <template>
     <v-container fluid v-if="dailyLesson">
-        <p class="text-h5 text-center mb-6">Lezioni del <b>{{ yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format() }}</b>
-        </p>
+        <v-row class="justify-center align-center mb-6">
+            <v-col cols="auto">
+                <BackButton></BackButton>
+            </v-col>
+            <v-col>
+                <p class="text-h5 text-center">Lezioni del <b>{{ yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()
+                        }}</b>
+                </p>
+            </v-col>
+        </v-row>
         <v-row>
             <v-col>
                 <v-btn @click="present" :disabled="!areLessonSelected">presenti</v-btn>
@@ -111,6 +119,7 @@
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
+import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type Student, type StudentLesson } from '@/models/model';
