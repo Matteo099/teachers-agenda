@@ -91,6 +91,11 @@ export class LessonGroupService {
 
         // Step 2: Loop until we have the required number of upcoming lessons (or run out of lessons)
         while ((weeklyLessons.length > 0 || futureDailyLessons.length > dailyLessonIndex) && lessonProjections.length < totalLessons) {
+            if (weeklyLessons.length == 0) {
+                const futureDailyLesson = futureDailyLessons[dailyLessonIndex];
+                lessonProjections.push(this.createLessonProjection(futureDailyLesson, false));
+                dailyLessonIndex++;
+            }
             weeklyLessons.forEach(weekLesson => {
                 if (lessonProjections.length >= totalLessons) return;
 
