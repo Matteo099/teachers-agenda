@@ -3,8 +3,8 @@ import HomeView from '../views/HomeView.vue'
 import ManageSchoolView from '@/views/ManageSchoolView.vue'
 import SchoolView from '@/views/SchoolView.vue'
 import LessonsView from '@/views/DailyLessonView.vue'
+import DailyLessonCalendar from '@/components/calendar/DailyLessonCalendar.vue'
 import CalendarView from '@/views/CalendarView.vue'
-import DailyLessonCalendar from '@/components/lesson/DailyLessonCalendar.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,7 +37,7 @@ const router = createRouter({
     {
       path: '/calendar',
       name: 'calendar',
-      component: DailyLessonCalendar
+      component: CalendarView
     },
     {
       path: '/reports',

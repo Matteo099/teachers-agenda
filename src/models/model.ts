@@ -74,6 +74,10 @@ export class yyyyMMdd {
 
     constructor(private day: number, private month: number, private year: number) { }
 
+    static today() {
+        return this.fromDate(new Date());
+    }
+
     static fromIyyyyMMdd(date: IyyyyMMdd): yyyyMMdd {
         if (date.length != 8) throw new Error("Unable to parse date, format not correct (yyyyMMdd): " + date);
 
@@ -83,8 +87,8 @@ export class yyyyMMdd {
         return new yyyyMMdd(d, m, y)
     }
 
-    toIyyyyMMdd(): IyyyyMMdd {
-        return `${this.year.toString().padStart(4, '0')}${this.month.toString().padStart(2, '0')}${this.day.toString().padStart(2, '0')}`
+    toIyyyyMMdd(delimiter: string = ""): IyyyyMMdd {
+        return `${this.year.toString().padStart(4, '0')}${delimiter}${this.month.toString().padStart(2, '0')}${delimiter}${this.day.toString().padStart(2, '0')}`
     }
 
     static fromDate(date: Date): yyyyMMdd {

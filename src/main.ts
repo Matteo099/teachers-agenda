@@ -1,5 +1,6 @@
 import '@mdi/font/css/materialdesignicons.css'
 import 'vue3-toastify/dist/index.css';
+import '@schedule-x/theme-default/dist/index.css'
 
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
