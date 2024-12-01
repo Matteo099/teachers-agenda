@@ -1,11 +1,12 @@
 <template>
     <v-container>
         <ScheduleXCalendar :calendar-app="calendarApp">
-            <!-- <template #eventModal="{ calendarEvent }">
-                <v-card elevation="3" :title="calendarEvent.title" :subtitle="calendarEvent.start" :text="calendarEvent.description">
+            <template #eventModal="{ calendarEvent }">
+                <v-card elevation="3" :title="calendarEvent.title" :subtitle="calendarEvent.start"
+                    :text="calendarEvent.description">
                     {{ calendarEvent }}
                 </v-card>
-            </template> -->
+            </template>
         </ScheduleXCalendar>
     </v-container>
 </template>
@@ -23,8 +24,10 @@ import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { ScheduleXCalendar } from '@schedule-x/vue';
 import { onMounted, watch } from 'vue';
 
+type CalendarEventExt = CalendarEvent & { data?: any };
+
 interface CalendarProps {
-    events: CalendarEvent[];
+    events: CalendarEventExt[];
     date?: yyyyMMdd;
     editable?: boolean;
 }
@@ -35,7 +38,7 @@ const props = withDefaults(defineProps<CalendarProps>(), {
     editable: false
 })
 
-watch(props.events, () => updateEvents());
+watch(() => props.events, () => updateEvents());
 
 const eventsServicePlugin = createEventsServicePlugin();
 const eventModal = createEventModalPlugin();
@@ -51,6 +54,7 @@ const calendarApp = createCalendar({
 })
 
 function updateEvents() {
+    console.log("updateEvents", props.events)
     props.events.forEach(event => {
         if (!event._options) event._options = {};
         event._options.disableDND = !props.editable;

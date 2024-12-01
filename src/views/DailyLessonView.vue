@@ -55,6 +55,10 @@
         </v-row>
 
         <v-container fluid>
+            <DailyLessonCalendar :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)" :events="events" editable></DailyLessonCalendar>
+        </v-container>
+
+        <v-container fluid>
             <v-timeline side="end" truncate-line="both">
                 <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id" :dot-color="getColor(item)"
                     size="small">
@@ -118,6 +122,7 @@
 </template>
 
 <script setup lang="ts">
+import DailyLessonCalendar from '@/components/calendar/DailyLessonCalendar.vue';
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
@@ -127,6 +132,7 @@ import { DailyLessonRepository } from '@/models/repositories/daily-lesson-reposi
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
+import { type CalendarEvent } from '@schedule-x/calendar';
 import { doc, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
@@ -141,6 +147,7 @@ const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
 const selectedLessons: Ref<number[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
 const studentLessons: Ref<StudentLesson[]> = ref([])
+const events: Ref<CalendarEvent[]> = ref([])
 const availableStudents: Ref<Student[]> = ref([]);
 const selectedStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
@@ -315,6 +322,21 @@ async function updateStudentLesson() {
         const s = data.find(st => st.id == l.studentId)!;
         return { ...l, ...s };
     });
+
+    const today = yyyyMMdd.fromIyyyyMMdd(dailyLesson.value.date).toIyyyyMMdd("-");
+    events.value = studentLessons.value.map(sl => {
+        const start = today + " " + Time.fromITime(sl.startTime).format();
+        const end = today + " " + Time.fromITime(sl.startTime + sl.minutesLessonDuration * 60).format();
+        return {
+            id: sl.lessonId,
+            start,
+            end,
+            title: sl.name + " " + sl.surname,
+            description: sl.notes?.join(";\n"),
+            data: sl
+        }
+    });
+    console.log(events.value);
 
     loadingStudents.value = false;
 }
