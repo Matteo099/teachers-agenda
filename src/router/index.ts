@@ -5,6 +5,7 @@ import SchoolView from '@/views/SchoolView.vue'
 import LessonsView from '@/views/DailyLessonView.vue'
 import DailyLessonCalendar from '@/components/calendar/DailyLessonCalendar.vue'
 import CalendarView from '@/views/CalendarView.vue'
+import WeekLessonEditor from '@/components/lesson/WeekLessonEditor.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -48,6 +49,11 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: HomeView
+    },
+    {
+      path: '/test',
+      name: 'test',
+      component: WeekLessonEditor
     },
 
     // {

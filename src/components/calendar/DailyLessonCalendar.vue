@@ -74,12 +74,14 @@ interface CalendarProps {
     events: CalendarEventExt[];
     date?: yyyyMMdd;
     editable?: boolean;
+    showDay?: boolean;
 }
 
 const props = withDefaults(defineProps<CalendarProps>(), {
     events: () => [],
     date: () => yyyyMMdd.today(),
-    editable: false
+    editable: false,
+    showDay: false
 })
 
 watch(() => props.events, () => updateEvents());
@@ -112,6 +114,16 @@ function updateEvents() {
 function toggleCalendarHeader() {
     const calendarHeader = document.getElementsByClassName("sx__calendar-header")[0] as HTMLDivElement;
     calendarHeader.style.display = calendarHeader.style.display == "none" ? "" : "none";
+    toggleInnerHeader();
+}
+
+function toggleInnerHeader(attempt: number = 0) {
+    const innerHeader = document.getElementsByClassName("sx__week-header")[0] as HTMLDivElement;
+    if (innerHeader) innerHeader.style.display = props.showDay ? "" : "none";
+    else {
+        if (attempt >= 10) console.error("Unable to hide day header");
+        else setTimeout(() => toggleInnerHeader(attempt + 1), 10);
+    }
 }
 
 onMounted(() => {

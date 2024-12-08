@@ -91,7 +91,8 @@
 
             </v-form>
 
-            <v-list>
+            <DailyLessonCalendar :events="events"></DailyLessonCalendar>
+            <!-- <v-list>
                 <v-list-subheader>STUDENTI</v-list-subheader>
                 <draggableComponent v-if="startingTime" :list="scheduledLessons" item-key="studentId"
                     @end="updateScheduledLessonsTime">
@@ -112,7 +113,7 @@
                     </template>
 
                 </draggableComponent>
-            </v-list>
+            </v-list> -->
         </v-card-text>
         <v-card-actions>
             <v-spacer></v-spacer>
@@ -136,6 +137,8 @@ import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import draggableComponent from 'vuedraggable';
 import * as yup from 'yup';
+import DailyLessonCalendar from '../calendar/DailyLessonCalendar.vue';
+import { type CalendarEvent } from '@schedule-x/calendar';
 
 interface WeekLessonEditorProps {
     school: School;
@@ -144,7 +147,13 @@ interface WeekLessonEditorProps {
 }
 
 const emit = defineEmits(['close', 'save'])
-const props = defineProps<WeekLessonEditorProps>()
+const props = withDefaults(defineProps<WeekLessonEditorProps>(),
+    {
+        school: () => ({
+            id: "1"
+        } as School)
+    }
+);
 const subscriptions: EventSubscription[] = [];
 let studentSubscription: EventSubscription;
 
@@ -179,6 +188,10 @@ const [from, fromProps] = defineField('from', vuetifyConfig);
 const [to, toProps] = defineField('to', vuetifyConfig);
 const [excludeDates, excludeDatesProps] = defineField('excludeDates', vuetifyConfig);
 const [startingTime, startingTimeProps] = defineField('startingTime', vuetifyConfig);
+
+const events: Ref<CalendarEvent[]> = ref([
+    { start: "2024-12-8 15:00", end: "2024-12-8 16:00", id: "q", title: "test", data: "2024-12-8" }
+])
 
 const onSave = handleSubmit(
     async (values: GenericObject) => {
