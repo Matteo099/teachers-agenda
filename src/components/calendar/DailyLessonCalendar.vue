@@ -1,10 +1,54 @@
 <template>
     <v-container>
         <ScheduleXCalendar :calendar-app="calendarApp">
+            <template #timeGridEvent="{ calendarEvent }">
+                <v-card color="primary" :title="calendarEvent.title">
+                    <v-card-text>
+                        <p>
+                            <v-icon>mdi-clock</v-icon>
+                            {{ calendarEvent.start.split(" ")[1] }} - {{ calendarEvent.end.split(" ")[1] }}
+                        </p>
+                        {{ calendarEvent }}
+                    </v-card-text>
+                </v-card>
+                <!-- <div class="event">
+                    {{ calendarEvent.title }}
+                </div> -->
+            </template>
             <template #eventModal="{ calendarEvent }">
-                <v-card elevation="3" :title="calendarEvent.title" :subtitle="calendarEvent.start"
+                <v-card elevation="3" :title="calendarEvent.title"
+                    :subtitle="calendarEvent.start.split(' ')[1] + ' - ' + calendarEvent.end.split(' ')[1]"
                     :text="calendarEvent.description">
-                    {{ calendarEvent }}
+
+                    <!-- {{ calendarEvent }} -->
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <!-- <v-btn text="Chiudi" @click="emit('close')"></v-btn> -->
+
+                        <v-dialog transition="dialog-bottom-transition">
+                            <template v-slot:activator="{ props: activatorProps }">
+                                <v-btn text="Chiudi" @click="eventModal.close()"></v-btn>
+                                <v-btn text="Modifica" color="primary" v-bind="activatorProps" @click.stop></v-btn>
+                            </template>
+
+                            <template v-slot:default="{ isActive }">
+                                <v-card>
+                                    <p>
+                                        questo è l'editor di un evento...
+                                    </p>
+                                    <p>
+                                        dovrebbe contenere input-field per l'ora e bho..
+                                    </p>
+                                    <v-card-actions>
+                                        <v-spacer></v-spacer>
+                                        <v-btn text="Chiudi" @click.stop="isActive.value = false"></v-btn>
+                                        <v-btn text="Modifica" color="primary"
+                                            @click.stop="isActive.value = false"></v-btn>
+                                    </v-card-actions>
+                                </v-card>
+                            </template>
+                        </v-dialog>
+                    </v-card-actions>
                 </v-card>
             </template>
         </ScheduleXCalendar>
