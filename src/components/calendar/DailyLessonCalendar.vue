@@ -1,20 +1,18 @@
 <template>
     <v-container>
         <ScheduleXCalendar :calendar-app="calendarApp">
-            <template #timeGridEvent="{ calendarEvent }">
-                <v-card color="primary" :title="calendarEvent.title">
-                    <v-card-text>
+            <!-- <template #timeGridEvent="{ calendarEvent }">
+                <v-card class="border" elevation="2">
+                    <v-card-text class="pa-1">
+                        <p>{{ calendarEvent.title }}</p>
                         <p>
                             <v-icon>mdi-clock</v-icon>
                             {{ calendarEvent.start.split(" ")[1] }} - {{ calendarEvent.end.split(" ")[1] }}
                         </p>
-                        {{ calendarEvent }}
                     </v-card-text>
                 </v-card>
-                <!-- <div class="event">
-                    {{ calendarEvent.title }}
-                </div> -->
-            </template>
+               
+            </template> -->
             <template #eventModal="{ calendarEvent }">
                 <v-card elevation="3" :title="calendarEvent.title"
                     :subtitle="calendarEvent.start.split(' ')[1] + ' - ' + calendarEvent.end.split(' ')[1]"
@@ -33,17 +31,34 @@
 
                             <template v-slot:default="{ isActive }">
                                 <v-card>
-                                    <p>
-                                        questo è l'editor di un evento...
-                                    </p>
-                                    <p>
-                                        dovrebbe contenere input-field per l'ora e bho..
-                                    </p>
+                                    <v-row justify="space-around">
+                                        <v-col cols="11" sm="5">
+                                            <v-text-field v-model="startTime" :active="startModal" :focus="startModal"
+                                                label="Data di inizio" prepend-icon="mdi-clock-time-four-outline"
+                                                readonly>
+                                                <v-dialog v-model="startModal" activator="parent" width="auto">
+                                                    <v-time-picker v-if="startModal" format="24hr" :max="endTime"
+                                                        v-model="startTime"></v-time-picker>
+                                                </v-dialog>
+                                            </v-text-field>
+                                        </v-col>
+
+                                        <v-col cols="11" sm="5">
+                                            <v-text-field v-model="endTime" :active="endModal" :focused="endModal"
+                                                label="Data di fine" prepend-icon="mdi-clock-time-four-outline"
+                                                readonly>
+                                                <v-dialog v-model="endModal" activator="parent" width="auto">
+                                                    <v-time-picker v-if="endModal" format="24hr" v-model="endTime"
+                                                        :min="startTime"></v-time-picker>
+                                                </v-dialog>
+                                            </v-text-field>
+                                        </v-col>
+                                    </v-row>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
                                         <v-btn text="Chiudi" @click.stop="isActive.value = false"></v-btn>
                                         <v-btn text="Modifica" color="primary"
-                                            @click.stop="isActive.value = false"></v-btn>
+                                            @click.stop="updateEventTime(calendarEvent); isActive.value = false;"></v-btn>
                                     </v-card-actions>
                                 </v-card>
                             </template>
@@ -66,7 +81,7 @@ import { createDragAndDropPlugin } from '@schedule-x/drag-and-drop';
 import { createEventModalPlugin } from '@schedule-x/event-modal';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { ScheduleXCalendar } from '@schedule-x/vue';
-import { onMounted, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 type CalendarEventExt = CalendarEvent & { data?: any };
 
@@ -84,7 +99,12 @@ const props = withDefaults(defineProps<CalendarProps>(), {
     showDay: false
 })
 
-watch(() => props.events, () => updateEvents());
+const startTime = ref();
+const endTime = ref();
+const startModal = ref(false);
+const endModal = ref(false);
+
+watch(props.events, () => updateEvents());
 
 const eventsServicePlugin = createEventsServicePlugin();
 const eventModal = createEventModalPlugin();
@@ -96,7 +116,14 @@ const calendarApp = createCalendar({
     selectedDate: props.date.toIyyyyMMdd("-"),
     views: [createViewDay()],
     events: [],
-    plugins: [dndPlugin, eventsServicePlugin, eventModal]
+    plugins: props.editable ? [dndPlugin, eventsServicePlugin, eventModal] : [dndPlugin, eventsServicePlugin],
+    callbacks: {
+        onEventClick(event: CalendarEvent) {
+            console.log("onEventClick", event.start, event.end);
+            startTime.value = event.start?.split(" ")[1] ?? null;
+            endTime.value = event.end?.split(" ")[1] ?? null;
+        }
+    }
 })
 
 function updateEvents() {
@@ -109,6 +136,16 @@ function updateEvents() {
             eventsServicePlugin.update(event);
         } else eventsServicePlugin.add(event);
     })
+}
+
+function updateEventTime(calendarEvent: CalendarEvent) {
+    if (!calendarEvent || !startTime.value || !endTime.value) return;
+    const ce = { ...calendarEvent }
+    const start = ce.start?.split(" ");
+    const end = ce.end?.split(" ");
+    ce.start = start[0] + " " + startTime.value;
+    ce.end = end[0] + " " + endTime.value;
+    eventsServicePlugin.update(ce);
 }
 
 function toggleCalendarHeader() {
@@ -131,3 +168,10 @@ onMounted(() => {
     updateEvents();
 })
 </script>
+
+<style scoped>
+.border {
+    border: 1px solid black !important;
+    border-left: 5px solid red !important;
+}
+</style>
