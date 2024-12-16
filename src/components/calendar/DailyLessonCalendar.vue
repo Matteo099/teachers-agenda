@@ -23,42 +23,44 @@
                         <v-spacer></v-spacer>
                         <!-- <v-btn text="Chiudi" @click="emit('close')"></v-btn> -->
 
-                        <v-dialog transition="dialog-bottom-transition">
+                        <v-dialog v-model="editTimeModal" transition="dialog-bottom-transition">
                             <template v-slot:activator="{ props: activatorProps }">
                                 <v-btn text="Chiudi" @click="eventModal.close()"></v-btn>
                                 <v-btn text="Modifica" color="primary" v-bind="activatorProps" @click.stop></v-btn>
                             </template>
 
                             <template v-slot:default="{ isActive }">
-                                <v-card>
-                                    <v-row justify="space-around">
-                                        <v-col cols="11" sm="5">
-                                            <v-text-field v-model="startTime" :active="startModal" :focus="startModal"
-                                                label="Data di inizio" prepend-icon="mdi-clock-time-four-outline"
-                                                readonly>
-                                                <v-dialog v-model="startModal" activator="parent" width="auto">
-                                                    <v-time-picker v-if="startModal" format="24hr" :max="endTime"
-                                                        v-model="startTime"></v-time-picker>
-                                                </v-dialog>
-                                            </v-text-field>
-                                        </v-col>
+                                <v-card title="Modifica orario lezione" elevation="2">
+                                    <v-card-text>
+                                        <v-row justify="space-around">
+                                            <v-col cols="11" sm="5">
+                                                <v-text-field v-model="startTime" :active="startModal"
+                                                    :focus="startModal" label="Data di inizio"
+                                                    prepend-icon="mdi-clock-time-four-outline" readonly>
+                                                    <v-dialog v-model="startModal" activator="parent" width="auto">
+                                                        <v-time-picker v-if="startModal" format="24hr"
+                                                            v-model="startTime"></v-time-picker>
+                                                    </v-dialog>
+                                                </v-text-field>
+                                            </v-col>
 
-                                        <v-col cols="11" sm="5">
-                                            <v-text-field v-model="endTime" :active="endModal" :focused="endModal"
-                                                label="Data di fine" prepend-icon="mdi-clock-time-four-outline"
-                                                readonly>
-                                                <v-dialog v-model="endModal" activator="parent" width="auto">
-                                                    <v-time-picker v-if="endModal" format="24hr" v-model="endTime"
-                                                        :min="startTime"></v-time-picker>
-                                                </v-dialog>
-                                            </v-text-field>
-                                        </v-col>
-                                    </v-row>
+                                            <v-col cols="11" sm="5">
+                                                <v-text-field v-model="endTime" :active="endModal" :focused="endModal"
+                                                    label="Data di fine" prepend-icon="mdi-clock-time-four-outline"
+                                                    readonly>
+                                                    <v-dialog v-model="endModal" activator="parent" width="auto">
+                                                        <v-time-picker v-if="endModal" format="24hr"
+                                                            v-model="endTime"></v-time-picker>
+                                                    </v-dialog>
+                                                </v-text-field>
+                                            </v-col>
+                                        </v-row>
+                                    </v-card-text>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
-                                        <v-btn text="Chiudi" @click.stop="isActive.value = false"></v-btn>
+                                        <v-btn text="Annulla" @click.stop="isActive.value = false"></v-btn>
                                         <v-btn text="Modifica" color="primary"
-                                            @click.stop="updateEventTime(calendarEvent); isActive.value = false;"></v-btn>
+                                            @click.stop="updateEventTime(calendarEvent)"></v-btn>
                                     </v-card-actions>
                                 </v-card>
                             </template>
@@ -71,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { yyyyMMdd } from '@/models/model';
+import { Time, yyyyMMdd } from '@/models/model';
 import {
     createCalendar,
     createViewDay,
@@ -82,11 +84,12 @@ import { createEventModalPlugin } from '@schedule-x/event-modal';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { ScheduleXCalendar } from '@schedule-x/vue';
 import { onMounted, ref, watch } from 'vue';
+import { toast } from 'vue3-toastify';
 
 type CalendarEventExt = CalendarEvent & { data?: any };
 
 interface CalendarProps {
-    events: CalendarEventExt[];
+    // events: CalendarEventExt[];
     date?: yyyyMMdd;
     editable?: boolean;
     showDay?: boolean;
@@ -98,13 +101,15 @@ const props = withDefaults(defineProps<CalendarProps>(), {
     editable: false,
     showDay: false
 })
+const events = defineModel<CalendarEventExt[]>({ default: [] });
 
 const startTime = ref();
 const endTime = ref();
 const startModal = ref(false);
 const endModal = ref(false);
+const editTimeModal = ref(false);
 
-watch(props.events, () => updateEvents());
+watch(events, () => updateEvents());
 
 const eventsServicePlugin = createEventsServicePlugin();
 const eventModal = createEventModalPlugin();
@@ -127,8 +132,8 @@ const calendarApp = createCalendar({
 })
 
 function updateEvents() {
-    console.log("updateEvents", props.events)
-    props.events.forEach(event => {
+    console.log("updateEvents", events.value)
+    events.value.forEach(event => {
         if (!event._options) event._options = {};
         event._options.disableDND = !props.editable;
 
@@ -138,19 +143,27 @@ function updateEvents() {
     });
 
     eventsServicePlugin.getAll().forEach(e => {
-        const toDelete = props.events.findIndex(ie => ie.id == e.id) == -1;
+        const toDelete = events.value.findIndex(ie => ie.id == e.id) == -1;
         if (toDelete) eventsServicePlugin.remove(e.id);
     });
 }
 
 function updateEventTime(calendarEvent: CalendarEvent) {
     if (!calendarEvent || !startTime.value || !endTime.value) return;
+
+    if ((Time.fromHHMM(startTime.value)?.getTotalMinutes() ?? 0) > (Time.fromHHMM(endTime.value)?.getTotalMinutes() ?? 0)) {
+        toast.warning("L'orario di inizio lezione deve essere antecedente all'orario di fine lezione");
+        return;
+    }
+
     const ce = { ...calendarEvent }
     const start = ce.start?.split(" ");
     const end = ce.end?.split(" ");
+
     ce.start = start[0] + " " + startTime.value;
     ce.end = end[0] + " " + endTime.value;
     eventsServicePlugin.update(ce);
+    editTimeModal.value = false;
 }
 
 function toggleCalendarHeader() {
