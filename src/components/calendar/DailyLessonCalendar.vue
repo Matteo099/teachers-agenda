@@ -135,7 +135,12 @@ function updateEvents() {
         if (eventsServicePlugin.get(event.id)) {
             eventsServicePlugin.update(event);
         } else eventsServicePlugin.add(event);
-    })
+    });
+
+    eventsServicePlugin.getAll().forEach(e => {
+        const toDelete = props.events.findIndex(ie => ie.id == e.id) == -1;
+        if (toDelete) eventsServicePlugin.remove(e.id);
+    });
 }
 
 function updateEventTime(calendarEvent: CalendarEvent) {

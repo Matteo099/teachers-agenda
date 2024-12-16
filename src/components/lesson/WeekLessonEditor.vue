@@ -91,7 +91,7 @@
 
             </v-form>
 
-            <DailyLessonCalendar :events="events"></DailyLessonCalendar>
+            <DailyLessonCalendar :events="events" editable></DailyLessonCalendar>
             <!-- <v-list>
                 <v-list-subheader>STUDENTI</v-list-subheader>
                 <draggableComponent v-if="startingTime" :list="scheduledLessons" item-key="studentId"
@@ -189,9 +189,26 @@ const [to, toProps] = defineField('to', vuetifyConfig);
 const [excludeDates, excludeDatesProps] = defineField('excludeDates', vuetifyConfig);
 const [startingTime, startingTimeProps] = defineField('startingTime', vuetifyConfig);
 
-const events: Ref<CalendarEvent[]> = ref([
-    { start: "2024-12-8 15:00", end: "2024-12-8 16:00", id: "q", title: "test", data: "2024-12-8" }
-])
+const events: Ref<CalendarEvent[]> = ref([]);
+
+async function fetchEvents() {
+    const today = yyyyMMdd.today();
+    let time = Time.fromITime(13 * 3600 + 40 * 60);
+
+    for (let index = 1; index <= 6; index++) {
+        const start = time.format();
+        time = time.add({ hour: 1 });
+        const end = time.format();
+        events.value.push({
+            id: index + "A",
+            title: "Studente " + index,
+            start: today.toIyyyyMMdd("-") + " " + start,
+            end: today.toIyyyyMMdd("-") + " " + end,
+        });
+    }
+
+    console.log(events.value);
+}
 
 const onSave = handleSubmit(
     async (values: GenericObject) => {
@@ -248,31 +265,18 @@ function updateScheduledLessons() {
 function updateScheduledLessonsTime() {
     const time = startingTime.value;
     updateDailyLessonTime(time, { scheduledLessons: scheduledLessons.value, students: selectedStudents.value });
-    //     let startingMinutes = 0;
-    //     try {
-    //         const time = startingTime.value;
-    //         if (!time) return;
 
-    //         const hhmm = time.split(":");
-    //         if (hhmm.length != 2) return;
-
-    //         const h = parseInt(hhmm[0]);
-    //         const m = parseInt(hhmm[1]);
-
-    //         startingMinutes = h * 60 + m;
-    //         console.log(startingMinutes)
-    //     } catch (error) {
-    //         console.log(error)
-    //         return;
-    //     }
-
-    //     scheduledLessons.value.forEach(sl => {
-    //         sl.time = startingMinutes * 60;
-    //         // sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
-    //         const student = selectedStudents.value.find(s => s.id == sl.studentId);
-    //         if (!student) return;
-    //         startingMinutes += student.minutesLessonDuration;
-    //     });
+    events.value.length = 0;
+    const today = yyyyMMdd.today();
+    const res = scheduledLessons.value.map(sl => {
+        return {
+            id: sl.lessonId,
+            start: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.startTime).format(),
+            end: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.endTime).format(),
+            title: sl.studentId
+        };
+    });
+    events.value.push(...res)
 }
 
 function updateWeekLesson() {
@@ -397,5 +401,6 @@ onUnmounted(() => {
 onMounted(async () => {
     await loadStudents();
     updateWeekLesson();
+    // await fetchEvents();
 })
 </script>
