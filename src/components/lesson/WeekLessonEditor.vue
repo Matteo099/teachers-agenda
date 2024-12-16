@@ -200,8 +200,31 @@ function toggle() {
 function updateScheduledLessons() {
     // add new selected students at the end of the list
     for (const student of selectedStudents.value) {
-        const index = scheduledLessons.value.findIndex(s => s.studentId == student.id)
-        if (index == -1) scheduledLessons.value.push({ lessonId: uuidv4(), studentId: student.id, startTime: 0, endTime: 0 });
+        // Check if the student is already in the scheduled lessons
+        const existingLessonIndex = scheduledLessons.value.findIndex(
+            lesson => lesson.studentId === student.id
+        );
+
+        if (existingLessonIndex === -1) {
+            console.log(scheduledLessons.value);
+            // Find the latest endTime among scheduled lessons
+            const startTime = scheduledLessons.value.reduce(
+                (latest, current) => (current.endTime > latest ? current.endTime : latest),
+                Time.fromHHMM(startingTime.value)?.getTotalMinutes() ?? 0
+            );
+
+            // Find the lesson duration for the student
+            const lessonDuration = student.minutesLessonDuration || 0;
+            const endTime = startTime + lessonDuration * 60;
+
+            // Add the new lesson for the student
+            scheduledLessons.value.push({
+                lessonId: uuidv4(),
+                studentId: student.id,
+                startTime: startTime,
+                endTime: endTime
+            });
+        }
     }
 
     // remove de-selected students from the list
@@ -217,7 +240,17 @@ function updateScheduledLessons() {
 }
 
 function updateScheduledLessonsTime() {
-    const time = startingTime.value;
+    // update timeslots based on startingTime, without modifing the "position" of the lessons (empty hours...)
+    // const time = startingTime.value;
+    // scheduledLessons.value.sort((a, b) => {
+    //     return a.startTime - b.startTime;
+    // }).forEach((sl, index) => {
+    //     const lessonDuration = sl.endTime - sl.startTime;
+    //     sl.startTime = startTime;
+    //     startTime += lessonDuration;
+    //     sl.endTime = startTime;
+    // });
+
     // updateDailyLessonTime(time, { scheduledLessons: scheduledLessons.value, students: selectedStudents.value });
 
     const today = yyyyMMdd.today();
