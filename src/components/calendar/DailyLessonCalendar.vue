@@ -89,14 +89,12 @@ import { toast } from 'vue3-toastify';
 type CalendarEventExt = CalendarEvent & { data?: any };
 
 interface CalendarProps {
-    // events: CalendarEventExt[];
     date?: yyyyMMdd;
     editable?: boolean;
     showDay?: boolean;
 }
 
 const props = withDefaults(defineProps<CalendarProps>(), {
-    events: () => [],
     date: () => yyyyMMdd.today(),
     editable: false,
     showDay: false
@@ -109,7 +107,7 @@ const startModal = ref(false);
 const endModal = ref(false);
 const editTimeModal = ref(false);
 
-watch(events, () => updateEvents());
+watch(events, () => updateEvents(), { deep: true });
 
 const eventsServicePlugin = createEventsServicePlugin();
 const eventModal = createEventModalPlugin();
@@ -123,16 +121,21 @@ const calendarApp = createCalendar({
     events: [],
     plugins: props.editable ? [dndPlugin, eventsServicePlugin, eventModal] : [dndPlugin, eventsServicePlugin],
     callbacks: {
-        onEventClick(event: CalendarEvent) {
-            console.log("onEventClick", event.start, event.end);
-            startTime.value = event.start?.split(" ")[1] ?? null;
-            endTime.value = event.end?.split(" ")[1] ?? null;
-        }
+        onEventClick(calendarEvent: CalendarEvent) {
+            // console.log("onEventClick", event.start, event.end);
+            startTime.value = calendarEvent.start?.split(" ")[1] ?? null;
+            endTime.value = calendarEvent.end?.split(" ")[1] ?? null;
+        },
+        onEventUpdate(calendarEvent: CalendarEvent) {
+            const event = events.value.find(e => e.id == calendarEvent.id);
+            if (!event) return;
+            event.start = calendarEvent.start;
+            event.end = calendarEvent.end;
+        },
     }
 })
 
 function updateEvents() {
-    console.log("updateEvents", events.value)
     events.value.forEach(event => {
         if (!event._options) event._options = {};
         event._options.disableDND = !props.editable;
@@ -156,13 +159,14 @@ function updateEventTime(calendarEvent: CalendarEvent) {
         return;
     }
 
+    const event = events.value.find(e => e.id == calendarEvent.id);
+    if (!event) return;
     const ce = { ...calendarEvent }
     const start = ce.start?.split(" ");
     const end = ce.end?.split(" ");
+    event.start = start[0] + " " + startTime.value;
+    event.end = end[0] + " " + endTime.value;
 
-    ce.start = start[0] + " " + startTime.value;
-    ce.end = end[0] + " " + endTime.value;
-    eventsServicePlugin.update(ce);
     editTimeModal.value = false;
 }
 

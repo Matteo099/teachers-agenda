@@ -47,17 +47,6 @@
                         <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" item-title="name"
                             item-value="id" :return-object="true" multiple
                             no-data-text="Nessuno studente disponibile per questa scuola">
-                            <!-- <template v-slot:item="{ item }">
-                                <v-list-item :value="item.raw" :key="item.raw.id" role="option">
-                                    <template v-slot:prepend="{ isSelected }">
-                                        <v-list-item-action start>
-                                            <v-checkbox-btn :model-value="isSelected"></v-checkbox-btn>
-                                        </v-list-item-action>
-                                    </template>
-
-                                    <v-list-item-title>{{ item.raw.name }} {{ item.raw.surname }}</v-list-item-title>
-                                </v-list-item>
-                            </template> -->
                             <template v-slot:prepend-item v-if="allStudents.length > 1">
                                 <v-list-item title="Seleziona tutti" @click="toggle">
                                     <template v-slot:prepend>
@@ -69,22 +58,6 @@
 
                                 <v-divider class="mt-2"></v-divider>
                             </template>
-
-                            <!-- <template v-slot:append-item>
-                                <v-divider class="mt-2"></v-divider>
-
-                                <v-dialog v-model="dialogCreateStudent" fullscreen>
-                                    <template v-slot:activator="{ props: activatorProps }">
-                                        <v-list-item prepend-icon="mdi-plus" title="Crea Studente" color="success"
-                                            v-bind="activatorProps">
-                                        </v-list-item>
-                                    </template>
-
-                                    <StudentEditor :schoolId="schoolId" @close="dialogCreateStudent = false"
-                                        @save="dialogCreateStudent = false">
-                                    </StudentEditor>
-                                </v-dialog>
-                            </template> -->
                         </v-select>
                     </v-col>
                 </v-row>
@@ -130,15 +103,14 @@ import { WeeklyLessonRepository } from '@/models/repositories/weekly-lesson-repo
 import { StudentService } from '@/models/services/student-service';
 import { dateFormat } from '@/models/utils';
 import type { EventSubscription } from '@/models/utils/event';
+import { type CalendarEvent } from '@schedule-x/calendar';
 import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { useForm, type GenericObject } from 'vee-validate';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
-import draggableComponent from 'vuedraggable';
 import * as yup from 'yup';
 import DailyLessonCalendar from '../calendar/DailyLessonCalendar.vue';
-import { type CalendarEvent } from '@schedule-x/calendar';
 
 interface WeekLessonEditorProps {
     school: School;
@@ -208,7 +180,7 @@ watch(to, () => updateExcludeDates())
 watch(selectedStudents, () => updateScheduledLessons())
 watch(startingTime, () => updateScheduledLessonsTime())
 watch(dayOfWeek, async () => await loadStudents())
-watch(events, () => updateScheduledLessonsByEvents())
+watch(events, () => updateScheduledLessonsByEvents(), { deep: true })
 
 const selectAllStudents = computed(() => {
     return selectedStudents.value.length === allStudents.value.length
@@ -246,7 +218,7 @@ function updateScheduledLessons() {
 
 function updateScheduledLessonsTime() {
     const time = startingTime.value;
-    updateDailyLessonTime(time, { scheduledLessons: scheduledLessons.value, students: selectedStudents.value });
+    // updateDailyLessonTime(time, { scheduledLessons: scheduledLessons.value, students: selectedStudents.value });
 
     const today = yyyyMMdd.today();
     events.value = scheduledLessons.value.map(sl => {
@@ -254,15 +226,13 @@ function updateScheduledLessonsTime() {
             id: sl.lessonId,
             start: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.startTime).format(),
             end: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.endTime).format(),
-            title: sl.studentId,
+            title: `${getCompleteStudentName(sl.studentId)} - ${getStudentLessonDay(sl.studentId)}`,
             data: sl
         };
     });
-    console.log("updateScheduledLessonsTime", events.value)
 }
 
 function updateScheduledLessonsByEvents() {
-    console.log("updateScheduledLessonsByEvents");
     scheduledLessons.value = events.value.map(e => {
         const start = e.start.split(" ")[1]
         const end = e.end.split(" ")[1]
