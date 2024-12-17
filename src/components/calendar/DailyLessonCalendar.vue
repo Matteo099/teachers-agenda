@@ -33,6 +33,11 @@
                                 <v-card title="Modifica orario lezione" elevation="2">
                                     <v-card-text>
                                         <v-row justify="space-around">
+                                            <v-col cols="11" md="6">
+                                                <v-checkbox v-model="alignEndTime"
+                                                    label="Allinea la data di fine lezione in base alla durata della lezione definita dallo studente"></v-checkbox>
+                                            </v-col>
+
                                             <v-col cols="11" sm="5">
                                                 <v-text-field v-model="startTime" :active="startModal"
                                                     :focus="startModal" label="Data di inizio"
@@ -47,13 +52,15 @@
                                             <v-col cols="11" sm="5">
                                                 <v-text-field v-model="endTime" :active="endModal" :focused="endModal"
                                                     label="Data di fine" prepend-icon="mdi-clock-time-four-outline"
-                                                    readonly>
+                                                    :disabled="alignEndTime" readonly>
                                                     <v-dialog v-model="endModal" activator="parent" width="auto">
                                                         <v-time-picker v-if="endModal" format="24hr"
                                                             v-model="endTime"></v-time-picker>
                                                     </v-dialog>
                                                 </v-text-field>
                                             </v-col>
+
+
                                         </v-row>
                                     </v-card-text>
                                     <v-card-actions>
@@ -73,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { Time, yyyyMMdd } from '@/models/model';
+import { Time, yyyyMMdd, type Student } from '@/models/model';
 import {
     createCalendar,
     createViewDay,
@@ -106,7 +113,11 @@ const endTime = ref();
 const startModal = ref(false);
 const endModal = ref(false);
 const editTimeModal = ref(false);
+const alignEndTime = ref(true);
 
+let selectedCalendarEvent: CalendarEventExt | undefined;
+
+watch(startTime, () => updateEndTime())
 watch(events, () => updateEvents(), { deep: true });
 
 const eventsServicePlugin = createEventsServicePlugin();
@@ -123,6 +134,7 @@ const calendarApp = createCalendar({
     callbacks: {
         onEventClick(calendarEvent: CalendarEvent) {
             // console.log("onEventClick", event.start, event.end);
+            selectedCalendarEvent = calendarEvent;
             startTime.value = calendarEvent.start?.split(" ")[1] ?? null;
             endTime.value = calendarEvent.end?.split(" ")[1] ?? null;
         },
@@ -168,6 +180,17 @@ function updateEventTime(calendarEvent: CalendarEvent) {
     event.end = end[0] + " " + endTime.value;
 
     editTimeModal.value = false;
+}
+
+function updateEndTime() {
+    if (alignEndTime.value && selectedCalendarEvent) {
+        const start = Time.fromHHMM(startTime.value);
+        if (!start) return;
+        const student: Student = selectedCalendarEvent.data.st;
+        if (!student) return;
+        const lessonMinutes = student.minutesLessonDuration;
+        endTime.value = Time.fromITime((start.getTotalMinutes() + lessonMinutes) * 60).format();
+    }
 }
 
 function toggleCalendarHeader() {

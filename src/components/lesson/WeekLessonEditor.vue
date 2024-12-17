@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { days, Time, updateDailyLessonTime, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
+import { days, Time, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { WeeklyLessonRepository } from '@/models/repositories/weekly-lesson-repository';
 import { StudentService } from '@/models/services/student-service';
 import { dateFormat } from '@/models/utils';
@@ -206,7 +206,6 @@ function updateScheduledLessons() {
         );
 
         if (existingLessonIndex === -1) {
-            console.log(scheduledLessons.value);
             // Find the latest endTime among scheduled lessons
             const startTime = scheduledLessons.value.reduce(
                 (latest, current) => (current.endTime > latest ? current.endTime : latest),
@@ -240,27 +239,30 @@ function updateScheduledLessons() {
 }
 
 function updateScheduledLessonsTime() {
-    // update timeslots based on startingTime, without modifing the "position" of the lessons (empty hours...)
-    // const time = startingTime.value;
-    // scheduledLessons.value.sort((a, b) => {
-    //     return a.startTime - b.startTime;
-    // }).forEach((sl, index) => {
-    //     const lessonDuration = sl.endTime - sl.startTime;
-    //     sl.startTime = startTime;
-    //     startTime += lessonDuration;
-    //     sl.endTime = startTime;
-    // });
+    // // update timeslots based on startingTime, without modifing the "position" of the lessons (empty hours...)
+    if (scheduledLessons.value.length > 0) {
+        scheduledLessons.value.sort((a, b) => {
+            return a.startTime - b.startTime;
+        });
+        const time = Time.fromHHMM(startingTime.value)?.getTotalMinutes() ?? 0;
+        const deltaTime = time * 60 - scheduledLessons.value[0].startTime;
+        scheduledLessons.value.forEach(sl => {
+            sl.startTime += deltaTime;
+            sl.endTime += deltaTime;
+        });
+    }
 
     // updateDailyLessonTime(time, { scheduledLessons: scheduledLessons.value, students: selectedStudents.value });
 
     const today = yyyyMMdd.today();
     events.value = scheduledLessons.value.map(sl => {
+        const st = getStudent(sl.studentId);
         return {
             id: sl.lessonId,
             start: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.startTime).format(),
             end: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.endTime).format(),
             title: `${getCompleteStudentName(sl.studentId)} - ${getStudentLessonDay(sl.studentId)}`,
-            data: sl
+            data: { sl, st }
         };
     });
 }
@@ -358,13 +360,27 @@ async function save(values: GenericObject) {
     }
 }
 
-function getCompleteStudentName(studentId: string): string {
-    const student = allStudents.value.find(s => s.id == studentId);
+function getStudent(studentId: string): Student | undefined {
+    return allStudents.value.find(s => s.id == studentId);
+}
+
+function getCompleteStudentName(studentId: string | Student): string {
+    let student: Student | undefined;
+    if (typeof studentId === "string") {
+        student = getStudent(studentId);
+    } else {
+        student = studentId;
+    }
     return `${student?.name} ${student?.surname}`;
 }
 
-function getStudentLessonDay(studentId: string): string {
-    const student = allStudents.value.find(s => s.id == studentId);
+function getStudentLessonDay(studentId: string | Student): string {
+    let student: Student | undefined;
+    if (typeof studentId === "string") {
+        student = getStudent(studentId);
+    } else {
+        student = studentId;
+    }
     return days[student?.lessonDay ?? 0];
 }
 
