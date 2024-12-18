@@ -52,67 +52,97 @@
                     </template>
                 </DeleteDialog>
             </v-col>
+
+            <v-col>
+                <v-btn-toggle v-model="visualization" mandatory shaped>
+                    <v-btn>
+                        <v-icon>mdi-timeline-text-outline</v-icon>
+                    </v-btn>
+
+                    <v-btn>
+                        <v-icon>mdi-calendar-week-begin-outline</v-icon>
+                    </v-btn>
+                </v-btn-toggle>
+            </v-col>
         </v-row>
 
-        <v-container fluid>
-            <DailyLessonCalendar :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)" :events="events" editable></DailyLessonCalendar>
-        </v-container>
 
         <v-container fluid>
-            <v-timeline side="end" truncate-line="both">
-                <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id" :dot-color="getColor(item)"
-                    size="small">
-                    <v-card elevation=3>
-                        <v-card-title>
-                            <v-checkbox v-model="selectedLessons" :value="index" multiple>
-                                <template v-slot:label>
-                                    <span><b>{{ Time.fromITime(item.startTime).format() }} - {{
-                                        Time.fromITime(item.endTime).format() }}</b> &nbsp; <i>{{
-                                                item.name }} {{ item.surname }}</i></span>
-                                </template>
-                            </v-checkbox>
-                        </v-card-title>
-                        <v-card-text>
-                            <template v-if="!item.recovery || item.recovery.ref == 'original'">
-                                <v-btn class="ma-1"
-                                    v-if="item.status != LessonStatus.PRESENT && item.status != LessonStatus.CANCELLED"
-                                    @click="present(item)">presente</v-btn>
-                                <v-btn class="ma-1"
-                                    v-if="item.status != LessonStatus.ABSENT && item.status != LessonStatus.CANCELLED"
-                                    @click="absent(item)">assente</v-btn>
-                                <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
-                                    @click="cancel(item)">cancella</v-btn>
-                                <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
-                                    @click="reset(item)">reset</v-btn>
+            <v-slide-x-transition leave-absolute>
+                <DailyLessonCalendar v-if="visualization == 1" :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)"
+                    :events="events" editable>
+                </DailyLessonCalendar>
 
-                                <v-btn v-if="item.recovery?.ref == 'original'" class="ma-1"
-                                    :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
-                                    <template v-slot:prepend>
-                                        <v-icon>mdi-eye-arrow-left-outline</v-icon>
+                <v-timeline v-else side="end" truncate-line="both">
+                    <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id" :dot-color="getColor(item)"
+                        size="small">
+                        <v-card elevation=3>
+                            <v-card-title>
+                                <v-checkbox v-model="selectedLessons" :value="index" multiple>
+                                    <template v-slot:label>
+                                        <span><b>{{ Time.fromITime(item.startTime).format() }} - {{
+                                            Time.fromITime(item.endTime).format() }}</b> &nbsp; <i>{{
+                                                    item.name }} {{ item.surname }}</i></span>
                                     </template>
-                                    origine</v-btn>
-                            </template>
-                            <template v-else>
-                                <v-btn class="ma-1" :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
-                                    <template v-slot:prepend>
-                                        <v-icon>mdi-eye-arrow-right-outline</v-icon>
-                                    </template>recupero</v-btn>
-                            </template>
+                                </v-checkbox>
+                            </v-card-title>
+                            <v-card-text>
+                                <template v-if="!item.recovery || item.recovery.ref == 'original'">
+                                    <v-btn class="ma-1"
+                                        v-if="item.status != LessonStatus.PRESENT && item.status != LessonStatus.CANCELLED"
+                                        @click="present(item)">presente</v-btn>
+                                    <v-btn class="ma-1"
+                                        v-if="item.status != LessonStatus.ABSENT && item.status != LessonStatus.CANCELLED"
+                                        @click="absent(item)">assente</v-btn>
+                                    <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
+                                        @click="cancel(item)">cancella</v-btn>
+                                    <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
+                                        @click="reset(item)">reset</v-btn>
 
+                                    <v-dialog v-model="timeDialog" transition="dialog-bottom-transition" fullscreen>
+                                        <template v-slot:activator="{ props: activatorProps }">
+                                            <v-btn class="ma-1" v-bind="activatorProps">modifica orario</v-btn>
+                                        </template>
 
-                            <v-btn class="ma-1" @click="notes(item)">note</v-btn>
+                                        <template v-slot:default="{ isActive }">
+                                            <EditLessonTime @close="isActive.value = false"
+                                                @save="updateLessonTime(item, $event)"
+                                                :startTime="Time.fromITime(item.startTime).format()"
+                                                :endTime="Time.fromITime(item.endTime).format()"
+                                                :minutesOfLesson="item.minutesLessonDuration">
+                                            </EditLessonTime>
+                                        </template>
+                                    </v-dialog>
 
-                            <DeleteDialog v-if="!item.recovery || item.recovery.ref == 'original'"
-                                :name="`${item.name} ${item.surname}`" objName="Studente"
-                                :onDelete="async () => await deleteStudent(item)">
-                                <template v-slot:activator="{ props: activatorProps }">
-                                    <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
+                                    <v-btn v-if="item.recovery?.ref == 'original'" class="ma-1"
+                                        :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
+                                        <template v-slot:prepend>
+                                            <v-icon>mdi-eye-arrow-left-outline</v-icon>
+                                        </template>
+                                        origine</v-btn>
                                 </template>
-                            </DeleteDialog>
-                        </v-card-text>
-                    </v-card>
-                </v-timeline-item>
-            </v-timeline>
+                                <template v-else>
+                                    <v-btn class="ma-1" :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
+                                        <template v-slot:prepend>
+                                            <v-icon>mdi-eye-arrow-right-outline</v-icon>
+                                        </template>recupero</v-btn>
+                                </template>
+
+
+                                <v-btn class="ma-1" @click="notes(item)">note</v-btn>
+
+                                <DeleteDialog v-if="!item.recovery || item.recovery.ref == 'original'"
+                                    :name="`${item.name} ${item.surname}`" objName="Studente"
+                                    :onDelete="async () => await deleteStudent(item)">
+                                    <template v-slot:activator="{ props: activatorProps }">
+                                        <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
+                                    </template>
+                                </DeleteDialog>
+                            </v-card-text>
+                        </v-card>
+                    </v-timeline-item>
+                </v-timeline>
+            </v-slide-x-transition>
         </v-container>
 
         <v-overlay :model-value="saving" class="align-center justify-center">
@@ -126,6 +156,7 @@ import DailyLessonCalendar from '@/components/calendar/DailyLessonCalendar.vue';
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
+import EditLessonTime from '@/components/lesson/EditLessonTime.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type Student, type StudentLesson } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
@@ -155,6 +186,8 @@ const loadingAllStudents = ref(false);
 const saving = ref(false);
 const savingSelectedStudents = ref(false);
 const studentsDialog = ref(false);
+const visualization = ref(0);
+const timeDialog = ref(false)
 
 const dailyLessonSource = computed(() =>
     doc(dailyLessonsRef, route.params.id as string)
@@ -218,6 +251,18 @@ function toggleAll() {
     } else {
         selectedLessons.value = [];
     }
+}
+
+async function updateLessonTime(event: StudentLesson, newDataEvent: { startTime: string, endTime: string }) {
+    const startTime = Time.fromHHMM(newDataEvent.startTime)?.toITime();
+    const endTime = Time.fromHHMM(newDataEvent.endTime)?.toITime();
+    if (startTime == undefined || endTime == undefined) {
+        return;
+    }
+    doBackup();
+    event.startTime = startTime;
+    event.endTime = endTime;
+    await save();
 }
 
 let backup: string;

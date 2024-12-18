@@ -30,46 +30,12 @@
                             </template>
 
                             <template v-slot:default="{ isActive }">
-                                <v-card title="Modifica orario lezione" elevation="2">
-                                    <v-card-text>
-                                        <v-row justify="space-around">
-                                            <v-col cols="11" md="6">
-                                                <v-checkbox v-model="alignEndTime"
-                                                    label="Allinea la data di fine lezione in base alla durata della lezione definita dallo studente"></v-checkbox>
-                                            </v-col>
-
-                                            <v-col cols="11" sm="5">
-                                                <v-text-field v-model="startTime" :active="startModal"
-                                                    :focus="startModal" label="Data di inizio"
-                                                    prepend-icon="mdi-clock-time-four-outline" readonly>
-                                                    <v-dialog v-model="startModal" activator="parent" width="auto">
-                                                        <v-time-picker v-if="startModal" format="24hr"
-                                                            v-model="startTime"></v-time-picker>
-                                                    </v-dialog>
-                                                </v-text-field>
-                                            </v-col>
-
-                                            <v-col cols="11" sm="5">
-                                                <v-text-field v-model="endTime" :active="endModal" :focused="endModal"
-                                                    label="Data di fine" prepend-icon="mdi-clock-time-four-outline"
-                                                    :disabled="alignEndTime" readonly>
-                                                    <v-dialog v-model="endModal" activator="parent" width="auto">
-                                                        <v-time-picker v-if="endModal" format="24hr"
-                                                            v-model="endTime"></v-time-picker>
-                                                    </v-dialog>
-                                                </v-text-field>
-                                            </v-col>
-
-
-                                        </v-row>
-                                    </v-card-text>
-                                    <v-card-actions>
-                                        <v-spacer></v-spacer>
-                                        <v-btn text="Annulla" @click.stop="isActive.value = false"></v-btn>
-                                        <v-btn text="Modifica" color="primary"
-                                            @click.stop="updateEventTime(calendarEvent)"></v-btn>
-                                    </v-card-actions>
-                                </v-card>
+                                <EditLessonTime @close="isActive.value = false"
+                                    @save="updateEventTime(calendarEvent, $event)"
+                                    :startTime="calendarEvent.start?.split(' ')[1]"
+                                    :endTime="calendarEvent.end?.split(' ')[1]"
+                                    :minutesOfLesson="calendarEvent.data.st.minutesLessonDuration">
+                                </EditLessonTime>
                             </template>
                         </v-dialog>
                     </v-card-actions>
@@ -80,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { Time, yyyyMMdd, type Student } from '@/models/model';
+import { yyyyMMdd } from '@/models/model';
 import {
     createCalendar,
     createViewDay,
@@ -91,7 +57,7 @@ import { createEventModalPlugin } from '@schedule-x/event-modal';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { ScheduleXCalendar } from '@schedule-x/vue';
 import { onMounted, ref, watch } from 'vue';
-import { toast } from 'vue3-toastify';
+import EditLessonTime from '../lesson/EditLessonTime.vue';
 
 type CalendarEventExt = CalendarEvent & { data?: any };
 
@@ -108,16 +74,8 @@ const props = withDefaults(defineProps<CalendarProps>(), {
 })
 const events = defineModel<CalendarEventExt[]>({ default: [] });
 
-const startTime = ref();
-const endTime = ref();
-const startModal = ref(false);
-const endModal = ref(false);
 const editTimeModal = ref(false);
-const alignEndTime = ref(true);
 
-let selectedCalendarEvent: CalendarEventExt | undefined;
-
-watch(startTime, () => updateEndTime())
 watch(events, () => updateEvents(), { deep: true });
 
 const eventsServicePlugin = createEventsServicePlugin();
@@ -132,12 +90,6 @@ const calendarApp = createCalendar({
     events: [],
     plugins: props.editable ? [dndPlugin, eventsServicePlugin, eventModal] : [dndPlugin, eventsServicePlugin],
     callbacks: {
-        onEventClick(calendarEvent: CalendarEvent) {
-            // console.log("onEventClick", event.start, event.end);
-            selectedCalendarEvent = calendarEvent;
-            startTime.value = calendarEvent.start?.split(" ")[1] ?? null;
-            endTime.value = calendarEvent.end?.split(" ")[1] ?? null;
-        },
         onEventUpdate(calendarEvent: CalendarEvent) {
             const event = events.value.find(e => e.id == calendarEvent.id);
             if (!event) return;
@@ -163,35 +115,21 @@ function updateEvents() {
     });
 }
 
-function updateEventTime(calendarEvent: CalendarEvent) {
-    if (!calendarEvent || !startTime.value || !endTime.value) return;
-
-    if ((Time.fromHHMM(startTime.value)?.getTotalMinutes() ?? 0) > (Time.fromHHMM(endTime.value)?.getTotalMinutes() ?? 0)) {
-        toast.warning("L'orario di inizio lezione deve essere antecedente all'orario di fine lezione");
-        return;
-    }
+function updateEventTime(calendarEvent: CalendarEvent, newEventData: { startTime: string, endTime: string }) {
+    if (!calendarEvent) return;
 
     const event = events.value.find(e => e.id == calendarEvent.id);
     if (!event) return;
     const ce = { ...calendarEvent }
     const start = ce.start?.split(" ");
     const end = ce.end?.split(" ");
-    event.start = start[0] + " " + startTime.value;
-    event.end = end[0] + " " + endTime.value;
+    event.start = start[0] + " " + newEventData.startTime;
+    event.end = end[0] + " " + newEventData.endTime;
 
     editTimeModal.value = false;
 }
 
-function updateEndTime() {
-    if (alignEndTime.value && selectedCalendarEvent) {
-        const start = Time.fromHHMM(startTime.value);
-        if (!start) return;
-        const student: Student = selectedCalendarEvent.data.st;
-        if (!student) return;
-        const lessonMinutes = student.minutesLessonDuration;
-        endTime.value = Time.fromITime((start.getTotalMinutes() + lessonMinutes) * 60).format();
-    }
-}
+
 
 function toggleCalendarHeader() {
     const calendarHeader = document.getElementsByClassName("sx__calendar-header")[0] as HTMLDivElement;
