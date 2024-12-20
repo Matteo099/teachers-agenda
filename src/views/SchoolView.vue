@@ -10,14 +10,15 @@
                     <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
                 </template>
                 <v-list>
-                    <v-dialog v-model="schoolDialog" fullscreen>
+                    <v-dialog fullscreen>
                         <template v-slot:activator="{ props: activatorProps }">
                             <v-list-item title="Modifica" v-bind="activatorProps"></v-list-item>
                         </template>
-
-                        <SchoolEditor edit :initialSchool="school" @close="schoolDialog = false"
-                            @save="schoolDialog = false">
-                        </SchoolEditor>
+                        <template v-slot:default="{ isActive }">
+                            <SchoolEditor edit :initialSchool="school" @close="isActive.value = false"
+                                @save="isActive.value = false">
+                            </SchoolEditor>
+                        </template>
                     </v-dialog>
 
                     <DeleteDialog :name="school.name" objName="Scuola" :onDelete="deleteSchool">
@@ -95,7 +96,6 @@ const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 const subscriptions: Unsubscribe[] = [];
 
 const notes: Ref<any[]> = ref([]);
-const schoolDialog = ref(false);
 
 const schoolSource = computed(() =>
     doc(schoolsRef, route.params.id as string)
