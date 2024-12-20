@@ -70,7 +70,7 @@
         <v-container fluid>
             <v-slide-x-transition leave-absolute>
                 <DailyLessonCalendar v-if="visualization == 1" :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)"
-                    :events="events" editable>
+                    :events="studentLessons" editable>
                 </DailyLessonCalendar>
 
                 <v-timeline v-else side="end" truncate-line="both">
@@ -98,7 +98,7 @@ import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type LessonTime, type Student, type StudentLesson } from '@/models/model';
+import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type EventTime, type Student, type StudentLesson, type HHMM } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentService } from '@/models/services/student-service';
@@ -118,7 +118,6 @@ const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
 const selectedLessons: Ref<string[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
 const studentLessons: Ref<StudentLesson[]> = ref([])
-const events: Ref<CalendarEvent[]> = ref([])
 const availableStudents: Ref<Student[]> = ref([]);
 const selectedStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
@@ -182,7 +181,7 @@ async function reset(event: StudentLesson) {
     }
 }
 
-async function updateLessonTime(event: StudentLesson, newDataEvent: LessonTime) {
+async function updateLessonTime(event: StudentLesson, newDataEvent: EventTime) {
     const startTime = Time.fromHHMM(newDataEvent.startTime)?.toITime();
     const endTime = Time.fromHHMM(newDataEvent.endTime)?.toITime();
     if (startTime == undefined || endTime == undefined) {
@@ -309,20 +308,20 @@ async function updateStudentLesson() {
         return { ...l, ...s };
     });
 
-    const today = yyyyMMdd.fromIyyyyMMdd(dailyLesson.value.date).toIyyyyMMdd("-");
-    events.value = studentLessons.value.map(sl => {
-        const start = today + " " + Time.fromITime(sl.startTime).format();
-        const end = today + " " + Time.fromITime(sl.startTime + sl.minutesLessonDuration * 60).format();
-        return {
-            id: sl.lessonId,
-            start,
-            end,
-            title: sl.name + " " + sl.surname,
-            description: sl.notes?.join(";\n"),
-            data: sl
-        }
-    });
-    console.log(events.value);
+    // const today = yyyyMMdd.fromIyyyyMMdd(dailyLesson.value.date).toIyyyyMMdd("-");
+    // events.value = studentLessons.value.map(sl => {
+    //     const start = today + " " + Time.fromITime(sl.startTime).format();
+    //     const end = today + " " + Time.fromITime(sl.startTime + sl.minutesLessonDuration * 60).format();
+    //     return {
+    //         id: sl.lessonId,
+    //         start,
+    //         end,
+    //         title: sl.name + " " + sl.surname,
+    //         description: sl.notes?.join(";\n"),
+    //         data: sl
+    //     }
+    // });
+    // console.log(events.value);
 
     loadingStudents.value = false;
 }

@@ -71,18 +71,18 @@
 
 <script setup lang="ts">
 import EditLessonTime from '@/components/lesson/EditLessonTime.vue';
-import { LessonStatus, Time, type LessonTime, type StudentLesson } from '@/models/model';
+import { LessonStatus, Time, type EventTime, type StudentLesson } from '@/models/model';
 import { ref } from 'vue';
 import DeleteDialog from '../DeleteDialog.vue';
 
-const props = defineProps<{ onDeleteStudent: () => Promise<boolean>; updateLessonTime: (newTime: LessonTime) => Promise<boolean> }>()
+const props = defineProps<{ onDeleteStudent: () => Promise<boolean>; updateLessonTime: (newTime: EventTime) => Promise<boolean> }>()
 const item = defineModel<StudentLesson>('item', { required: true });
 const select = defineModel<string[]>('select');
 const emit = defineEmits(['present', 'absent', 'reset', 'cancel', 'updateLessonTime', 'notes', 'deleteStudent'])
 const timeDialog = ref(false)
 
 
-async function _updateLessonTime(newTime: LessonTime) {
+async function _updateLessonTime(newTime: EventTime) {
     const res = await props.updateLessonTime(newTime);
     if (res) timeDialog.value = false;
 }

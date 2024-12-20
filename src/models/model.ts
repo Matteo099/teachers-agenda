@@ -17,7 +17,7 @@ export enum DayOfWeek {
 
 export type HHMM = string;
 
-export interface LessonTime {
+export interface EventTime {
     startTime: HHMM;
     endTime: HHMM;
 }

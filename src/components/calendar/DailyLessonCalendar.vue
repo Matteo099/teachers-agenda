@@ -34,7 +34,7 @@
                                     @save="updateEventTime(calendarEvent, $event)"
                                     :startTime="calendarEvent.start?.split(' ')[1]"
                                     :endTime="calendarEvent.end?.split(' ')[1]"
-                                    :minutesOfLesson="calendarEvent.data.st.minutesLessonDuration">
+                                    :minutesOfLesson="calendarEvent.data.minutesLessonDuration">
                                 </EditLessonTime>
                             </template>
                         </v-dialog>
@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { yyyyMMdd } from '@/models/model';
+import { days, Time, yyyyMMdd, type EventTime, type StudentLesson } from '@/models/model';
 import {
     createCalendar,
     createViewDay,
@@ -72,11 +72,12 @@ const props = withDefaults(defineProps<CalendarProps>(), {
     editable: false,
     showDay: false
 })
-const events = defineModel<CalendarEventExt[]>({ default: [] });
+const model = defineModel<(CalendarEventExt | StudentLesson)[]>({ default: [] });
+const _events = ref<CalendarEventExt[]>([]);
 
 const editTimeModal = ref(false);
 
-watch(events, () => updateEvents(), { deep: true });
+watch(model, () => updateInternalEvents(), { deep: true });
 
 const eventsServicePlugin = createEventsServicePlugin();
 const eventModal = createEventModalPlugin();
@@ -91,16 +92,18 @@ const calendarApp = createCalendar({
     plugins: props.editable ? [dndPlugin, eventsServicePlugin, eventModal] : [dndPlugin, eventsServicePlugin],
     callbacks: {
         onEventUpdate(calendarEvent: CalendarEvent) {
-            const event = events.value.find(e => e.id == calendarEvent.id);
+            const event = _events.value.find(e => e.id == calendarEvent.id);
             if (!event) return;
             event.start = calendarEvent.start;
             event.end = calendarEvent.end;
+            updateModelEvent(calendarEvent);
         },
     }
 })
 
-function updateEvents() {
-    events.value.forEach(event => {
+function updateInternalEvents() {
+    _events.value = transformModel();
+    _events.value.forEach(event => {
         if (!event._options) event._options = {};
         event._options.disableDND = !props.editable;
 
@@ -110,26 +113,65 @@ function updateEvents() {
     });
 
     eventsServicePlugin.getAll().forEach(e => {
-        const toDelete = events.value.findIndex(ie => ie.id == e.id) == -1;
+        const toDelete = _events.value.findIndex(ie => ie.id == e.id) == -1;
         if (toDelete) eventsServicePlugin.remove(e.id);
     });
 }
 
-function updateEventTime(calendarEvent: CalendarEvent, newEventData: { startTime: string, endTime: string }) {
+function transformModel(): CalendarEventExt[] {
+    const today = yyyyMMdd.today();
+    return model.value.map(sl => {
+        if ("lessonId" in sl) {
+            return {
+                id: sl.lessonId,
+                start: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.startTime).format(),
+                end: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.endTime).format(),
+                title: `${sl.name} ${sl.surname} - ${days[sl.lessonDay ?? 0]}`,
+                data: { ...sl }
+            };
+        } else {
+            return sl;
+        }
+    });
+}
+
+function updateEventTime(calendarEvent: CalendarEvent, newEventTime: EventTime) {
     if (!calendarEvent) return;
 
-    const event = events.value.find(e => e.id == calendarEvent.id);
+    const event = _events.value.find(e => e.id == calendarEvent.id);
     if (!event) return;
     const ce = { ...calendarEvent }
     const start = ce.start?.split(" ");
     const end = ce.end?.split(" ");
-    event.start = start[0] + " " + newEventData.startTime;
-    event.end = end[0] + " " + newEventData.endTime;
+    event.start = start[0] + " " + newEventTime.startTime;
+    event.end = end[0] + " " + newEventTime.endTime;
+
+    updateModelEvent(event);
 
     editTimeModal.value = false;
 }
 
+function updateModelEvent(calendarEvent: CalendarEvent) {
 
+    const event = model.value.find(e => {
+        if ("lessonId" in e) {
+            return e.lessonId == calendarEvent.id
+        } else {
+            return e.id == calendarEvent.id
+        }
+    });
+
+    if (!event) return;
+
+    if ("lessonId" in event) {
+        event.startTime = Time.fromHHMM(calendarEvent.start)?.toITime() ?? event.startTime;
+        event.endTime = Time.fromHHMM(calendarEvent.end)?.toITime() ?? event.endTime;
+    } else {
+        event.start = calendarEvent.start;
+        event.end = calendarEvent.end;
+    }
+
+}
 
 function toggleCalendarHeader() {
     const calendarHeader = document.getElementsByClassName("sx__calendar-header")[0] as HTMLDivElement;
@@ -148,7 +190,7 @@ function toggleInnerHeader(attempt: number = 0) {
 
 onMounted(() => {
     toggleCalendarHeader();
-    updateEvents();
+    updateInternalEvents();
 })
 </script>
 

@@ -262,7 +262,7 @@ function updateScheduledLessonsTime() {
             start: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.startTime).format(),
             end: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.endTime).format(),
             title: `${getCompleteStudentName(sl.studentId)} - ${getStudentLessonDay(sl.studentId)}`,
-            data: { sl, st }
+            data: { ...sl, ...st }
         };
     });
 }
