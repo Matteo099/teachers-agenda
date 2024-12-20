@@ -15,6 +15,13 @@ export enum DayOfWeek {
     SATURDAY,
 }
 
+export type HHMM = string;
+
+export interface LessonTime {
+    startTime: HHMM;
+    endTime: HHMM;
+}
+
 /**
  * Represent the time in seconds (like 12:00:00 ==> 12h + 0min + 0sec = 43200)
  */
@@ -30,7 +37,7 @@ export class Time {
         return new Time(h, m, s)
     }
 
-    static fromHHMM(t: string): Time | undefined {
+    static fromHHMM(t: HHMM): Time | undefined {
         try {
             const hhmm = t.split(":");
             if (hhmm.length != 2) return;
