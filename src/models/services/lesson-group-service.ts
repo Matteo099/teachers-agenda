@@ -1,6 +1,8 @@
 import { LessonStatus, months, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type ScheduledLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
+import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nextDay, pastDay } from "../utils";
+import { DailyLessonService } from "./daily-lesson-service";
 
 export interface LessonGroup {
     month: string;
@@ -52,7 +54,7 @@ export class LessonGroupService {
         this.calculateToday();
 
         // Step 1: Filter the last 2 lessons from daily lessons or (if no daily lesson present) weekly lesson based on today
-        this.addLastLessons(schoolLessons.dailyLessons, schoolLessons.weeklyLessons, lessonProjections, 2);
+        await this.addLastLessons(schoolLessons, lessonProjections, 2);
 
         // Step 2: Add the upcoming 4 lessons from weekly lessons based on today
         this.addUpcomingLessons(schoolLessons.dailyLessons, schoolLessons.weeklyLessons, lessonProjections, 4);
@@ -61,7 +63,9 @@ export class LessonGroupService {
         return this.groupLessonsByMonth(lessonProjections);
     }
 
-    private addLastLessons(dailyLessons: DailyLesson[], weeklyLessons: WeeklyLesson[], lessonProjections: LessonProjection[], count: number) {
+    private async addLastLessons(schoolLessons: SchoolLessons, lessonProjections: LessonProjection[], count: number) {
+        const dailyLessons: DailyLesson[] = schoolLessons.dailyLessons;
+        const weeklyLessons: WeeklyLesson[] = schoolLessons.weeklyLessons;
         // Filter only lessons that are done (i.e., on or before today)
         const pastLessons = dailyLessons.filter(dailyLesson => dailyLesson.date <= this.today.asString);
 
@@ -77,7 +81,7 @@ export class LessonGroupService {
         const _weeklyLessons = [...weeklyLessons];
         // Step 2: Loop until we have the required number of past lessons (or run out of lessons)
         while (lessonProjections.length < count && _weeklyLessons.length > 0) {
-            _weeklyLessons.forEach((weekLesson, index) => {
+            _weeklyLessons.forEach(async (weekLesson, index) => {
                 if (lessonProjections.length >= count) return;
 
                 const pastLessonDate = pastDay(startingDay, weekLesson.dayOfWeek);
@@ -97,11 +101,19 @@ export class LessonGroupService {
 
                 // Step 5: Ensure this weekly lesson isn't already in the projection
                 if (!lessonProjections.some(lesson => lesson.date.equals(formattedDate))) {
-                    lessonProjections.push({
-                        date: formattedDate,
-                        next: false, // Mark as next lesson later
-                        lessons: weekLesson.schedule
-                    });
+                    const dailyLessonId = await DailyLessonService.instance.createDailyLessonByDate(schoolLessons, formattedDate.toDate());
+                    const dailyLesson = (await DailyLessonRepository.instance.getDoc(dailyLessonId)).data();
+
+                    if (dailyLesson)
+                        lessonProjections.push(this.createLessonProjection(dailyLesson, false));
+                    else {
+                        console.warn("Impossible to retrive just created daily lesson...");
+                        lessonProjections.push({
+                            date: formattedDate,
+                            next: false, // Mark as next lesson later
+                            lessons: weekLesson.schedule
+                        });
+                    }
                 }
             });
             // Move the starting day one week forward for the next batch of weekly lessons
