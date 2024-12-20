@@ -95,7 +95,7 @@ watch(recoveries, async () => computeDailyLessons());
 async function cancelScheduleRecovery(recovery: ExtendedStudentLesson) {
     try {
         cancellingScheduleRecovery.value = true;
-        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, recovery.schoolId, { ...recovery, dailyLessonId: recovery.originalDailyLesson.id });
+        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, recovery.schoolId, { ...recovery, dailyLessonId: recovery.originalDailyLesson.id });
     } catch (error) {
         toast.warn("Impossibile annullare la lezione di recupero")
     } finally {

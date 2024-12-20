@@ -196,6 +196,9 @@ export class SchoolRecoveryLessonService {
                     const info = LessonStatus.CANCELLED;
                     // this.removeRecoveryByType(recovery, ref, RecoveryType.PENDING);
                     this.addRecoveryByType(recovery, originalLessonRef, RecoveryType.DONE, info);
+
+                    // TODO: delete dailyLesson recovery lesson 
+                    // TODO: remove originalDailyLesson.recoveryLessonReference
                 }
             } else if (action == LessonStatusAction.RESET) {
                 if (!isRecoveryLesson) {
