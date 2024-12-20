@@ -70,7 +70,7 @@
         <v-container fluid>
             <v-slide-x-transition leave-absolute>
                 <DailyLessonCalendar v-if="visualization == 1" :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)"
-                    :events="studentLessons" editable>
+                    v-model="studentLessons" editable>
                 </DailyLessonCalendar>
 
                 <v-timeline v-else side="end" truncate-line="both">
@@ -98,12 +98,11 @@ import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type EventTime, type Student, type StudentLesson, type HHMM } from '@/models/model';
+import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type Student, type StudentLesson } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
-import { type CalendarEvent } from '@schedule-x/calendar';
 import { doc, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';

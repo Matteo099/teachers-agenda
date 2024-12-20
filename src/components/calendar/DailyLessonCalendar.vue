@@ -112,6 +112,7 @@ function updateInternalEvents() {
         } else eventsServicePlugin.add(event);
     });
 
+    console.log("updateInternalEvents", eventsServicePlugin.getAll(), props.date)
     eventsServicePlugin.getAll().forEach(e => {
         const toDelete = _events.value.findIndex(ie => ie.id == e.id) == -1;
         if (toDelete) eventsServicePlugin.remove(e.id);
@@ -119,13 +120,13 @@ function updateInternalEvents() {
 }
 
 function transformModel(): CalendarEventExt[] {
-    const today = yyyyMMdd.today();
+    const date = props.date.toIyyyyMMdd("-");
     return model.value.map(sl => {
         if ("lessonId" in sl) {
             return {
                 id: sl.lessonId,
-                start: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.startTime).format(),
-                end: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.endTime).format(),
+                start: date + " " + Time.fromITime(sl.startTime).format(),
+                end: date + " " + Time.fromITime(sl.endTime).format(),
                 title: `${sl.name} ${sl.surname} - ${days[sl.lessonDay ?? 0]}`,
                 data: { ...sl }
             };
