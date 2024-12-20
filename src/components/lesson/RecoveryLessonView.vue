@@ -2,7 +2,7 @@
     <v-card title="Recuperi" elevation="3" :loading="loadingExtendedRecoveries">
         <v-list lines="three">
             <template v-for="(extRecovery, index) of extendedRecoveries?.recoveryMap" :key="extRecovery.type">
-                <v-list-subheader inset>{{ recoveryTypes[extRecovery.type] }}</v-list-subheader>
+                <v-list-subheader inset><b>{{ recoveryTypes[extRecovery.type] }}</b></v-list-subheader>
 
                 <v-list-item v-if="extRecovery.recoveries.length == 0">
                     <div v-if="extRecovery.type == 'unset'">
@@ -27,7 +27,8 @@
                                 yyyyMMdd.fromIyyyyMMdd(recovery.originalDailyLesson.date).format() }}
                         </div>
                         <div v-else-if="extRecovery.type == 'pending'">
-                            Recupero programmato
+                            Recupero della lezione del {{
+                                yyyyMMdd.fromIyyyyMMdd(recovery.originalDailyLesson.date).format() }} programmato
                             <span v-if="recovery.recoveryDailyLesson"> per il {{
                                 yyyyMMdd.fromIyyyyMMdd(recovery.recoveryDailyLesson.date).format() }}</span>
                         </div>

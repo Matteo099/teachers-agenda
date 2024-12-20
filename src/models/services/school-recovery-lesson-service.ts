@@ -69,7 +69,7 @@ export class SchoolRecoveryLessonService {
                 if (!student) return;
 
                 if (recoveryDailyLesson) {
-                    status ? addRecovery(lesson, student, doneRecoveries, recoveryReferences, status)
+                    status != undefined ? addRecovery(lesson, student, doneRecoveries, recoveryReferences, status)
                         : addRecovery(lesson, student, pendingRecoveries, recoveryReferences);
                 } else {
                     addRecovery(lesson, student, unsetRecoveries, recoveryReferences);
