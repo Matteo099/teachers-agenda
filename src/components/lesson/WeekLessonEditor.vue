@@ -160,6 +160,7 @@ const [from, fromProps] = defineField('from', vuetifyConfig);
 const [to, toProps] = defineField('to', vuetifyConfig);
 const [excludeDates, excludeDatesProps] = defineField('excludeDates', vuetifyConfig);
 const [startingTime, startingTimeProps] = defineField('startingTime', vuetifyConfig);
+let initializingStartingTime: boolean = false;
 
 const events: Ref<CalendarEvent[]> = ref([]);
 
@@ -178,7 +179,7 @@ watch(dayOfWeek, () => updateExcludeDates())
 watch(from, () => updateExcludeDates())
 watch(to, () => updateExcludeDates())
 watch(selectedStudents, () => updateScheduledLessons())
-watch(startingTime, () => updateScheduledLessonsTime())
+watch(startingTime, () => { updateScheduledLessonsTime(); initializingStartingTime = false; })
 watch(dayOfWeek, async () => await loadStudents())
 watch(events, () => updateScheduledLessonsByEvents(), { deep: true })
 
@@ -240,7 +241,7 @@ function updateScheduledLessons() {
 
 function updateScheduledLessonsTime() {
     // // update timeslots based on startingTime, without modifing the "position" of the lessons (empty hours...)
-    if (scheduledLessons.value.length > 0) {
+    if (!initializingStartingTime && scheduledLessons.value.length > 0) {
         scheduledLessons.value.sort((a, b) => {
             return a.startTime - b.startTime;
         });
@@ -292,6 +293,7 @@ function updateWeekLesson() {
         selectedStudents.value = allStudents.value.filter(s => studentsId.includes(s.id));
 
         if (scheduledLessons.value.length > 0) {
+            initializingStartingTime = true;
             const minTime = scheduledLessons.value[0].startTime;
             startingTime.value = Time.fromITime(minTime).format();
         }
@@ -326,8 +328,6 @@ function updateExcludeDates() {
     }
 }
 
-
-
 async function save(values: GenericObject) {
     saving.value = true;
 
@@ -337,7 +337,7 @@ async function save(values: GenericObject) {
         from: yyyyMMdd.fromDate(from.value!).toIyyyyMMdd(),
         to: yyyyMMdd.fromDate(to.value!).toIyyyyMMdd(),
         exclude: excludeDates.value?.map((d: Date) => yyyyMMdd.fromDate(d).toIyyyyMMdd()) ?? [],
-        schedule: scheduledLessons.value,
+        schedule: scheduledLessons.value.sort((a, b) => a.startTime - b.startTime),
         createdAt: props.edit ? props.initialWeekLesson?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now(),
     };
