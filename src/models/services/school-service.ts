@@ -10,6 +10,7 @@ import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import type { SchoolLessons } from "./lesson-group-service";
 import { DailyLessonService } from "./daily-lesson-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
+import { SchoolRecoveryLessonRepository } from "../repositories/school-recovery-lesson-repository";
 
 export class SchoolService {
     private static _instance: SchoolService | null = null;
@@ -37,6 +38,10 @@ export class SchoolService {
         // delete dailyLessons
         const dailyLessons = await DailyLessonRepository.instance.getAllDocs(where(nameof<DailyLesson>('schoolId'), '==', id))
         dailyLessons.forEach(s => batches.delete(s.ref));
+
+        // delete recoveryLessons
+        const recoveryLessons = await SchoolRecoveryLessonRepository.instance.getAllDocs(where(nameof<DailyLesson>('schoolId'), '==', id))
+        recoveryLessons.forEach(s => batches.delete(s.ref));
 
         await batches.commit();
     }
