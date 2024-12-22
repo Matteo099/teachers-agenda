@@ -1,12 +1,12 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule, type StudentLesson } from "../model";
+import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
 import type { LessonProjection, SchoolLessons } from "./lesson-group-service";
+import type { ExpandedLesson } from "./school-recovery-lesson-service";
 import { SchoolService } from "./school-service";
-import type { ExpandedLesson, RecoveryReference } from "./school-recovery-lesson-service";
 
 export class DailyLessonService {
 

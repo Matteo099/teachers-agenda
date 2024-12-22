@@ -47,17 +47,6 @@
                         <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" item-title="name"
                             item-value="id" :return-object="true" multiple
                             no-data-text="Nessuno studente disponibile per questa scuola">
-                            <!-- <template v-slot:item="{ item }">
-                                <v-list-item :value="item.raw" :key="item.raw.id" role="option">
-                                    <template v-slot:prepend="{ isSelected }">
-                                        <v-list-item-action start>
-                                            <v-checkbox-btn :model-value="isSelected"></v-checkbox-btn>
-                                        </v-list-item-action>
-                                    </template>
-
-                                    <v-list-item-title>{{ item.raw.name }} {{ item.raw.surname }}</v-list-item-title>
-                                </v-list-item>
-                            </template> -->
                             <template v-slot:prepend-item v-if="allStudents.length > 1">
                                 <v-list-item title="Seleziona tutti" @click="toggle">
                                     <template v-slot:prepend>
@@ -69,29 +58,14 @@
 
                                 <v-divider class="mt-2"></v-divider>
                             </template>
-
-                            <!-- <template v-slot:append-item>
-                                <v-divider class="mt-2"></v-divider>
-
-                                <v-dialog v-model="dialogCreateStudent" fullscreen>
-                                    <template v-slot:activator="{ props: activatorProps }">
-                                        <v-list-item prepend-icon="mdi-plus" title="Crea Studente" color="success"
-                                            v-bind="activatorProps">
-                                        </v-list-item>
-                                    </template>
-
-                                    <StudentEditor :schoolId="schoolId" @close="dialogCreateStudent = false"
-                                        @save="dialogCreateStudent = false">
-                                    </StudentEditor>
-                                </v-dialog>
-                            </template> -->
                         </v-select>
                     </v-col>
                 </v-row>
 
             </v-form>
 
-            <v-list>
+            <DailyLessonCalendar v-model="events" editable></DailyLessonCalendar>
+            <!-- <v-list>
                 <v-list-subheader>STUDENTI</v-list-subheader>
                 <draggableComponent v-if="startingTime" :list="scheduledLessons" item-key="studentId"
                     @end="updateScheduledLessonsTime">
@@ -112,7 +86,7 @@
                     </template>
 
                 </draggableComponent>
-            </v-list>
+            </v-list> -->
         </v-card-text>
         <v-card-actions>
             <v-spacer></v-spacer>
@@ -124,18 +98,19 @@
 </template>
 
 <script setup lang="ts">
-import { days, Time, updateDailyLessonTime, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
+import { days, Time, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { WeeklyLessonRepository } from '@/models/repositories/weekly-lesson-repository';
 import { StudentService } from '@/models/services/student-service';
 import { dateFormat } from '@/models/utils';
 import type { EventSubscription } from '@/models/utils/event';
+import { type CalendarEvent } from '@schedule-x/calendar';
 import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { useForm, type GenericObject } from 'vee-validate';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
-import draggableComponent from 'vuedraggable';
 import * as yup from 'yup';
+import DailyLessonCalendar from '../calendar/DailyLessonCalendar.vue';
 
 interface WeekLessonEditorProps {
     school: School;
@@ -144,7 +119,13 @@ interface WeekLessonEditorProps {
 }
 
 const emit = defineEmits(['close', 'save'])
-const props = defineProps<WeekLessonEditorProps>()
+const props = withDefaults(defineProps<WeekLessonEditorProps>(),
+    {
+        school: () => ({
+            id: "1"
+        } as School)
+    }
+);
 const subscriptions: EventSubscription[] = [];
 let studentSubscription: EventSubscription;
 
@@ -179,6 +160,9 @@ const [from, fromProps] = defineField('from', vuetifyConfig);
 const [to, toProps] = defineField('to', vuetifyConfig);
 const [excludeDates, excludeDatesProps] = defineField('excludeDates', vuetifyConfig);
 const [startingTime, startingTimeProps] = defineField('startingTime', vuetifyConfig);
+let initializingStartingTime: boolean = false;
+
+const events: Ref<CalendarEvent[]> = ref([]);
 
 const onSave = handleSubmit(
     async (values: GenericObject) => {
@@ -195,8 +179,9 @@ watch(dayOfWeek, () => updateExcludeDates())
 watch(from, () => updateExcludeDates())
 watch(to, () => updateExcludeDates())
 watch(selectedStudents, () => updateScheduledLessons())
-watch(startingTime, () => updateScheduledLessonsTime())
+watch(startingTime, () => { updateScheduledLessonsTime(); initializingStartingTime = false; })
 watch(dayOfWeek, async () => await loadStudents())
+watch(events, () => updateScheduledLessonsByEvents(), { deep: true })
 
 const selectAllStudents = computed(() => {
     return selectedStudents.value.length === allStudents.value.length
@@ -216,8 +201,30 @@ function toggle() {
 function updateScheduledLessons() {
     // add new selected students at the end of the list
     for (const student of selectedStudents.value) {
-        const index = scheduledLessons.value.findIndex(s => s.studentId == student.id)
-        if (index == -1) scheduledLessons.value.push({ lessonId: uuidv4(), studentId: student.id, startTime: 0, endTime: 0 });
+        // Check if the student is already in the scheduled lessons
+        const existingLessonIndex = scheduledLessons.value.findIndex(
+            lesson => lesson.studentId === student.id
+        );
+
+        if (existingLessonIndex === -1) {
+            // Find the latest endTime among scheduled lessons
+            const startTime = scheduledLessons.value.reduce(
+                (latest, current) => (current.endTime > latest ? current.endTime : latest),
+                Time.fromHHMM(startingTime.value)?.getTotalMinutes() ?? 0
+            );
+
+            // Find the lesson duration for the student
+            const lessonDuration = student.minutesLessonDuration || 0;
+            const endTime = startTime + lessonDuration * 60;
+
+            // Add the new lesson for the student
+            scheduledLessons.value.push({
+                lessonId: uuidv4(),
+                studentId: student.id,
+                startTime: startTime,
+                endTime: endTime
+            });
+        }
     }
 
     // remove de-selected students from the list
@@ -233,33 +240,45 @@ function updateScheduledLessons() {
 }
 
 function updateScheduledLessonsTime() {
-    const time = startingTime.value;
-    updateDailyLessonTime(time, { scheduledLessons: scheduledLessons.value, students: selectedStudents.value });
-    //     let startingMinutes = 0;
-    //     try {
-    //         const time = startingTime.value;
-    //         if (!time) return;
+    // // update timeslots based on startingTime, without modifing the "position" of the lessons (empty hours...)
+    if (!initializingStartingTime && scheduledLessons.value.length > 0) {
+        scheduledLessons.value.sort((a, b) => {
+            return a.startTime - b.startTime;
+        });
+        const time = Time.fromHHMM(startingTime.value)?.getTotalMinutes() ?? 0;
+        const deltaTime = time * 60 - scheduledLessons.value[0].startTime;
+        scheduledLessons.value.forEach(sl => {
+            sl.startTime += deltaTime;
+            sl.endTime += deltaTime;
+        });
+    }
 
-    //         const hhmm = time.split(":");
-    //         if (hhmm.length != 2) return;
+    // updateDailyLessonTime(time, { scheduledLessons: scheduledLessons.value, students: selectedStudents.value });
 
-    //         const h = parseInt(hhmm[0]);
-    //         const m = parseInt(hhmm[1]);
+    const today = yyyyMMdd.today();
+    events.value = scheduledLessons.value.map(sl => {
+        const st = getStudent(sl.studentId);
+        return {
+            id: sl.lessonId,
+            start: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.startTime).format(),
+            end: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.endTime).format(),
+            title: `${getCompleteStudentName(sl.studentId)} - ${getStudentLessonDay(sl.studentId)}`,
+            data: { ...sl, ...st }
+        };
+    });
+}
 
-    //         startingMinutes = h * 60 + m;
-    //         console.log(startingMinutes)
-    //     } catch (error) {
-    //         console.log(error)
-    //         return;
-    //     }
-
-    //     scheduledLessons.value.forEach(sl => {
-    //         sl.time = startingMinutes * 60;
-    //         // sl.time = { hour: Math.trunc(startingMinutes / 60), minutes: startingMinutes % 60 }
-    //         const student = selectedStudents.value.find(s => s.id == sl.studentId);
-    //         if (!student) return;
-    //         startingMinutes += student.minutesLessonDuration;
-    //     });
+function updateScheduledLessonsByEvents() {
+    scheduledLessons.value = events.value.map(e => {
+        const start = e.start.split(" ")[1]
+        const end = e.end.split(" ")[1]
+        return {
+            lessonId: e.data.lessonId,
+            startTime: Time.fromHHMM(start)!.toITime(),
+            endTime: Time.fromHHMM(end)!.toITime(),
+            studentId: e.data.studentId
+        }
+    });
 }
 
 function updateWeekLesson() {
@@ -274,6 +293,7 @@ function updateWeekLesson() {
         selectedStudents.value = allStudents.value.filter(s => studentsId.includes(s.id));
 
         if (scheduledLessons.value.length > 0) {
+            initializingStartingTime = true;
             const minTime = scheduledLessons.value[0].startTime;
             startingTime.value = Time.fromITime(minTime).format();
         }
@@ -308,8 +328,6 @@ function updateExcludeDates() {
     }
 }
 
-
-
 async function save(values: GenericObject) {
     saving.value = true;
 
@@ -319,7 +337,7 @@ async function save(values: GenericObject) {
         from: yyyyMMdd.fromDate(from.value!).toIyyyyMMdd(),
         to: yyyyMMdd.fromDate(to.value!).toIyyyyMMdd(),
         exclude: excludeDates.value?.map((d: Date) => yyyyMMdd.fromDate(d).toIyyyyMMdd()) ?? [],
-        schedule: scheduledLessons.value,
+        schedule: scheduledLessons.value.sort((a, b) => a.startTime - b.startTime),
         createdAt: props.edit ? props.initialWeekLesson?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now(),
     };
@@ -342,13 +360,27 @@ async function save(values: GenericObject) {
     }
 }
 
-function getCompleteStudentName(studentId: string): string {
-    const student = allStudents.value.find(s => s.id == studentId);
+function getStudent(studentId: string): Student | undefined {
+    return allStudents.value.find(s => s.id == studentId);
+}
+
+function getCompleteStudentName(studentId: string | Student): string {
+    let student: Student | undefined;
+    if (typeof studentId === "string") {
+        student = getStudent(studentId);
+    } else {
+        student = studentId;
+    }
     return `${student?.name} ${student?.surname}`;
 }
 
-function getStudentLessonDay(studentId: string): string {
-    const student = allStudents.value.find(s => s.id == studentId);
+function getStudentLessonDay(studentId: string | Student): string {
+    let student: Student | undefined;
+    if (typeof studentId === "string") {
+        student = getStudent(studentId);
+    } else {
+        student = studentId;
+    }
     return days[student?.lessonDay ?? 0];
 }
 

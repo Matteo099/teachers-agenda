@@ -19,16 +19,18 @@
                     {{ days[item.lessonDay] }}
                 </template>
                 <template v-slot:item.actions="{ item }">
-                    <v-dialog v-model="dialog2" fullscreen>
+                    <v-dialog fullscreen>
                         <template v-slot:activator="{ props: activatorProps }">
                             <v-icon class="me-2" size="small" v-bind="activatorProps">
                                 mdi-pencil
                             </v-icon>
                         </template>
 
-                        <StudentEditor edit :school="school" :initialStudent="item" @close="dialog2 = false"
-                            @save="dialog2 = false">
-                        </StudentEditor>
+                        <template v-slot:default="{ isActive }">
+                            <StudentEditor edit :school="school" :initialStudent="item" @close="isActive.value = false"
+                                @save="isActive.value = false">
+                            </StudentEditor>
+                        </template>
                     </v-dialog>
                     <DeleteDialog :name="item.name + ' ' + item.surname" objName="Studente"
                         :onDelete="async () => await deleteStudent(item)">
@@ -65,7 +67,6 @@ const subscriptions: EventSubscription[] = [];
 const students: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
 const dialog = ref(false);
-const dialog2 = ref(false);
 const studentHeaders: any = [
     {
         title: 'Nome',
@@ -88,7 +89,7 @@ function onSaveStudent(student?: Student) {
 }
 
 async function deleteStudent(student?: Student): Promise<boolean> {
-    if(!student) return false;
+    if (!student) return false;
 
     try {
         await StudentRepository.instance.delete(student.id)
