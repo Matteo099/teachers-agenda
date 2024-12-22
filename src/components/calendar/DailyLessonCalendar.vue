@@ -123,6 +123,7 @@ function transformModel(): CalendarEventExt[] {
     const date = props.date.toIyyyyMMdd("-");
     return model.value.map(sl => {
         if ("lessonId" in sl) {
+            console.log(sl);
             return {
                 id: sl.lessonId,
                 start: date + " " + Time.fromITime(sl.startTime).format(),
@@ -153,7 +154,6 @@ function updateEventTime(calendarEvent: CalendarEvent, newEventTime: EventTime) 
 }
 
 function updateModelEvent(calendarEvent: CalendarEvent) {
-
     const event = model.value.find(e => {
         if ("lessonId" in e) {
             return e.lessonId == calendarEvent.id
@@ -165,8 +165,8 @@ function updateModelEvent(calendarEvent: CalendarEvent) {
     if (!event) return;
 
     if ("lessonId" in event) {
-        event.startTime = Time.fromHHMM(calendarEvent.start)?.toITime() ?? event.startTime;
-        event.endTime = Time.fromHHMM(calendarEvent.end)?.toITime() ?? event.endTime;
+        event.startTime = Time.fromHHMM(calendarEvent.start.split(' ')[1])?.toITime() ?? event.startTime;
+        event.endTime = Time.fromHHMM(calendarEvent.end.split(' ')[1])?.toITime() ?? event.endTime;
     } else {
         event.start = calendarEvent.start;
         event.end = calendarEvent.end;
