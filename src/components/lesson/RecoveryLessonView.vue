@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, recoveryTypes, yyyyMMdd, type School, type SchoolRecoveryLesson } from '@/models/model';
-import { LessonStatusAction, SchoolRecoveryLessonService, type ExtendedSchoolRecoveryLesson, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
+import { SchoolRecoveryLessonService, type ExtendedSchoolRecoveryLesson, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
 import { doc } from 'firebase/firestore';
 import { computed, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
@@ -95,7 +95,7 @@ watch(recoveries, async () => computeDailyLessons());
 async function cancelScheduleRecovery(recovery: ExtendedStudentLesson) {
     try {
         cancellingScheduleRecovery.value = true;
-        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, recovery.schoolId, { ...recovery, dailyLessonId: recovery.originalDailyLesson.id });
+        await SchoolRecoveryLessonService.instance.cancelRecovery(recovery);
     } catch (error) {
         toast.warn("Impossibile annullare la lezione di recupero")
     } finally {

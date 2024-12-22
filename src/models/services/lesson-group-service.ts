@@ -1,8 +1,6 @@
 import { LessonStatus, months, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type ScheduledLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
-import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nextDay, pastDay } from "../utils";
-import { DailyLessonService } from "./daily-lesson-service";
 
 export interface LessonGroup {
     month: string;
@@ -101,19 +99,12 @@ export class LessonGroupService {
 
                 // Step 5: Ensure this weekly lesson isn't already in the projection
                 if (!lessonProjections.some(lesson => lesson.date.equals(formattedDate))) {
-                    const dailyLessonId = await DailyLessonService.instance.createDailyLessonByDate(schoolLessons, formattedDate.toDate());
-                    const dailyLesson = (await DailyLessonRepository.instance.getDoc(dailyLessonId)).data();
-
-                    if (dailyLesson)
-                        lessonProjections.push(this.createLessonProjection(dailyLesson, false));
-                    else {
-                        console.warn("Impossible to retrive just created daily lesson...");
-                        lessonProjections.push({
-                            date: formattedDate,
-                            next: false, // Mark as next lesson later
-                            lessons: weekLesson.schedule
-                        });
-                    }
+                    lessonProjections.push({
+                        date: formattedDate,
+                        pending: true,
+                        next: false,
+                        lessons: weekLesson.schedule
+                    });
                 }
             });
             // Move the starting day one week forward for the next batch of weekly lessons
