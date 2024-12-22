@@ -279,7 +279,7 @@ export class SchoolRecoveryLessonService {
             }
         }
 
-        // Step 2: remove the recovery lesson refecetd from the original daily lesson
+        // Step 2: remove the recovery lesson reference from the original daily lesson
         const originalDailyLesson = await DailyLessonRepository.instance.get(lesson.originalDailyLesson.id);
         const originalLessonIndex = originalDailyLesson?.lessons.findIndex(l => l.recovery?.lessonRef.dailyLessonId == lesson.recovery?.lessonRef.dailyLessonId && l.recovery?.lessonRef.lessonId == lesson.recovery?.lessonRef.lessonId);
         if (originalDailyLesson && originalLessonIndex != undefined && originalLessonIndex != -1) {

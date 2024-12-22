@@ -79,7 +79,8 @@
                         <LessonItem v-model:item="studentLessons[index]" v-model:select="selectedLessons"
                             @present="present(item)" @absent="absent(item)" @cancel="cancel(item)" @reset="reset(item)"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
-                            @notes="notes(item)" :onDeleteStudent="async () => await deleteStudent(item)"></LessonItem>
+                            @notes="notes(item)" :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
+                        </LessonItem>
                     </v-timeline-item>
                 </v-timeline>
             </v-slide-x-transition>
@@ -98,9 +99,11 @@ import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type Student, type StudentLesson } from '@/models/model';
+import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type Student, type StudentLesson } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
+import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
+import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
 import { doc, Timestamp } from 'firebase/firestore';
@@ -272,19 +275,11 @@ async function deleteDailyLesson() {
     }
 }
 
-async function deleteStudent(student: StudentLesson) {
-    const newDailyLesson = { ...dailyLesson.value };
-
-    const index = newDailyLesson.lessons?.findIndex(s => s.studentId == student.id) ?? -1;
-    if (index == -1)
-        return false;
-    const startingTime = index == 0 ? newDailyLesson.lessons![index].startTime : newDailyLesson.lessons![index - 1].startTime;
-    newDailyLesson.lessons?.splice(index, 1);
-    updateDailyLessonTime(startingTime, { scheduledLessons: newDailyLesson.lessons!, students: studentLessons.value });
+async function deleteStudentLesson(student: StudentLesson) {
+    if (!dailyLesson.value) return false;
 
     try {
-        await DailyLessonRepository.instance.save(newDailyLesson, newDailyLesson.id!);
-        return true;
+        return await DailyLessonService.instance.deleteStudentLesson(student, dailyLesson.value);
     } catch (error) {
         return false;
     }
@@ -301,26 +296,12 @@ async function updateStudentLesson() {
 
     loadingStudents.value = true;
 
-    const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.value.schoolId, newStudentsId);
-    studentLessons.value = dailyLesson.value.lessons.map(l => {
-        const s = data.find(st => st.id == l.studentId)!;
-        return { ...l, ...s };
-    });
-
-    // const today = yyyyMMdd.fromIyyyyMMdd(dailyLesson.value.date).toIyyyyMMdd("-");
-    // events.value = studentLessons.value.map(sl => {
-    //     const start = today + " " + Time.fromITime(sl.startTime).format();
-    //     const end = today + " " + Time.fromITime(sl.startTime + sl.minutesLessonDuration * 60).format();
-    //     return {
-    //         id: sl.lessonId,
-    //         start,
-    //         end,
-    //         title: sl.name + " " + sl.surname,
-    //         description: sl.notes?.join(";\n"),
-    //         data: sl
-    //     }
+    studentLessons.value = await StudentLessonService.instance.getStudentLesson(dailyLesson.value, newStudentsId);
+    // const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.value.schoolId, newStudentsId);
+    // studentLessons.value = dailyLesson.value.lessons.map(l => {
+    //     const s = data.find(st => st.id == l.studentId)!;
+    //     return { ...l, ...s };
     // });
-    // console.log(events.value);
 
     loadingStudents.value = false;
 }
