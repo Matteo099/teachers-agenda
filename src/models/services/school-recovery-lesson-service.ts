@@ -261,14 +261,25 @@ export class SchoolRecoveryLessonService {
         SchoolRecoveryLessonRepository.instance.save(recovery, lesson.schoolId);
     }
 
-    public async cancelRecovery(lesson: ExtendedStudentLesson) {
+    public async cancelRecovery(lesson: ExtendedStudentLesson, deleteFromRecoveries?: boolean) {
         if (!lesson.recoveryDailyLesson) return;
-        
+
         const recovery = await SchoolRecoveryLessonService.instance.getOrCreate(lesson.schoolId);
+        let recoveryLessonRef: LessonRef | undefined;
+        let originalLessonRef: LessonRef | undefined;
+        const recoveryTypeDeletition: RecoveryType[] = [];
+
+        if (lesson.recovery?.ref == "recovery") {
+            recoveryLessonRef = lesson.recovery.lessonRef;
+            originalLessonRef = lesson.recoveryDailyLesson.lessons.find(l => l.lessonId == recoveryLessonRef?.lessonId)?.recovery?.lessonRef;
+        } else if (lesson.recovery?.ref == "original") {
+            originalLessonRef = lesson.recovery.lessonRef;
+            recoveryLessonRef = lesson.originalDailyLesson.lessons.find(l => l.lessonId == originalLessonRef?.lessonId)?.recovery?.lessonRef;
+        }
 
         // Step 1: remove the recovery lesson from the recovery daily lesson
         const recoveryDailyLesson = await DailyLessonRepository.instance.get(lesson.recoveryDailyLesson.id);
-        const recoveryLessonIndex = recoveryDailyLesson?.lessons.findIndex(l => l.lessonId == lesson.recovery?.lessonRef.lessonId);
+        const recoveryLessonIndex = recoveryDailyLesson?.lessons.findIndex(l => l.lessonId == recoveryLessonRef?.lessonId);
         if (recoveryDailyLesson && recoveryLessonIndex != undefined && recoveryLessonIndex != -1) {
             recoveryDailyLesson.lessons.splice(recoveryLessonIndex, 1);
             // if the recovery daily lesson has no more lessons, delete it
@@ -279,21 +290,22 @@ export class SchoolRecoveryLessonService {
             }
         }
 
-        // Step 2: remove the recovery lesson refecetd from the original daily lesson
+        // Step 2: remove the recovery lesson reference from the original daily lesson
         const originalDailyLesson = await DailyLessonRepository.instance.get(lesson.originalDailyLesson.id);
-        const originalLessonIndex = originalDailyLesson?.lessons.findIndex(l => l.recovery?.lessonRef.dailyLessonId == lesson.recovery?.lessonRef.dailyLessonId && l.recovery?.lessonRef.lessonId == lesson.recovery?.lessonRef.lessonId);
+        const originalLessonIndex = originalDailyLesson?.lessons.findIndex(l => l.lessonId == originalLessonRef?.lessonId);
         if (originalDailyLesson && originalLessonIndex != undefined && originalLessonIndex != -1) {
             delete originalDailyLesson.lessons[originalLessonIndex].recovery;
             await DailyLessonRepository.instance.save(originalDailyLesson, originalDailyLesson.id);
         }
 
         // Step 3: remove the recovey ref from recoveries
-        const ref: LessonRef = {
-            dailyLessonId: lesson.originalDailyLesson.id,
-            lessonId: lesson.lessonId
-        }
+        if (originalLessonRef) {
+            recoveryTypeDeletition.push(RecoveryType.DONE, RecoveryType.PENDING);
+            if (deleteFromRecoveries)
+                recoveryTypeDeletition.push(RecoveryType.UNSET);
 
-        if (this.removeRecoveryByType(recovery, ref, RecoveryType.PENDING))
+            recoveryTypeDeletition.forEach(rtd => this.removeRecoveryByType(recovery, originalLessonRef, rtd));
             await SchoolRecoveryLessonRepository.instance.save(recovery, lesson.schoolId);
+        }
     }
 }

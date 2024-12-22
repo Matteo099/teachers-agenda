@@ -57,10 +57,8 @@
 
             <v-btn class="ma-1" @click="emit('notes')">note</v-btn>
 
-            <DeleteDialog v-if="!item.recovery || item.recovery.ref == 'original'"
-                :name="`${item.name} ${item.surname}`" objName="Studente" :onDelete="onDeleteStudent">
-
-                <!-- :onDelete="async () => await deleteStudent(item)"> -->
+            <!-- DeleteDialog v-if="!item.recovery || item.recovery.ref == 'original'" -->
+            <DeleteDialog :name="`${item.name} ${item.surname}`" objName="Studente" :onDelete="onDeleteLessonItem">
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
                 </template>
@@ -75,7 +73,7 @@ import { LessonStatus, Time, type EventTime, type StudentLesson } from '@/models
 import { ref } from 'vue';
 import DeleteDialog from '../DeleteDialog.vue';
 
-const props = defineProps<{ onDeleteStudent: () => Promise<boolean>; updateLessonTime: (newTime: EventTime) => Promise<boolean> }>()
+const props = defineProps<{ onDeleteLessonItem: () => Promise<boolean>; updateLessonTime: (newTime: EventTime) => Promise<boolean> }>()
 const item = defineModel<StudentLesson>('item', { required: true });
 const select = defineModel<string[]>('select');
 const emit = defineEmits(['present', 'absent', 'reset', 'cancel', 'updateLessonTime', 'notes', 'deleteStudent'])
