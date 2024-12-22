@@ -65,6 +65,7 @@ interface CalendarProps {
     date?: yyyyMMdd;
     editable?: boolean;
     showDay?: boolean;
+    sort?: boolean
 }
 
 const props = withDefaults(defineProps<CalendarProps>(), {
@@ -72,6 +73,7 @@ const props = withDefaults(defineProps<CalendarProps>(), {
     editable: false,
     showDay: false
 })
+const emit = defineEmits(['edit']);
 const model = defineModel<(CalendarEventExt | StudentLesson)[]>({ default: [] });
 const _events = ref<CalendarEventExt[]>([]);
 
@@ -172,6 +174,10 @@ function updateModelEvent(calendarEvent: CalendarEvent) {
         event.end = calendarEvent.end;
     }
 
+    if (props.sort) {
+        model.value.sort((a, b) => a.startTime - b.startTime);
+    }
+    emit('edit');
 }
 
 function toggleCalendarHeader() {

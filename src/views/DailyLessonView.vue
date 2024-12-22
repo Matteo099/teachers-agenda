@@ -70,7 +70,7 @@
         <v-container fluid>
             <v-slide-x-transition leave-absolute>
                 <DailyLessonCalendar v-if="visualization == 1" :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)"
-                    v-model="studentLessons" editable>
+                    v-model="studentLessons" editable sort @edit="save">
                 </DailyLessonCalendar>
 
                 <v-timeline v-else side="end" truncate-line="both">
@@ -315,6 +315,7 @@ async function save() {
     }
     try {
         await DailyLessonRepository.instance.save(dl, dl.id);
+        toast.success("Modifiche salvate", { autoClose: 1000 });
         saving.value = false;
     } catch (e) {
         console.error("Error adding document (dailyLesson): ", e);
