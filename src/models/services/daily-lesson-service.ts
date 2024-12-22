@@ -234,7 +234,7 @@ export class DailyLessonService {
                         return false;
                     }
 
-                    this.deleteStudentLesson(recoveryStudentLesson, recoveryDailyLesson);
+                    await this.deleteStudentLesson(recoveryStudentLesson, recoveryDailyLesson);
                     dailyLesson.lessons.splice(index, 1);
                     await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id!);
                 }
