@@ -200,7 +200,7 @@ export class DailyLessonService {
         // }
     }
 
-    public async deleteStudentLesson(studentLesson: StudentLesson, dailyLesson: DailyLesson) {
+    public async deleteStudentLesson(studentLesson: StudentLesson, dailyLesson: DailyLesson, deleteFromRecoveries?: boolean) {
         const index = dailyLesson.lessons.findIndex(s => s.studentId == studentLesson.id) ?? -1;
         if (index == -1)
             return false;
@@ -213,28 +213,28 @@ export class DailyLessonService {
                     const originalDailyLesson = await DailyLessonRepository.instance.get(lessonToDelete.recovery.lessonRef.dailyLessonId);
                     const recoveryDailyLesson = dailyLesson;
                     if (!originalDailyLesson) {
-                        console.warn("Impossible to cancel recovery because original daily lesson does not exist");
+                        console.warn("Unable to cancel recovery because original daily lesson does not exist");
                         return false;
                     }
 
                     const recoveryLesson: ExtendedStudentLesson = { ...studentLesson, originalDailyLesson, recoveryDailyLesson };
-                    await SchoolRecoveryLessonService.instance.cancelRecovery(recoveryLesson);
+                    await SchoolRecoveryLessonService.instance.cancelRecovery(recoveryLesson, deleteFromRecoveries);
                 } else if (lessonToDelete.recovery.ref == 'recovery') {
                     // delete recovery lesson
 
                     const recoveryDailyLesson = await DailyLessonRepository.instance.get(lessonToDelete.recovery.lessonRef.dailyLessonId);
                     if (!recoveryDailyLesson) {
-                        console.warn("Impossible to cancel recovery because recovery daily lesson does not exist");
+                        console.warn("Unable to cancel recovery because recovery daily lesson does not exist");
                         return false;
                     }
                     const recoveryStudentLessons = await StudentLessonService.instance.getStudentLesson(recoveryDailyLesson);
                     const recoveryStudentLesson = recoveryStudentLessons.find(l => l.lessonId == lessonToDelete.recovery!.lessonRef.lessonId)
                     if (!recoveryStudentLesson) {
-                        console.warn("Impossible to cancel recovery because recovery student lesson does not exist");
+                        console.warn("Unable to cancel recovery because recovery student lesson does not exist");
                         return false;
                     }
 
-                    await this.deleteStudentLesson(recoveryStudentLesson, recoveryDailyLesson);
+                    await this.deleteStudentLesson(recoveryStudentLesson, recoveryDailyLesson, true);
                     dailyLesson.lessons.splice(index, 1);
                     await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id!);
                 }

@@ -261,12 +261,13 @@ export class SchoolRecoveryLessonService {
         SchoolRecoveryLessonRepository.instance.save(recovery, lesson.schoolId);
     }
 
-    public async cancelRecovery(lesson: ExtendedStudentLesson) {
+    public async cancelRecovery(lesson: ExtendedStudentLesson, deleteFromRecoveries?: boolean) {
         if (!lesson.recoveryDailyLesson) return;
 
         const recovery = await SchoolRecoveryLessonService.instance.getOrCreate(lesson.schoolId);
         let recoveryLessonRef: LessonRef | undefined;
         let originalLessonRef: LessonRef | undefined;
+        const recoveryTypeDeletition: RecoveryType[] = [];
 
         if (lesson.recovery?.ref == "recovery") {
             recoveryLessonRef = lesson.recovery.lessonRef;
@@ -298,12 +299,13 @@ export class SchoolRecoveryLessonService {
         }
 
         // Step 3: remove the recovey ref from recoveries
-        const ref: LessonRef = {
-            dailyLessonId: lesson.originalDailyLesson.id,
-            lessonId: lesson.lessonId
-        }
+        if (originalLessonRef) {
+            recoveryTypeDeletition.push(RecoveryType.DONE, RecoveryType.PENDING);
+            if (deleteFromRecoveries)
+                recoveryTypeDeletition.push(RecoveryType.UNSET);
 
-        if (this.removeRecoveryByType(recovery, ref, RecoveryType.PENDING))
+            recoveryTypeDeletition.forEach(rtd => this.removeRecoveryByType(recovery, originalLessonRef, rtd));
             await SchoolRecoveryLessonRepository.instance.save(recovery, lesson.schoolId);
+        }
     }
 }

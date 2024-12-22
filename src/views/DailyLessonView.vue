@@ -279,7 +279,6 @@ async function deleteStudentLesson(student: StudentLesson) {
     if (!dailyLesson.value) return false;
 
     try {
-        debugger;
         return await DailyLessonService.instance.deleteStudentLesson(student, dailyLesson.value);
     } catch (error) {
         return false;
