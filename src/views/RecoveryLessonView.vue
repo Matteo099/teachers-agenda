@@ -71,7 +71,7 @@ import { doc } from 'firebase/firestore';
 import { computed, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
-import ScheduleRecoveryLessonButton from './ScheduleRecoveryLessonButton.vue';
+import ScheduleRecoveryLessonButton from '@/components/lesson/ScheduleRecoveryLessonButton.vue';
 
 export interface RecoveryLessonViewProps {
     school: School

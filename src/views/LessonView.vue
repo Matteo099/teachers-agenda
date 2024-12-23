@@ -28,7 +28,6 @@
                 </template>
             </v-dialog>
 
-
             <v-btn icon="mdi-refresh" variant="text" :disabled="!school || computingLessonGroups"
                 @click="loadLessonGroup"></v-btn>
 
@@ -42,6 +41,8 @@
                     </WeekLessonEditor>
                 </template>
             </v-dialog>
+
+            <v-btn icon="mdi-eye-arrow-right" variant="text" :to="'/lessons/' + school.id"></v-btn>
         </template>
 
         <v-list lines="two">
@@ -75,7 +76,7 @@ import { type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useDate } from 'vuetify';
-import WeekLessonEditor from './CalendarLessonEditor.vue';
+import WeekLessonEditor from '@/components/lesson/WeekLessonEditor.vue';
 
 export interface LessonViewProps {
     school: School

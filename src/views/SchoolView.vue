@@ -76,18 +76,17 @@
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
-import LessonView from '@/components/lesson/LessonView.vue';
-import RecoveryLessonView from '@/components/lesson/RecoveryLessonView.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import StudentView from '@/components/student/StudentView.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import type { School } from '@/models/model';
 import { SchoolService } from '@/models/services/school-service';
-import { dateFormat } from '@/models/utils';
 import { doc, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDocument } from 'vuefire';
+import LessonView from './LessonView.vue';
+import RecoveryLessonView from './RecoveryLessonView.vue';
 
 const route = useRoute()
 const router = useRouter()
