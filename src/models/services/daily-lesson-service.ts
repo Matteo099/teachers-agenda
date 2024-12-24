@@ -5,8 +5,9 @@ import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
 import type { LessonProjection, SchoolLessons } from "./lesson-group-service";
+import { SchoolRecoveryLessonService, type ExpandedLesson, type ExtendedStudentLesson } from "./school-recovery-lesson-service";
 import { SchoolService } from "./school-service";
-import type { ExpandedLesson, RecoveryReference } from "./school-recovery-lesson-service";
+import { StudentLessonService } from "./student-lesson-service";
 
 export class DailyLessonService {
 
@@ -197,5 +198,52 @@ export class DailyLessonService {
             await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
         }
         // }
+    }
+
+    public async deleteStudentLesson(studentLesson: StudentLesson, dailyLesson: DailyLesson, deleteFromRecoveries?: boolean) {
+        const index = dailyLesson.lessons.findIndex(s => s.studentId == studentLesson.id) ?? -1;
+        if (index == -1)
+            return false;
+
+        try {
+            const lessonToDelete = dailyLesson.lessons[index];
+            if (lessonToDelete.recovery) {
+                if (lessonToDelete.recovery.ref == 'original') {
+                    // update original daily lesson, by cancelling scheduled recovery
+                    const originalDailyLesson = await DailyLessonRepository.instance.get(lessonToDelete.recovery.lessonRef.dailyLessonId);
+                    const recoveryDailyLesson = dailyLesson;
+                    if (!originalDailyLesson) {
+                        console.warn("Unable to cancel recovery because original daily lesson does not exist");
+                        return false;
+                    }
+
+                    const recoveryLesson: ExtendedStudentLesson = { ...studentLesson, originalDailyLesson, recoveryDailyLesson };
+                    await SchoolRecoveryLessonService.instance.cancelRecovery(recoveryLesson, deleteFromRecoveries);
+                } else if (lessonToDelete.recovery.ref == 'recovery') {
+                    // delete recovery lesson
+
+                    const recoveryDailyLesson = await DailyLessonRepository.instance.get(lessonToDelete.recovery.lessonRef.dailyLessonId);
+                    if (!recoveryDailyLesson) {
+                        console.warn("Unable to cancel recovery because recovery daily lesson does not exist");
+                        return false;
+                    }
+                    const recoveryStudentLessons = await StudentLessonService.instance.getStudentLesson(recoveryDailyLesson);
+                    const recoveryStudentLesson = recoveryStudentLessons.find(l => l.lessonId == lessonToDelete.recovery!.lessonRef.lessonId)
+                    if (!recoveryStudentLesson) {
+                        console.warn("Unable to cancel recovery because recovery student lesson does not exist");
+                        return false;
+                    }
+
+                    await this.deleteStudentLesson(recoveryStudentLesson, recoveryDailyLesson, true);
+                    dailyLesson.lessons.splice(index, 1);
+                    await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id!);
+                }
+            }
+
+
+            return true;
+        } catch (error) {
+            return false;
+        }
     }
 }

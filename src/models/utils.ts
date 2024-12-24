@@ -37,6 +37,24 @@ export const nextDay = function (startingDate: Date, targetDayOfWeek: DayOfWeek)
     return resultDate;
 }
 
+export const pastDay = function (startingDate: Date, targetDayOfWeek: DayOfWeek): Date {
+    // Get the day of the week for the starting date (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+    const startingDayOfWeek = startingDate.getDay();
+    if (targetDayOfWeek == startingDayOfWeek) return startingDate;
+
+    // Calculate the difference between the target day and the current day
+    // We add 7 to ensure the result is non-negative, then take mod 7
+    const daysToAdd = (targetDayOfWeek - startingDayOfWeek + 7) % 7 || 7;
+
+    // Create a new date object based on the starting date
+    const resultDate = new Date(startingDate);
+
+    // Add the calculated number of days to the result date
+    resultDate.setDate(startingDate.getDate() - daysToAdd);
+
+    return resultDate;
+}
+
 export const dateFormatter = new Intl.DateTimeFormat('it-IT', {
     year: 'numeric',
     month: '2-digit',

@@ -1,7 +1,15 @@
 <template>
     <v-container fluid v-if="dailyLesson">
-        <p class="text-h5 text-center mb-6">Lezioni del <b>{{ yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format() }}</b>
-        </p>
+        <v-row class="justify-center align-center mb-6">
+            <v-col cols="auto">
+                <BackButton></BackButton>
+            </v-col>
+            <v-col>
+                <p class="text-h5 text-center">Lezioni del <b>{{ yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()
+                        }}</b>
+                </p>
+            </v-col>
+        </v-row>
         <v-row>
             <v-col>
                 <v-btn @click="present" :disabled="!areLessonSelected">presenti</v-btn>
@@ -44,63 +52,38 @@
                     </template>
                 </DeleteDialog>
             </v-col>
+
+            <v-col>
+                <v-btn-toggle v-model="visualization" mandatory shaped>
+                    <v-btn>
+                        <v-icon>mdi-timeline-text-outline</v-icon>
+                    </v-btn>
+
+                    <v-btn>
+                        <v-icon>mdi-calendar-week-begin-outline</v-icon>
+                    </v-btn>
+                </v-btn-toggle>
+            </v-col>
         </v-row>
 
+
         <v-container fluid>
-            <v-timeline side="end" truncate-line="both">
-                <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id" :dot-color="getColor(item)"
-                    size="small">
-                    <v-card elevation=3>
-                        <v-card-title>
-                            <v-checkbox v-model="selectedLessons" :value="index" multiple>
-                                <template v-slot:label>
-                                    <span><b>{{ Time.fromITime(item.startTime).format() }} - {{
-                                        Time.fromITime(item.endTime).format() }}</b> &nbsp; <i>{{
-                                                item.name }} {{ item.surname }}</i></span>
-                                </template>
-                            </v-checkbox>
-                        </v-card-title>
-                        <v-card-text>
-                            <template v-if="!item.recovery || item.recovery.ref == 'original'">
-                                <v-btn class="ma-1"
-                                    v-if="item.status != LessonStatus.PRESENT && item.status != LessonStatus.CANCELLED"
-                                    @click="present(item)">presente</v-btn>
-                                <v-btn class="ma-1"
-                                    v-if="item.status != LessonStatus.ABSENT && item.status != LessonStatus.CANCELLED"
-                                    @click="absent(item)">assente</v-btn>
-                                <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
-                                    @click="cancel(item)">cancella</v-btn>
-                                <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE"
-                                    @click="reset(item)">reset</v-btn>
+            <v-slide-x-transition leave-absolute>
+                <DailyLessonCalendar v-if="visualization == 1" :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)"
+                    v-model="studentLessons" editable sort @edit="save">
+                </DailyLessonCalendar>
 
-                                <v-btn v-if="item.recovery?.ref == 'original'" class="ma-1"
-                                    :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
-                                    <template v-slot:prepend>
-                                        <v-icon>mdi-eye-arrow-left-outline</v-icon>
-                                    </template>
-                                    origine</v-btn>
-                            </template>
-                            <template v-else>
-                                <v-btn class="ma-1" :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
-                                    <template v-slot:prepend>
-                                        <v-icon>mdi-eye-arrow-right-outline</v-icon>
-                                    </template>recupero</v-btn>
-                            </template>
-
-
-                            <v-btn class="ma-1" @click="notes(item)">note</v-btn>
-
-                            <DeleteDialog v-if="!item.recovery || item.recovery.ref == 'original'"
-                                :name="`${item.name} ${item.surname}`" objName="Studente"
-                                :onDelete="async () => await deleteStudent(item)">
-                                <template v-slot:activator="{ props: activatorProps }">
-                                    <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
-                                </template>
-                            </DeleteDialog>
-                        </v-card-text>
-                    </v-card>
-                </v-timeline-item>
-            </v-timeline>
+                <v-timeline v-else side="end" truncate-line="both">
+                    <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id" :dot-color="getColor(item)"
+                        size="small">
+                        <LessonItem v-model:item="studentLessons[index]" v-model:select="selectedLessons"
+                            @present="present(item)" @absent="absent(item)" @cancel="cancel(item)" @reset="reset(item)"
+                            :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
+                            @notes="notes(item)" :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
+                        </LessonItem>
+                    </v-timeline-item>
+                </v-timeline>
+            </v-slide-x-transition>
         </v-container>
 
         <v-overlay :model-value="saving" class="align-center justify-center">
@@ -110,12 +93,17 @@
 </template>
 
 <script setup lang="ts">
+import DailyLessonCalendar from '@/components/calendar/DailyLessonCalendar.vue';
 import DeleteDialog from '@/components/DeleteDialog.vue';
+import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
+import LessonItem from '@/components/lesson/LessonItem.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { LessonStatus, lessonStatusColor, Time, updateDailyLessonTime, yyyyMMdd, type DailyLesson, type Lesson, type Student, type StudentLesson } from '@/models/model';
+import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type Student, type StudentLesson } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
+import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
+import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
 import { doc, Timestamp } from 'firebase/firestore';
@@ -129,7 +117,7 @@ const route = useRoute();
 const router = useRouter();
 const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
 
-const selectedLessons: Ref<number[]> = ref([])
+const selectedLessons: Ref<string[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
 const studentLessons: Ref<StudentLesson[]> = ref([])
 const availableStudents: Ref<Student[]> = ref([]);
@@ -139,6 +127,7 @@ const loadingAllStudents = ref(false);
 const saving = ref(false);
 const savingSelectedStudents = ref(false);
 const studentsDialog = ref(false);
+const visualization = ref(0);
 
 const dailyLessonSource = computed(() =>
     doc(dailyLessonsRef, route.params.id as string)
@@ -161,7 +150,7 @@ function getColor(event: StudentLesson): string {
 
 async function present(event: StudentLesson) {
     doBackup();
-    const _studentLessons = selectedLessons.value.map(s => studentLessons.value[s]);
+    const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.id == id)).filter(s => !!s);
     _studentLessons.push(event);
     _studentLessons.forEach(s => s.status = LessonStatus.PRESENT)
     selectedLessons.value = []
@@ -170,7 +159,7 @@ async function present(event: StudentLesson) {
 }
 async function absent(event: StudentLesson) {
     doBackup();
-    const _studentLessons = selectedLessons.value.map(s => studentLessons.value[s]);
+    const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.id == id)).filter(s => !!s);
     _studentLessons.push(event);
     _studentLessons.forEach(s => s.status = LessonStatus.ABSENT)
     selectedLessons.value = []
@@ -194,11 +183,25 @@ async function reset(event: StudentLesson) {
     }
 }
 
+async function updateLessonTime(event: StudentLesson, newDataEvent: EventTime) {
+    const startTime = Time.fromHHMM(newDataEvent.startTime)?.toITime();
+    const endTime = Time.fromHHMM(newDataEvent.endTime)?.toITime();
+    if (startTime == undefined || endTime == undefined) {
+        return false;
+    }
+    doBackup();
+    event.startTime = startTime;
+    event.endTime = endTime;
+    studentLessons.value.sort((a, b) => a.startTime - b.startTime);
+    await save();
+    return true;
+}
+
 function notes(event: StudentLesson) { }
 
 function toggleAll() {
     if (!selectAllLessons.value) {
-        selectedLessons.value = [...Array(studentLessons.value.length).keys()]
+        selectedLessons.value = [...studentLessons.value.map(s => s.id)]
     } else {
         selectedLessons.value = [];
     }
@@ -272,19 +275,11 @@ async function deleteDailyLesson() {
     }
 }
 
-async function deleteStudent(student: StudentLesson) {
-    const newDailyLesson = { ...dailyLesson.value };
-
-    const index = newDailyLesson.lessons?.findIndex(s => s.studentId == student.id) ?? -1;
-    if (index == -1)
-        return false;
-    const startingTime = index == 0 ? newDailyLesson.lessons![index].startTime : newDailyLesson.lessons![index - 1].startTime;
-    newDailyLesson.lessons?.splice(index, 1);
-    updateDailyLessonTime(startingTime, { scheduledLessons: newDailyLesson.lessons!, students: studentLessons.value });
+async function deleteStudentLesson(student: StudentLesson) {
+    if (!dailyLesson.value) return false;
 
     try {
-        await DailyLessonRepository.instance.save(newDailyLesson, newDailyLesson.id!);
-        return true;
+        return await DailyLessonService.instance.deleteStudentLesson(student, dailyLesson.value);
     } catch (error) {
         return false;
     }
@@ -301,11 +296,12 @@ async function updateStudentLesson() {
 
     loadingStudents.value = true;
 
-    const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.value.schoolId, newStudentsId);
-    studentLessons.value = dailyLesson.value.lessons.map(l => {
-        const s = data.find(st => st.id == l.studentId)!;
-        return { ...l, ...s };
-    });
+    studentLessons.value = await StudentLessonService.instance.getStudentLesson(dailyLesson.value, newStudentsId);
+    // const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.value.schoolId, newStudentsId);
+    // studentLessons.value = dailyLesson.value.lessons.map(l => {
+    //     const s = data.find(st => st.id == l.studentId)!;
+    //     return { ...l, ...s };
+    // });
 
     loadingStudents.value = false;
 }
@@ -319,6 +315,7 @@ async function save() {
     }
     try {
         await DailyLessonRepository.instance.save(dl, dl.id);
+        toast.success("Modifiche salvate", { autoClose: 1000 });
         saving.value = false;
     } catch (e) {
         console.error("Error adding document (dailyLesson): ", e);
@@ -339,8 +336,8 @@ function extractDailyLesson(): DailyLesson | undefined {
             lessonId: l.lessonId,
             createdAt: l.createdAt,
             studentId: l.studentId,
-            startTime: l.startTime,
-            endTime: l.endTime,
+            startTime: less.startTime,
+            endTime: less.endTime,
             status: less.status,
             updatedAt: Timestamp.now()
         }
@@ -351,7 +348,7 @@ function extractDailyLesson(): DailyLesson | undefined {
     return {
         date: dl.date,
         id: dl.id,
-        lessons,
+        lessons: lessons.sort((a, b) => a.startTime - b.startTime),
         schoolId: dl.schoolId
     } as DailyLesson;
 }

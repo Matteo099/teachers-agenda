@@ -28,7 +28,6 @@
                 </template>
             </v-dialog>
 
-
             <v-btn icon="mdi-refresh" variant="text" :disabled="!school || computingLessonGroups"
                 @click="loadLessonGroup"></v-btn>
 
@@ -42,6 +41,8 @@
                     </WeekLessonEditor>
                 </template>
             </v-dialog>
+
+            <v-btn icon="mdi-eye-arrow-right" variant="text" :to="'/lessons/' + school.id"></v-btn>
         </template>
 
         <v-list lines="two">
@@ -62,38 +63,20 @@
                     </template>
                 </v-list-item>
             </template>
-
-            <!-- <v-divider inset></v-divider>
-
-            <v-list-subheader inset>Files</v-list-subheader>
-
-            <v-list-item v-for="file in files" :key="file.title" :subtitle="file.subtitle"
-                :title="file.title">
-                <template v-slot:prepend>
-                    <v-avatar :color="file.color">
-                        <v-icon color="white">{{ file.icon }}</v-icon>
-                    </v-avatar>
-                </template>
-
-                <template v-slot:append>
-                    <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"></v-btn>
-                </template>
-            </v-list-item> -->
         </v-list>
     </v-card>
 </template>
 
 <script setup lang="ts">
-import { yyyyMMdd, type School } from '@/models/model';
+import { type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { LessonGroupService, type LessonGroup, type LessonProjection, type SchoolLessons } from '@/models/services/lesson-group-service';
-import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
+import { SchoolService } from '@/models/services/school-service';
 import { type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useDate } from 'vuetify';
-import WeekLessonEditor from './CalendarLessonEditor.vue';
-import { SchoolService } from '@/models/services/school-service';
+import WeekLessonEditor from '@/components/lesson/WeekLessonEditor.vue';
 
 export interface LessonViewProps {
     school: School
@@ -116,7 +99,7 @@ const schoolLessons: SchoolLessons = {
     schoolId: props.school.id
 };
 
-const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value);
+const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value || computingLessonGroups.value);
 watch(props.school, () => loadLessonGroup())
 
 function getColor(lesson: LessonProjection) {
@@ -140,8 +123,6 @@ async function loadLessonGroup() {
 
     const _schoolLessons = await SchoolService.instance.getSchoolLessons(props.school.id, startingDate);
     lessonGroups.value = await LessonGroupService.instance.getGroupedLessons(_schoolLessons);
-
-    console.log(_schoolLessons, lessonGroups);
 
     computingLessonGroups.value = false;
 }

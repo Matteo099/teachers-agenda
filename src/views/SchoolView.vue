@@ -1,5 +1,8 @@
 <template>
     <v-card v-if="school" class="pa-3" :title="school.name" elevation="0">
+        <template v-slot:prepend>
+            <BackButton></BackButton>
+        </template>
         <!-- <p class="text-h5 text-center mb-6">{{ school.name }}</p> -->
         <template v-slot:append>
             <v-menu transition="slide-y-transition">
@@ -7,14 +10,15 @@
                     <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
                 </template>
                 <v-list>
-                    <v-dialog v-model="schoolDialog" fullscreen>
+                    <v-dialog fullscreen>
                         <template v-slot:activator="{ props: activatorProps }">
                             <v-list-item title="Modifica" v-bind="activatorProps"></v-list-item>
                         </template>
-
-                        <SchoolEditor edit :initialSchool="school" @close="schoolDialog = false"
-                            @save="schoolDialog = false">
-                        </SchoolEditor>
+                        <template v-slot:default="{ isActive }">
+                            <SchoolEditor edit :initialSchool="school" @close="isActive.value = false"
+                                @save="isActive.value = false">
+                            </SchoolEditor>
+                        </template>
                     </v-dialog>
 
                     <DeleteDialog :name="school.name" objName="Scuola" :onDelete="deleteSchool">
@@ -71,18 +75,18 @@
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
-import LessonView from '@/components/lesson/LessonView.vue';
-import RecoveryLessonView from '@/components/lesson/RecoveryLessonView.vue';
+import BackButton from '@/components/inputs/BackButton.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import StudentView from '@/components/student/StudentView.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import type { School } from '@/models/model';
 import { SchoolService } from '@/models/services/school-service';
-import { dateFormat } from '@/models/utils';
 import { doc, type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDocument } from 'vuefire';
+import LessonView from './LessonView.vue';
+import RecoveryLessonView from './RecoveryLessonView.vue';
 
 const route = useRoute()
 const router = useRouter()
@@ -91,7 +95,6 @@ const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 const subscriptions: Unsubscribe[] = [];
 
 const notes: Ref<any[]> = ref([]);
-const schoolDialog = ref(false);
 
 const schoolSource = computed(() =>
     doc(schoolsRef, route.params.id as string)

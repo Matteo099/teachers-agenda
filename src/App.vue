@@ -64,16 +64,10 @@
 
       <template v-slot:append>
         <v-footer height="45" class="px-0">
-          <v-row align-content="center" no-gutters class="text-caption">
-            <v-col align-self="center" cols="5">
-              <v-img :src="companyLogo" height="45" />
-            </v-col>
-            <v-col align-self="center" cols="2"></v-col>
-            <v-col align-self="center" class="d-flex" cols="5">
-              <v-icon start>mdi-alpha-v-circle</v-icon>
-              <span>{{ appVersion }}</span>
-            </v-col>
-          </v-row>
+          <div class="d-flex justify-center w-100">
+            <v-icon start>mdi-alpha-v-circle</v-icon>
+            <span>{{ appVersion }}</span>
+          </div>
         </v-footer>
       </template>
     </v-navigation-drawer>
@@ -85,6 +79,10 @@
           <v-img contain :src="companyLogo" height="90" width="150"></v-img>
         </router-link> -->
       </v-app-bar-title>
+
+      <v-btn v-if="mobile" icon class="mr-2" v-tooltip="tooltip">
+        <v-icon right>mdi-information</v-icon>
+      </v-btn>
 
       <v-btn @click="toggleTheme" icon class="mr-2">
         <v-icon right>mdi-theme-light-dark</v-icon>
@@ -102,10 +100,16 @@
           </v-list-item>
         </v-list>
       </v-menu>
-      <div>
-        <v-btn class="mx-5" variant="outlined" v-if="!user" @click="signIn">Accedi
+      <div v-if="mobile">
+        <v-btn class="mx-5" icon="mdi-login" v-if="!user" @click="signIn"></v-btn>
+        <v-btn class="mx-5" icon="mdi-logout" v-if="user" @click="signOut"></v-btn>
+      </div>
+      <div v-else>
+        <v-btn class="mx-5" variant="outlined" v-if="!user" @click="signIn">
+          Accedi
           <v-icon right class="ml-2">mdi-login</v-icon></v-btn>
-        <v-btn class="mx-5" variant="outlined" v-if="user" @click="signOut">Esci
+        <v-btn class="mx-5" variant="outlined" v-if="user" @click="signOut">
+          Esci
           <v-icon right class="ml-2">mdi-logout</v-icon></v-btn>
       </div>
     </v-app-bar>
@@ -150,11 +154,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, onMounted, ref } from 'vue'
-import { useTheme } from 'vuetify'
-import { useSettingsStore } from './stores/settings'
-import { useDisplay } from 'vuetify'
-import { toast } from 'vue3-toastify';
+import { computed, ref } from 'vue';
+import { useDisplay, useTheme } from 'vuetify';
+import { useSettingsStore } from './stores/settings';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);
@@ -179,6 +181,16 @@ const drawer = ref(true)
 const userInitials = ref<string>()
 const userRoles = ref<string[]>()
 const appVersion = import.meta.env.VITE_APP_VERSION
+
+const tooltip = {
+  text: `Versione ${appVersion}`,
+  scrollStrategy: 'close',
+  location: "bottom",
+  scrim: true,
+  persistent: false,
+  openOnClick: true,
+  openOnHover: false,
+};
 
 function toggleTheme() {
   settingsStore.toggleDarkMode()

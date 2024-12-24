@@ -3,7 +3,9 @@ import HomeView from '../views/HomeView.vue'
 import ManageSchoolView from '@/views/ManageSchoolView.vue'
 import SchoolView from '@/views/SchoolView.vue'
 import LessonsView from '@/views/DailyLessonView.vue'
+import DailyLessonCalendar from '@/components/calendar/DailyLessonCalendar.vue'
 import CalendarView from '@/views/CalendarView.vue'
+import WeekLessonEditor from '@/components/lesson/WeekLessonEditor.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,43 +13,48 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView
+      component: () => import('../views/HomeView.vue')
     },
     {
       path: '/schools',
       name: 'schools',
-      component: ManageSchoolView
+      component: () => import('../views/ManageSchoolView.vue'),
     },
     {
       path: '/school/:id',
-      component: SchoolView,
+      component: () => import('../views/SchoolView.vue'),
       meta: { transition: 'v-slide-x-transition' }
     },
     {
-      path: '/lesson/:id',
+      path: '/lessons/:id',
       name: 'lessons',
-      component: LessonsView
+      component: () => import('../views/SchoolLessonView.vue')
+    },
+    {
+      path: '/lesson/:id',
+      name: 'lesson',
+      component: () => import('../views/LessonView.vue')
     },
     {
       path: '/recoveries',
       name: 'recoveries',
-      component: HomeView
+      component: () => import('../views/HomeView.vue')
     },
     {
       path: '/calendar',
       name: 'calendar',
-      component: CalendarView
+      component: () => import('../views/CalendarView.vue')
     },
     {
       path: '/reports',
       name: 'reports',
-      component: HomeView
+      component: () => import('../views/HomeView.vue')
     },
     {
       path: '/settings',
       name: 'settings',
-      component: HomeView
-    },
+      component: () => import('../views/HomeView.vue')
+    }
 
     // {
     //   path: '/about',

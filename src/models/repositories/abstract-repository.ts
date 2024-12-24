@@ -1,4 +1,4 @@
-import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData } from "firebase/firestore";
+import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryCompositeFilterConstraint, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData, type QueryNonFilterConstraint } from "firebase/firestore";
 import { QueryEvent, type IQueryEvent } from "../utils/event";
 
 export type ID = string;
@@ -16,6 +16,12 @@ export abstract class AbstractRepository<T> {
 
     public async getAll(...queries: QueryConstraint[]): Promise<T[]> {
         const _query = query(this.collectionReference, ...queries);
+        const snapshot = await getDocs(_query);
+        return snapshot.docs.map(doc => doc.data());
+    }
+
+    public async getAllAdv(compositeFilter: QueryCompositeFilterConstraint, ...queries: QueryNonFilterConstraint[]): Promise<T[]> {
+        const _query = query(this.collectionReference, compositeFilter, ...queries);
         const snapshot = await getDocs(_query);
         return snapshot.docs.map(doc => doc.data());
     }
