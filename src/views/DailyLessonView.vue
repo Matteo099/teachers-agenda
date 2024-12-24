@@ -152,18 +152,22 @@ async function present(event: StudentLesson) {
     doBackup();
     const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.id == id)).filter(s => !!s);
     _studentLessons.push(event);
+    //@ts-ignore
     _studentLessons.forEach(s => s.status = LessonStatus.PRESENT)
     selectedLessons.value = []
     await save();
+    //@ts-ignore
     await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
 async function absent(event: StudentLesson) {
     doBackup();
     const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.id == id)).filter(s => !!s);
     _studentLessons.push(event);
+    //@ts-ignore
     _studentLessons.forEach(s => s.status = LessonStatus.ABSENT)
     selectedLessons.value = []
     await save();
+    //@ts-ignore
     await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
 async function cancel(event: StudentLesson) {

@@ -79,3 +79,13 @@ $ firebase emulators:start
 ``` sh
 git subtree push --prefix dist origin gh-pages
 ```
+
+if there are some errors:
+
+``` sh
+git push origin --delete gh-pages
+```
+
+``` sh
+git subtree push --prefix dist origin gh-pages
+```
