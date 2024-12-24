@@ -182,9 +182,16 @@ function saveLevelRanges(lr: LevelRange[]) {
 async function save(values: GenericObject) {
     saving.value = true;
 
-    const school: Partial<School> = { ...values };
-    school.createdAt = props.edit ? props.initialSchool?.createdAt : Timestamp.now();
-    school.updatedAt = Timestamp.now();
+    const school: Partial<School> = {
+        name: values.name,
+        managed: managed.value ?? false,
+        levelRanges: values.levelRanges,
+        createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),
+        updatedAt: Timestamp.now()
+    };
+    if(values.city) school.city = values.city;
+    if(values.email) school.email = values.email;
+    if(values.phoneNumber) school.phoneNumber = values.phoneNumber;
     if (managed.value) school.managerOptions = managerOptions.value;
 
     try {
