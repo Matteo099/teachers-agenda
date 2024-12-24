@@ -5,6 +5,7 @@
         </template>
 
         <v-container>
+            <v-progress-linear :active="loading" color="primary" indeterminate></v-progress-linear>
             <ScheduleXCalendar :calendar-app="calendarApp">
             </ScheduleXCalendar>
         </v-container>
@@ -14,24 +15,23 @@
 <script setup lang="ts">
 import BackButton from '@/components/inputs/BackButton.vue';
 import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { Time, yyyyMMdd, type CalendarEventExt, type DailyLesson, type School } from '@/models/model';
-import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
-import { DailyLessonService } from '@/models/services/daily-lesson-service';
-import { nameof } from '@/models/utils';
+import { Time, yyyyMMdd, type CalendarEventExt, type School } from '@/models/model';
+import { LessonGroupService } from '@/models/services/lesson-group-service';
+import { StudentService } from '@/models/services/student-service';
 import {
     createCalendar,
     createViewDay,
     createViewMonthAgenda,
     createViewMonthGrid,
     createViewWeek,
+    viewWeek,
 } from '@schedule-x/calendar';
-
 import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
 import { createEventModalPlugin } from '@schedule-x/event-modal';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { ScheduleXCalendar } from '@schedule-x/vue';
-import { doc, where } from 'firebase/firestore';
-import { computed, onMounted, ref, watch, type Ref } from 'vue';
+import { doc } from 'firebase/firestore';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDocument } from 'vuefire';
 
@@ -47,7 +47,8 @@ const schoolSource = computed(() =>
     doc(schoolsRef, route.params.id as string)
 )
 const school = useDocument(schoolSource)
-const lessons: Ref<CalendarEventExt[]> = ref([]);
+const lessons: CalendarEventExt[] = [];
+const loading = ref(false);
 
 const eventsServicePlugin = createEventsServicePlugin();
 const eventModal = createEventModalPlugin();
@@ -57,21 +58,22 @@ const calendarControls = createCalendarControlsPlugin()
 const calendarApp = createCalendar({
     locale: 'it-IT',
     views: [createViewDay(), createViewWeek(), createViewMonthGrid(), createViewMonthAgenda()],
+    defaultView: viewWeek.name,
     events: [],
     plugins: [eventsServicePlugin, eventModal, calendarControls],
     callbacks: {
+        beforeRender($app) {
+            const range = $app.calendarState.range.value
+            loadLessons(range);
+        },
         onRangeUpdate(range) {
             loadLessons(range);
         }
     }
 })
 
-watch(() => lessons, () => updateCalendarEvents(), { deep: true });
-
 function updateCalendarEvents() {
-    console.log("updateCalendarEvents")
-
-    lessons.value.forEach(event => {
+    lessons.forEach(event => {
         if (!event._options) event._options = {};
 
         if (eventsServicePlugin.get(event.id)) {
@@ -80,7 +82,7 @@ function updateCalendarEvents() {
     });
 
     eventsServicePlugin.getAll().forEach(e => {
-        const toDelete = lessons.value.findIndex(ie => ie.id == e.id) == -1;
+        const toDelete = lessons.findIndex(ie => ie.id == e.id) == -1;
         if (toDelete) eventsServicePlugin.remove(e.id);
     });
 }
@@ -88,6 +90,9 @@ function updateCalendarEvents() {
 async function loadLessons(range?: DateRange | null) {
     range ??= calendarControls.getRange();
     if (!range || !school.value) return;
+
+    lessons.length = 0;
+    loading.value = true;
 
     const from = {
         date: yyyyMMdd.fromDate(new Date(range.start)),
@@ -98,27 +103,20 @@ async function loadLessons(range?: DateRange | null) {
         time: Time.fromHHMM(range.end.split(" ")[1])
     }
 
-    // retireve all the dailyLesson between from and to
-    const _query1 = where(nameof<DailyLesson>('schoolId'), '==', school.value.id);
-    const _query2 = where(nameof<DailyLesson>('date'), '>=', from.date.toIyyyyMMdd());
-    const _query3 = where(nameof<DailyLesson>('date'), '<=', to.date.toIyyyyMMdd());
-    const dailyLessons = await DailyLessonRepository.instance.getAll(_query1, _query2, _query3);
-    lessons.value = dailyLessons.flatMap(dl => {
-        const date = yyyyMMdd.fromIyyyyMMdd(dl.date).toIyyyyMMdd("-", 1);
-        return dl.lessons.map(l => {
-            return {
-                id: l.lessonId,
-                title: l.studentId,
-                start: date + " " + Time.fromITime(l.startTime).format(),
-                end: date + " " + Time.fromITime(l.endTime).format(),
-            }
-        });
+    const _lessons = await LessonGroupService.instance.getCalendarLessons(school.value.id, from, to);
+    //@ts-ignore
+    const studentIds: string[] = Array.from(new Set(_lessons.map(l => l.title).filter(Boolean)));
+    const students = await StudentService.instance.getStudentsOfSchoolWithIds(school.value.id, studentIds);
+    _lessons.forEach(l => {
+        const st = students.find(s => s.id == l.title);
+        if (st) {
+            l.title = st.name + " " + st.surname;
+        }
     });
+    lessons.push(..._lessons);
 
-    console.log("loadLessons", range, dailyLessons, lessons.value);
-
-    // compute the weekly lesson according to from and to
-    // more...?
+    updateCalendarEvents();
+    loading.value = false;
 }
 
 onMounted(async () => {
