@@ -76,16 +76,28 @@ $ firebase emulators:start
 
 ### github pages
 
-``` sh
-git subtree push --prefix dist origin gh-pages
-```
+1. Update package.json version
+2. run 
 
-if there are some errors:
+    ``` sh
+    npm run build
+    ```
 
-``` sh
-git push origin --delete gh-pages
-```
+3. push to main
 
-``` sh
-git subtree push --prefix dist origin gh-pages
-```
+    ``` sh
+    git push
+    ```
+
+4. push to git pages
+
+    ``` sh
+    git subtree push --prefix dist origin gh-pages
+    ```
+
+    if there are some errors, run:
+
+    ``` sh
+    git push origin --delete gh-pages
+    git subtree push --prefix dist origin gh-pages
+    ```

@@ -106,13 +106,15 @@ async function loadLessons(range?: DateRange | null) {
     const _lessons = await LessonGroupService.instance.getCalendarLessons(school.value.id, from, to);
     //@ts-ignore
     const studentIds: string[] = Array.from(new Set(_lessons.map(l => l.title).filter(Boolean)));
-    const students = await StudentService.instance.getStudentsOfSchoolWithIds(school.value.id, studentIds);
-    _lessons.forEach(l => {
-        const st = students.find(s => s.id == l.title);
-        if (st) {
-            l.title = st.name + " " + st.surname;
-        }
-    });
+    if(studentIds.length > 0){
+        const students = await StudentService.instance.getStudentsOfSchoolWithIds(school.value.id, studentIds);
+        _lessons.forEach(l => {
+            const st = students.find(s => s.id == l.title);
+            if (st) {
+                l.title = st.name + " " + st.surname;
+            }
+        });
+    }
     lessons.push(..._lessons);
 
     updateCalendarEvents();
