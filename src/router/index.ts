@@ -13,48 +13,48 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView
+      component: () => import('../views/HomeView.vue')
     },
     {
       path: '/schools',
       name: 'schools',
-      component: ManageSchoolView
+      component: () => import('../views/ManageSchoolView.vue'),
     },
     {
       path: '/school/:id',
-      component: SchoolView,
+      component: () => import('../views/SchoolView.vue'),
       meta: { transition: 'v-slide-x-transition' }
     },
     {
-      path: '/lesson/:id',
+      path: '/lessons/:id',
       name: 'lessons',
-      component: LessonsView
+      component: () => import('../views/SchoolLessonView.vue')
+    },
+    {
+      path: '/lesson/:id',
+      name: 'lesson',
+      component: () => import('../views/LessonView.vue')
     },
     {
       path: '/recoveries',
       name: 'recoveries',
-      component: HomeView
+      component: () => import('../views/HomeView.vue')
     },
     {
       path: '/calendar',
       name: 'calendar',
-      component: CalendarView
+      component: () => import('../views/CalendarView.vue')
     },
     {
       path: '/reports',
       name: 'reports',
-      component: HomeView
+      component: () => import('../views/HomeView.vue')
     },
     {
       path: '/settings',
       name: 'settings',
-      component: HomeView
-    },
-    {
-      path: '/test',
-      name: 'test',
-      component: WeekLessonEditor
-    },
+      component: () => import('../views/HomeView.vue')
+    }
 
     // {
     //   path: '/about',

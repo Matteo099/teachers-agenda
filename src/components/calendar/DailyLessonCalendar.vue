@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { days, Time, yyyyMMdd, type EventTime, type StudentLesson } from '@/models/model';
+import { days, Time, yyyyMMdd, type CalendarEventExt, type EventTime, type StudentLesson } from '@/models/model';
 import {
     createCalendar,
     createViewDay,
@@ -59,8 +59,6 @@ import { ScheduleXCalendar } from '@schedule-x/vue';
 import { onMounted, ref, watch } from 'vue';
 import EditLessonTime from '../lesson/EditLessonTime.vue';
 
-type CalendarEventExt = CalendarEvent & { data?: any };
-
 interface CalendarProps {
     date?: yyyyMMdd;
     editable?: boolean;
@@ -71,7 +69,8 @@ interface CalendarProps {
 const props = withDefaults(defineProps<CalendarProps>(), {
     date: () => yyyyMMdd.today(),
     editable: false,
-    showDay: false
+    showDay: false,
+    sort: false
 })
 const emit = defineEmits(['edit']);
 const model = defineModel<(CalendarEventExt | StudentLesson)[]>({ default: [] });

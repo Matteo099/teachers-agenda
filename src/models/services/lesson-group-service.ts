@@ -1,6 +1,10 @@
-import { LessonStatus, months, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type ScheduledLesson, type WeeklyLesson } from "../model";
+import { where } from "firebase/firestore";
+import { LessonStatus, months, Time, yyyyMMdd, type CalendarEventExt, type DailyLesson, type IyyyyMMdd, type ScheduledLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
-import { nextDay, pastDay } from "../utils";
+import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
+import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
+import { nameof, nextDay, pastDay } from "../utils";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface LessonGroup {
     month: string;
@@ -45,6 +49,57 @@ export class LessonGroupService {
             asyyyyMMdd: asyyyyMMdd,
             asIyyyyMMdd: asyyyyMMdd.toIyyyyMMdd(),
         }
+    }
+
+    public async getCalendarLessons(schoolId: ID, from: { date: yyyyMMdd, time?: Time }, to: { date: yyyyMMdd, time?: Time }): Promise<CalendarEventExt[]> {
+        const lessons: CalendarEventExt[] = [];
+
+        // retireve all the dailyLesson between from and to
+        const _query1 = where(nameof<DailyLesson>('schoolId'), '==', schoolId);
+        const _query2 = where(nameof<DailyLesson>('date'), '>=', from.date.toIyyyyMMdd());
+        const _query3 = where(nameof<DailyLesson>('date'), '<=', to.date.toIyyyyMMdd());
+        const dailyLessons = await DailyLessonRepository.instance.getAll(_query1, _query2, _query3);
+        lessons.push(...dailyLessons.flatMap(dl => {
+            const date = yyyyMMdd.fromIyyyyMMdd(dl.date).toIyyyyMMdd("-", 1);
+            return dl.lessons.map(l => {
+                return {
+                    id: uuidv4(),
+                    title: l.studentId,
+                    start: date + " " + Time.fromITime(l.startTime).format(),
+                    end: date + " " + Time.fromITime(l.endTime).format(),
+                    data: { date }
+                }
+            });
+        }));
+
+        // compute the weekly lesson according to from and to
+        const _query4 = where(nameof<WeeklyLesson>('schoolId'), '==', schoolId);
+        const _query5 = where(nameof<WeeklyLesson>('from'), '<=', to.date.toIyyyyMMdd());
+        const _query6 = where(nameof<WeeklyLesson>('to'), '>=', from.date.toIyyyyMMdd());
+        const weeklyLessons = await WeeklyLessonRepository.instance.getAll(_query4, _query5, _query6);
+        const toDate = to.date.toDate();
+        const startingDate = from.date.toDate();
+        while (startingDate <= toDate && weeklyLessons.length > 0) {
+            weeklyLessons.forEach(w => {
+                const next = nextDay(startingDate, w.dayOfWeek);
+                if (next > toDate) return;
+                if (next > yyyyMMdd.fromIyyyyMMdd(w.to).toDate() || next < yyyyMMdd.fromIyyyyMMdd(w.from).toDate()) return;
+                const date = yyyyMMdd.fromDate(next).toIyyyyMMdd("-", 1);
+                if (lessons.find(l => l.data?.date == date)) return;
+
+                lessons.push(...w.schedule.map(s => {
+                    return {
+                        id: uuidv4(),
+                        title: s.studentId,
+                        start: date + " " + Time.fromITime(s.startTime).format(),
+                        end: date + " " + Time.fromITime(s.endTime).format(),
+                    };
+                }))
+            });
+            startingDate.setDate(startingDate.getDate() + 7);
+        }
+
+        return lessons;
     }
 
     public async getGroupedLessons(schoolLessons: SchoolLessons): Promise<LessonGroup[]> {

@@ -1,9 +1,11 @@
 import { Timestamp } from "firebase/firestore";
 import { dateFormat } from "./utils";
 import type { ID } from "./repositories/abstract-repository";
-
+import { type CalendarEvent } from '@schedule-x/calendar';
 export const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 export const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+
+export type CalendarEventExt = CalendarEvent & { data?: any };
 
 export enum DayOfWeek {
     SUNDAY,
@@ -94,8 +96,8 @@ export class yyyyMMdd {
         return new yyyyMMdd(d, m, y)
     }
 
-    toIyyyyMMdd(delimiter: string = ""): IyyyyMMdd {
-        return `${this.year.toString().padStart(4, '0')}${delimiter}${this.month.toString().padStart(2, '0')}${delimiter}${this.day.toString().padStart(2, '0')}`
+    toIyyyyMMdd(delimiter: string = "", startingMonthIndex = 0): IyyyyMMdd {
+        return `${this.year.toString().padStart(4, '0')}${delimiter}${(this.month + startingMonthIndex).toString().padStart(2, '0')}${delimiter}${this.day.toString().padStart(2, '0')}`
     }
 
     static fromDate(date: Date): yyyyMMdd {

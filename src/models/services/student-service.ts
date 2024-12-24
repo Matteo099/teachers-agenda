@@ -23,7 +23,7 @@ export class StudentService {
         return StudentRepository.instance.observeAll(_query);
     }
 
-    public async getStudentsOfSchoolWithIds(schoolId: any, studentIds: string[]): Promise<Student[]> {
+    public async getStudentsOfSchoolWithIds(schoolId: ID, studentIds: string[]): Promise<Student[]> {
         const _query1 = where(nameof<Student>('schoolId'), '==', schoolId);
         const _query2 = where(documentId(), 'in', studentIds);
         return StudentRepository.instance.getAll(_query1, _query2);
