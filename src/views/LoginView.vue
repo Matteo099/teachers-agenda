@@ -15,7 +15,7 @@
                             <v-row class="justify-center">
                                 <v-col class="px-2">
                                     <v-text-field density="compact" variant="outlined" v-model="lEmail"
-                                        v-bind="lEmailProps" type="email" label="Email"></v-text-field>
+                                        v-bind="lEmailProps" type="email" label="Email" autocomplete="on"></v-text-field>
                                 </v-col>
                             </v-row>
                             <v-row class="justify-center">
@@ -23,7 +23,7 @@
                                     <v-text-field density="compact" variant="outlined" v-model="lPassword"
                                         hint="Almeno 8 caratteri" :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
                                         v-bind="lPasswordProps" :type="show1 ? 'text' : 'password'"
-                                        @click:append-inner="show1 = !show1" counter label="Password"></v-text-field>
+                                        @click:append-inner="show1 = !show1" counter label="Password" autocomplete="on"></v-text-field>
                                 </v-col>
                             </v-row>
 
@@ -75,7 +75,7 @@
                             <v-row class="justify-center">
                                 <v-col class="px-2">
                                     <v-text-field density="compact" variant="outlined" v-model="rEmail"
-                                        v-bind="rEmailProps" type="email" label="Email"></v-text-field>
+                                        v-bind="rEmailProps" type="email" label="Email" autocomplete="on"></v-text-field>
                                 </v-col>
                             </v-row>
                             <v-row class="justify-center">
@@ -174,8 +174,7 @@ watch(display, () => {
 })
 
 watch(remember, (newValue) => {
-    if (newValue)
-        updateLocalStorage();
+    if (newValue) updateLocalStorage();
     else LocalStorageHandler.removeItem('userSettings');
 })
 

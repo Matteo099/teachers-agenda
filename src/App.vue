@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-if="!mobile" permanent v-model="drawer">
+    <v-navigation-drawer v-if="!loginPage && !mobile" permanent v-model="drawer">
       <v-list-item height="64">
         <template v-slot:prepend>
           <v-img contain :src="appLogo" height="45" width="45"></v-img>
@@ -73,7 +73,7 @@
     </v-navigation-drawer>
 
     <v-app-bar color="grey-darken-4">
-      <v-app-bar-nav-icon v-if="!mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon v-if="!loginPage && !mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-app-bar-title style="margin-left: -10px">
         <!-- <router-link to="/">
           <v-img contain :src="companyLogo" height="90" width="150"></v-img>
@@ -134,7 +134,7 @@
       </v-container>
     </v-main>
 
-    <v-layout v-if="mobile" class="overflow-visible position-relative" style="height: 56px;">
+    <v-layout v-if="!loginPage && mobile" class="overflow-visible position-relative" style="height: 56px;">
       <v-bottom-navigation class="position-fixed bottom-0" v-model="data" :bg-color="color" mode="shift">
         <v-btn to="/">
           <v-icon>mdi-home</v-icon>
@@ -185,7 +185,8 @@ const notifications: any[] = [];
 const auth = useFirebaseAuth()!;
 const theme = useTheme()
 const appLogo = new URL('@/assets/images/logor.png', import.meta.url).href
-const drawer = ref(true)
+const drawer = ref(false)
+const loginPage = ref(true)
 const appVersion = import.meta.env.VITE_APP_VERSION
 
 const tooltip = {
@@ -222,6 +223,8 @@ watch(user, async (currentUser, previousUser) => {
     return router.push(redirect);
   }
 })
+
+watch(() => route.name, () => loginPage.value = route.name == "login")
 
 function toggleTheme() {
   const currentTheme = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
