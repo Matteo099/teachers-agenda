@@ -54,7 +54,7 @@
           <v-list-item-title>Statistiche</v-list-item-title>
         </v-list-item>
 
-        <v-list-item v-if="hasRole('HANDLE_DIE')" to="/settings" color="lime-darken-4">
+        <v-list-item to="/settings" color="lime-darken-4">
           <template v-slot:prepend>
             <v-icon icon="mdi-cog"></v-icon>
           </template>
@@ -100,18 +100,25 @@
           </v-list-item>
         </v-list>
       </v-menu>
-      <div v-if="mobile">
-        <v-btn class="mx-5" icon="mdi-login" v-if="!user" @click="signIn"></v-btn>
-        <v-btn class="mx-5" icon="mdi-logout" v-if="user" @click="signOut"></v-btn>
-      </div>
-      <div v-else>
-        <v-btn class="mx-5" variant="outlined" v-if="!user" @click="signIn">
-          Accedi
-          <v-icon right class="ml-2">mdi-login</v-icon></v-btn>
-        <v-btn class="mx-5" variant="outlined" v-if="user" @click="signOut">
-          Esci
-          <v-icon right class="ml-2">mdi-logout</v-icon></v-btn>
-      </div>
+      <v-slide-x-transition hide-on-leave>
+        <div v-if="mobile">
+          <v-fab-transition>
+            <v-btn class="mx-5" icon="mdi-login" v-if="!user" to="/login"></v-btn>
+            <v-btn class="mx-5" icon="mdi-logout" v-if="user" @click="signOut(auth)"></v-btn>
+          </v-fab-transition>
+        </div>
+        <div v-else>
+          <v-fab-transition>
+            <v-btn class="mx-5" variant="outlined" v-if="!user" to="/login">
+              Accedi
+              <v-icon right class="ml-2">mdi-login</v-icon></v-btn>
+            <v-btn class="mx-5" variant="outlined" v-if="user" @click="signOut(auth)">
+              Esci
+              <v-icon right class="ml-2">mdi-logout</v-icon></v-btn>
+          </v-fab-transition>
+        </div>
+      </v-slide-x-transition>
+
     </v-app-bar>
 
     <v-main>
@@ -154,9 +161,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { signOut } from 'firebase/auth';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useCurrentUser, useFirebaseAuth } from 'vuefire';
 import { useDisplay, useTheme } from 'vuetify';
-import { useSettingsStore } from './stores/settings';
+import { LocalStorageHandler } from './models/storage/local-storage-handler';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);
@@ -170,16 +180,12 @@ const color = computed(() => {
   }
 })
 
-const user = ref(false);
 const notifications: any[] = [];
 
-const settingsStore = useSettingsStore()
+const auth = useFirebaseAuth()!;
 const theme = useTheme()
 const appLogo = new URL('@/assets/images/logor.png', import.meta.url).href
-const companyLogo = new URL('@/assets/images/logo.png', import.meta.url).href
 const drawer = ref(true)
-const userInitials = ref<string>()
-const userRoles = ref<string[]>()
 const appVersion = import.meta.env.VITE_APP_VERSION
 
 const tooltip = {
@@ -192,14 +198,38 @@ const tooltip = {
   openOnHover: false,
 };
 
+const user = useCurrentUser()
+const router = useRouter()
+const route = useRoute()
+
+watch(user, async (currentUser, previousUser) => {
+  console.log(currentUser, previousUser, typeof route.query.redirect === 'string', route.query.redirect)
+  // redirect to login if they logout and the current
+  // route is only for authenticated users
+  if (
+    !currentUser &&
+    previousUser &&
+    route.meta.requiresAuth
+  ) {
+    return router.push({ name: 'login' })
+  }
+
+  // redirect the user if they are logged in but were
+  // rejected because the user wasn't ready yet, logged in
+  // then got back to this page
+  if (currentUser) {
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/';
+    return router.push(redirect);
+  }
+})
+
 function toggleTheme() {
-  settingsStore.toggleDarkMode()
-  theme.global.name.value =
-    theme.global.name.value == 'myCustomDarkTheme' ? 'myCustomLightTheme' : 'myCustomDarkTheme'
+  const currentTheme = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
+  theme.global.name.value = currentTheme == 'myCustomDarkTheme' ? 'myCustomLightTheme' : 'myCustomDarkTheme';
+  LocalStorageHandler.setItem('theme', theme.global.name.value);
 }
 
-function signIn() { }
-function signOut() { }
-function hasRole(role: string): boolean { return true; }
-
+onMounted(() => {
+  theme.global.name.value = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
+})
 </script>
