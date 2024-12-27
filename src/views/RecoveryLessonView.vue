@@ -111,7 +111,7 @@ async function computeDailyLessons() {
         extendedRecoveries.value = await SchoolRecoveryLessonService.instance.computeDailyLessons(recoveries.value);
         console.log(extendedRecoveries);
     } catch (error) {
-        toast.warning("Impossibile caricare le Lezioni di Recupero");
+        toast.warning("Impossibile caricare le Lezioni di Recupero: "+error);
     } finally {
         loadingExtendedRecoveries.value = false;
     }

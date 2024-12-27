@@ -115,6 +115,9 @@
                 <p class="text-caption mt-1">
                   {{ user.email }}
                 </p>
+                <p class="text-caption mt-1">
+                  <b>{{ user.uid }}</b>
+                </p>
                 <v-divider class="my-3"></v-divider>
                 <v-btn variant="text" rounded to="/settings">
                   <v-icon right class="mr-2">mdi-cog</v-icon>
@@ -224,7 +227,6 @@ const userImage = computed(() => user.value?.photoURL ?? appLogo);
 const avatarColor = computed(() => stringToHslColor(userInitials.value));
 
 watch(user, async (currentUser, previousUser) => {
-  console.log(currentUser, previousUser, typeof route.query.redirect === 'string', route.query.redirect)
   // redirect to login if they logout and the current
   // route is only for authenticated users
   if (

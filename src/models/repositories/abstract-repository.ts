@@ -1,10 +1,16 @@
-import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryCompositeFilterConstraint, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData, type QueryNonFilterConstraint } from "firebase/firestore";
+import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, setDoc, where, type CollectionReference, type DocumentData } from "firebase/firestore";
+import { useCurrentUser } from "vuefire";
 import { QueryEvent, type IQueryEvent } from "../utils/event";
 
 export type ID = string;
 
 export abstract class AbstractRepository<T> {
-    protected constructor(public readonly collectionReference: CollectionReference<T, DocumentData>) { }
+    private readonly user = useCurrentUser();
+
+    protected constructor(
+        public readonly collectionReference: CollectionReference<T, DocumentData>,
+        public readonly requiresAuth: boolean = false
+    ) { }
 
     public async get(id: ID): Promise<T | undefined> {
         return (await this.getDoc(id)).data();
@@ -15,23 +21,26 @@ export abstract class AbstractRepository<T> {
     }
 
     public async getAll(...queries: QueryConstraint[]): Promise<T[]> {
-        const _query = query(this.collectionReference, ...queries);
-        const snapshot = await getDocs(_query);
-        return snapshot.docs.map(doc => doc.data());
-    }
+        if (this.requiresAuth && this.user.value) queries.push(where("userId", "==", this.user.value?.uid));
 
-    public async getAllAdv(compositeFilter: QueryCompositeFilterConstraint, ...queries: QueryNonFilterConstraint[]): Promise<T[]> {
-        const _query = query(this.collectionReference, compositeFilter, ...queries);
+        const _query = query(this.collectionReference, ...queries);
         const snapshot = await getDocs(_query);
         return snapshot.docs.map(doc => doc.data());
     }
 
     public async getAllDocs(...queries: QueryConstraint[]): Promise<QuerySnapshot<T, DocumentData>> {
+        if (this.requiresAuth && this.user.value) queries.push(where("userId", "==", this.user.value?.uid));
+
         const _query = query(this.collectionReference, ...queries);
         return await getDocs(_query);
     }
 
     public async save(obj: Partial<T> | any, id?: ID): Promise<ID> {
+        if (this.requiresAuth) {
+            if (this.user.value) obj.userId = this.user.value?.uid;
+            else throw new Error("errore durante il salvataggio di una risorsa protetta: utente non valido");
+        }
+
         if (id != undefined) {
             setDoc(doc(this.collectionReference, id), obj);
             return id;
@@ -41,6 +50,8 @@ export abstract class AbstractRepository<T> {
     }
 
     public observeAll(...queries: QueryConstraint[]): IQueryEvent<T[]> {
+        if (this.requiresAuth && this.user.value) queries.push(where("userId", "==", this.user.value?.uid));
+        
         const subscription = new QueryEvent<T[]>();
         const _query = query(this.collectionReference, ...queries);
         const unsubscibe = onSnapshot(_query, (snapshot) => {
