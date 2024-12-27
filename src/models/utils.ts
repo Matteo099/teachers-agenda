@@ -114,3 +114,13 @@ export const arraysHaveSameElements = function (arr1: string[], arr2: string[]):
 
     return sortedArr1.every((value, index) => value === sortedArr2[index]);
 }
+
+export const stringToHslColor = function (str: string, saturation: number = 30, lightness: number = 80) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const h = hash % 360;
+    return 'hsl(' + h + ', ' + saturation + '%, ' + lightness + '%)';
+}

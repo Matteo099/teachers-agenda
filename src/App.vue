@@ -53,13 +53,6 @@
           </template>
           <v-list-item-title>Statistiche</v-list-item-title>
         </v-list-item>
-
-        <v-list-item to="/settings" color="lime-darken-4">
-          <template v-slot:prepend>
-            <v-icon icon="mdi-cog"></v-icon>
-          </template>
-          <v-list-item-title>Impostazioni</v-list-item-title>
-        </v-list-item>
       </v-list>
 
       <template v-slot:append>
@@ -100,25 +93,48 @@
           </v-list-item>
         </v-list>
       </v-menu>
-      <v-slide-x-transition hide-on-leave>
-        <div v-if="mobile">
-          <v-fab-transition>
-            <v-btn class="mx-5" icon="mdi-login" v-if="!user" to="/login"></v-btn>
-            <v-btn class="mx-5" icon="mdi-logout" v-if="user" @click="signOut(auth)"></v-btn>
-          </v-fab-transition>
-        </div>
-        <div v-else>
-          <v-fab-transition>
-            <v-btn class="mx-5" variant="outlined" v-if="!user" to="/login">
-              Accedi
-              <v-icon right class="ml-2">mdi-login</v-icon></v-btn>
-            <v-btn class="mx-5" variant="outlined" v-if="user" @click="signOut(auth)">
-              Esci
-              <v-icon right class="ml-2">mdi-logout</v-icon></v-btn>
-          </v-fab-transition>
-        </div>
-      </v-slide-x-transition>
 
+      <v-menu min-width="200px" class="mr-2" rounded>
+        <template v-slot:activator="{ props }">
+          <v-btn class="mr-2" icon v-bind="props">
+            <v-avatar :color="avatarColor">
+              <v-img v-if="userImage" :src="userImage"></v-img>
+              <span v-else class="text-h7">{{ userInitials }}</span>
+            </v-avatar>
+          </v-btn>
+        </template>
+        <v-card>
+          <v-card-text>
+            <div class="mx-auto text-center">
+              <div v-if="user">
+                <v-avatar :color="avatarColor">
+                  <v-img v-if="userImage" :src="userImage"></v-img>
+                  <span v-else class="text-h7">{{ userInitials }}</span>
+                </v-avatar>
+                <h3>{{ user.displayName }}</h3>
+                <p class="text-caption mt-1">
+                  {{ user.email }}
+                </p>
+                <v-divider class="my-3"></v-divider>
+                <v-btn variant="text" rounded to="/settings">
+                  <v-icon right class="mr-2">mdi-cog</v-icon>
+                  Impostazioni
+                </v-btn>
+                <v-divider class="my-3"></v-divider>
+              </div>
+              <v-fab-transition>
+                <v-btn class="mx-5" variant="outlined" v-if="!user" to="/login">
+                  Accedi
+                  <v-icon right class="ml-2">mdi-login</v-icon></v-btn>
+
+                <v-btn class="mx-5" variant="text" v-else @click="signOut(auth)">
+                  Esci
+                  <v-icon right class="ml-2">mdi-logout</v-icon></v-btn>
+              </v-fab-transition>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-menu>
     </v-app-bar>
 
     <v-main>
@@ -162,11 +178,12 @@
 
 <script setup lang="ts">
 import { signOut } from 'firebase/auth';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch, type ComputedRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCurrentUser, useFirebaseAuth } from 'vuefire';
 import { useDisplay, useTheme } from 'vuetify';
 import { LocalStorageHandler } from './models/storage/local-storage-handler';
+import { stringToHslColor } from './models/utils';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);
@@ -202,6 +219,9 @@ const tooltip = {
 const user = useCurrentUser()
 const router = useRouter()
 const route = useRoute()
+const userInitials: ComputedRef<string> = computed(() => user.value?.displayName?.split(" ").map(s => s.charAt(0)).join("") ?? "TA");
+const userImage = computed(() => user.value?.photoURL ?? appLogo);
+const avatarColor = computed(() => stringToHslColor(userInitials.value));
 
 watch(user, async (currentUser, previousUser) => {
   console.log(currentUser, previousUser, typeof route.query.redirect === 'string', route.query.redirect)
