@@ -98,7 +98,6 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type Student, type StudentLesson } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
@@ -106,7 +105,7 @@ import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/servic
 import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
-import { doc, Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -115,7 +114,6 @@ import { useDocument } from 'vuefire';
 
 const route = useRoute();
 const router = useRouter();
-const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
 
 const selectedLessons: Ref<string[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
@@ -128,11 +126,8 @@ const saving = ref(false);
 const savingSelectedStudents = ref(false);
 const studentsDialog = ref(false);
 const visualization = ref(0);
-
-const dailyLessonSource = computed(() =>
-    doc(dailyLessonsRef, route.params.id as string)
-)
-const dailyLesson = useDocument(dailyLessonSource)
+const dailyLessonSource = DailyLessonRepository.instance.observe(route.params.id as string);
+const dailyLesson = useDocument(dailyLessonSource);
 
 const areLessonSelected = computed(() => selectedLessons.value.length != 0)
 

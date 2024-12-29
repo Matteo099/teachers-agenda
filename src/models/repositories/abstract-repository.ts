@@ -1,10 +1,32 @@
-import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryCompositeFilterConstraint, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData, type QueryNonFilterConstraint } from "firebase/firestore";
+import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData } from "firebase/firestore";
+import { useCurrentUser } from "vuefire";
 import { QueryEvent, type IQueryEvent } from "../utils/event";
+import { computed } from "vue";
 
 export type ID = string;
 
 export abstract class AbstractRepository<T> {
-    protected constructor(public readonly collectionReference: CollectionReference<T, DocumentData>) { }
+
+    private user = useCurrentUser();
+    private cache: { userId?: string, collectionReference?: CollectionReference<T, DocumentData> } = {};
+
+    protected get collectionReference(): CollectionReference<T, DocumentData> {
+        if (this.cache.userId != this.user.value?.uid || !this.cache.collectionReference) {
+            this.cache = {
+                userId: this.user.value?.uid,
+                collectionReference: this._collectionReference(this.user.value?.uid ?? "")
+            }
+        }
+        return this.cache.collectionReference!;
+    }
+
+    protected constructor(
+        private readonly _collectionReference: (userId: string) => CollectionReference<T, DocumentData>
+    ) { }
+
+    public observe(id: ID) {
+        return computed(() => doc(this.collectionReference, id as string))
+    }
 
     public async get(id: ID): Promise<T | undefined> {
         return (await this.getDoc(id)).data();
@@ -16,12 +38,6 @@ export abstract class AbstractRepository<T> {
 
     public async getAll(...queries: QueryConstraint[]): Promise<T[]> {
         const _query = query(this.collectionReference, ...queries);
-        const snapshot = await getDocs(_query);
-        return snapshot.docs.map(doc => doc.data());
-    }
-
-    public async getAllAdv(compositeFilter: QueryCompositeFilterConstraint, ...queries: QueryNonFilterConstraint[]): Promise<T[]> {
-        const _query = query(this.collectionReference, compositeFilter, ...queries);
         const snapshot = await getDocs(_query);
         return snapshot.docs.map(doc => doc.data());
     }
