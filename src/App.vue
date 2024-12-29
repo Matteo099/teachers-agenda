@@ -238,9 +238,8 @@ watch(user, async (currentUser, previousUser) => {
   // redirect the user if they are logged in but were
   // rejected because the user wasn't ready yet, logged in
   // then got back to this page
-  if (currentUser) {
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/';
-    return router.push(redirect);
+  if (currentUser && typeof route.query.redirect === 'string') {
+    return router.push(route.query.redirect);
   }
 })
 
