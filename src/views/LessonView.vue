@@ -37,8 +37,7 @@
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <WeekLessonEditor :school="school" @close="isActive.value = false; loadLessonGroup()">
-                    </WeekLessonEditor>
+                    <CalendarLessonEditor :school="school" @close="isActive.value = false; loadLessonGroup()"></CalendarLessonEditor>
                 </template>
             </v-dialog>
 
@@ -77,6 +76,7 @@ import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useDate } from 'vuetify';
 import WeekLessonEditor from '@/components/lesson/WeekLessonEditor.vue';
+import CalendarLessonEditor from '@/components/lesson/CalendarLessonEditor.vue';
 
 export interface LessonViewProps {
     school: School
