@@ -68,7 +68,7 @@ import ScheduleRecoveryLessonButton from '@/components/lesson/ScheduleRecoveryLe
 import { LessonStatus, recoveryTypes, yyyyMMdd, type School } from '@/models/model';
 import { SchoolRecoveryLessonRepository } from '@/models/repositories/school-recovery-lesson-repository';
 import { SchoolRecoveryLessonService, type ExtendedSchoolRecoveryLesson, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
-import { ref, watch, type Ref } from 'vue';
+import { computed, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
 
@@ -78,12 +78,13 @@ export interface RecoveryLessonViewProps {
 
 const props = defineProps<RecoveryLessonViewProps>();
 
+const id = computed(() => props.school.id);
+const schoolRecoveryLessonsSource = SchoolRecoveryLessonRepository.instance.observe(id);
+const recoveries = useDocument(schoolRecoveryLessonsSource);
+
 const extendedRecoveries: Ref<ExtendedSchoolRecoveryLesson | undefined> = ref();
 const loadingExtendedRecoveries = ref(false);
 const cancellingScheduleRecovery = ref(false);
-
-const schoolRecoveryLessonsSource = SchoolRecoveryLessonRepository.instance.observe(props.school.id as string);
-const recoveries = useDocument(schoolRecoveryLessonsSource);
 
 watch(recoveries, async () => computeDailyLessons());
 

@@ -81,7 +81,7 @@ import StudentView from '@/components/student/StudentView.vue';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { SchoolService } from '@/models/services/school-service';
 import { type Unsubscribe } from 'firebase/firestore';
-import { onMounted, onUnmounted, ref, type Ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDocument } from 'vuefire';
 import LessonView from './LessonView.vue';
@@ -90,12 +90,14 @@ import RecoveryLessonView from './RecoveryLessonView.vue';
 const route = useRoute()
 const router = useRouter()
 
+const id = computed(() => route.params.id as string);
+const schoolSource = SchoolRepository.instance.observe(id);
+const school = useDocument(schoolSource)
+
 const subscriptions: Unsubscribe[] = [];
 
 const notes: Ref<any[]> = ref([]);
 
-const schoolSource = SchoolRepository.instance.observe(route.params.id as string);
-const school = useDocument(schoolSource)
 
 async function deleteSchool(): Promise<boolean> {
     if (!school.value) return false;

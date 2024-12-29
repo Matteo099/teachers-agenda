@@ -1,7 +1,7 @@
 import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData } from "firebase/firestore";
 import { useCurrentUser } from "vuefire";
 import { QueryEvent, type IQueryEvent } from "../utils/event";
-import { computed } from "vue";
+import { computed, type Ref } from "vue";
 
 export type ID = string;
 
@@ -10,7 +10,7 @@ export abstract class AbstractRepository<T> {
     private user = useCurrentUser();
     private cache: { userId?: string, collectionReference?: CollectionReference<T, DocumentData> } = {};
 
-    protected get collectionReference(): CollectionReference<T, DocumentData> {
+    public get collectionReference(): CollectionReference<T, DocumentData> {
         if (this.cache.userId != this.user.value?.uid || !this.cache.collectionReference) {
             this.cache = {
                 userId: this.user.value?.uid,
@@ -24,8 +24,8 @@ export abstract class AbstractRepository<T> {
         private readonly _collectionReference: (userId: string) => CollectionReference<T, DocumentData>
     ) { }
 
-    public observe(id: ID) {
-        return computed(() => doc(this.collectionReference, id as string))
+    public observe(id: Ref<ID>) {
+        return computed(() => doc(this.collectionReference, id.value))
     }
 
     public async get(id: ID): Promise<T | undefined> {
