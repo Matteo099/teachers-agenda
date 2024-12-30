@@ -85,6 +85,10 @@ $ firebase emulators:start
     ```
 3. push updates to git
 
+    ``` sh
+    git push
+    ```
+
 4. push to git pages
 
     ``` sh
@@ -99,10 +103,6 @@ $ firebase emulators:start
     ```
 
 5. merge to main and create the release/tag
-
-    ``` sh
-    git push
-    ```
 
 ### git utils
 
