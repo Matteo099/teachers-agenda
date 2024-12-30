@@ -10,7 +10,7 @@ import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import type { SchoolLessons } from "./lesson-group-service";
 import { DailyLessonService } from "./daily-lesson-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
-import { SchoolRecoveryLessonRepository } from "../repositories/school-recovery-lesson-repository";
+import { SchoolRecoveryLessonRepository } from "../repositories/recovery-lesson-repository";
 
 export class SchoolService {
     private static _instance: SchoolService | null = null;

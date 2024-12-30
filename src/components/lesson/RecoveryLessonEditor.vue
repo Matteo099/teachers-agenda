@@ -32,16 +32,17 @@
 </template>
 
 <script setup lang="ts">
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, Time, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type Student, type WeeklyLesson } from '@/models/model';
-import { nameof } from '@/models/utils';
-import { addDoc, doc, getDocs, query, setDoc, Timestamp, where } from 'firebase/firestore';
+import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
+import { DailyLessonService } from '@/models/services/daily-lesson-service';
+import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
+import { Timestamp } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 import { useForm, type GenericObject } from 'vee-validate';
 import { ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import DailyLessonStudentList from './DailyLessonStudentList.vue';
-import { v4 as uuidv4 } from 'uuid';
 
 interface WeekLessonEditorProps {
     schoolId: string;
@@ -51,8 +52,6 @@ interface WeekLessonEditorProps {
 
 const emit = defineEmits(['close', 'save'])
 const props = defineProps<WeekLessonEditorProps>()
-const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
-const weekLessonsRef = useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS);
 
 const modalTimePicker = ref(false);
 const dailyLesson: Ref<Partial<DailyLesson> | undefined> = ref();
@@ -99,16 +98,7 @@ async function loadDailyLesson() {
     // load dailyLesson
     loadingDailyLesson.value = true;
     try {
-        const dailyLessonsQuery = query(
-            dailyLessonsRef,
-            where(nameof<DailyLesson>('schoolId'), '==', props.schoolId),
-            where(nameof<DailyLesson>('date'), '==', currentDate)
-        );
-        const snapshot = await getDocs(dailyLessonsQuery)
-        const data = snapshot.docs.map(doc => doc.data());
-        console.log("Current data: ", snapshot, data);
-
-        dailyLesson.value = data?.[0];
+        dailyLesson.value = (await DailyLessonService.instance.getDailyLessonOfSchoolByDate(props.schoolId, currentDate))?.[0];
         if (dailyLesson.value == undefined) {
             const wl = await loadWeeklyLesson(currentDate);
             let dl: Partial<DailyLesson>;
@@ -150,15 +140,8 @@ async function loadWeeklyLesson(currentDate: IyyyyMMdd): Promise<WeeklyLesson | 
     const _date = date.value as Date;
     const dayOfWeek = _date.getDay();
 
-    const q = query(weekLessonsRef,
-        where(nameof<WeeklyLesson>('schoolId'), '==', props.schoolId),
-        where(nameof<WeeklyLesson>('dayOfWeek'), '==', dayOfWeek),
-        where(nameof<WeeklyLesson>('from'), '<=', currentDate),
-        where(nameof<WeeklyLesson>('to'), '>=', currentDate),
-    );
-    const snapshot = await getDocs(q);
-    const data = snapshot.docs.map(doc => doc.data())
-    console.log("Current data: ", snapshot, data);
+    const data = await WeeklyLessonService.instance.getWeeklyLessonOfSchoolByDayBetweenDate(props.schoolId, dayOfWeek, currentDate)
+    console.log("Current data: ", data);
     return data?.[0];
 }
 
@@ -201,11 +184,11 @@ async function save(values: GenericObject) {
     saving.value = true;
     try {
         if (dailyLesson.value.id != undefined) {
-            const docRef = await setDoc(doc(dailyLessonsRef, dailyLesson.value.id), dailyLesson.value);
-            console.log("Document (dailyLesson) update with ID: ", dailyLesson.value.id, docRef);
+            await DailyLessonRepository.instance.save(dailyLesson.value, dailyLesson.value.id)
+            console.log("Document (dailyLesson) update with ID: ", dailyLesson.value.id);
         } else {
-            const docRef = await addDoc(dailyLessonsRef, dailyLesson.value);
-            console.log("Document (daily lesson) created with ID: ", docRef.id);
+            const dailyLessonId = await DailyLessonRepository.instance.save(dailyLesson.value)
+            console.log("Document (daily lesson) created with ID: ", dailyLessonId);
         }
         emit('save', dailyLesson.value);
     } catch (e) {

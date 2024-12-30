@@ -1,7 +1,7 @@
 import { LessonStatus, type DailyLesson, type Lesson, type LessonRef, type RecoveryInfo, type RecoveryLessonInfo, type RecoverySchedule, type SchoolRecoveryLesson, type Student, type StudentLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
-import { SchoolRecoveryLessonRepository } from "../repositories/school-recovery-lesson-repository";
+import { SchoolRecoveryLessonRepository } from "../repositories/recovery-lesson-repository";
 import { DailyLessonService } from "./daily-lesson-service";
 import { StudentService } from "./student-service";
 

@@ -58,7 +58,6 @@ import { onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 
-// const studentsRef = useDB<Student>(DatabaseRef.STUDENTS);
 const props = defineProps<{ school: School, initialStudent?: Student, edit?: boolean }>()
 const emit = defineEmits(['close', 'save'])
 

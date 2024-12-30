@@ -224,7 +224,6 @@ const userImage = computed(() => user.value?.photoURL ?? appLogo);
 const avatarColor = computed(() => stringToHslColor(userInitials.value));
 
 watch(user, async (currentUser, previousUser) => {
-  console.log(currentUser, previousUser, typeof route.query.redirect === 'string', route.query.redirect)
   // redirect to login if they logout and the current
   // route is only for authenticated users
   if (
@@ -239,8 +238,10 @@ watch(user, async (currentUser, previousUser) => {
   // rejected because the user wasn't ready yet, logged in
   // then got back to this page
   if (currentUser) {
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/';
-    return router.push(redirect);
+    if (typeof route.query.redirect === 'string')
+      return router.push(route.query.redirect);
+    else if (route.name == "login")
+      return router.push("/");
   }
 })
 

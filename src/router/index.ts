@@ -31,7 +31,7 @@ const router = createRouter({
       path: '/lesson/:id',
       name: 'lesson',
       meta: { requiresAuth: true },
-      component: () => import('../views/LessonView.vue')
+      component: () => import('../views/DailyLessonView.vue')
     },
     {
       path: '/recoveries',
