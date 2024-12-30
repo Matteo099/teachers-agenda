@@ -1,4 +1,7 @@
-export type UserSettings = {name: string}
+export type UserSettings = { 
+    name: string,
+    debuggerEnabled: boolean
+}
 
 export type LocalStorageValues = {
     theme: string,

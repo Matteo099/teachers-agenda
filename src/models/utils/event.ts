@@ -7,16 +7,18 @@ export type EventHandler<T> = {
 };
 
 export interface IQueryEvent<T> {
-    subscribe(handler: EventHandler<T>): EventSubscription;
+    subscribe(handler: EventHandler<T>, immediate: boolean): EventSubscription;
     unsubscribe(handler: EventHandler<T>): void;
 }
 
 export class QueryEvent<T> implements IQueryEvent<T> {
     private handlers: EventHandler<T>[] = [];
     private unsubscription?: Unsubscribe;
+    private cache?: T;
 
-    public subscribe(handler: EventHandler<T>): EventSubscription {
+    public subscribe(handler: EventHandler<T>, immediate: boolean = false): EventSubscription {
         this.handlers.push(handler);
+        if(immediate && this.cache != undefined) handler.next(this.cache);
         return new EventSubscription(this, handler);
     }
 
@@ -39,6 +41,7 @@ export class QueryEvent<T> implements IQueryEvent<T> {
     }
 
     public next(data: T) {
+        this.cache = data;
         [...this.handlers].forEach(h => h.next(data))
     }
 
