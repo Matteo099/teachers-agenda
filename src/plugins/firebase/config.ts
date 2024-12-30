@@ -1,6 +1,7 @@
 export default {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: "teachers-agenda.firebaseapp.com",
+    authDomain: "matteo099.github.io",
+    // authDomain: "teachers-agenda.firebaseapp.com",
     projectId: "teachers-agenda",
     storageBucket: "teachers-agenda.appspot.com",
     messagingSenderId: "56057008308",
