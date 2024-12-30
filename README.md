@@ -83,8 +83,9 @@ $ firebase emulators:start
     ``` sh
     npm run build
     ```
+3. push updates to git
 
-3. push to git pages
+4. push to git pages
 
     ``` sh
     git subtree push --prefix dist origin gh-pages
@@ -97,7 +98,7 @@ $ firebase emulators:start
     git subtree push --prefix dist origin gh-pages
     ```
 
-4. push to main
+5. merge to main and create the release/tag
 
     ``` sh
     git push
