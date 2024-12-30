@@ -14,8 +14,8 @@
 
 <script setup lang="ts">
 import BackButton from '@/components/inputs/BackButton.vue';
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { Time, yyyyMMdd, type CalendarEventExt, type School } from '@/models/model';
+import { Time, yyyyMMdd, type CalendarEventExt } from '@/models/model';
+import { SchoolRepository } from '@/models/repositories/school-repository';
 import { LessonGroupService } from '@/models/services/lesson-group-service';
 import { StudentService } from '@/models/services/student-service';
 import {
@@ -30,7 +30,6 @@ import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
 import { createEventModalPlugin } from '@schedule-x/event-modal';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { ScheduleXCalendar } from '@schedule-x/vue';
-import { doc } from 'firebase/firestore';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDocument } from 'vuefire';
@@ -41,12 +40,11 @@ interface DateRange {
 }
 
 const route = useRoute()
-const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
 
-const schoolSource = computed(() =>
-    doc(schoolsRef, route.params.id as string)
-)
+const id = computed(() => route.params.id as string);
+const schoolSource = SchoolRepository.instance.observe(id);
 const school = useDocument(schoolSource)
+
 const lessons: CalendarEventExt[] = [];
 const loading = ref(false);
 

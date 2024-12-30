@@ -77,17 +77,13 @@ $ firebase emulators:start
 ### github pages
 
 1. Update package.json version
+
 2. run 
 
     ``` sh
     npm run build
     ```
-
-3. push to main
-
-    ``` sh
-    git push
-    ```
+3. push updates to git
 
 4. push to git pages
 
@@ -100,4 +96,24 @@ $ firebase emulators:start
     ``` sh
     git push origin --delete gh-pages
     git subtree push --prefix dist origin gh-pages
+    ```
+
+5. merge to main and create the release/tag
+
+    ``` sh
+    git push
+    ```
+
+### git utils
+
+- Delete useless branches:
+
+    ``` sh
+    git fetch --prune
+    ```
+
+- Delete local branch
+    
+    ``` sh
+    git branch -D db-auth-based-on-doc-key
     ```

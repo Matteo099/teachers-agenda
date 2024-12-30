@@ -4,9 +4,9 @@ import { AbstractRepository } from "./abstract-repository";
 
 export class StudentRepository extends AbstractRepository<Student> {
     private static _instance: StudentRepository | null = null;
-      
+
     constructor() {
-        super(useDB<Student>(DatabaseRef.STUDENTS))
+        super((userId: string) => useDB<Student>(DatabaseRef.STUDENTS, userId))
     }
 
     public static get instance(): StudentRepository {

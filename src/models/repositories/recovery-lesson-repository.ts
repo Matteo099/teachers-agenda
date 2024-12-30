@@ -1,12 +1,12 @@
 import { DatabaseRef, useDB } from "../firestore-utils";
-import type { SchoolRecoveryLesson, WeeklyLesson } from "../model";
+import type { SchoolRecoveryLesson } from "../model";
 import { AbstractRepository } from "./abstract-repository";
 
 export class SchoolRecoveryLessonRepository extends AbstractRepository<SchoolRecoveryLesson> {
     private static _instance: SchoolRecoveryLessonRepository | null = null;
 
     constructor() {
-        super(useDB<SchoolRecoveryLesson>(DatabaseRef.SCHOOL_RECOVERY_LESSONS))
+        super((userId: string) => useDB<SchoolRecoveryLesson>(DatabaseRef.RECOVERY_LESSONS, userId))
     }
 
     public static get instance(): SchoolRecoveryLessonRepository {

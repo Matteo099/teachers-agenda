@@ -78,10 +78,9 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import StudentView from '@/components/student/StudentView.vue';
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import type { School } from '@/models/model';
+import { SchoolRepository } from '@/models/repositories/school-repository';
 import { SchoolService } from '@/models/services/school-service';
-import { doc, type Unsubscribe } from 'firebase/firestore';
+import { type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDocument } from 'vuefire';
@@ -90,16 +89,15 @@ import RecoveryLessonView from './RecoveryLessonView.vue';
 
 const route = useRoute()
 const router = useRouter()
-const schoolsRef = useDB<School>(DatabaseRef.SCHOOLS);
+
+const id = computed(() => route.params.id as string);
+const schoolSource = SchoolRepository.instance.observe(id);
+const school = useDocument(schoolSource)
 
 const subscriptions: Unsubscribe[] = [];
 
 const notes: Ref<any[]> = ref([]);
 
-const schoolSource = computed(() =>
-    doc(schoolsRef, route.params.id as string)
-)
-const school = useDocument(schoolSource)
 
 async function deleteSchool(): Promise<boolean> {
     if (!school.value) return false;
