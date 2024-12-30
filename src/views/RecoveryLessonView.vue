@@ -64,31 +64,27 @@
 </template>
 
 <script setup lang="ts">
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
-import { LessonStatus, recoveryTypes, yyyyMMdd, type School, type SchoolRecoveryLesson } from '@/models/model';
+import ScheduleRecoveryLessonButton from '@/components/lesson/ScheduleRecoveryLessonButton.vue';
+import { LessonStatus, recoveryTypes, yyyyMMdd, type School } from '@/models/model';
+import { SchoolRecoveryLessonRepository } from '@/models/repositories/recovery-lesson-repository';
 import { SchoolRecoveryLessonService, type ExtendedSchoolRecoveryLesson, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
-import { doc } from 'firebase/firestore';
 import { computed, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
-import ScheduleRecoveryLessonButton from '@/components/lesson/ScheduleRecoveryLessonButton.vue';
 
 export interface RecoveryLessonViewProps {
     school: School
 }
 
 const props = defineProps<RecoveryLessonViewProps>();
-const schoolRecoveryLessonsRef = useDB<SchoolRecoveryLesson>(DatabaseRef.SCHOOL_RECOVERY_LESSONS);
+
+const id = computed(() => props.school.id);
+const schoolRecoveryLessonsSource = SchoolRecoveryLessonRepository.instance.observe(id);
+const recoveries = useDocument(schoolRecoveryLessonsSource);
 
 const extendedRecoveries: Ref<ExtendedSchoolRecoveryLesson | undefined> = ref();
 const loadingExtendedRecoveries = ref(false);
 const cancellingScheduleRecovery = ref(false);
-
-const schoolRecoveryLessonsSource = computed(() =>
-    doc(schoolRecoveryLessonsRef, props.school.id as string)
-)
-const recoveries = useDocument(schoolRecoveryLessonsSource)
-
 
 watch(recoveries, async () => computeDailyLessons());
 

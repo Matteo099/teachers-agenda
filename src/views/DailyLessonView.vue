@@ -1,5 +1,5 @@
 <template>
-    <v-container fluid v-if="dailyLesson">
+    <v-container fluid v-if="dailyLesson && !loading">
         <v-row class="justify-center align-center mb-6">
             <v-col cols="auto">
                 <BackButton></BackButton>
@@ -74,10 +74,11 @@
                 </DailyLessonCalendar>
 
                 <v-timeline v-else side="end" truncate-line="both">
-                    <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id" :dot-color="getColor(item)"
-                        size="small">
-                        <LessonItem v-model:item="studentLessons[index]" v-model:select="selectedLessons"
-                            @present="present(item)" @absent="absent(item)" @cancel="cancel(item)" @reset="reset(item)"
+                    <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id + dailyLesson.id"
+                        :dot-color="getColor(item)" size="small">
+                        <LessonItem :key="item.id + dailyLesson.id" v-model:item="studentLessons[index]"
+                            v-model:select="selectedLessons" @present="present(item)" @absent="absent(item)"
+                            @cancel="cancel(item)" @reset="reset(item)"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
                             @notes="notes(item)" :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
                         </LessonItem>
@@ -90,6 +91,14 @@
             <v-progress-circular color="primary" size="64" indeterminate></v-progress-circular>
         </v-overlay>
     </v-container>
+
+    <v-container fluid v-else>
+        <v-skeleton-loader class="mx-auto" type="heading"></v-skeleton-loader>
+        <v-skeleton-loader class="mx-auto justify-center"
+            type="chip, chip, chip, chip, chip, chip, chip"></v-skeleton-loader>
+        <v-skeleton-loader v-for="i in 3" :key="i" class="mx-auto justify-center mt-4" max-width="75%" elevation=3
+            type="sentences, chip, chip, chip, chip"></v-skeleton-loader>
+    </v-container>
 </template>
 
 <script setup lang="ts">
@@ -98,15 +107,15 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
-import { DatabaseRef, useDB } from '@/models/firestore-utils';
 import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type Student, type StudentLesson } from '@/models/model';
+import type { ID } from '@/models/repositories/abstract-repository';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
-import { doc, Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -115,7 +124,10 @@ import { useDocument } from 'vuefire';
 
 const route = useRoute();
 const router = useRouter();
-const dailyLessonsRef = useDB<DailyLesson>(DatabaseRef.DAILY_LESSONS);
+
+const id = computed(() => route.params.id as string);
+const dailyLessonSource = DailyLessonRepository.instance.observe(id);
+const dailyLesson = useDocument(dailyLessonSource);
 
 const selectedLessons: Ref<string[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
@@ -127,16 +139,15 @@ const loadingAllStudents = ref(false);
 const saving = ref(false);
 const savingSelectedStudents = ref(false);
 const studentsDialog = ref(false);
+const routeChanged = ref(true);
 const visualization = ref(0);
 
-const dailyLessonSource = computed(() =>
-    doc(dailyLessonsRef, route.params.id as string)
-)
-const dailyLesson = useDocument(dailyLessonSource)
-
 const areLessonSelected = computed(() => selectedLessons.value.length != 0)
+const loading = computed(() => loadingStudents.value || !dailyLesson.value || routeChanged.value);
+let currentDailyLessonId: ID | undefined = undefined;
 
 watch(dailyLesson, () => updateStudentLesson())
+watch(dailyLessonSource, () => routeChanged.value = true)
 watch(selectedLessons, () => {
     if (selectedLessons.value.length == 0)
         selectAllLessons.value = false
@@ -290,22 +301,20 @@ async function deleteStudentLesson(student: StudentLesson) {
 }
 
 async function updateStudentLesson() {
+    routeChanged.value = false;
+
     if (!dailyLesson.value) return;
 
     const currentStudentsId: string[] = studentLessons.value.map(s => s.studentId);
     const newStudentsId: string[] = dailyLesson.value.lessons.map(l => l.studentId);
 
     const differentStudents = !arraysHaveSameElements(currentStudentsId, newStudentsId);
-    if (!differentStudents) return;
+    if (!differentStudents && currentDailyLessonId == dailyLesson.value.id) return;
 
     loadingStudents.value = true;
 
+    currentDailyLessonId = dailyLesson.value.id;
     studentLessons.value = await StudentLessonService.instance.getStudentLesson(dailyLesson.value, newStudentsId);
-    // const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.value.schoolId, newStudentsId);
-    // studentLessons.value = dailyLesson.value.lessons.map(l => {
-    //     const s = data.find(st => st.id == l.studentId)!;
-    //     return { ...l, ...s };
-    // });
 
     loadingStudents.value = false;
 }
@@ -375,6 +384,7 @@ onUnmounted(() => {
 })
 
 onMounted(async () => {
+    window.scrollTo(0, 0);
     // scrollToCurrentLesson();
 })
 

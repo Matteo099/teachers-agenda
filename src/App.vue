@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-if="!mobile" permanent v-model="drawer">
+    <v-navigation-drawer v-if="!loginPage && !mobile" permanent v-model="drawer">
       <v-list-item height="64">
         <template v-slot:prepend>
           <v-img contain :src="appLogo" height="45" width="45"></v-img>
@@ -53,13 +53,6 @@
           </template>
           <v-list-item-title>Statistiche</v-list-item-title>
         </v-list-item>
-
-        <v-list-item v-if="hasRole('HANDLE_DIE')" to="/settings" color="lime-darken-4">
-          <template v-slot:prepend>
-            <v-icon icon="mdi-cog"></v-icon>
-          </template>
-          <v-list-item-title>Impostazioni</v-list-item-title>
-        </v-list-item>
       </v-list>
 
       <template v-slot:append>
@@ -73,7 +66,7 @@
     </v-navigation-drawer>
 
     <v-app-bar color="grey-darken-4">
-      <v-app-bar-nav-icon v-if="!mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon v-if="!loginPage && !mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-app-bar-title style="margin-left: -10px">
         <!-- <router-link to="/">
           <v-img contain :src="companyLogo" height="90" width="150"></v-img>
@@ -100,18 +93,48 @@
           </v-list-item>
         </v-list>
       </v-menu>
-      <div v-if="mobile">
-        <v-btn class="mx-5" icon="mdi-login" v-if="!user" @click="signIn"></v-btn>
-        <v-btn class="mx-5" icon="mdi-logout" v-if="user" @click="signOut"></v-btn>
-      </div>
-      <div v-else>
-        <v-btn class="mx-5" variant="outlined" v-if="!user" @click="signIn">
-          Accedi
-          <v-icon right class="ml-2">mdi-login</v-icon></v-btn>
-        <v-btn class="mx-5" variant="outlined" v-if="user" @click="signOut">
-          Esci
-          <v-icon right class="ml-2">mdi-logout</v-icon></v-btn>
-      </div>
+
+      <v-menu min-width="200px" class="mr-2" rounded>
+        <template v-slot:activator="{ props }">
+          <v-btn class="mr-2" icon v-bind="props">
+            <v-avatar :color="avatarColor">
+              <v-img v-if="userImage" :src="userImage"></v-img>
+              <span v-else class="text-h7">{{ userInitials }}</span>
+            </v-avatar>
+          </v-btn>
+        </template>
+        <v-card>
+          <v-card-text>
+            <div class="mx-auto text-center">
+              <div v-if="user">
+                <v-avatar :color="avatarColor">
+                  <v-img v-if="userImage" :src="userImage"></v-img>
+                  <span v-else class="text-h7">{{ userInitials }}</span>
+                </v-avatar>
+                <h3>{{ user.displayName }}</h3>
+                <p class="text-caption mt-1">
+                  {{ user.email }}
+                </p>
+                <v-divider class="my-3"></v-divider>
+                <v-btn variant="text" rounded to="/settings">
+                  <v-icon right class="mr-2">mdi-cog</v-icon>
+                  Impostazioni
+                </v-btn>
+                <v-divider class="my-3"></v-divider>
+              </div>
+              <v-fab-transition>
+                <v-btn class="mx-5" variant="outlined" v-if="!user" to="/login">
+                  Accedi
+                  <v-icon right class="ml-2">mdi-login</v-icon></v-btn>
+
+                <v-btn class="mx-5" variant="text" v-else @click="signOut(auth)">
+                  Esci
+                  <v-icon right class="ml-2">mdi-logout</v-icon></v-btn>
+              </v-fab-transition>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-menu>
     </v-app-bar>
 
     <v-main>
@@ -127,7 +150,7 @@
       </v-container>
     </v-main>
 
-    <v-layout v-if="mobile" class="overflow-visible position-relative" style="height: 56px;">
+    <v-layout v-if="!loginPage && mobile" class="overflow-visible position-relative" style="height: 56px;">
       <v-bottom-navigation class="position-fixed bottom-0" v-model="data" :bg-color="color" mode="shift">
         <v-btn to="/">
           <v-icon>mdi-home</v-icon>
@@ -154,9 +177,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { signOut } from 'firebase/auth';
+import { computed, onMounted, ref, watch, type ComputedRef } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useCurrentUser, useFirebaseAuth } from 'vuefire';
 import { useDisplay, useTheme } from 'vuetify';
-import { useSettingsStore } from './stores/settings';
+import { LocalStorageHandler } from './models/storage/local-storage-handler';
+import { stringToHslColor } from './models/utils';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);
@@ -170,16 +197,13 @@ const color = computed(() => {
   }
 })
 
-const user = ref(false);
 const notifications: any[] = [];
 
-const settingsStore = useSettingsStore()
+const auth = useFirebaseAuth()!;
 const theme = useTheme()
 const appLogo = new URL('@/assets/images/logor.png', import.meta.url).href
-const companyLogo = new URL('@/assets/images/logo.png', import.meta.url).href
-const drawer = ref(true)
-const userInitials = ref<string>()
-const userRoles = ref<string[]>()
+const drawer = ref(false)
+const loginPage = ref(true)
 const appVersion = import.meta.env.VITE_APP_VERSION
 
 const tooltip = {
@@ -192,14 +216,44 @@ const tooltip = {
   openOnHover: false,
 };
 
+const user = useCurrentUser()
+const router = useRouter()
+const route = useRoute()
+const userInitials: ComputedRef<string> = computed(() => user.value?.displayName?.split(" ").map(s => s.charAt(0)).join("") ?? "TA");
+const userImage = computed(() => user.value?.photoURL ?? appLogo);
+const avatarColor = computed(() => stringToHslColor(userInitials.value));
+
+watch(user, async (currentUser, previousUser) => {
+  // redirect to login if they logout and the current
+  // route is only for authenticated users
+  if (
+    !currentUser &&
+    previousUser &&
+    route.meta.requiresAuth
+  ) {
+    return router.push({ name: 'login' })
+  }
+
+  // redirect the user if they are logged in but were
+  // rejected because the user wasn't ready yet, logged in
+  // then got back to this page
+  if (currentUser) {
+    if (typeof route.query.redirect === 'string')
+      return router.push(route.query.redirect);
+    else if (route.name == "login")
+      return router.push("/");
+  }
+})
+
+watch(() => route.name, () => loginPage.value = route.name == "login")
+
 function toggleTheme() {
-  settingsStore.toggleDarkMode()
-  theme.global.name.value =
-    theme.global.name.value == 'myCustomDarkTheme' ? 'myCustomLightTheme' : 'myCustomDarkTheme'
+  const currentTheme = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
+  theme.global.name.value = currentTheme == 'myCustomDarkTheme' ? 'myCustomLightTheme' : 'myCustomDarkTheme';
+  LocalStorageHandler.setItem('theme', theme.global.name.value);
 }
 
-function signIn() { }
-function signOut() { }
-function hasRole(role: string): boolean { return true; }
-
+onMounted(() => {
+  theme.global.name.value = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
+})
 </script>

@@ -2,6 +2,7 @@ import { getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import config from "./config";
+import { GoogleAuthProvider } from 'firebase/auth';
 
 function initialize(existingApp?: FirebaseApp) {
     const firebaseApp = existingApp || initializeApp(config);
@@ -23,3 +24,5 @@ export default function getFirebase() {
     const existingApp = getApps()[0];
     return initialize(existingApp);
 }
+
+export const googleAuthProvider = new GoogleAuthProvider()

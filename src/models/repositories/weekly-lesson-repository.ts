@@ -6,7 +6,7 @@ export class WeeklyLessonRepository extends AbstractRepository<WeeklyLesson> {
     private static _instance: WeeklyLessonRepository | null = null;
 
     constructor() {
-        super(useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS))
+        super((userId: string) => useDB<WeeklyLesson>(DatabaseRef.WEEKLY_LESSONS, userId))
     }
 
     public static get instance(): WeeklyLessonRepository {

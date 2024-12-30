@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import type { ManagerOptions } from '@/models/model';
 import { useForm, type GenericObject } from 'vee-validate';
-import { onMounted, watch } from 'vue';
+import { watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 
@@ -76,7 +76,7 @@ const onSave = handleSubmit(
     }
 )
 
-watch(() => props.initialManagerOptions, () => updateManagerOptions())
+watch(() => props.initialManagerOptions, () => updateManagerOptions(), { immediate: true })
 
 function updateManagerOptions() {
     if (props.initialManagerOptions) {
@@ -85,6 +85,4 @@ function updateManagerOptions() {
         cashFund.value = props.initialManagerOptions.cashFund;
     }
 }
-
-onMounted(() => updateManagerOptions())
 </script>
