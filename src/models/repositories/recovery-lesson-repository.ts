@@ -6,7 +6,7 @@ export class SchoolRecoveryLessonRepository extends AbstractRepository<SchoolRec
     private static _instance: SchoolRecoveryLessonRepository | null = null;
 
     constructor() {
-        super((userId: string) => useDB<SchoolRecoveryLesson>(DatabaseRef.SCHOOL_RECOVERY_LESSONS, userId))
+        super((userId: string) => useDB<SchoolRecoveryLesson>(DatabaseRef.RECOVERY_LESSONS, userId))
     }
 
     public static get instance(): SchoolRecoveryLessonRepository {

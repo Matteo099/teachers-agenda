@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import ScheduleRecoveryLessonButton from '@/components/lesson/ScheduleRecoveryLessonButton.vue';
 import { LessonStatus, recoveryTypes, yyyyMMdd, type School } from '@/models/model';
-import { SchoolRecoveryLessonRepository } from '@/models/repositories/school-recovery-lesson-repository';
+import { SchoolRecoveryLessonRepository } from '@/models/repositories/recovery-lesson-repository';
 import { SchoolRecoveryLessonService, type ExtendedSchoolRecoveryLesson, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
 import { computed, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
