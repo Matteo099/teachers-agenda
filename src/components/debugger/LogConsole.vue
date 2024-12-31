@@ -4,14 +4,14 @@
             <v-system-bar color="pink-darken-2" style="height: 35px">
                 <v-btn class="ms-1" density="compact" variant="text" icon="mdi-dots-vertical"
                     @click="toggleMore"></v-btn>
-                <v-btn class="ms-1" density="compact" variant="text" icon="mdi-format-vertical-align-top"
-                    @click="toggleFollow"></v-btn>
+                <v-btn class="ms-1" density="compact" variant="text" icon="mdi-format-vertical-align-bottom"
+                    :color="follow ? 'yellow' : ''" @click="toggleFollow"></v-btn>
                 <v-btn class="ms-1" density="compact" variant="text" icon="mdi-content-copy" @click="copy"></v-btn>
                 <v-spacer></v-spacer>
                 <v-btn class="ms-1" density="compact" variant="text" icon="mdi-delete" @click="clear"></v-btn>
             </v-system-bar>
             <v-main>
-                <v-row class="pa-0">
+                <v-row class="pa-0 pt-3">
                     <v-slide-x-transition hide-on-leave>
                         <v-col class="my-4 border-e-thin" v-if="more">
                             <v-list :lines="false" density="compact" nav>
@@ -23,12 +23,14 @@
 
                                     <v-list-item-title>{{ item.text() }}</v-list-item-title>
                                 </v-list-item>
+
+                                <v-btn @click="toggleTimer">start</v-btn>
                             </v-list>
                         </v-col>
                     </v-slide-x-transition>
 
                     <v-col :md="more ? 10 : 12">
-                        <v-card-text class="console-output px-2">
+                        <v-card-text class="console-output px-2" ref="consoleOutput">
                             <v-card v-for="(log, index) in logs" :key="index" class="log-entry my-1 pa-1">
                                 <p class="text-caption" v-if="log.level == LogLevel.ERROR">
                                     <v-icon color="error" class="mr-2">mdi-close-octagon</v-icon>
@@ -53,7 +55,7 @@
 
 <script setup lang="ts">
 import type { EventSubscription } from '@/models/utils/event';
-import { onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import { onMounted, onUnmounted, ref, useTemplateRef, watch, type Ref } from 'vue';
 import { Debugger, LogLevel, type Log } from './debugger';
 
 interface LogConsoleProps {
@@ -66,7 +68,9 @@ const props = withDefaults(defineProps<LogConsoleProps>(), {
 
 const allLogs: Ref<Log[]> = ref([]);
 const logs: Ref<Log[]> = ref([]);
-const more = ref(false);
+const more = ref(true);
+const follow = ref(true);
+const consoleOutput = useTemplateRef("consoleOutput");
 const status = [
     { text: () => `Totale ${allLogs.value.length}`, icon: 'mdi-format-list-bulleted', color: "", type: LogLevel.ALL },
     { text: () => `Errori ${allLogs.value.filter(l => l.level == LogLevel.ERROR).length}`, icon: 'mdi-close-octagon', color: "error", type: LogLevel.ERROR },
@@ -77,9 +81,10 @@ const filter: Ref<LogLevel | undefined> = ref();
 let subscription: EventSubscription | undefined = undefined;
 
 watch(filter, () => {
-    if (filter.value== undefined || filter.value == LogLevel.ALL)
+    if (filter.value == undefined || filter.value == LogLevel.ALL)
         logs.value = allLogs.value;
     else logs.value = allLogs.value.filter(l => l.level == filter.value);
+    updateConsoleCursor();
 });
 
 function clear() {
@@ -87,18 +92,17 @@ function clear() {
 }
 
 async function copy() {
-    console.warn("copy()");
-    const copyText = logs.value.map(l => l.timestamp.toJSON() +" - "+ l.message).join("\n");
+    const copyText = logs.value.map(l => l.timestamp.toJSON() + " - " + l.message).join("\n");
     navigator.clipboard.writeText(copyText);
 }
 
 function toggleMore() {
-    console.error("toggleMore()");
     more.value = !more.value;
 }
 
 function toggleFollow() {
-    console.log("toggleFollow()");
+    follow.value = !follow.value;
+    updateConsoleCursor();
 }
 
 function toggleFilter(level: LogLevel) {
@@ -106,9 +110,36 @@ function toggleFilter(level: LogLevel) {
     else filter.value = level;
 }
 
+function updateLogs(l: Log[]) {
+    logs.value = allLogs.value = [...l].splice(0, props.bufferSize)
+    updateConsoleCursor();
+}
+
+function updateConsoleCursor() {
+    if (!follow.value) return;
+
+    setTimeout(() => {
+        consoleOutput.value?.$el.scrollTo({ top: consoleOutput.value?.$el.scrollHeight, behavior: 'smooth' });
+    }, 100);
+}
+
+let interval: number | undefined;
+function toggleTimer() {
+    if (interval != undefined) {
+        clearInterval(interval);
+        interval = undefined;
+        return;
+    }
+    interval = setInterval(() => {
+        for (let index = 0; index < 5; index++) {
+            console.error("Ciao");
+        }
+    }, 1000)
+}
+
 onMounted(() => {
     subscription = Debugger.instance.subscription.subscribe({
-        next: (l: Log[]) => logs.value = allLogs.value = [...l].reverse().splice(0, props.bufferSize)
+        next: (l: Log[]) => updateLogs(l)
     }, true);
 })
 
@@ -136,13 +167,4 @@ onUnmounted(() => {
     padding: 16px;
     font-family: monospace;
 }
-
-/* .log-entry {
-    margin-bottom: 8px;
-}
-
-.log-entry pre {
-    margin: 0;
-    word-break: break-word;
-} */
 </style>
