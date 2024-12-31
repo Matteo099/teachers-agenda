@@ -9,8 +9,11 @@
             </v-col>
         </v-row>
         <v-row>
-            <v-col>
+            <v-col v-if="debugEnabled">
                 <LogConsole></LogConsole>
+            </v-col>
+            <v-col class="text-center" v-else>
+                <p>La console di debug non è abilitata. Abilitala tramite le <v-btn to="settings" variant="text"><v-icon>mdi-link</v-icon> impostazioni</v-btn></p>
             </v-col>
         </v-row>
     </v-container>
@@ -19,5 +22,12 @@
 <script setup lang="ts">
 import LogConsole from '@/components/debugger/LogConsole.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
+import { LocalStorageHandler } from '@/models/storage/local-storage-handler';
+import { onMounted, ref } from 'vue';
 
+const debugEnabled = ref(false);
+
+onMounted(() => {
+    debugEnabled.value = LocalStorageHandler.getItem('debugEnabled') ?? false;
+});
 </script>

@@ -23,8 +23,6 @@
 
                                     <v-list-item-title>{{ item.text() }}</v-list-item-title>
                                 </v-list-item>
-
-                                <v-btn @click="toggleTimer">start</v-btn>
                             </v-list>
                         </v-col>
                     </v-slide-x-transition>
@@ -121,20 +119,6 @@ function updateConsoleCursor() {
     setTimeout(() => {
         consoleOutput.value?.$el.scrollTo({ top: consoleOutput.value?.$el.scrollHeight, behavior: 'smooth' });
     }, 100);
-}
-
-let interval: number | undefined;
-function toggleTimer() {
-    if (interval != undefined) {
-        clearInterval(interval);
-        interval = undefined;
-        return;
-    }
-    interval = setInterval(() => {
-        for (let index = 0; index < 5; index++) {
-            console.error("Ciao");
-        }
-    }, 1000)
 }
 
 onMounted(() => {

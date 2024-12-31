@@ -1,9 +1,9 @@
 export type UserSettings = { 
     name: string,
-    debuggerEnabled: boolean
 }
 
 export type LocalStorageValues = {
+    debugEnabled: boolean
     theme: string,
     userSettings: UserSettings,
     lastLogin: Date,
