@@ -21,6 +21,10 @@
                 <v-col cols="12" md="12">
                     <v-row justify-center>
                         <v-col class="align-self-center">
+                            <v-select v-model="salaryOption" v-bind="salaryOptionProps" :items="salaryOptions"
+                                item-title="value" item-value="key" label="Opzione di Pagamento" required></v-select>
+                        </v-col>
+                        <v-col class="align-self-center">
                             <v-checkbox v-model="managed" v-bind="managedProps" label="Gestione"></v-checkbox>
                         </v-col>
                         <v-col class="align-self-center">
@@ -65,7 +69,6 @@
                     </v-dialog>
                 </v-col>
             </v-row>
-
         </v-card-text>
 
         <v-divider></v-divider>
@@ -82,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LevelRange, ManagerOptions, School } from '@/models/model';
+import { SalaryOption, type LevelRange, type ManagerOptions, type School } from '@/models/model';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -98,6 +101,10 @@ const emit = defineEmits(['close', 'save'])
 const dialogLevels = ref(false)
 const dialogManager = ref(false)
 const saving = ref(false);
+const salaryOptions = [
+    { key: SalaryOption.ABSENT_AND_PRESENT, value: "La lezione viene pagata sia se lo studente è presente sia se è assente" },
+    { key: SalaryOption.ONLY_PRESENT, value: "La lezione viene pagata solo se lo studente è presente" }
+];
 
 const schema = yup.object({
     name: yup.string().required('Il Nome è obbligatorio').min(1).label('Nome'),
@@ -105,6 +112,7 @@ const schema = yup.object({
     email: yup.string().label('Email').nullable().optional(),
     phoneNumber: yup.string().label('Numero di Telefono').nullable().optional(),
     managed: yup.bool().label('Gestione'),
+    salaryOption: yup.string().required("L'Opzione di pagamento lezioni è obbligatorio").label('Opzione di Pagamento'),
     managerOptions: yup.object().test({
         test: (v: any | ManagerOptions) => {
             if (managed.value)
@@ -138,6 +146,7 @@ const [city, cityProps] = defineField('city', vuetifyConfig);
 const [email, emailProps] = defineField('email', vuetifyConfig);
 const [phoneNumber, phoneNumberProps] = defineField('phoneNumber', vuetifyConfig);
 const [managed, managedProps] = defineField('managed', vuetifyConfig);
+const [salaryOption, salaryOptionProps] = defineField('salaryOption', vuetifyConfig);
 const [managerOptions, managerOptionsProps] = defineField('managerOptions', vuetifyConfig);
 const [levelRanges, levelRangesProps] = defineField('levelRanges', vuetifyConfig);
 
@@ -161,6 +170,7 @@ function updateSchool() {
         city.value = schoolClone.city ?? "";
         email.value = schoolClone.email ?? "";
         phoneNumber.value = schoolClone.phoneNumber ?? "";
+        salaryOption.value = schoolClone.salaryOption;
         managed.value = schoolClone.managed;
         managerOptions.value = schoolClone.managerOptions;
         levelRanges.value = schoolClone.levelRanges;
@@ -184,14 +194,15 @@ async function save(values: GenericObject) {
 
     const school: Partial<School> = {
         name: values.name,
+        salaryOption: values.salaryOption,
         managed: managed.value ?? false,
         levelRanges: values.levelRanges,
         createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now()
     };
-    if(values.city) school.city = values.city;
-    if(values.email) school.email = values.email;
-    if(values.phoneNumber) school.phoneNumber = values.phoneNumber;
+    if (values.city) school.city = values.city;
+    if (values.email) school.email = values.email;
+    if (values.phoneNumber) school.phoneNumber = values.phoneNumber;
     if (managed.value) school.managerOptions = managerOptions.value;
 
     try {

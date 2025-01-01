@@ -5,9 +5,21 @@
                 <BackButton></BackButton>
             </v-col>
             <v-col>
-                <p class="text-h5 text-center">Lezioni del <b>{{ yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()
-                        }}</b>
-                </p>
+                <v-row>
+                    <v-col>
+                        <p class="text-h5 text-center">Lezioni del <b>{{
+                            yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()
+                                }}</b>
+                        </p>
+                    </v-col>
+                </v-row>
+                <v-row class="justify-center">
+                    <v-col cols="auto" v-if="dailyLesson.salary">
+                        <span class="text-subtitle">
+                            Totale: <b> {{ dailyLesson.salary }} €</b>
+                        </span>
+                    </v-col>
+                </v-row>
             </v-col>
         </v-row>
         <v-row>
@@ -107,9 +119,10 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
-import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type Student, type StudentLesson } from '@/models/model';
+import { LessonStatus, lessonStatusColor, SalaryOption, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
+import { SchoolRepository } from '@/models/repositories/school-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentLessonService } from '@/models/services/student-lesson-service';
@@ -128,6 +141,7 @@ const router = useRouter();
 const id = computed(() => route.params.id as string);
 const dailyLessonSource = DailyLessonRepository.instance.observe(id);
 const dailyLesson = useDocument(dailyLessonSource);
+const school: Ref<School | undefined> = ref();
 
 const selectedLessons: Ref<string[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
@@ -135,6 +149,7 @@ const studentLessons: Ref<StudentLesson[]> = ref([])
 const availableStudents: Ref<Student[]> = ref([]);
 const selectedStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
+const loadingSchool = ref(false);
 const loadingAllStudents = ref(false);
 const saving = ref(false);
 const savingSelectedStudents = ref(false);
@@ -143,7 +158,7 @@ const routeChanged = ref(true);
 const visualization = ref(0);
 
 const areLessonSelected = computed(() => selectedLessons.value.length != 0)
-const loading = computed(() => loadingStudents.value || !dailyLesson.value || routeChanged.value);
+const loading = computed(() => loadingStudents.value || loadingSchool.value || !dailyLesson.value || routeChanged.value);
 let currentDailyLessonId: ID | undefined = undefined;
 
 watch(dailyLesson, () => updateStudentLesson())
@@ -304,7 +319,11 @@ async function updateStudentLesson() {
     routeChanged.value = false;
 
     if (!dailyLesson.value) return;
-
+    if (!school.value) {
+        loadingSchool.value = true;
+        school.value = await SchoolRepository.instance.get(dailyLesson.value.schoolId);
+        loadingSchool.value = false;
+    }
     const currentStudentsId: string[] = studentLessons.value.map(s => s.studentId);
     const newStudentsId: string[] = dailyLesson.value.lessons.map(l => l.studentId);
 
@@ -337,10 +356,27 @@ async function save() {
     }
 }
 
+function computeSalaryOfLesson(less: StudentLesson): number {
+    if (school.value) {
+        const computeSalary =
+            (school.value.salaryOption == SalaryOption.ABSENT_AND_PRESENT && (less.status == LessonStatus.PRESENT || less.status == LessonStatus.ABSENT)) ||
+            (school.value.salaryOption == SalaryOption.ONLY_PRESENT && less.status == LessonStatus.PRESENT);
+
+        if (computeSalary) {
+            const priceAtMinute = school.value.levelRanges.find(l => l.levels.includes(less.level))?.price;
+            if (priceAtMinute != undefined) {
+                return priceAtMinute * ((less.endTime - less.startTime) / 60);
+            }
+        }
+    }
+    return 0;
+}
+
 function extractDailyLesson(): DailyLesson | undefined {
     const dl = dailyLesson.value;
     if (dl === undefined) return;
     const lessons: Lesson[] = [];
+    let salary = 0;
     dl.lessons.forEach(l => {
         const less = studentLessons.value.find(sl => sl.id == l.studentId);
         if (less === undefined) return;
@@ -357,12 +393,15 @@ function extractDailyLesson(): DailyLesson | undefined {
         if (l.recovery) newLesson.recovery = l.recovery;
         if (l.trial) newLesson.trial = l.trial;
         lessons.push(newLesson);
+
+        salary += computeSalaryOfLesson(less);
     })
     return {
         date: dl.date,
         id: dl.id,
         lessons: lessons.sort((a, b) => a.startTime - b.startTime),
-        schoolId: dl.schoolId
+        schoolId: dl.schoolId,
+        salary
     } as DailyLesson;
 }
 

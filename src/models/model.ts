@@ -159,6 +159,7 @@ export interface School {
     managed: boolean;
     levelRanges: LevelRange[];
     managerOptions?: ManagerOptions;
+    salaryOption: SalaryOption;
 
     // Instead of embedding arrays of students, store students in a separate collection and use schoolId for filtering
     // students: Student[];
@@ -170,11 +171,9 @@ export interface School {
     updatedAt: Timestamp;
 }
 
-export interface Salary {
-    schoolId: string; // relation with the school
-    date: Timestamp;
-    total: number;
-    // todo...
+export enum SalaryOption {
+    ABSENT_AND_PRESENT,
+    ONLY_PRESENT
 }
 
 export interface ManagerOptions {
@@ -213,6 +212,7 @@ export interface DailyLesson {
     date: IyyyyMMdd;
     schoolId: string;
     lessons: Lesson[];
+    salary: number;
 }
 
 export const lessonStatusName = ["", "presente", "assente", "cancellata"]
