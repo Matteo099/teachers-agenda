@@ -14,7 +14,7 @@
                     </v-col>
                 </v-row>
                 <v-row class="justify-center">
-                    <v-col cols="auto" v-if="dailyLesson.salary">
+                    <v-col cols="auto">
                         <span class="text-subtitle">
                             Totale: <b> {{ dailyLesson.salary }} €</b>
                         </span>
@@ -119,7 +119,7 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
-import { LessonStatus, lessonStatusColor, SalaryOption, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
+import { LessonStatus, lessonStatusColor, SalaryStrategy, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
@@ -334,6 +334,7 @@ async function updateStudentLesson() {
 
     currentDailyLessonId = dailyLesson.value.id;
     studentLessons.value = await StudentLessonService.instance.getStudentLesson(dailyLesson.value, newStudentsId);
+    computeSalaryAndSave();
 
     loadingStudents.value = false;
 }
@@ -356,11 +357,18 @@ async function save() {
     }
 }
 
+function computeSalaryAndSave() {
+    if (dailyLesson.value?.salaryStrategy != school.value?.salaryStrategy){
+        toast.info("Aggiornamento dello stipendio giornaliero in corso...");
+        save();
+    }
+}
+
 function computeSalaryOfLesson(less: StudentLesson): number {
     if (school.value) {
         const computeSalary =
-            (school.value.salaryOption == SalaryOption.ABSENT_AND_PRESENT && (less.status == LessonStatus.PRESENT || less.status == LessonStatus.ABSENT)) ||
-            (school.value.salaryOption == SalaryOption.ONLY_PRESENT && less.status == LessonStatus.PRESENT);
+            (school.value.salaryStrategy == SalaryStrategy.ABSENT_AND_PRESENT && (less.status == LessonStatus.PRESENT || less.status == LessonStatus.ABSENT)) ||
+            (school.value.salaryStrategy == SalaryStrategy.ONLY_PRESENT && less.status == LessonStatus.PRESENT);
 
         if (computeSalary) {
             const priceAtMinute = school.value.levelRanges.find(l => l.levels.includes(less.level))?.price;
@@ -396,13 +404,15 @@ function extractDailyLesson(): DailyLesson | undefined {
 
         salary += computeSalaryOfLesson(less);
     })
-    return {
+    const newDailyLesson: DailyLesson = {
         date: dl.date,
         id: dl.id,
         lessons: lessons.sort((a, b) => a.startTime - b.startTime),
         schoolId: dl.schoolId,
         salary
-    } as DailyLesson;
+    };
+    if (school.value?.salaryStrategy != undefined) newDailyLesson.salaryStrategy = school.value?.salaryStrategy;
+    return newDailyLesson;
 }
 
 // function scrollToCurrentLesson() {

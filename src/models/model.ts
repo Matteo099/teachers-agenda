@@ -159,7 +159,7 @@ export interface School {
     managed: boolean;
     levelRanges: LevelRange[];
     managerOptions?: ManagerOptions;
-    salaryOption: SalaryOption;
+    salaryStrategy: SalaryStrategy;
 
     // Instead of embedding arrays of students, store students in a separate collection and use schoolId for filtering
     // students: Student[];
@@ -171,7 +171,7 @@ export interface School {
     updatedAt: Timestamp;
 }
 
-export enum SalaryOption {
+export enum SalaryStrategy {
     ABSENT_AND_PRESENT,
     ONLY_PRESENT
 }
@@ -213,6 +213,11 @@ export interface DailyLesson {
     schoolId: string;
     lessons: Lesson[];
     salary: number;
+    /**
+     * This field is used to verify if the school has changed its salary option over time.
+     * If the strategy has changed, the salary must be recalculated accordingly.
+     */
+    salaryStrategy?: SalaryStrategy;
 }
 
 export const lessonStatusName = ["", "presente", "assente", "cancellata"]
