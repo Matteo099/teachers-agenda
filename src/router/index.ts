@@ -107,9 +107,10 @@ router.beforeEach(async (to) => {
 })
 router.onError((error, to) => {
   if (error.message.includes('Failed to fetch dynamically imported module') || error.message.includes("Importing a module script failed")) {
-    console.log("Refreshing page... => " + to.fullPath);
+    const finalPath = import.meta.env.BASE_URL + "/#" + to.fullPath;
+    console.log("Refreshing page... => " + to.fullPath + ". Final path is " + finalPath);
     // @ts-ignore
-    window.location = to.fullPath;
+    window.location = finalPath;
   }
 })
 
