@@ -107,8 +107,9 @@ router.beforeEach(async (to) => {
 })
 router.onError((error, to) => {
   if (error.message.includes('Failed to fetch dynamically imported module') || error.message.includes("Importing a module script failed")) {
+    console.log("Refreshing page... => " + to.fullPath);
     // @ts-ignore
-    window.location = to.fullPath
+    window.location = to.fullPath;
   }
 })
 
