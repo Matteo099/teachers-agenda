@@ -12,6 +12,8 @@ export class StudentLessonService {
 
     public async getStudentLesson(dailyLesson: DailyLesson, stundetIds?: string[]) {
         stundetIds ??= dailyLesson.lessons.map(l => l.studentId);
+        if(stundetIds.length == 0) return [];
+        
         const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.schoolId, stundetIds);
         return dailyLesson.lessons.map(l => {
             const s = data.find(st => st.id == l.studentId)!;
