@@ -7,7 +7,7 @@ export type EventHandler<T> = {
 };
 
 export interface IQueryEvent<T> {
-    subscribe(handler: EventHandler<T>, immediate: boolean): EventSubscription;
+    subscribe(handler: EventHandler<T>, immediate?: boolean): EventSubscription;
     unsubscribe(handler: EventHandler<T>): void;
 }
 

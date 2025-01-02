@@ -1,5 +1,5 @@
 <template>
-    <v-card elevation="3">
+    <v-card title="Studenti" elevation="3" :loading="loadingStudents">
         <v-card-text>
             <v-row class="mr-4 mb-1 align-center">
                 <v-text-field class="ma-2" prepend-inner-icon="mdi-magnify" density="comfortable"
@@ -40,7 +40,6 @@
                             </v-icon>
                         </template>
                     </DeleteDialog>
-
                 </template>
             </v-data-table>
         </v-card-text>
@@ -49,13 +48,13 @@
 
 
 <script setup lang="ts">
+import DeleteDialog from '@/components/DeleteDialog.vue';
+import StudentEditor from '@/components/student/StudentEditor.vue';
 import { days, type School, type Student } from '@/models/model';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { StudentService } from '@/models/services/student-service';
 import type { EventSubscription } from '@/models/utils/event';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
-import DeleteDialog from '../DeleteDialog.vue';
-import StudentEditor from './StudentEditor.vue';
 
 interface StudentViewProps {
     school: School

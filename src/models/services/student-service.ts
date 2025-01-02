@@ -24,6 +24,7 @@ export class StudentService {
     }
 
     public async getStudentsOfSchoolWithIds(schoolId: ID, studentIds: string[]): Promise<Student[]> {
+        if(studentIds.length == 0) return [];
         const _query1 = where(nameof<Student>('schoolId'), '==', schoolId);
         const _query2 = where(documentId(), 'in', studentIds);
         return StudentRepository.instance.getAll(_query1, _query2);
