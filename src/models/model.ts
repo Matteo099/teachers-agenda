@@ -176,6 +176,15 @@ export enum SalaryStrategy {
     ONLY_PRESENT
 }
 
+export interface Salary {
+    dailyLessonId: ID;
+    date: IyyyyMMdd;
+    lastUpdate?: Timestamp;
+    salary: number;
+    presents: number;
+    absents: number;
+}
+
 export interface ManagerOptions {
     totalStudents: number;
     quotePerStudent: number;
@@ -212,6 +221,7 @@ export interface DailyLesson {
     date: IyyyyMMdd;
     schoolId: string;
     lessons: Lesson[];
+    lastSalaryUpdate?: Timestamp;
     salary: number;
     /**
      * This field is used to verify if the school has changed its salary option over time.

@@ -1,6 +1,6 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule, type StudentLesson } from "../model";
+import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule, type School, type StudentLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
@@ -8,6 +8,7 @@ import type { LessonProjection, SchoolLessons } from "./lesson-group-service";
 import { SchoolRecoveryLessonService, type ExpandedLesson, type ExtendedStudentLesson } from "./school-recovery-lesson-service";
 import { SchoolService } from "./school-service";
 import { StudentLessonService } from "./student-lesson-service";
+import { SalaryService } from "./salary-service";
 
 export class DailyLessonService {
 
@@ -31,6 +32,14 @@ export class DailyLessonService {
         queries.push(_query1, _query2);
         if (orderByDirection) queries.push(orderBy(nameof<DailyLesson>('date'), orderByDirection))
         return DailyLessonRepository.instance.getAll(...queries);
+    }
+
+    public async getDailyLessonOfSchoolBetweenDate(schoolId: ID, from: IyyyyMMdd, to: IyyyyMMdd): Promise<DailyLesson[]> {
+        // retireve all the dailyLesson between from and to
+        const _query1 = where(nameof<DailyLesson>('schoolId'), '==', schoolId);
+        const _query2 = where(nameof<DailyLesson>('date'), '>=', from);
+        const _query3 = where(nameof<DailyLesson>('date'), '<=', to);
+        return await DailyLessonRepository.instance.getAll(_query1, _query2, _query3);
     }
 
     public async getOrCreateDailyLessonId(
@@ -245,5 +254,26 @@ export class DailyLessonService {
         } catch (error) {
             return false;
         }
+    }
+
+    public async computeSalaryOfDailyLesson(school: School, dailyLessonId: ID): Promise<DailyLesson | undefined> {
+        const dailyLesson = await DailyLessonRepository.instance.get(dailyLessonId);
+        if (!dailyLesson) return;
+        const studentIds = dailyLesson.lessons.map(l => l.studentId);
+        const studentLessons = await StudentLessonService.instance.getStudentLesson(dailyLesson, studentIds);
+
+        let salary = 0;
+        dailyLesson.lessons.forEach(l => {
+            const less = studentLessons.find(sl => sl.id == l.studentId);
+            if (less === undefined) return;
+            salary += SalaryService.instance.computeSalaryByStudentLesson(school, less);
+        })
+        if (salary != dailyLesson.salary) {
+            dailyLesson.salary = salary;
+            dailyLesson.lastSalaryUpdate = Timestamp.now();
+            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
+            return dailyLesson;
+        }
+        return;
     }
 }

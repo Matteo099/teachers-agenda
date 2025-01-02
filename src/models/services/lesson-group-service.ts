@@ -5,6 +5,7 @@ import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
 import { nameof, nextDay, pastDay } from "../utils";
 import { v4 as uuidv4 } from 'uuid';
+import { DailyLessonService } from "./daily-lesson-service";
 
 export interface LessonGroup {
     month: string;
@@ -54,11 +55,7 @@ export class LessonGroupService {
     public async getCalendarLessons(schoolId: ID, from: { date: yyyyMMdd, time?: Time }, to: { date: yyyyMMdd, time?: Time }): Promise<CalendarEventExt[]> {
         const lessons: CalendarEventExt[] = [];
 
-        // retireve all the dailyLesson between from and to
-        const _query1 = where(nameof<DailyLesson>('schoolId'), '==', schoolId);
-        const _query2 = where(nameof<DailyLesson>('date'), '>=', from.date.toIyyyyMMdd());
-        const _query3 = where(nameof<DailyLesson>('date'), '<=', to.date.toIyyyyMMdd());
-        const dailyLessons = await DailyLessonRepository.instance.getAll(_query1, _query2, _query3);
+        const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(schoolId, from.date.toIyyyyMMdd(), to.date.toIyyyyMMdd());
         lessons.push(...dailyLessons.flatMap(dl => {
             const date = yyyyMMdd.fromIyyyyMMdd(dl.date).toIyyyyMMdd("-", 1);
             return dl.lessons.map(l => {

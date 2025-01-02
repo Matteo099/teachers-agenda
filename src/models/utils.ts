@@ -124,3 +124,7 @@ export const stringToHslColor = function (str: string, saturation: number = 30, 
     const h = hash % 360;
     return 'hsl(' + h + ', ' + saturation + '%, ' + lightness + '%)';
 }
+
+export const delay = async function (ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}

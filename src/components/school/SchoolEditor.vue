@@ -210,7 +210,7 @@ async function save(values: GenericObject) {
             await SchoolRepository.instance.save(school, props.initialSchool.id);
             toast.success("Scuola Aggiornata")
             if (props.initialSchool.salaryStrategy != undefined && props.initialSchool.salaryStrategy != school.salaryStrategy) {
-                toast.warning("E' stato aggiornato l'opzione di pagamento, tuttavia TUTTE le lezioni giornaliere create fino ad ora non saranno aggiornate in automatico!", { autoClose: 10000 });
+                toast.warning("E' stata aggiornata l'opzione di pagamento, tuttavia TUTTE le lezioni giornaliere create fino ad ora non saranno aggiornate in automatico!", { autoClose: 10000 });
             }
         } else {
             await SchoolRepository.instance.save(school);

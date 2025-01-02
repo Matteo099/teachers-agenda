@@ -119,11 +119,12 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
-import { LessonStatus, lessonStatusColor, SalaryStrategy, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
+import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
+import { SalaryService } from '@/models/services/salary-service';
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
@@ -364,22 +365,6 @@ function computeSalaryAndSave() {
     }
 }
 
-function computeSalaryOfLesson(less: StudentLesson): number {
-    if (school.value) {
-        const computeSalary =
-            (school.value.salaryStrategy == SalaryStrategy.ABSENT_AND_PRESENT && (less.status == LessonStatus.PRESENT || less.status == LessonStatus.ABSENT)) ||
-            (school.value.salaryStrategy == SalaryStrategy.ONLY_PRESENT && less.status == LessonStatus.PRESENT);
-
-        if (computeSalary) {
-            const priceAtMinute = school.value.levelRanges.find(l => l.levels.includes(less.level))?.price;
-            if (priceAtMinute != undefined) {
-                return priceAtMinute * ((less.endTime - less.startTime) / 60);
-            }
-        }
-    }
-    return 0;
-}
-
 function extractDailyLesson(): DailyLesson | undefined {
     const dl = dailyLesson.value;
     if (dl === undefined) return;
@@ -402,13 +387,14 @@ function extractDailyLesson(): DailyLesson | undefined {
         if (l.trial) newLesson.trial = l.trial;
         lessons.push(newLesson);
 
-        salary += computeSalaryOfLesson(less);
+        salary += SalaryService.instance.computeSalaryByStudentLesson(school.value, less);
     })
     const newDailyLesson: DailyLesson = {
         date: dl.date,
         id: dl.id,
         lessons: lessons.sort((a, b) => a.startTime - b.startTime),
         schoolId: dl.schoolId,
+        lastSalaryUpdate: Timestamp.now(),
         salary
     };
     if (school.value?.salaryStrategy != undefined) newDailyLesson.salaryStrategy = school.value?.salaryStrategy;

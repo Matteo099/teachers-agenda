@@ -42,6 +42,9 @@
             <v-col class="pa-2" cols="12" md="6">
                 <StudentView :school="school"></StudentView>
             </v-col>
+            <v-col class="pa-2" cols="12" md="6">
+                <SalaryView :school="school"></SalaryView>
+            </v-col>
         </v-row>
         <v-row>
             <v-col class="pa-2" cols="12">
@@ -77,7 +80,6 @@
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
-import StudentView from '@/components/student/StudentView.vue';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { SchoolService } from '@/models/services/school-service';
 import { type Unsubscribe } from 'firebase/firestore';
@@ -86,6 +88,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useDocument } from 'vuefire';
 import LessonView from './LessonView.vue';
 import RecoveryLessonView from './RecoveryLessonView.vue';
+import StudentView from './StudentView.vue';
+import SalaryView from './SalaryView.vue';
 
 const route = useRoute()
 const router = useRouter()
