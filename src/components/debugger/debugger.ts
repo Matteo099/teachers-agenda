@@ -15,7 +15,7 @@ export const getCircularReplacer = () => {
 };
 
 export enum LogLevel {
-    ERROR, WARNING, INFO, ALL
+    ERROR, WARNING, INFO, EXCEPTION, PROMISE_REJECTION, ALL
 }
 export interface Log {
     level: LogLevel,
@@ -27,6 +27,7 @@ export class Debugger {
 
     private static _instance: Debugger | null = null;
     private logs: Log[] = [];
+    public logs2: any[] = [];
     private _subscription = new QueryEvent<Log[]>();
 
     public static get instance(): Debugger {
@@ -39,7 +40,7 @@ export class Debugger {
     }
 
     public get enabled(): boolean {
-        return LocalStorageHandler.getItem("userSettings")?.debuggerEnabled ?? true;
+        return LocalStorageHandler.getItem("debugEnabled") ?? true;
     }
 
     public push(level: LogLevel, ...args: any[]) {

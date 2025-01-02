@@ -1,21 +1,37 @@
 import { Debugger, LogLevel } from "@/components/debugger/debugger";
 
 export const interceptConsole = () => {
-    const error = console.error.bind(console)
-    console.error = (...args) => {
-        error(...args)
-        Debugger.instance.push(LogLevel.ERROR, ...args);
+
+    window.onerror = function (error, url, line) {
+        Debugger.instance.push(LogLevel.EXCEPTION, { error, url, line });
+        return false;
+    }
+    window.onunhandledrejection = function (e) {
+        try {
+            const reason = {
+                message: e.reason.message,
+                stack: e.reason.stack,
+            }
+            Debugger.instance.push(LogLevel.PROMISE_REJECTION, reason)
+        } catch (error) {
+            Debugger.instance.push(LogLevel.PROMISE_REJECTION, e)
+        }
     }
 
-    const warn = console.warn.bind(console)
-    console.warn = (...args) => {
-        warn(...args)
-        Debugger.instance.push(LogLevel.WARNING, ...args);
+    function hookLogType(logType: any) {
+        // @ts-ignore
+        const original = console[logType].bind(console)
+        return function (...args: any) {
+            let level = LogLevel.INFO;
+            if (logType == "error") level = LogLevel.ERROR;
+            else if (logType == "warn") level = LogLevel.WARNING;
+            Debugger.instance.push(level, ...Array.from(args))
+            original.apply(console, args)
+        }
     }
 
-    const log = console.log.bind(console)
-    console.log = (...args) => {
-        log(...args)
-        Debugger.instance.push(LogLevel.INFO, ...args);
-    }
+    ['log', 'error', 'warn'].forEach(logType => {
+        // @ts-ignore
+        console[logType] = hookLogType(logType)
+    })
 }

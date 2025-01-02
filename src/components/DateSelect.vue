@@ -1,13 +1,16 @@
 <template>
     <v-row class="px-2 mb-2">
         <v-col cols="12" md="6">
-            <v-select variant="outlined" density="compact" v-model="selectedType" :items="selectTypes" hide-details></v-select>
+            <v-select variant="outlined" density="compact" v-model="selectedType" :items="selectTypes"
+                hide-details></v-select>
         </v-col>
         <v-col cols="12" md="6" v-if="selectedType == selectTypes[0]">
-            <v-date-input variant="outlined" density="compact" v-model="range" multiple="range" inputmode="none" hide-details></v-date-input>
+            <v-date-input variant="outlined" density="compact" v-model="range" multiple="range" inputmode="none"
+                hide-details></v-date-input>
         </v-col>
         <v-col cols="12" md="6" v-else>
-            <v-select variant="outlined" density="compact" v-model="selectedPeriod" :items="periods" hide-details></v-select>
+            <v-select variant="outlined" density="compact" v-model="selectedPeriod" :items="periods"
+                hide-details></v-select>
         </v-col>
     </v-row>
 </template>
@@ -43,7 +46,6 @@ watch(range, updateModel);
 watch(model, updateValues, { immediate: true });
 
 function updateModel() {
-
     updatingInternalModel = true;
 
     // relative

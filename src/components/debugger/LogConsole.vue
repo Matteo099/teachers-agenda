@@ -30,7 +30,8 @@
                     <v-col :md="more ? 10 : 12">
                         <v-card-text class="console-output px-2" ref="consoleOutput">
                             <v-card v-for="(log, index) in logs" :key="index" class="log-entry my-1 pa-1">
-                                <p class="text-caption" v-if="log.level == LogLevel.ERROR">
+                                <p class="text-caption"
+                                    v-if="log.level == LogLevel.ERROR || log.level == LogLevel.EXCEPTION || log.level == LogLevel.PROMISE_REJECTION">
                                     <v-icon color="error" class="mr-2">mdi-close-octagon</v-icon>
                                     {{ log.message }}
                                 </p>
@@ -71,17 +72,17 @@ const follow = ref(true);
 const consoleOutput = useTemplateRef("consoleOutput");
 const status = [
     { text: () => `Totale ${allLogs.value.length}`, icon: 'mdi-format-list-bulleted', color: "", type: LogLevel.ALL },
-    { text: () => `Errori ${allLogs.value.filter(l => l.level == LogLevel.ERROR).length}`, icon: 'mdi-close-octagon', color: "error", type: LogLevel.ERROR },
+    { text: () => `Errori ${allLogs.value.filter(l => l.level == LogLevel.ERROR || l.level == LogLevel.EXCEPTION || l.level == LogLevel.PROMISE_REJECTION).length}`, icon: 'mdi-close-octagon', color: "error", type: LogLevel.ERROR },
     { text: () => `Warning ${allLogs.value.filter(l => l.level == LogLevel.WARNING).length}`, icon: 'mdi-alert-outline', color: "warning", type: LogLevel.WARNING },
     { text: () => `Info ${allLogs.value.filter(l => l.level == LogLevel.INFO).length}`, icon: 'mdi-information-outline', color: "info", type: LogLevel.INFO },
 ];
-const filter: Ref<LogLevel | undefined> = ref();
+const filter: Ref<LogLevel[]> = ref([]);
 let subscription: EventSubscription | undefined = undefined;
 
 watch(filter, () => {
-    if (filter.value == undefined || filter.value == LogLevel.ALL)
+    if (filter.value.length == 0 || filter.value.includes(LogLevel.ALL))
         logs.value = allLogs.value;
-    else logs.value = allLogs.value.filter(l => l.level == filter.value);
+    else logs.value = allLogs.value.filter(l => filter.value.includes(l.level));
     updateConsoleCursor();
 });
 
@@ -104,8 +105,14 @@ function toggleFollow() {
 }
 
 function toggleFilter(level: LogLevel) {
-    if (filter.value == level) filter.value = undefined;
-    else filter.value = level;
+    if (filter.value.includes(level)) filter.value = [];
+    else {
+        const _level = [level];
+        if (level == LogLevel.ERROR) {
+            _level.push(LogLevel.EXCEPTION, LogLevel.PROMISE_REJECTION);
+        }
+        filter.value = _level;
+    }
 }
 
 function updateLogs(l: Log[]) {
