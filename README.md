@@ -117,3 +117,9 @@ $ firebase emulators:start
     ``` sh
     git branch -D db-auth-based-on-doc-key
     ```
+
+- List local branches
+    
+    ``` sh
+    git branch --list
+    ```
