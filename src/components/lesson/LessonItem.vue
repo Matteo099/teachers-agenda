@@ -19,24 +19,39 @@
                     @click="emit('cancel')">cancella</v-btn>
                 <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE" @click="emit('reset')">reset</v-btn>
 
+                <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen>
+                    <template v-slot:activator="{ props: activatorProps }">
+                        <v-btn class="ma-1" v-bind="activatorProps"
+                            v-if="item.status == LessonStatus.NONE">sposta</v-btn>
+                    </template>
+
+                    <template v-slot:default="{ isActive }">
+                        <v-card>
+                            <v-card-text>
+                                <v-date-picker class="w-100" v-model="newLessonDate"></v-date-picker>
+                            </v-card-text>
+                            <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn text="Annulla"
+                                    @click="isActive.value = false; newLessonDate = undefined;"></v-btn>
+                                <v-btn color="primary" text="Sposta" @click="_moveLesson"
+                                    :disabled="!newLessonDate"></v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </template>
+                </v-dialog>
+
                 <v-dialog v-model="timeDialog" transition="dialog-bottom-transition" fullscreen>
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn class="ma-1" v-bind="activatorProps">modifica orario</v-btn>
                     </template>
 
                     <template v-slot:default="{ isActive }">
-                        <div class="bg-primary">
-                            <p>
-                                {{ item }}
-                                {{ Time.fromITime(item.startTime).format() }}
-                                {{ item.endTime }}
-                            </p>
-                            <EditLessonTime @close="isActive.value = false" @save="_updateLessonTime"
-                                :startTime="Time.fromITime(item.startTime).format()"
-                                :endTime="Time.fromITime(item.endTime).format()"
-                                :minutesOfLesson="item.minutesLessonDuration">
-                            </EditLessonTime>
-                        </div>
+                        <EditLessonTime @close="isActive.value = false" @save="_updateLessonTime"
+                            :startTime="Time.fromITime(item.startTime).format()"
+                            :endTime="Time.fromITime(item.endTime).format()"
+                            :minutesOfLesson="item.minutesLessonDuration">
+                        </EditLessonTime>
                     </template>
                 </v-dialog>
 
@@ -72,17 +87,35 @@ import EditLessonTime from '@/components/lesson/EditLessonTime.vue';
 import { LessonStatus, Time, type EventTime, type StudentLesson } from '@/models/model';
 import { ref } from 'vue';
 import DeleteDialog from '../DeleteDialog.vue';
+import { toast } from 'vue3-toastify';
 
-const props = defineProps<{ onDeleteLessonItem: () => Promise<boolean>; updateLessonTime: (newTime: EventTime) => Promise<boolean> }>()
+const props = defineProps<{
+    onDeleteLessonItem: () => Promise<boolean>;
+    updateLessonTime: (newTime: EventTime) => Promise<boolean>;
+    moveLesson: (newLessonDate: Date) => Promise<boolean>
+}>()
 const item = defineModel<StudentLesson>('item', { required: true });
 const select = defineModel<string[]>('select');
 const emit = defineEmits(['present', 'absent', 'reset', 'cancel', 'updateLessonTime', 'notes', 'deleteStudent'])
 const timeDialog = ref(false)
+const dateDialog = ref(false)
+const newLessonDate = ref();
 
 
 async function _updateLessonTime(newTime: EventTime) {
     const res = await props.updateLessonTime(newTime);
     if (res) timeDialog.value = false;
 }
+
+async function _moveLesson() {
+    if (newLessonDate.value) {
+        const res = await props.moveLesson(newLessonDate.value);
+        if (res) {
+            dateDialog.value = false;
+            newLessonDate.value = undefined;
+        } else toast.warn("Impossibile spostare la lezione...")
+    }
+}
+
 
 </script>

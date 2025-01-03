@@ -56,11 +56,10 @@
                     @click="toggleAll"></v-checkbox>
             </v-col>
             <v-col>
-
                 <DeleteDialog :name="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()" objName="Lezione Giornaliera"
                     :onDelete="async () => await deleteDailyLesson()">
                     <template v-slot:activator="{ props: activatorProps }">
-                        <v-btn color="error" v-bind="activatorProps">elimina lezione</v-btn>
+                        <v-btn color="error" v-bind="activatorProps" ref="deleteDailyLessonBtn">elimina lezione</v-btn>
                     </template>
                 </DeleteDialog>
             </v-col>
@@ -90,7 +89,8 @@
                         :dot-color="getColor(item)" size="small">
                         <LessonItem :key="item.id + dailyLesson.id" v-model:item="studentLessons[index]"
                             v-model:select="selectedLessons" @present="present(item)" @absent="absent(item)"
-                            @cancel="cancel(item)" @reset="reset(item)"
+                            :moveLesson="async ($event) => await moveLesson(item, $event)" @cancel="cancel(item)"
+                            @reset="reset(item)"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
                             @notes="notes(item)" :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
                         </LessonItem>
@@ -131,7 +131,7 @@ import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
@@ -157,6 +157,7 @@ const savingSelectedStudents = ref(false);
 const studentsDialog = ref(false);
 const routeChanged = ref(true);
 const visualization = ref(0);
+const deleteDailyLessonBtn = useTemplateRef("deleteDailyLessonBtn");
 
 const total = computed(() => isNaN(dailyLesson.value?.salary ?? 0) ? 0 : dailyLesson.value?.salary)
 const areLessonSelected = computed(() => selectedLessons.value.length != 0)
@@ -213,6 +214,35 @@ async function reset(event: StudentLesson) {
         await save();
         await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
     }
+}
+
+async function moveLesson(event: StudentLesson, lessonDate: Date) {
+    if (!event || !school.value || !lessonDate) {
+        console.warn("Unable to move the lesson because the event/school/date is undefined!");
+        return false;
+    }
+
+    // Step 1: get (or create) the new dailyLesson
+    const newDailyLessonId = await DailyLessonService.instance.getOrCreateDailyLessonId(school.value.id, lessonDate);
+    // Step 2: add the lesson to the new dailyLesson
+    const newDailyLesson = await DailyLessonRepository.instance.get(newDailyLessonId);
+    if (newDailyLesson) {
+        newDailyLesson.lessons.push({
+            lessonId: event.lessonId,
+            studentId: event.studentId,
+            endTime: event.endTime,
+            startTime: event.startTime,
+            status: LessonStatus.NONE,
+            updatedAt: Timestamp.now(),
+            createdAt: Timestamp.now()
+        });
+        await DailyLessonRepository.instance.save(newDailyLesson, newDailyLesson.id);
+    } else {
+        console.warn("Unable to move the lesson because the new daily lesson is undefined!");
+        return false;
+    }
+    // Step 3: remove the lesson from the old dailyLesson
+    return await deleteStudentLesson(event, false);
 }
 
 async function updateLessonTime(event: StudentLesson, newDataEvent: EventTime) {
@@ -300,19 +330,26 @@ async function deleteDailyLesson() {
 
     try {
         await DailyLessonRepository.instance.delete(dailyLesson.value.id);
-        router.go(-1)
+        router.push(`/school/${school.value!.id}`);
         return true;
     } catch (error) {
         return false;
     }
 }
 
-async function deleteStudentLesson(student: StudentLesson) {
+async function deleteStudentLesson(student: StudentLesson, deleteDailyLessonWhenNoLessons = true) {
     if (!dailyLesson.value) return false;
 
     try {
-        return await DailyLessonService.instance.deleteStudentLesson(student, dailyLesson.value);
+        const res = await DailyLessonService.instance.deleteLessonAndRecoveryReferences(student, dailyLesson.value, deleteDailyLessonWhenNoLessons);
+        if (res) {
+            if (!dailyLesson.value || dailyLesson.value.lessons.length == 0) {
+                router.push(`/school/${school.value!.id}`);
+            }
+        }
+        return res;
     } catch (error) {
+        console.warn("Unable to delete the student lesson...", error)
         return false;
     }
 }
