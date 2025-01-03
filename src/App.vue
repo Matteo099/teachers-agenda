@@ -120,6 +120,11 @@
                   <v-icon right class="mr-2">mdi-cog</v-icon>
                   Impostazioni
                 </v-btn>
+                <br>
+                <v-btn variant="text" rounded to="/debugger">
+                  <v-icon right class="mr-2">mdi-bug</v-icon>
+                  Debugger
+                </v-btn>
                 <v-divider class="my-3"></v-divider>
               </div>
               <v-fab-transition>
@@ -184,6 +189,7 @@ import { useCurrentUser, useFirebaseAuth } from 'vuefire';
 import { useDisplay, useTheme } from 'vuetify';
 import { LocalStorageHandler } from './models/storage/local-storage-handler';
 import { stringToHslColor } from './models/utils';
+import { Debugger } from './components/debugger/debugger';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);

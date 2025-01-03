@@ -1,13 +1,14 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule, type StudentLesson } from "../model";
+import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule, type School, type StudentLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
-import type { LessonProjection, SchoolLessons } from "./lesson-group-service";
+import type { LessonProjection } from "./lesson-group-service";
+import { SalaryService } from "./salary-service";
 import { SchoolRecoveryLessonService, type ExpandedLesson, type ExtendedStudentLesson } from "./school-recovery-lesson-service";
-import { SchoolService } from "./school-service";
 import { StudentLessonService } from "./student-lesson-service";
+import { WeeklyLessonService } from "./weely-lesson-service";
 
 export class DailyLessonService {
 
@@ -33,26 +34,34 @@ export class DailyLessonService {
         return DailyLessonRepository.instance.getAll(...queries);
     }
 
+    public async getDailyLessonOfSchoolBetweenDate(schoolId: ID, from: IyyyyMMdd, to: IyyyyMMdd): Promise<DailyLesson[]> {
+        // retireve all the dailyLesson between from and to
+        const _query1 = where(nameof<DailyLesson>('schoolId'), '==', schoolId);
+        const _query2 = where(nameof<DailyLesson>('date'), '>=', from);
+        const _query3 = where(nameof<DailyLesson>('date'), '<=', to);
+        return await DailyLessonRepository.instance.getAll(_query1, _query2, _query3);
+    }
+
     public async getOrCreateDailyLessonId(
-        schoolLessons: SchoolLessons,
+        schoolId: ID,
         lesson: LessonProjection | Date
     ): Promise<ID> {
         // If lesson is a Date, call the helper to create a daily lesson based on the date
         if (lesson instanceof Date) {
-            return this.createDailyLessonByDate(schoolLessons, lesson);
+            return this.createDailyLessonByDate(schoolId, lesson);
         }
 
         // If lesson is a LessonProjection, handle it
-        return this.handleLessonProjection(schoolLessons, lesson);
+        return this.handleLessonProjection(schoolId, lesson);
     }
 
     private async handleLessonProjection(
-        schoolLessons: SchoolLessons,
+        schoolId: ID,
         lessonGroup: LessonProjection
     ): Promise<ID> {
         if (!lessonGroup.dailyLessonId) {
             // If lessonId is undefined, create a new daily lesson
-            const newDailyLesson = this.buildDailyLessonFromProjection(schoolLessons.schoolId, lessonGroup);
+            const newDailyLesson = this.buildDailyLessonFromProjection(schoolId, lessonGroup);
             return DailyLessonRepository.instance.save(newDailyLesson);
         }
 
@@ -80,35 +89,37 @@ export class DailyLessonService {
     }
 
     public async createDailyLessonByDate(
-        schoolLessons: SchoolLessons,
+        schoolId: ID,
         lessonDate: Date
     ): Promise<ID> {
         const parseDate = yyyyMMdd.fromDate(lessonDate).toIyyyyMMdd();
 
         // Try to retrieve the daily lesson for the given date
-        const existingData = await DailyLessonService.instance.getDailyLessonOfSchoolByDate(schoolLessons.schoolId, parseDate);
+        const existingData = await DailyLessonService.instance.getDailyLessonOfSchoolByDate(schoolId, parseDate);
 
         if (existingData?.[0]?.id) {
             return existingData[0].id; // If found, return the existing ID
         }
 
         // If no daily lesson found, create a new one from weekly lessons
-        const newDailyLesson = this.buildDailyLessonFromWeeklyOrEmpty(schoolLessons, lessonDate, parseDate);
+        const newDailyLesson = await this.buildDailyLessonFromWeeklyOrEmpty(schoolId, lessonDate, parseDate);
         return DailyLessonRepository.instance.save(newDailyLesson);
     }
 
-    public buildDailyLessonFromWeeklyOrEmpty(
-        schoolLessons: SchoolLessons,
+    public async buildDailyLessonFromWeeklyOrEmpty(
+        schoolId: ID,
         lessonDate: Date,
         formattedDate: string
-    ): Partial<DailyLesson> {
-        const weeklyLesson = schoolLessons.weeklyLessons.find(l => l.dayOfWeek === lessonDate.getDay());
+    ): Promise<Partial<DailyLesson>> {
+        const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchoolByDayBetweenDate(schoolId, lessonDate.getDay(), formattedDate);
+        const weeklyLesson = weeklyLessons?.[0];
+        // const weeklyLesson = schoolLessons.weeklyLessons.find(l => l.dayOfWeek === lessonDate.getDay());
 
         if (weeklyLesson) {
             // Create daily lesson from weekly lesson schedule
             return {
                 date: formattedDate,
-                schoolId: schoolLessons.schoolId,
+                schoolId: schoolId,
                 lessons: weeklyLesson.schedule.map(l => ({
                     lessonId: uuidv4(),
                     status: LessonStatus.NONE,
@@ -124,7 +135,7 @@ export class DailyLessonService {
         // Create an empty daily lesson if no weekly lesson is found
         return {
             date: formattedDate,
-            schoolId: schoolLessons.schoolId,
+            schoolId: schoolId,
             lessons: [],
         };
     }
@@ -159,8 +170,8 @@ export class DailyLessonService {
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
         }
-        const schoolLessons = await SchoolService.instance.getSchoolLessons(schedule.schoolId, schedule.date)
-        const recoveryDailyLessonId = await this.getOrCreateDailyLessonId(schoolLessons, schedule.date);
+        // const schoolLessons = await SchoolService.instance.getSchoolLessons(schedule.schoolId, schedule.date)
+        const recoveryDailyLessonId = await this.getOrCreateDailyLessonId(schedule.schoolId, schedule.date);
         const recoveryDailyLesson = (await DailyLessonRepository.instance.get(recoveryDailyLessonId))!;
         recoveryDailyLesson.lessons.push(recoveryLesson)
         await DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
@@ -200,50 +211,85 @@ export class DailyLessonService {
         // }
     }
 
-    public async deleteStudentLesson(studentLesson: StudentLesson, dailyLesson: DailyLesson, deleteFromRecoveries?: boolean) {
+    public async deleteLessonAndRecoveryReferences(studentLesson: StudentLesson, dailyLesson: DailyLesson, deleteDailyLessonWhenNoLessons: boolean, deleteFromRecoveries?: boolean) {
         const index = dailyLesson.lessons.findIndex(s => s.studentId == studentLesson.id) ?? -1;
         if (index == -1)
             return false;
 
         try {
             const lessonToDelete = dailyLesson.lessons[index];
-            if (lessonToDelete.recovery) {
-                if (lessonToDelete.recovery.ref == 'original') {
-                    // update original daily lesson, by cancelling scheduled recovery
-                    const originalDailyLesson = await DailyLessonRepository.instance.get(lessonToDelete.recovery.lessonRef.dailyLessonId);
-                    const recoveryDailyLesson = dailyLesson;
-                    if (!originalDailyLesson) {
-                        console.warn("Unable to cancel recovery because original daily lesson does not exist");
-                        return false;
-                    }
 
-                    const recoveryLesson: ExtendedStudentLesson = { ...studentLesson, originalDailyLesson, recoveryDailyLesson };
-                    await SchoolRecoveryLessonService.instance.cancelRecovery(recoveryLesson, deleteFromRecoveries);
-                } else if (lessonToDelete.recovery.ref == 'recovery') {
-                    // delete recovery lesson
-
-                    const recoveryDailyLesson = await DailyLessonRepository.instance.get(lessonToDelete.recovery.lessonRef.dailyLessonId);
-                    if (!recoveryDailyLesson) {
-                        console.warn("Unable to cancel recovery because recovery daily lesson does not exist");
-                        return false;
-                    }
-                    const recoveryStudentLessons = await StudentLessonService.instance.getStudentLesson(recoveryDailyLesson);
-                    const recoveryStudentLesson = recoveryStudentLessons.find(l => l.lessonId == lessonToDelete.recovery!.lessonRef.lessonId)
-                    if (!recoveryStudentLesson) {
-                        console.warn("Unable to cancel recovery because recovery student lesson does not exist");
-                        return false;
-                    }
-
-                    await this.deleteStudentLesson(recoveryStudentLesson, recoveryDailyLesson, true);
-                    dailyLesson.lessons.splice(index, 1);
-                    await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id!);
+            if (lessonToDelete.recovery?.ref == 'original') {
+                // update original daily lesson, by cancelling scheduled recovery
+                const originalDailyLesson = await DailyLessonRepository.instance.get(lessonToDelete.recovery.lessonRef.dailyLessonId);
+                const recoveryDailyLesson = dailyLesson;
+                if (!originalDailyLesson) {
+                    console.warn("Unable to cancel recovery because original daily lesson does not exist");
+                    return false;
                 }
-            }
 
+                const recoveryLesson: ExtendedStudentLesson = { ...studentLesson, originalDailyLesson, recoveryDailyLesson };
+                await SchoolRecoveryLessonService.instance.cancelRecovery(recoveryLesson, deleteFromRecoveries);
+            } else if (lessonToDelete.recovery?.ref == 'recovery') {
+                // delete recovery lesson
+
+                const recoveryDailyLesson = await DailyLessonRepository.instance.get(lessonToDelete.recovery.lessonRef.dailyLessonId);
+                if (!recoveryDailyLesson) {
+                    console.warn("Unable to cancel recovery because recovery daily lesson does not exist");
+                    return false;
+                }
+                const recoveryStudentLessons = await StudentLessonService.instance.getStudentLesson(recoveryDailyLesson);
+                const recoveryStudentLesson = recoveryStudentLessons.find(l => l.lessonId == lessonToDelete.recovery!.lessonRef.lessonId)
+                if (!recoveryStudentLesson) {
+                    console.warn("Unable to cancel recovery because recovery student lesson does not exist");
+                    return false;
+                }
+
+                await this.deleteLessonAndRecoveryReferences(recoveryStudentLesson, recoveryDailyLesson, deleteDailyLessonWhenNoLessons, true);
+                dailyLesson.lessons.splice(index, 1);
+                await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id!);
+            }
+            // lessonToDelete.recovery is undefined
+            else {
+                await this.deleteLesson(dailyLesson, index, deleteDailyLessonWhenNoLessons);
+            }
 
             return true;
         } catch (error) {
             return false;
         }
+    }
+
+    public async deleteLesson(dailyLesson?: DailyLesson, index?: number, deleteDailyLessonWhenNoLessons?: boolean) {
+        if (dailyLesson && index != undefined && index != -1) {
+            dailyLesson.lessons.splice(index, 1);
+            // if the recovery daily lesson has no more lessons, delete it
+            if (dailyLesson.lessons.length == 0 && deleteDailyLessonWhenNoLessons) {
+                await DailyLessonRepository.instance.delete(dailyLesson.id);
+            } else {
+                await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
+            }
+        }
+    }
+
+    public async computeSalaryOfDailyLesson(school: School, dailyLessonId: ID): Promise<DailyLesson | undefined> {
+        const dailyLesson = await DailyLessonRepository.instance.get(dailyLessonId);
+        if (!dailyLesson) return;
+        const studentIds = dailyLesson.lessons.map(l => l.studentId);
+        const studentLessons = await StudentLessonService.instance.getStudentLesson(dailyLesson, studentIds);
+
+        let salary = 0;
+        dailyLesson.lessons.forEach(l => {
+            const less = studentLessons.find(sl => sl.id == l.studentId);
+            if (less === undefined) return;
+            salary += SalaryService.instance.computeSalaryByStudentLesson(school, less);
+        })
+        if (salary != dailyLesson.salary) {
+            dailyLesson.salary = salary;
+            dailyLesson.lastSalaryUpdate = Timestamp.now();
+            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
+            return dailyLesson;
+        }
+        return;
     }
 }

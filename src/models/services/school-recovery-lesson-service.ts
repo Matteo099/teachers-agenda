@@ -280,15 +280,7 @@ export class SchoolRecoveryLessonService {
         // Step 1: remove the recovery lesson from the recovery daily lesson
         const recoveryDailyLesson = await DailyLessonRepository.instance.get(lesson.recoveryDailyLesson.id);
         const recoveryLessonIndex = recoveryDailyLesson?.lessons.findIndex(l => l.lessonId == recoveryLessonRef?.lessonId);
-        if (recoveryDailyLesson && recoveryLessonIndex != undefined && recoveryLessonIndex != -1) {
-            recoveryDailyLesson.lessons.splice(recoveryLessonIndex, 1);
-            // if the recovery daily lesson has no more lessons, delete it
-            if (recoveryDailyLesson.lessons.length == 0) {
-                await DailyLessonRepository.instance.delete(recoveryDailyLesson.id);
-            } else {
-                await DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
-            }
-        }
+        await DailyLessonService.instance.deleteLesson(recoveryDailyLesson, recoveryLessonIndex);
 
         // Step 2: remove the recovery lesson reference from the original daily lesson
         const originalDailyLesson = await DailyLessonRepository.instance.get(lesson.originalDailyLesson.id);

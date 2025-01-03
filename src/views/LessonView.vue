@@ -71,7 +71,7 @@
 import CalendarLessonEditor from '@/components/lesson/CalendarLessonEditor.vue';
 import { type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
-import { LessonGroupService, type LessonGroup, type LessonProjection, type SchoolLessons } from '@/models/services/lesson-group-service';
+import { LessonGroupService, type LessonGroup, type LessonProjection } from '@/models/services/lesson-group-service';
 import { SchoolService } from '@/models/services/school-service';
 import { type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
@@ -93,11 +93,11 @@ const loadingLessons = ref(false);
 const loadingCalendar = ref(false);
 const computingLessonGroups = ref(false);
 
-const schoolLessons: SchoolLessons = {
-    dailyLessons: [],
-    weeklyLessons: [],
-    schoolId: props.school.id
-};
+// const schoolLessons: SchoolLessons = {
+//     dailyLessons: [],
+//     weeklyLessons: [],
+//     schoolId: props.school.id
+// };
 
 const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value || computingLessonGroups.value);
 watch(props.school, () => loadLessonGroup())
@@ -111,7 +111,7 @@ function getColor(lesson: LessonProjection) {
 }
 
 async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
-    const dailyLessonId = await DailyLessonService.instance.getOrCreateDailyLessonId(schoolLessons, lessonGroup);
+    const dailyLessonId = await DailyLessonService.instance.getOrCreateDailyLessonId(props.school.id, lessonGroup);
     router.push(`/lesson/${dailyLessonId}`);
 }
 

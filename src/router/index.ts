@@ -1,5 +1,14 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { getCurrentUser } from 'vuefire'
+import HomeView from '../views/HomeView.vue'
+import ManageSchoolView from '@/views/ManageSchoolView.vue'
+import SchoolView from '@/views/SchoolView.vue'
+import SchoolLessonView from '@/views/SchoolLessonView.vue'
+import DailyLessonView from '@/views/DailyLessonView.vue'
+import CalendarView from '@/views/CalendarView.vue'
+import SettingsView from '@/views/SettingsView.vue'
+import LoginView from '@/views/LoginView.vue'
+import DebuggerView from '@/views/DebuggerView.vue'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -9,59 +18,75 @@ const router = createRouter({
       path: '/',
       name: 'home',
       meta: { requiresAuth: true },
-      component: () => import('../views/HomeView.vue')
+      // // component: () => import('../views/HomeView.vue'),
+      component: HomeView,
     },
     {
       path: '/schools',
       name: 'schools',
       meta: { requiresAuth: true },
-      component: () => import('../views/ManageSchoolView.vue'),
+      // component: () => import('../views/ManageSchoolView.vue'),
+      component: ManageSchoolView,
     },
     {
       path: '/school/:id',
       meta: { requiresAuth: true, transition: 'v-slide-x-transition' },
-      component: () => import('../views/SchoolView.vue'),
+      // component: () => import('../views/SchoolView.vue'),
+      component: SchoolView,
     },
     {
       path: '/lessons/:id',
       name: 'lessons',
       meta: { requiresAuth: true },
-      component: () => import('../views/SchoolLessonView.vue')
+      // component: () => import('../views/SchoolLessonView.vue'),
+      component: SchoolLessonView,
     },
     {
       path: '/lesson/:id',
       name: 'lesson',
       meta: { requiresAuth: true },
-      component: () => import('../views/DailyLessonView.vue')
+      // component: () => import('../views/DailyLessonView.vue'),
+      component: DailyLessonView,
     },
     {
       path: '/recoveries',
       name: 'recoveries',
       meta: { requiresAuth: true },
-      component: () => import('../views/HomeView.vue')
+      // component: () => import('../views/HomeView.vue'),
+      component: HomeView,
     },
     {
       path: '/calendar',
       name: 'calendar',
       meta: { requiresAuth: true },
-      component: () => import('../views/CalendarView.vue')
+      // component: () => import('../views/CalendarView.vue'),
+      component: CalendarView,
     },
     {
       path: '/reports',
       name: 'reports',
       meta: { requiresAuth: true },
-      component: () => import('../views/HomeView.vue')
+      // component: () => import('../views/HomeView.vue'),
+      component: HomeView,
     },
     {
       path: '/settings',
       name: 'settings',
       meta: { requiresAuth: true },
-      component: () => import('../views/HomeView.vue')
+      // component: () => import('../views/SettingsView.vue'),
+      component: SettingsView,
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import('../views/LoginView.vue')
+      // component: () => import('../views/LoginView.vue'),
+      component: LoginView,
+    },
+    {
+      path: '/debugger',
+      name: 'debugger',
+      // component: () => import('../views/DebuggerView.vue'),
+      component: DebuggerView,
     }
 
     // {
@@ -70,7 +95,7 @@ const router = createRouter({
     //   // route level code-splitting
     //   // this generates a separate chunk (About.[hash].js) for this route
     //   // which is lazy-loaded when the route is visited.
-    //   component: () => import('../views/AboutView.vue')
+    //   // component: () => import('../views/AboutView.vue'),
     // }
   ]
 })

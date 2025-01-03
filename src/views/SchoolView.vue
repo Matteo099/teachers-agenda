@@ -42,6 +42,9 @@
             <v-col class="pa-2" cols="12" md="6">
                 <StudentView :school="school"></StudentView>
             </v-col>
+            <v-col class="pa-2" cols="12" md="6">
+                <SalaryView :school="school"></SalaryView>
+            </v-col>
         </v-row>
         <v-row>
             <v-col class="pa-2" cols="12">
@@ -71,13 +74,21 @@
             </v-col>
         </v-row>
     </v-card>
+
+    <v-container fluid v-else>
+        <v-skeleton-loader class="mx-auto" type="heading"></v-skeleton-loader>
+        <v-row class="justify-center mt-4">
+            <v-col v-for="i in 5" :key="i" cols="12" md="6">
+                <v-skeleton-loader elevation=3 type="card"></v-skeleton-loader>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
-import StudentView from '@/components/student/StudentView.vue';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { SchoolService } from '@/models/services/school-service';
 import { type Unsubscribe } from 'firebase/firestore';
@@ -86,6 +97,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useDocument } from 'vuefire';
 import LessonView from './LessonView.vue';
 import RecoveryLessonView from './RecoveryLessonView.vue';
+import StudentView from './StudentView.vue';
+import SalaryView from './SalaryView.vue';
 
 const route = useRoute()
 const router = useRouter()
