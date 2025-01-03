@@ -61,7 +61,10 @@ const salaryHeaders: any = [
     { title: 'Operazioni', key: 'actions', sortable: false },
 ];
 
-const total = computed(() => salaries.value.reduce((total, obj) => total + obj.salary, 0));
+const total = computed(() => {
+    const t = salaries.value.reduce((total, obj) => total + obj.salary, 0);
+    return isNaN(t) ? 0 : t;
+});
 
 watch(selectedRange, loadSalary);
 

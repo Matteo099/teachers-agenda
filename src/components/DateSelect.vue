@@ -40,9 +40,9 @@ const model = defineModel<DateSelectModel>({
     }
 });
 
-watch(selectedType, updateModel);
-watch(selectedPeriod, updateModel);
-watch(range, updateModel);
+watch(selectedType, updateModel, { immediate: true });
+watch(selectedPeriod, updateModel, { immediate: true });
+watch(range, updateModel, { immediate: true });
 watch(model, updateValues, { immediate: true });
 
 function updateModel() {

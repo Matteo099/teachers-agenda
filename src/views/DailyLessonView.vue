@@ -16,7 +16,7 @@
                 <v-row class="justify-center">
                     <v-col cols="auto">
                         <span class="text-subtitle">
-                            Totale: <b> {{ dailyLesson.salary }} €</b>
+                            Totale: <b> {{ total }} €</b>
                         </span>
                     </v-col>
                 </v-row>
@@ -158,6 +158,7 @@ const studentsDialog = ref(false);
 const routeChanged = ref(true);
 const visualization = ref(0);
 
+const total = computed(() => isNaN(dailyLesson.value?.salary ?? 0) ? 0 : dailyLesson.value?.salary)
 const areLessonSelected = computed(() => selectedLessons.value.length != 0)
 const loading = computed(() => loadingStudents.value || loadingSchool.value || !dailyLesson.value || routeChanged.value);
 let currentDailyLessonId: ID | undefined = undefined;
@@ -359,7 +360,7 @@ async function save() {
 }
 
 function computeSalaryAndSave() {
-    if (dailyLesson.value?.salaryStrategy != school.value?.salaryStrategy){
+    if (dailyLesson.value?.salaryStrategy != school.value?.salaryStrategy) {
         toast.info("Aggiornamento dello stipendio giornaliero in corso...");
         save();
     }
