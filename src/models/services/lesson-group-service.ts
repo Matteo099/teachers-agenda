@@ -1,10 +1,9 @@
 import { where } from "firebase/firestore";
+import { v4 as uuidv4 } from 'uuid';
 import { LessonStatus, months, Time, yyyyMMdd, type CalendarEventExt, type DailyLesson, type IyyyyMMdd, type ScheduledLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
-import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
 import { nameof, nextDay, pastDay } from "../utils";
-import { v4 as uuidv4 } from 'uuid';
 import { DailyLessonService } from "./daily-lesson-service";
 
 export interface LessonGroup {
@@ -60,11 +59,11 @@ export class LessonGroupService {
             const date = yyyyMMdd.fromIyyyyMMdd(dl.date).toIyyyyMMdd("-", 1);
             return dl.lessons.map(l => {
                 return {
-                    id: uuidv4(),
+                    id: dl.id + "_" + l.lessonId,
                     title: l.studentId,
                     start: date + " " + Time.fromITime(l.startTime).format(),
                     end: date + " " + Time.fromITime(l.endTime).format(),
-                    data: { date }
+                    data: { date, dailyLessonId: dl.id }
                 }
             });
         }));

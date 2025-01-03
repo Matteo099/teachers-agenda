@@ -14,7 +14,7 @@ import vuetify from './plugins/vuetify';
 import router from './router';
 import { interceptConsole } from './plugins/interceptor';
 
-interceptConsole();
+if(import.meta.env.VITE_ENABLE_IN_APP_DEBUGGER.toLowerCase() === "true") interceptConsole();
 
 const { firebaseApp } = getFirebase()
 const app = createApp(App)

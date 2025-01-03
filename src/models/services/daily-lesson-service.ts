@@ -4,11 +4,11 @@ import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, 
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
-import type { LessonProjection, SchoolLessons } from "./lesson-group-service";
-import { SchoolRecoveryLessonService, type ExpandedLesson, type ExtendedStudentLesson } from "./school-recovery-lesson-service";
-import { SchoolService } from "./school-service";
-import { StudentLessonService } from "./student-lesson-service";
+import type { LessonProjection } from "./lesson-group-service";
 import { SalaryService } from "./salary-service";
+import { SchoolRecoveryLessonService, type ExpandedLesson, type ExtendedStudentLesson } from "./school-recovery-lesson-service";
+import { StudentLessonService } from "./student-lesson-service";
+import { WeeklyLessonService } from "./weely-lesson-service";
 
 export class DailyLessonService {
 
@@ -43,25 +43,25 @@ export class DailyLessonService {
     }
 
     public async getOrCreateDailyLessonId(
-        schoolLessons: SchoolLessons,
+        schoolId: ID,
         lesson: LessonProjection | Date
     ): Promise<ID> {
         // If lesson is a Date, call the helper to create a daily lesson based on the date
         if (lesson instanceof Date) {
-            return this.createDailyLessonByDate(schoolLessons, lesson);
+            return this.createDailyLessonByDate(schoolId, lesson);
         }
 
         // If lesson is a LessonProjection, handle it
-        return this.handleLessonProjection(schoolLessons, lesson);
+        return this.handleLessonProjection(schoolId, lesson);
     }
 
     private async handleLessonProjection(
-        schoolLessons: SchoolLessons,
+        schoolId: ID,
         lessonGroup: LessonProjection
     ): Promise<ID> {
         if (!lessonGroup.dailyLessonId) {
             // If lessonId is undefined, create a new daily lesson
-            const newDailyLesson = this.buildDailyLessonFromProjection(schoolLessons.schoolId, lessonGroup);
+            const newDailyLesson = this.buildDailyLessonFromProjection(schoolId, lessonGroup);
             return DailyLessonRepository.instance.save(newDailyLesson);
         }
 
@@ -89,35 +89,37 @@ export class DailyLessonService {
     }
 
     public async createDailyLessonByDate(
-        schoolLessons: SchoolLessons,
+        schoolId: ID,
         lessonDate: Date
     ): Promise<ID> {
         const parseDate = yyyyMMdd.fromDate(lessonDate).toIyyyyMMdd();
 
         // Try to retrieve the daily lesson for the given date
-        const existingData = await DailyLessonService.instance.getDailyLessonOfSchoolByDate(schoolLessons.schoolId, parseDate);
+        const existingData = await DailyLessonService.instance.getDailyLessonOfSchoolByDate(schoolId, parseDate);
 
         if (existingData?.[0]?.id) {
             return existingData[0].id; // If found, return the existing ID
         }
 
         // If no daily lesson found, create a new one from weekly lessons
-        const newDailyLesson = this.buildDailyLessonFromWeeklyOrEmpty(schoolLessons, lessonDate, parseDate);
+        const newDailyLesson = await this.buildDailyLessonFromWeeklyOrEmpty(schoolId, lessonDate, parseDate);
         return DailyLessonRepository.instance.save(newDailyLesson);
     }
 
-    public buildDailyLessonFromWeeklyOrEmpty(
-        schoolLessons: SchoolLessons,
+    public async buildDailyLessonFromWeeklyOrEmpty(
+        schoolId: ID,
         lessonDate: Date,
         formattedDate: string
-    ): Partial<DailyLesson> {
-        const weeklyLesson = schoolLessons.weeklyLessons.find(l => l.dayOfWeek === lessonDate.getDay());
+    ): Promise<Partial<DailyLesson>> {
+        const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchoolByDayBetweenDate(schoolId, lessonDate.getDay(), formattedDate);
+        const weeklyLesson = weeklyLessons?.[0];
+        // const weeklyLesson = schoolLessons.weeklyLessons.find(l => l.dayOfWeek === lessonDate.getDay());
 
         if (weeklyLesson) {
             // Create daily lesson from weekly lesson schedule
             return {
                 date: formattedDate,
-                schoolId: schoolLessons.schoolId,
+                schoolId: schoolId,
                 lessons: weeklyLesson.schedule.map(l => ({
                     lessonId: uuidv4(),
                     status: LessonStatus.NONE,
@@ -133,7 +135,7 @@ export class DailyLessonService {
         // Create an empty daily lesson if no weekly lesson is found
         return {
             date: formattedDate,
-            schoolId: schoolLessons.schoolId,
+            schoolId: schoolId,
             lessons: [],
         };
     }
@@ -168,8 +170,8 @@ export class DailyLessonService {
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
         }
-        const schoolLessons = await SchoolService.instance.getSchoolLessons(schedule.schoolId, schedule.date)
-        const recoveryDailyLessonId = await this.getOrCreateDailyLessonId(schoolLessons, schedule.date);
+        // const schoolLessons = await SchoolService.instance.getSchoolLessons(schedule.schoolId, schedule.date)
+        const recoveryDailyLessonId = await this.getOrCreateDailyLessonId(schedule.schoolId, schedule.date);
         const recoveryDailyLesson = (await DailyLessonRepository.instance.get(recoveryDailyLessonId))!;
         recoveryDailyLesson.lessons.push(recoveryLesson)
         await DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
