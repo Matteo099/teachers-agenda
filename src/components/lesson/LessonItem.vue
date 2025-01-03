@@ -22,7 +22,7 @@
                 <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen>
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn class="ma-1" v-bind="activatorProps"
-                            v-if="item.status == LessonStatus.NONE">sposta</v-btn>
+                            v-if="!item.recovery && item.status == LessonStatus.NONE">sposta</v-btn>
                     </template>
 
                     <template v-slot:default="{ isActive }">
