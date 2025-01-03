@@ -74,6 +74,15 @@
             </v-col>
         </v-row>
     </v-card>
+
+    <v-container fluid v-else>
+        <v-skeleton-loader class="mx-auto" type="heading"></v-skeleton-loader>
+        <v-row class="justify-center mt-4">
+            <v-col v-for="i in 5" :key="i" cols="12" md="6">
+                <v-skeleton-loader elevation=3 type="card"></v-skeleton-loader>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
 <script setup lang="ts">
