@@ -7,4 +7,14 @@
 </template>
 
 <script setup lang="ts">
+import type { IyyyyMMdd } from '@/models/model';
+
+
+interface SalaryTrendProps {
+    from?: IyyyyMMdd;
+    to?: IyyyyMMdd;
+}
+
+const props = defineProps<SalaryTrendProps>()
+
 </script>
