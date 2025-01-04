@@ -151,7 +151,7 @@ export interface Student {
 
 export interface Note {
     text: string;
-    updatedAt: Timestamp;  
+    updatedAt: Timestamp;
 }
 
 export interface School {
@@ -234,6 +234,9 @@ export interface DailyLesson {
      */
     salaryStrategy?: SalaryStrategy;
 }
+
+export interface TodayLesson { school: School; lesson: DailyLesson | WeeklyLesson }
+
 
 export const lessonStatusName = ["", "presente", "assente", "cancellata"]
 export const lessonStatusColor = ["gray", "green", "red", "orange"]

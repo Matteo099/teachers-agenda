@@ -4,14 +4,13 @@ import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, 
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { nameof } from "../utils";
-import type { LessonProjection } from "./lesson-group-service";
+import { type LessonProjection } from "./lesson-group-service";
 import { SalaryService } from "./salary-service";
 import { SchoolRecoveryLessonService, type ExpandedLesson, type ExtendedStudentLesson } from "./school-recovery-lesson-service";
 import { StudentLessonService } from "./student-lesson-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
 
 export class DailyLessonService {
-
     private static _instance: DailyLessonService | null = null;
 
     public static get instance(): DailyLessonService {

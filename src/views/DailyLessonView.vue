@@ -7,7 +7,7 @@
             <v-col>
                 <v-row>
                     <v-col>
-                        <p class="text-h5 text-center">Lezioni del <b>{{
+                        <p class="text-h5 text-center">Lezione del <b>{{
                             yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()
                                 }}</b>
                         </p>
