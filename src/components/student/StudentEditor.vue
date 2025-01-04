@@ -3,35 +3,42 @@
         <v-card-text>
             <v-row dense>
                 <v-col cols="12" md="6">
-                    <v-text-field v-model="name" v-bind="nameProps" label="Nome"></v-text-field>
+                    <v-text-field id="std_name" :disabled="isDisabled('name')" :focused="isFocussed('name')"
+                        v-model="name" v-bind="nameProps" label="Nome"></v-text-field>
                 </v-col>
                 <v-col cols="12" md="6">
-                    <v-text-field v-model="surname" v-bind="surnameProps" label="Cognome"></v-text-field>
-                </v-col>
-
-                <v-col cols="12" md="6">
-                    <v-text-field v-model="contact" v-bind="contactProps" label="Contatto"></v-text-field>
+                    <v-text-field id="std_surname" :disabled="isDisabled('surname')" :focused="isFocussed('surname')"
+                        v-model="surname" v-bind="surnameProps" label="Cognome"></v-text-field>
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-select v-model="level" v-bind="levelProps" :items="_levels" label="Livello"></v-select>
+                    <v-text-field id="std_contact" :disabled="isDisabled('contact')" :focused="isFocussed('contact')"
+                        v-model="contact" v-bind="contactProps" label="Contatto"></v-text-field>
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-select v-model="lessonDay" v-bind="lessonDayProps" :items="days"
-                        label="Giorno della Lezione"></v-select>
+                    <v-select id="std_level" :disabled="isDisabled('level')" :focused="isFocussed('level')"
+                        v-model="level" v-bind="levelProps" :items="_levels" label="Livello"></v-select>
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-number-input v-model="minutesLessonDuration" v-bind="minutesLessonDurationProps" :reverse="false"
-                        controlVariant="default" label="Durata della Lezione" suffix="min" :hideInput="false"
-                        :inset="false" :min="1">
+                    <v-select id="std_lessonDay" :disabled="isDisabled('lessonDay')" :focused="isFocussed('lessonDay')"
+                        v-model="lessonDay" v-bind="lessonDayProps" :items="days" label="Giorno della Lezione"
+                        clearable></v-select>
+                </v-col>
+
+                <v-col cols="12" md="6">
+                    <v-number-input id="std_minutesLessonDuration" :disabled="isDisabled('minutesLessonDuration')"
+                        :focused="isFocussed('minutesLessonDuration')" v-model="minutesLessonDuration"
+                        v-bind="minutesLessonDurationProps" :reverse="false" controlVariant="default"
+                        label="Durata della Lezione" suffix="min" :hideInput="false" :inset="false" :min="1">
                     </v-number-input>
                 </v-col>
 
-                <!-- <v-col cols="12" md="6">
-                    <v-text-field v-model="_schoolId" label="Scuola" required></v-text-field>
-                </v-col> -->
+                <v-col cols="12" md="12">
+                    <v-textarea id="std_note" :disabled="isDisabled('note')" :focused="isFocussed('note')"
+                        v-model="note" v-bind="noteProps" label="Note" counter></v-textarea>
+                </v-col>
             </v-row>
 
         </v-card-text>
@@ -58,7 +65,16 @@ import { onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 
-const props = defineProps<{ school: School, initialStudent?: Student, edit?: boolean }>()
+type StudentEditorField = "name" | "surname" | "contact" | "lessonDay" | "level" | "minutesLessonDuration" | "note";
+interface StudentEditorProps {
+    school: School;
+    initialStudent?: Student;
+    edit?: boolean;
+    focus?: StudentEditorField;
+    disableFields?: StudentEditorField[];
+}
+
+const props = defineProps<StudentEditorProps>()
 const emit = defineEmits(['close', 'save'])
 
 const _school: Ref<School | undefined> = ref();
@@ -75,7 +91,7 @@ const schema = yup.object({
     lessonDay: yup.string().label('Giono di Lezione').nullable().optional(),
     level: yup.string().required('Il Livello è obbligatorio').label('Livello'),
     minutesLessonDuration: yup.number().required('La Durata della Lezione è obbligatoria').min(1).label('Durata della Lezione'),
-    notes: yup.array().of(yup.string()).label('Note'),
+    note: yup.string().label('Note'),
 })
 
 const { defineField, handleSubmit } = useForm({
@@ -94,7 +110,7 @@ const [contact, contactProps] = defineField('contact', vuetifyConfig);
 const [lessonDay, lessonDayProps] = defineField('lessonDay', vuetifyConfig);
 const [level, levelProps] = defineField('level', vuetifyConfig);
 const [minutesLessonDuration, minutesLessonDurationProps] = defineField('minutesLessonDuration', vuetifyConfig);
-const [notes, notesProps] = defineField('notes', vuetifyConfig);
+const [note, noteProps] = defineField('note', vuetifyConfig);
 
 const onSave = handleSubmit(
     async (values: GenericObject) => {
@@ -106,16 +122,24 @@ const onSave = handleSubmit(
     }
 )
 
+function isDisabled(fieldName: StudentEditorField) {
+    return props.disableFields?.includes(fieldName);
+}
+
+function isFocussed(fieldName: StudentEditorField) {
+    return props.focus == fieldName;
+}
+
 function updateStudent() {
     if (props.initialStudent) {
         const studentClone = JSON.parse(JSON.stringify(props.initialStudent)) as Student;
         name.value = studentClone.name;
-        surname.value = studentClone.surname ?? "";
-        contact.value = studentClone.contact ?? "";
-        lessonDay.value = days[studentClone.lessonDay];
+        surname.value = studentClone.surname;
         level.value = studentClone.level;
-        notes.value = studentClone.notes ?? [];
         minutesLessonDuration.value = studentClone.minutesLessonDuration;
+        contact.value = studentClone.contact ?? "";
+        note.value = studentClone.note?.text ?? "";
+        if (studentClone.lessonDay) lessonDay.value = days[studentClone.lessonDay];
     }
 }
 
@@ -127,11 +151,20 @@ function updateSchool() {
 async function save(values: GenericObject) {
     saving.value = true;
 
-    const student: Partial<Student> = { ...values }
-    student.schoolId = _school.value!.id;
-    student.createdAt = props.edit ? props.initialStudent?.createdAt : Timestamp.now();
-    student.updatedAt = Timestamp.now();
+    const student: Partial<Student> = {
+        name: values.name,
+        surname: values.surname,
+        schoolId: _school.value!.id,
+        createdAt: props.edit ? props.initialStudent!.createdAt : Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        minutesLessonDuration: values.minutesLessonDuration,
+        level: values.level
+    }
+
+    if (contact.value && contact.value.trim().length != 0) student.contact = contact.value.trim();
     if (lessonDay.value) student.lessonDay = days.indexOf(lessonDay.value);
+    if (note.value && note.value.trim().length != 0) student.note = { text: note.value.trim(), updatedAt: Timestamp.now() };
+    else delete student.note;
 
     try {
         if (props.edit && props.initialStudent?.id != undefined) {
@@ -151,7 +184,15 @@ async function save(values: GenericObject) {
     }
 }
 
+function scrollToFocus() {
+    if (!props.focus) return;
+
+    const el = document.getElementById("std_" + props.focus);
+    el?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
 onMounted(() => {
+    scrollToFocus();
     updateStudent();
     updateSchool();
 })
