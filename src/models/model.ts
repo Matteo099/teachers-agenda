@@ -137,16 +137,21 @@ export interface Student {
     schoolId: string; // relation with the school
     name: string;
     surname: string;
-    contact: string;
-    lessonDay: number;
+    contact?: string;
+    lessonDay?: number;
+    note?: Note;
     level: string;
-    notes: string[];
     minutesLessonDuration: number;
 
     removed?: boolean;
 
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
     updatedAt: Timestamp;
+}
+
+export interface Note {
+    text: string;
+    updatedAt: Timestamp;  
 }
 
 export interface School {
