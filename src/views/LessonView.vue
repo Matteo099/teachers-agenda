@@ -42,7 +42,7 @@
                 </template>
             </v-dialog>
 
-            <v-btn icon="mdi-eye-arrow-right" variant="text" :to="'/lessons/' + school.id"></v-btn>
+            <v-btn icon="mdi-eye-arrow-right" variant="text" :to="'/calendar?filters=' + school.id"></v-btn>
         </template>
 
         <v-list lines="two">

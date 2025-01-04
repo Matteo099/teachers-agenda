@@ -19,32 +19,11 @@
           <v-list-item-title>Home</v-list-item-title>
         </v-list-item>
 
-        <v-list-item to="/schools" color="lime-darken-4">
-          <template v-slot:prepend>
-            <v-icon icon="mdi-town-hall"></v-icon>
-          </template>
-          <v-list-item-title>Gestisci Scuole</v-list-item-title>
-        </v-list-item>
-
         <v-list-item to="/calendar" color="lime-darken-4">
           <template v-slot:prepend>
             <v-icon icon="mdi-calendar"></v-icon>
           </template>
           <v-list-item-title>Calendario</v-list-item-title>
-        </v-list-item>
-
-        <v-list-item :to="'/lesson/' + new Date()" color="lime-darken-4">
-          <template v-slot:prepend>
-            <v-icon icon="mdi-book-account"></v-icon>
-          </template>
-          <v-list-item-title>Lezioni</v-list-item-title>
-        </v-list-item>
-
-        <v-list-item to="/recoveries" color="lime-darken-4">
-          <template v-slot:prepend>
-            <v-icon icon="mdi-repeat"></v-icon>
-          </template>
-          <v-list-item-title>Recuperi</v-list-item-title>
         </v-list-item>
 
         <v-list-item to="/reports" color="lime-darken-4">
@@ -157,25 +136,20 @@
 
     <v-layout v-if="!loginPage && mobile" class="overflow-visible position-relative" style="height: 56px;">
       <v-bottom-navigation class="position-fixed bottom-0" v-model="data" :bg-color="color" mode="shift">
+        <v-btn to="/calendar">
+          <v-icon>mdi-calendar</v-icon>
+          <span>Calendario</span>
+        </v-btn>
+
         <v-btn to="/">
           <v-icon>mdi-home</v-icon>
           <span>Home</span>
         </v-btn>
-        <!-- 
-        <v-btn>
-          <v-icon>mdi-music-note</v-icon>
-          <span>Music</span>
-        </v-btn>
 
-        <v-btn>
-          <v-icon>mdi-book</v-icon>
-          <span>Book</span>
+        <v-btn to="/statistics">
+          <v-icon>mdi-chart-bar</v-icon>
+          <span>Statistiche</span>
         </v-btn>
-
-        <v-btn>
-          <v-icon>mdi-image</v-icon>
-          <span>Image</span>
-        </v-btn> -->
       </v-bottom-navigation>
     </v-layout>
   </v-app>
@@ -189,7 +163,6 @@ import { useCurrentUser, useFirebaseAuth } from 'vuefire';
 import { useDisplay, useTheme } from 'vuetify';
 import { LocalStorageHandler } from './models/storage/local-storage-handler';
 import { stringToHslColor } from './models/utils';
-import { Debugger } from './components/debugger/debugger';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);
