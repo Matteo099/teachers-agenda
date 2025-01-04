@@ -26,7 +26,7 @@
           <v-list-item-title>Calendario</v-list-item-title>
         </v-list-item>
 
-        <v-list-item to="/reports" color="lime-darken-4">
+        <v-list-item to="/statistics" color="lime-darken-4">
           <template v-slot:prepend>
             <v-icon icon="mdi-chart-bar"></v-icon>
           </template>

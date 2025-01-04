@@ -4,7 +4,7 @@
             <BackButton></BackButton>
         </template>
         <v-card-text>
-            <v-select variant="outlined" chips label="Scuola" v-model="selectedSchools" :items="schools"
+            <v-select variant="outlined" chips label="Scuole" v-model="selectedSchools" :items="schools"
                 multiple item-title="name" item-value="id" :loading="loadingSchools"></v-select>
             <v-progress-linear :active="loading" color="primary" indeterminate></v-progress-linear>
             <ScheduleXCalendar :calendar-app="calendarApp">

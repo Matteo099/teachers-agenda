@@ -1,14 +1,13 @@
+import CalendarView from '@/views/CalendarView.vue'
+import DailyLessonView from '@/views/DailyLessonView.vue'
+import DebuggerView from '@/views/DebuggerView.vue'
+import LoginView from '@/views/LoginView.vue'
+import SchoolView from '@/views/SchoolView.vue'
+import SettingsView from '@/views/SettingsView.vue'
+import StatisticsView from '@/views/StatisticsView.vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { getCurrentUser } from 'vuefire'
 import HomeView from '../views/HomeView.vue'
-import ManageSchoolView from '@/views/ManageSchoolView.vue'
-import SchoolView from '@/views/SchoolView.vue'
-import SchoolLessonView from '@/views/SchoolLessonView.vue'
-import DailyLessonView from '@/views/DailyLessonView.vue'
-import CalendarView from '@/views/CalendarView.vue'
-import SettingsView from '@/views/SettingsView.vue'
-import LoginView from '@/views/LoginView.vue'
-import DebuggerView from '@/views/DebuggerView.vue'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -22,24 +21,10 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/schools',
-      name: 'schools',
-      meta: { requiresAuth: true },
-      // component: () => import('../views/ManageSchoolView.vue'),
-      component: ManageSchoolView,
-    },
-    {
       path: '/school/:id',
       meta: { requiresAuth: true, transition: 'v-slide-x-transition' },
       // component: () => import('../views/SchoolView.vue'),
       component: SchoolView,
-    },
-    {
-      path: '/lessons/:id',
-      name: 'lessons',
-      meta: { requiresAuth: true },
-      // component: () => import('../views/SchoolLessonView.vue'),
-      component: SchoolLessonView,
     },
     {
       path: '/lesson/:id',
@@ -63,11 +48,11 @@ const router = createRouter({
       component: CalendarView,
     },
     {
-      path: '/reports',
-      name: 'reports',
+      path: '/statistics',
+      name: 'statistics',
       meta: { requiresAuth: true },
-      // component: () => import('../views/HomeView.vue'),
-      component: HomeView,
+      // component: () => import('../views/StatisticsView.vue'),
+      component: StatisticsView,
     },
     {
       path: '/settings',
