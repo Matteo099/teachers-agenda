@@ -70,6 +70,7 @@ const router = createRouter({
     {
       path: '/debugger',
       name: 'debugger',
+      meta: { requiresAuth: true },
       // component: () => import('../views/DebuggerView.vue'),
       component: DebuggerView,
     }

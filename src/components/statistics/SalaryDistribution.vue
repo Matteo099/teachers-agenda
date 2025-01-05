@@ -1,5 +1,5 @@
 <template>
-    <BaseChart :from="from" :to="to" :create-chart="createChart" :after-chart-created="afterChartCreated"
+    <BaseChart :schools="schools" :from="from" :to="to" :create-chart="createChart" :after-chart-created="afterChartCreated"
         :are-update-condition-satistied="areUpdateConditionSatistied" :update-chart-data="updateChartData"
         title="Distribuzione dello Stipendio" subtitle="Divisione dello stipendio per Scuola" />
 </template>
