@@ -49,7 +49,10 @@ export default defineConfig({
             purpose: 'maskable'
           }
         ]
-      }
+      },
+      workbox: {
+        maximumFileSizeToCacheInBytes: 3 * 1024 ** 2, // 3 MB or set to something else
+      }    
     })
   ],
   base: "/teachers-agenda",
