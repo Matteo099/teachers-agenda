@@ -132,6 +132,11 @@ export class yyyyMMdd {
     }
 }
 
+export interface DateSelectModel {
+    from?: IyyyyMMdd;
+    to?: IyyyyMMdd;
+}
+
 export interface Student {
     id: string;
     schoolId: string; // relation with the school

@@ -12,8 +12,9 @@
                 <DateSelect v-model="dateRange" class="mt-2"></DateSelect>
             </v-col>
             <v-col cols=12 md="4">
-                <v-select v-model="selectedSchoolsID" :items="schools" :loading="loadingSchools" item-value="id" label="Scuole"
-                    item-title="name" variant="outlined" density="compact" hide-details chips multiple></v-select>
+                <v-select v-model="selectedSchoolsID" :items="schools" :loading="loadingSchools" item-value="id"
+                    label="Scuole" item-title="name" variant="outlined" density="compact" hide-details chips
+                    multiple></v-select>
             </v-col>
         </v-row>
 
@@ -21,31 +22,31 @@
             <v-tabs-window-item value="salary">
                 <v-card flat>
                     <v-card-text>
-                        <SalaryDistribution :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
-                        <SalaryTrend :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
+                        <SalaryDistribution :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
+                        <SalaryTrend :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                     </v-card-text>
                 </v-card>
             </v-tabs-window-item>
             <v-tabs-window-item value="schools">
                 <v-card flat>
                     <v-card-text>
-                        <SchoolDistribution :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
-                        <SchoolStudentDistribution :schools="selectedSchools" :from="dateRange.from"
-                            :to="dateRange.to" />
+                        <SchoolDistribution :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
+                        <SchoolStudentDistribution :schools="selectedSchools" :from="dateRange?.from"
+                            :to="dateRange?.to" />
                     </v-card-text>
                 </v-card>
             </v-tabs-window-item>
             <v-tabs-window-item value="lessons">
                 <v-card flat>
                     <v-card-text>
-                        <LessonDistribution :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
+                        <LessonDistribution :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                     </v-card-text>
                 </v-card>
             </v-tabs-window-item>
             <v-tabs-window-item value="students">
                 <v-card flat>
                     <v-card-text>
-                        <StudentTrend :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
+                        <StudentTrend :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                     </v-card-text>
                 </v-card>
             </v-tabs-window-item>
@@ -61,7 +62,7 @@ import SalaryTrend from '@/components/statistics/SalaryTrend.vue';
 import SchoolDistribution from '@/components/statistics/SchoolDistribution.vue';
 import SchoolStudentDistribution from '@/components/statistics/SchoolStudentDistribution.vue';
 import StudentTrend from '@/components/statistics/StudentTrend.vue';
-import type { School } from '@/models/model';
+import type { DateSelectModel, School } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { computed, onMounted, ref, watch, type Ref } from 'vue';
@@ -71,19 +72,24 @@ const tabs = ["salary", "schools", "lessons", "students"];
 const route = useRoute();
 const router = useRouter();
 const tab = ref(tabs[0]);
-const dateRange = ref();
+const dateRange: Ref<DateSelectModel | undefined> = ref();
 const loadingSchools = ref(false);
 const schools: Ref<School[]> = ref([]);
 const selectedSchoolsID: Ref<ID[]> = ref([]);
 
 const tabQuery = computed(() => route.query.tab as string);
 const filtersQuery = computed(() => route.query.filters as string);
+const from = computed(() => route.query.from as string);
+const to = computed(() => route.query.to as string);
 const selectedSchools = computed(() => schools.value.filter(s => selectedSchoolsID.value.includes(s.id)));
 watch(tabQuery, updateTab, { immediate: true });
 watch(filtersQuery, updateFilters, { immediate: true });
+watch(from, updateFilters, { immediate: true });
+watch(to, updateFilters, { immediate: true });
 watch(schools, updateFilters);
 watch(tab, updateQueryRoute);
 watch(selectedSchoolsID, updateQueryRoute);
+watch(dateRange, updateQueryRoute);
 
 function updateTab() {
     if (tabQuery.value && tabs.includes(tabQuery.value.toLowerCase())) {
@@ -93,16 +99,22 @@ function updateTab() {
 
 function updateFilters() {
     selectedSchoolsID.value = filtersQuery.value?.split(",") ?? schools.value.map(s => s.id);
+    if (from.value) dateRange.value = { from: from.value, to: dateRange.value?.to };
+    if (to.value) dateRange.value = { from: dateRange.value?.from, to: to.value };
     if (filtersQuery.value && tabs.includes(tabQuery.value.toLowerCase())) {
         tab.value = tabQuery.value;
     }
 }
 
 function updateQueryRoute() {
+    let route = `/statistics?tab=${tab.value}`;
+
     const filters = selectedSchoolsID.value.join(",");
-    if (filters && filters.length != 0)
-        router.push("/statistics?tab=" + tab.value + "&filters=" + filters)
-    else router.push("/statistics?tab=" + tab.value)
+    if (filters && filters.length != 0) route += "&filters=" + filters;
+    if (dateRange.value?.from) route += `&from=${dateRange.value.from}`;
+    if (dateRange.value?.to) route += `&to=${dateRange.value.to}`;
+
+    router.push(route)
 }
 
 async function loadSchools() {

@@ -16,14 +16,9 @@
 </template>
 
 <script setup lang="ts">
-import { yyyyMMdd, type IyyyyMMdd } from '@/models/model';
+import { yyyyMMdd, type DateSelectModel } from '@/models/model';
 import { ref, watch } from 'vue';
 import { useDate } from 'vuetify';
-
-interface DateSelectModel {
-    from?: IyyyyMMdd;
-    to?: IyyyyMMdd;
-}
 
 const date = useDate();
 const selectTypes = ["Assoluto", "Relativo"];
