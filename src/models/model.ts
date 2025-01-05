@@ -60,6 +60,10 @@ export class Time {
         return this.hour * 3600 + this.minutes * 60 + this.seconds;
     }
 
+    setSeconds(sec: number) {
+        this.seconds = sec;
+    }
+
     add(p: { hour?: number; minutes?: number; seconds?: number; }): Time {
         this.hour += p.hour ?? 0;
         this.minutes += p.minutes ?? 0;

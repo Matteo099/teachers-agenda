@@ -48,8 +48,8 @@
         <v-card-actions>
             <v-spacer></v-spacer>
 
+            <v-btn text="Random" variant="plain" @click="randomData" v-if="development"></v-btn>
             <v-btn text="Chiudi" variant="plain" @click="emit('close')"></v-btn>
-
             <v-btn color="primary" :loading="saving" :disabled="saving" :text="edit ? 'Salva Modifiche' : 'Crea'"
                 variant="tonal" @click="onSave"></v-btn>
         </v-card-actions>
@@ -58,6 +58,7 @@
 
 <script setup lang="ts">
 import { days, type School, type Student } from '@/models/model';
+import { development, Random } from '@/models/random-utils';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -146,6 +147,16 @@ function updateStudent() {
 function updateSchool() {
     _school.value = props.school
     _levels.value = _school.value.levelRanges.flatMap(l => l.levels);
+}
+
+function randomData() {
+    name.value = Random.word();
+    surname.value = Random.word();
+    level.value = Random.item(_levels.value);
+    lessonDay.value = Random.item(days);
+    minutesLessonDuration.value = Random.int(30, 150);
+    contact.value = Random.word()
+    note.value = Random.text()
 }
 
 async function save(values: GenericObject) {
