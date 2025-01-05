@@ -1,4 +1,4 @@
-import { LessonStatus, SalaryStrategy, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Salary, type School, type StudentLesson } from "../model";
+import { LessonStatus, SalaryStrategy, type DailyLesson, type IyyyyMMdd, type Salary, type School, type StudentLesson } from "../model";
 import { DailyLessonService } from "./daily-lesson-service";
 
 export class SalaryService {

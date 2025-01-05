@@ -1,5 +1,5 @@
 <template>
-    <v-row class="px-2 mb-2">
+    <v-row>
         <v-col cols="12" md="6">
             <v-select variant="outlined" density="compact" v-model="selectedType" :items="selectTypes"
                 hide-details></v-select>
