@@ -12,6 +12,20 @@ export interface TAPieData {
     value: number;
 }
 
+export interface TAStudentTrendData {
+    student: string;
+    present: number;
+    absent: number;
+    recovery: number;
+}
+
+export interface TALessonTrendData {
+    school: string;
+    present: number;
+    absent: number;
+    recovery: number;
+}
+
 export function addTitle(root: am5.Root, chart: am5.Chart, title: string, subtitle?: string) {
     if (subtitle)
         chart.children.unshift(am5.Label.new(root, {

@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { TaIndicator } from "@/models/charts/ta-indicator";
-import { yyyyMMdd, type IyyyyMMdd } from "@/models/model";
+import { yyyyMMdd, type IyyyyMMdd, type School } from "@/models/model";
 import * as am5 from "@amcharts/amcharts5";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import { onMounted, shallowRef, watch } from "vue";
@@ -22,14 +22,15 @@ interface BaseChartProps {
     to?: IyyyyMMdd;
     title?: string;
     subtitle?: string;
+    schools?: School[];
 
     createChart: (root: am5.Root) => void;
     afterChartCreated: () => void;
     areUpdateConditionSatistied: () => boolean;
-    updateChartData: (from: IyyyyMMdd, to: IyyyyMMdd) => Promise<any>;
+    updateChartData: (from: IyyyyMMdd, to: IyyyyMMdd, ...schools: School[]) => Promise<any>;
 }
 
-const props = defineProps<BaseChartProps>()
+const props = withDefaults(defineProps<BaseChartProps>(), { schools: () => [] });
 const chartdiv = shallowRef(null);
 let indicator: TaIndicator;
 
@@ -40,7 +41,7 @@ async function _updateChartData() {
     if (!props.from) return;
 
     indicator.show();
-    await props.updateChartData(props.from, props.to ?? yyyyMMdd.today().toIyyyyMMdd());
+    await props.updateChartData(props.from, props.to ?? yyyyMMdd.today().toIyyyyMMdd(), ...props.schools);
     indicator.hide();
 }
 

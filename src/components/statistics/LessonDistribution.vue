@@ -1,7 +1,7 @@
 <template>
-    <BaseChart :from="from" :to="to" :create-chart="createChart" :after-chart-created="afterChartCreated"
+    <BaseChart :schools="schools" :from="from" :to="to" :create-chart="createChart" :after-chart-created="afterChartCreated"
         :are-update-condition-satistied="areUpdateConditionSatistied" :update-chart-data="updateChartData"
-        title="Distribuzione delle scuole" />
+        title="Distribuzione delle Lezioni" subtitle="Numero di lezioni in una scuola" />
 </template>
 
 <script setup lang="ts">
@@ -74,11 +74,11 @@ function areUpdateConditionSatistied(): boolean {
 }
 
 async function updateChartData(from: IyyyyMMdd, to: IyyyyMMdd, ...schools: School[]) {
-    const data = await StatisticsService.instance.getSchoolDistribution(...schools);
+    const data = await StatisticsService.instance.getLessonTrend(from, to, ...schools);
     series.data.setAll(data);
 
     // The text does not update...
-    updateLabel();
+    updateLabel()
 }
 
 function updateLabel() {
@@ -86,7 +86,7 @@ function updateLabel() {
     label = am5.Label.new(_root, {
         centerX: am5.percent(50),
         centerY: am5.percent(50),
-        text: "Scuole: {valueSum}",
+        text: "Lezioni: {valueSum}",
         populateText: true,
         fontSize: "1.5em"
     })

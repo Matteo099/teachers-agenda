@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { type IyyyyMMdd } from "@/models/model";
+import { type IyyyyMMdd, type School } from "@/models/model";
 import { StatisticsService } from "@/models/services/statistics-service";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
@@ -14,9 +14,10 @@ import BaseChart from "./BaseChart.vue";
 interface Props {
     from?: IyyyyMMdd;
     to?: IyyyyMMdd;
+    schools?: School[];
 }
 
-defineProps<Props>()
+withDefaults(defineProps<Props>(), { schools: () => [] })
 let chart: am5xy.XYChart;
 let series: am5xy.LineSeries;
 
@@ -79,8 +80,8 @@ function areUpdateConditionSatistied(): boolean {
     return !!series;
 }
 
-async function updateChartData(from: IyyyyMMdd, to: IyyyyMMdd) {
-    const data = await StatisticsService.instance.getSalaryTrend(from, to);
+async function updateChartData(from: IyyyyMMdd, to: IyyyyMMdd, ...schools: School[]) {
+    const data = await StatisticsService.instance.getSalaryTrend(from, to, ...schools);
     series.data.setAll(data);
 }
 </script>
