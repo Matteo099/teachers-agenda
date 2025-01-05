@@ -11,12 +11,12 @@ import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import BaseChart from "./BaseChart.vue";
 
-interface SalaryTrendProps {
+interface Props {
     from?: IyyyyMMdd;
     to?: IyyyyMMdd;
 }
 
-defineProps<SalaryTrendProps>()
+defineProps<Props>()
 let chart: am5xy.XYChart;
 let series: am5xy.LineSeries;
 

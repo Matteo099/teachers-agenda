@@ -1,7 +1,7 @@
 <template>
     <BaseChart :from="from" :to="to" :create-chart="createChart" :after-chart-created="afterChartCreated"
         :are-update-condition-satistied="areUpdateConditionSatistied" :update-chart-data="updateChartData"
-        title="Distribuzione dello Stipendio" subtitle="Divisione dello stipendio per Scuola" />
+        title="Distribuzione delle scuole" />
 </template>
 
 <script setup lang="ts">
@@ -73,7 +73,7 @@ function areUpdateConditionSatistied(): boolean {
 }
 
 async function updateChartData(from: IyyyyMMdd, to: IyyyyMMdd) {
-    const data = await StatisticsService.instance.getSalaryDistribution(from, to);
+    const data = await StatisticsService.instance.getSchoolDistribution();
     series.data.setAll(data);
 
     // The text does not update...
@@ -85,7 +85,7 @@ function updateLabel() {
     label = am5.Label.new(_root, {
         centerX: am5.percent(50),
         centerY: am5.percent(50),
-        text: "Totale: {valueSum}€",
+        text: "Scuole: {valueSum}",
         populateText: true,
         fontSize: "1.5em"
     })

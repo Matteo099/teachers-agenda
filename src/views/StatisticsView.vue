@@ -21,8 +21,8 @@
             <v-tabs-window-item value="schools">
                 <v-card flat>
                     <v-card-text>
-                        <p>schools chart A</p>
-                        <p>schools chart B</p>
+                        <SchoolDistribution :from="dateRange.from" :to="dateRange.to" />
+                        <SchoolStudentDistribution :from="dateRange.from" :to="dateRange.to" />
                     </v-card-text>
                 </v-card>
             </v-tabs-window-item>
@@ -50,6 +50,8 @@
 import DateSelect from '@/components/DateSelect.vue';
 import SalaryDistribution from '@/components/statistics/SalaryDistribution.vue';
 import SalaryTrend from '@/components/statistics/SalaryTrend.vue';
+import SchoolDistribution from '@/components/statistics/SchoolDistribution.vue';
+import SchoolStudentDistribution from '@/components/statistics/SchoolStudentDistribution.vue';
 import { ref } from 'vue';
 
 const tab = ref('option-1');

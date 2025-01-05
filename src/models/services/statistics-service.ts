@@ -2,6 +2,7 @@ import type { TAPieData, TAXYData } from "../charts/chart-helper";
 import { yyyyMMdd, type IyyyyMMdd, type School } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { SchoolRepository } from "../repositories/school-repository";
+import { StudentRepository } from "../repositories/student-repository";
 import { DailyLessonService } from "./daily-lesson-service";
 
 export class StatisticsService {
@@ -30,7 +31,7 @@ export class StatisticsService {
         return data;
     }
 
-    public async getSalaryDivision(from: string, to: string, ...schools: School[]): Promise<TAPieData[]> {
+    public async getSalaryDistribution(from: string, to: string, ...schools: School[]): Promise<TAPieData[]> {
 
         const data: TAPieData[] = [];
         if (!schools || schools.length == 0) {
@@ -46,6 +47,28 @@ export class StatisticsService {
             });
         }
 
+        return data;
+    }
+
+    public async getSchoolDistribution(): Promise<TAPieData[]> {
+        const schools = await SchoolRepository.instance.getAll();
+        return schools.map(s => ({
+            category: s.name,
+            value: 1
+        }));
+    }
+
+    public async getSchoolStudentDistribution(): Promise<TAPieData[]> {
+        const data: TAPieData[] = [];
+        const schools = await SchoolRepository.instance.getAll();
+        const students = await StudentRepository.instance.getAll();
+        for (const school of schools) {
+            const total = students.filter(s => s.schoolId == school.id).length;
+            data.push({
+                category: school.name,
+                value: total
+            })
+        }
         return data;
     }
 }
