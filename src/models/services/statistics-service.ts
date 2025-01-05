@@ -1,5 +1,5 @@
-import type { TAXYData } from "../charts/chart-helper";
-import { yyyyMMdd, type IyyyyMMdd } from "../model";
+import type { TAPieData, TAXYData } from "../charts/chart-helper";
+import { yyyyMMdd, type IyyyyMMdd, type School } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { SchoolRepository } from "../repositories/school-repository";
 import { DailyLessonService } from "./daily-lesson-service";
@@ -25,6 +25,25 @@ export class StatisticsService {
             const seriesData: TAXYData[] = dailyLessons.filter(d => !isNaN(d.salary))
                 .map(d => ({ date: yyyyMMdd.fromIyyyyMMdd(d.date).toDate().getTime(), value: d.salary }))
             data.push(...seriesData);
+        }
+
+        return data;
+    }
+
+    public async getSalaryDivision(from: string, to: string, ...schools: School[]): Promise<TAPieData[]> {
+
+        const data: TAPieData[] = [];
+        if (!schools || schools.length == 0) {
+            schools = await SchoolRepository.instance.getAll();
+        }
+
+        for await (const school of schools) {
+            const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
+            const total = dailyLessons.filter(d => !isNaN(d.salary)).map(d => d.salary).reduce((a, b) => a + b, 0);
+            data.push({
+                category: school.name,
+                value: total
+            });
         }
 
         return data;

@@ -13,8 +13,8 @@
             <v-tabs-window-item value="salary">
                 <v-card flat>
                     <v-card-text>
+                        <SalaryDistribution :from="dateRange.from" :to="dateRange.to" />
                         <SalaryTrend :from="dateRange.from" :to="dateRange.to" />
-                        <SalaryCount :from="dateRange.from" :to="dateRange.to" />
                     </v-card-text>
                 </v-card>
             </v-tabs-window-item>
@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import DateSelect from '@/components/DateSelect.vue';
-import SalaryCount from '@/components/statistics/SalaryCount.vue';
+import SalaryDistribution from '@/components/statistics/SalaryDistribution.vue';
 import SalaryTrend from '@/components/statistics/SalaryTrend.vue';
 import { ref } from 'vue';
 
