@@ -1,11 +1,31 @@
 import type { TAPieData, TAStudentTrendData, TAXYData } from "../charts/chart-helper";
-import { LessonStatus, yyyyMMdd, type IyyyyMMdd, type School } from "../model";
+import { LessonStatus, yyyyMMdd, type IyyyyMMdd, type School, type Student } from "../model";
 import { SchoolRepository } from "../repositories/school-repository";
 import { StudentRepository } from "../repositories/student-repository";
 import { DailyLessonService } from "./daily-lesson-service";
-import { StudentService } from "./student-service";
+
+class StatisticsCache {
+    private schools: School[] = [];
+    private students: Student[] = [];
+
+    public async getSchools(): Promise<School[]> {
+        if (this.schools.length == 0) this.schools = await SchoolRepository.instance.getAll();
+        return this.schools;
+    }
+
+    public async getStudents(): Promise<Student[]> {
+        if (this.students.length == 0) this.students = await StudentRepository.instance.getAll();
+        return this.students;
+    }
+
+    public clear() {
+        this.schools = [];
+        this.students = [];
+    }
+}
 
 export class StatisticsService {
+    public readonly cache = new StatisticsCache();
     private static _instance: StatisticsService | null = null;
 
     public static get instance(): StatisticsService {
@@ -13,11 +33,12 @@ export class StatisticsService {
         return this._instance;
     }
 
+
     public async getSalaryTrend(from: IyyyyMMdd, to: IyyyyMMdd, ...schools: School[]): Promise<TAXYData[]> {
 
         const data: TAXYData[] = [];
         if (!schools || schools.length == 0) {
-            schools = await SchoolRepository.instance.getAll();
+            schools = await this.cache.getSchools();
         }
 
         for await (const school of schools) {
@@ -34,7 +55,7 @@ export class StatisticsService {
 
         const data: TAPieData[] = [];
         if (!schools || schools.length == 0) {
-            schools = await SchoolRepository.instance.getAll();
+            schools = await this.cache.getSchools();
         }
 
         for await (const school of schools) {
@@ -51,7 +72,7 @@ export class StatisticsService {
 
     public async getSchoolDistribution(...schools: School[]): Promise<TAPieData[]> {
         if (!schools || schools.length == 0) {
-            schools = await SchoolRepository.instance.getAll();
+            schools = await this.cache.getSchools();
         }
         return schools.map(s => ({
             category: s.name,
@@ -62,9 +83,9 @@ export class StatisticsService {
     public async getSchoolStudentDistribution(...schools: School[]): Promise<TAPieData[]> {
         const data: TAPieData[] = [];
         if (!schools || schools.length == 0) {
-            schools = await SchoolRepository.instance.getAll();
+            schools = await this.cache.getSchools();
         }
-        const students = await StudentRepository.instance.getAll();
+        const students = await this.cache.getStudents();
         for (const school of schools) {
             const total = students.filter(s => s.schoolId == school.id).length;
             if (total)
@@ -80,11 +101,11 @@ export class StatisticsService {
         const data: TAStudentTrendData[] = [];
 
         if (!schools || schools.length == 0) {
-            schools = await SchoolRepository.instance.getAll();
+            schools = await this.cache.getSchools();
         }
 
         for await (const school of schools) {
-            const students = await StudentService.instance.getStudentsOfSchool(school.id);
+            const students = (await this.cache.getStudents()).filter(s => s.schoolId == school.id);
             const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
 
             students.forEach(student => {
@@ -124,7 +145,7 @@ export class StatisticsService {
         };
 
         if (!schools || schools.length == 0) {
-            schools = await SchoolRepository.instance.getAll();
+            schools = await this.cache.getSchools();
         }
 
         for await (const school of schools) {

@@ -65,6 +65,7 @@ import StudentTrend from '@/components/statistics/StudentTrend.vue';
 import type { DateSelectModel, School } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
+import { StatisticsService } from '@/models/services/statistics-service';
 import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -123,5 +124,8 @@ async function loadSchools() {
     loadingSchools.value = false;
 }
 
-onMounted(() => loadSchools())
+onMounted(() => {
+    StatisticsService.instance.cache.clear();
+    loadSchools();
+})
 </script>
