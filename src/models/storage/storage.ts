@@ -3,7 +3,8 @@ export type UserSettings = {
 }
 
 export type LocalStorageValues = {
-    debugEnabled: boolean
+    debugEnabled: boolean,
+    loadTodayLesson: boolean,
     theme: string,
     userSettings: UserSettings,
     lastLogin: Date,

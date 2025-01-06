@@ -12,8 +12,11 @@
             <v-col>
                 <v-form class="ma-2">
                     <v-row class="justify-center">
-                        <v-col class="px-2">
-                            <v-switch v-model="debugEnabled" color="primary" :label="label"></v-switch>
+                        <v-col class="px-2" cols="12" md="6">
+                            <v-switch v-model="debugEnabled" color="primary" :label="debugEnabledLabel"></v-switch>
+                        </v-col>
+                        <v-col class="px-2" cols="12" md="6">
+                            <v-switch v-model="loadTodayLesson" color="primary" :label="loadTodayLessonLabel"></v-switch>
                         </v-col>
                     </v-row>
                 </v-form>
@@ -28,12 +31,16 @@ import { LocalStorageHandler } from '@/models/storage/local-storage-handler';
 import { computed, onMounted, ref, watch } from 'vue';
 
 const debugEnabled = ref(false);
-const label = computed(() => `Abilitare console debug: ${(debugEnabled.value ? 'on' : 'off')}`)
+const debugEnabledLabel = computed(() => `Abilitare console debug: ${(debugEnabled.value ? 'on' : 'off')}`)
+const loadTodayLesson = ref(false);
+const loadTodayLessonLabel = computed(() => `Abilitare il caricamento automatico delle lezioni del giorno sulla Homepage: ${(loadTodayLesson.value ? 'on' : 'off')}`)
 
 watch(debugEnabled, () => LocalStorageHandler.setItem('debugEnabled', debugEnabled.value));
+watch(loadTodayLesson, () => LocalStorageHandler.setItem('loadTodayLesson', loadTodayLesson.value));
 
 function loadSettings() {
     debugEnabled.value = LocalStorageHandler.getItem('debugEnabled') ?? false;
+    loadTodayLesson.value = LocalStorageHandler.getItem('loadTodayLesson') ?? false;
 }
 
 onMounted(() => loadSettings());

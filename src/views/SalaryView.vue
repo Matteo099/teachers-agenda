@@ -7,8 +7,7 @@
                     {{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}
                 </template>
                 <template v-slot:item.lastUpdate="{ item }">
-                    {{ item.lastUpdate ? timestampFormat(new Timestamp(item.lastUpdate.seconds,
-                        item.lastUpdate.nanoseconds).toDate()) : "" }}
+                    {{ item.lastUpdate ? timestampFormat(toDate(item.lastUpdate)) : "" }}
                 </template>
                 <template v-slot:item.actions="{ item, index }">
                     <div class="d-flex justify-center">
@@ -32,7 +31,7 @@ import DateSelect from '@/components/DateSelect.vue';
 import { yyyyMMdd, type IyyyyMMdd, type Salary, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { SalaryService } from '@/models/services/salary-service';
-import { timestampFormat } from '@/models/utils';
+import { timestampFormat, toDate } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';

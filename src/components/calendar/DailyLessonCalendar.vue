@@ -1,28 +1,12 @@
 <template>
     <v-container>
         <ScheduleXCalendar :calendar-app="calendarApp">
-            <!-- <template #timeGridEvent="{ calendarEvent }">
-                <v-card class="border" elevation="2">
-                    <v-card-text class="pa-1">
-                        <p>{{ calendarEvent.title }}</p>
-                        <p>
-                            <v-icon>mdi-clock</v-icon>
-                            {{ calendarEvent.start.split(" ")[1] }} - {{ calendarEvent.end.split(" ")[1] }}
-                        </p>
-                    </v-card-text>
-                </v-card>
-               
-            </template> -->
             <template #eventModal="{ calendarEvent }">
                 <v-card elevation="3" :title="calendarEvent.title"
                     :subtitle="calendarEvent.start.split(' ')[1] + ' - ' + calendarEvent.end.split(' ')[1]"
                     :text="calendarEvent.description">
-
-                    <!-- {{ calendarEvent }} -->
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <!-- <v-btn text="Chiudi" @click="emit('close')"></v-btn> -->
-
                         <v-dialog v-model="editTimeModal" transition="dialog-bottom-transition">
                             <template v-slot:activator="{ props: activatorProps }">
                                 <v-btn text="Chiudi" @click="eventModal.close()"></v-btn>
@@ -87,7 +71,7 @@ const dndPlugin = createDragAndDropPlugin(15);
 // For updating events, use the events service plugin
 const calendarApp = createCalendar({
     locale: 'it-IT',
-    selectedDate: props.date.toIyyyyMMdd("-"),
+    selectedDate: props.date.toIyyyyMMdd("-", 1),
     views: [createViewDay()],
     events: [],
     plugins: props.editable ? [dndPlugin, eventsServicePlugin, eventModal] : [dndPlugin, eventsServicePlugin],
@@ -113,15 +97,16 @@ function updateInternalEvents() {
         } else eventsServicePlugin.add(event);
     });
 
-    console.log("updateInternalEvents", eventsServicePlugin.getAll(), props.date)
     eventsServicePlugin.getAll().forEach(e => {
         const toDelete = _events.value.findIndex(ie => ie.id == e.id) == -1;
         if (toDelete) eventsServicePlugin.remove(e.id);
     });
+
+    console.log(eventsServicePlugin.getAll())
 }
 
 function transformModel(): CalendarEventExt[] {
-    const date = props.date.toIyyyyMMdd("-");
+    const date = props.date.toIyyyyMMdd("-", 1);
     return model.value.map(sl => {
         if ("lessonId" in sl) {
             console.log(sl);
@@ -130,6 +115,7 @@ function transformModel(): CalendarEventExt[] {
                 start: date + " " + Time.fromITime(sl.startTime).format(),
                 end: date + " " + Time.fromITime(sl.endTime).format(),
                 title: `${sl.name} ${sl.surname} - ${days[sl.lessonDay ?? 0]}`,
+                calendarId: sl.schoolId,
                 data: { ...sl }
             };
         } else {
@@ -199,10 +185,3 @@ onMounted(() => {
     updateInternalEvents();
 })
 </script>
-
-<style scoped>
-.border {
-    border: 1px solid black !important;
-    border-left: 5px solid red !important;
-}
-</style>

@@ -69,8 +69,20 @@
                     </template>recupero</v-btn>
             </template>
 
+            <v-dialog fullscreen>
+                <template v-slot:activator="{ props: activatorProps }">
+                    <v-btn class="ma-1" v-bind="activatorProps">
+                        note
+                    </v-btn>
+                </template>
 
-            <v-btn class="ma-1" @click="emit('notes')">note</v-btn>
+                <template v-slot:default="{ isActive }">
+                    <StudentEditor edit :school="school" :initialStudent="item" focus="note"
+                        :disableFields="['name', 'surname', 'contact', 'lessonDay', 'level', 'minutesLessonDuration']"
+                        @close="isActive.value = false" @save="item.note = $event.note; isActive.value = false">
+                    </StudentEditor>
+                </template>
+            </v-dialog>
 
             <!-- DeleteDialog v-if="!item.recovery || item.recovery.ref == 'original'" -->
             <DeleteDialog :name="`${item.name} ${item.surname}`" objName="Studente" :onDelete="onDeleteLessonItem">
@@ -84,12 +96,14 @@
 
 <script setup lang="ts">
 import EditLessonTime from '@/components/lesson/EditLessonTime.vue';
-import { LessonStatus, Time, type EventTime, type StudentLesson } from '@/models/model';
+import { LessonStatus, Time, type EventTime, type School, type StudentLesson } from '@/models/model';
 import { ref } from 'vue';
 import DeleteDialog from '../DeleteDialog.vue';
 import { toast } from 'vue3-toastify';
+import StudentEditor from '../student/StudentEditor.vue';
 
 const props = defineProps<{
+    school: School;
     onDeleteLessonItem: () => Promise<boolean>;
     updateLessonTime: (newTime: EventTime) => Promise<boolean>;
     moveLesson: (newLessonDate: Date) => Promise<boolean>

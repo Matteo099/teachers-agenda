@@ -1,35 +1,36 @@
 <template>
-    <v-row class="px-2 mb-2">
+    <v-row>
         <v-col cols="12" md="6">
-            <v-select variant="outlined" density="compact" v-model="selectedType" :items="selectTypes"
+            <v-select variant="outlined" density="compact" v-model="selectedType" :items="selectTypes" label="Tempo"
                 hide-details></v-select>
         </v-col>
         <v-col cols="12" md="6" v-if="selectedType == selectTypes[0]">
             <v-date-input variant="outlined" density="compact" v-model="range" multiple="range" inputmode="none"
-                hide-details></v-date-input>
+                label="Intervallo" hide-details></v-date-input>
+        </v-col>
+        <v-col cols="12" md="6" v-else-if="selectedType == selectTypes[1]">
+            <v-select variant="outlined" density="compact" v-model="selectedPeriod" :items="periods" label="Periodo"
+                hide-details></v-select>
         </v-col>
         <v-col cols="12" md="6" v-else>
-            <v-select variant="outlined" density="compact" v-model="selectedPeriod" :items="periods"
-                hide-details></v-select>
+            <v-select class="text-capitalize" variant="outlined" density="compact" v-model="selectedMonth"
+                :label="`Mese ${new Date().getFullYear()}`" :items="months" hide-details></v-select>
         </v-col>
     </v-row>
 </template>
 
 <script setup lang="ts">
-import { yyyyMMdd, type IyyyyMMdd } from '@/models/model';
-import { ref, watch } from 'vue';
+import { yyyyMMdd, type DateSelectModel } from '@/models/model';
+import { capitalize, ref, watch } from 'vue';
 import { useDate } from 'vuetify';
 
-interface DateSelectModel {
-    from?: IyyyyMMdd;
-    to?: IyyyyMMdd;
-}
-
 const date = useDate();
-const selectTypes = ["Assoluto", "Relativo"];
+const selectTypes = ["Assoluto", "Relativo", "Per mese"];
 const periods = ["Ultima settimana", "Ultimo mese", "Ultimi 3 mesi", "Ultimi 6 mesi", "Ultimo anno"];
+const months = [...Array(12).keys()].map(key => capitalize(new Date(0, key).toLocaleString('it', { month: 'long' })))
 const selectedType = ref(selectTypes[1]);
 const selectedPeriod = ref(periods[0]);
+const selectedMonth = ref(months[0]);
 const range = ref();
 let updatingInternalModel = false;
 
@@ -42,14 +43,27 @@ const model = defineModel<DateSelectModel>({
 
 watch(selectedType, updateModel, { immediate: true });
 watch(selectedPeriod, updateModel, { immediate: true });
+watch(selectedMonth, updateModel, { immediate: true });
 watch(range, updateModel, { immediate: true });
 watch(model, updateValues, { immediate: true });
 
 function updateModel() {
     updatingInternalModel = true;
 
+    // by month
+    if (selectedType.value == selectTypes[2]) {
+        let month = months.indexOf(selectedMonth.value);
+        month = month == -1 ? 0 : month;
+        const year = new Date().getFullYear();
+        const start = new Date(year, month, 1);
+        const end = new Date(year, month + 1, 0);
+        model.value = {
+            from: yyyyMMdd.fromDate(start).toIyyyyMMdd(),
+            to: yyyyMMdd.fromDate(end).toIyyyyMMdd()
+        }
+    }
     // relative
-    if (selectedType.value == selectTypes[1]) {
+    else if (selectedType.value == selectTypes[1]) {
         let res: Date;
         // last month
         if (selectedPeriod.value == periods[1]) {
@@ -102,29 +116,49 @@ function updateValues() {
     if (from && !to) {
         selectedType.value = selectTypes[1];
         const today = new Date();
-        const diff = new Date(today.getTime() - yyyyMMdd.fromIyyyyMMdd(from).toDate().getTime());
-        const deltaYears = diff.getUTCFullYear() - 1970;
-        const deltaMonths = diff.getUTCMonth();
-        const deltaDays = diff.getUTCDate() - 1;
-        if (deltaDays == 7 && deltaMonths == 0 && deltaYears == 0) selectedPeriod.value = periods[0];
-        else if ((deltaDays == 30 || deltaMonths == 1) && deltaYears == 0) selectedPeriod.value = periods[1];
-        else if ((deltaDays == 90 || deltaMonths == 3) && deltaYears == 0) selectedPeriod.value = periods[2];
-        else if ((deltaDays == 180 || deltaMonths == 6) && deltaYears == 0) selectedPeriod.value = periods[3];
-        else if (deltaDays == 365 || deltaMonths == 12 || deltaYears == 1) selectedPeriod.value = periods[4];
+        const delta = getDeltaDates(today, yyyyMMdd.fromIyyyyMMdd(from).toDate());
+        if (delta.days == 7 && delta.months == 0 && delta.years == 0) selectedPeriod.value = periods[0];
+        else if ((delta.days == 30 || delta.months == 1) && delta.years == 0) selectedPeriod.value = periods[1];
+        else if ((delta.days == 90 || delta.months == 3) && delta.years == 0) selectedPeriod.value = periods[2];
+        else if ((delta.days == 180 || delta.months == 6) && delta.years == 0) selectedPeriod.value = periods[3];
+        else if (delta.days == 365 || delta.months == 12 || delta.years == 1) selectedPeriod.value = periods[4];
         else {
             console.warn("Selected period not recognized, falling to last week");
             selectedPeriod.value = periods[0];
         }
     }
-    // absolute
+    // absolute or by month
     else if (from && to) {
-        selectedType.value = selectTypes[0];
-        range.value = [];
         const _from = yyyyMMdd.fromIyyyyMMdd(from).toDate();
         const _to = yyyyMMdd.fromIyyyyMMdd(to).toDate();
-        for (const dt = _from; dt <= _to; dt.setDate(dt.getDate() + 1)) {
-            range.value.push(new Date(dt));
+
+        console.log(_from, _to, _from.getDate(), _to.getDate(), new Date(_from.getFullYear(), _from.getMonth() + 1, 0).getDate())
+
+        // by month
+        if (_from.getDate() == 1
+            && _to.getMonth() == _from.getMonth()
+            && _to.getFullYear() == _from.getFullYear()
+            && _to.getDate() == new Date(_from.getFullYear(), _from.getMonth() + 1, 0).getDate()) {
+            selectedType.value = selectTypes[2];
+            selectedMonth.value = months[_from.getMonth()];
         }
+        // absolute
+        else {
+            selectedType.value = selectTypes[0];
+            range.value = [];
+            for (const dt = _from; dt <= _to; dt.setDate(dt.getDate() + 1)) {
+                range.value.push(new Date(dt));
+            }
+        }
+
     }
+}
+
+function getDeltaDates(a: Date, b: Date) {
+    const diff = new Date(Math.abs(a.getTime() - b.getTime()));
+    const years = diff.getUTCFullYear() - 1970;
+    const months = diff.getUTCMonth();
+    const days = diff.getUTCDate() - 1;
+    return { years, months, days };
 }
 </script>

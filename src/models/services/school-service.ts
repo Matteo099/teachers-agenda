@@ -1,18 +1,19 @@
-import { DocumentReference, where, WriteBatch, writeBatch } from "firebase/firestore";
+import { DocumentReference, where, writeBatch } from "firebase/firestore";
+import { useFirestore } from "vuefire";
+import { yyyyMMdd, type DailyLesson, type IyyyyMMdd, type SchoolRecoveryLesson, type Student, type TodayLesson, type WeeklyLesson } from "../model";
+import type { ID } from "../repositories/abstract-repository";
+import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
+import { SchoolRecoveryLessonRepository } from "../repositories/recovery-lesson-repository";
 import { SchoolRepository } from "../repositories/school-repository";
 import { StudentRepository } from "../repositories/student-repository";
-import { useFirestore } from "vuefire";
-import type { ID } from "../repositories/abstract-repository";
-import { nameof } from "../utils";
-import { yyyyMMdd, type DailyLesson, type IyyyyMMdd, type SchoolRecoveryLesson, type Student, type WeeklyLesson } from "../model";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
-import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
-import type { SchoolLessons } from "./lesson-group-service";
+import { nameof } from "../utils";
 import { DailyLessonService } from "./daily-lesson-service";
+import { type SchoolLessons } from "./lesson-group-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
-import { SchoolRecoveryLessonRepository } from "../repositories/recovery-lesson-repository";
 
 export class SchoolService {
+
     private static _instance: SchoolService | null = null;
 
     public static get instance(): SchoolService {
@@ -67,7 +68,7 @@ export class SchoolService {
         return relations;
     }
 
-    async getSchoolLessons(schoolId: ID, from: Date | IyyyyMMdd): Promise<SchoolLessons> {
+    public async getSchoolLessons(schoolId: ID, from: Date | IyyyyMMdd): Promise<SchoolLessons> {
         const start = from instanceof Date ? yyyyMMdd.fromDate(from).toIyyyyMMdd() : from;
         const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolFromDate(schoolId, start, 'desc');
         const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(schoolId);
@@ -77,5 +78,22 @@ export class SchoolService {
             weeklyLessons,
             schoolId
         }
+    }
+
+    public async getTodayLessons(): Promise<TodayLesson[]> {
+        const lessons: TodayLesson[] = [];
+        const dateObj = yyyyMMdd.today();
+        const dateString = dateObj.toIyyyyMMdd();
+        const date = dateObj.toDate();
+        const schools = await SchoolRepository.instance.getAll();
+        for await (const school of schools) {
+            const schoolLessons = await this.getSchoolLessons(school.id, date);
+            const todayLesson = schoolLessons.dailyLessons.find(dl => dl.date == dateString) ?? schoolLessons.weeklyLessons.find(wl => wl.dayOfWeek == date.getDay());
+            if (todayLesson) lessons.push({
+                school,
+                lesson: todayLesson
+            })
+        }
+        return lessons;
     }
 }

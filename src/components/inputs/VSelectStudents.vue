@@ -1,5 +1,5 @@
 <template>
-    <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" item-title="name" item-value="id"
+    <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" :item-props="itemProps"
         :return-object="true" multiple no-data-text="Nessuno studente disponibile per questa scuola">
         <!-- <template v-slot:item="{ item }">
                 <v-list-item :value="item.raw" :key="item.raw.id" role="option">
@@ -59,6 +59,13 @@ const selectAllStudents = computed(() => {
 const selectSomeStudents = computed(() => {
     return selectedStudents.value.length > 0;
 });
+
+function itemProps(item: Student) {
+    return {
+        title: item.name + " " + item.surname,
+        id: item.id
+    }
+}
 
 function toggle() {
     if (selectAllStudents.value) {

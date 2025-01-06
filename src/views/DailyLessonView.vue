@@ -1,5 +1,5 @@
 <template>
-    <v-container fluid v-if="dailyLesson && !loading">
+    <v-container fluid v-if="dailyLesson && school && !loading">
         <v-row class="justify-center align-center mb-6">
             <v-col cols="auto">
                 <BackButton></BackButton>
@@ -7,7 +7,7 @@
             <v-col>
                 <v-row>
                     <v-col>
-                        <p class="text-h5 text-center">Lezioni del <b>{{
+                        <p class="text-h5 text-center">Lezione del <b>{{
                             yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()
                                 }}</b>
                         </p>
@@ -87,7 +87,7 @@
                 <v-timeline v-else side="end" truncate-line="both">
                     <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id + dailyLesson.id"
                         :dot-color="getColor(item)" size="small">
-                        <LessonItem :key="item.id + dailyLesson.id" v-model:item="studentLessons[index]"
+                        <LessonItem :school="school" :key="item.id + dailyLesson.id" v-model:item="studentLessons[index]"
                             v-model:select="selectedLessons" @present="present(item)" @absent="absent(item)"
                             :moveLesson="async ($event) => await moveLesson(item, $event)" @cancel="cancel(item)"
                             @reset="reset(item)"
@@ -131,7 +131,7 @@ import { StudentService } from '@/models/services/student-service';
 import { arraysHaveSameElements } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch, type Ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
@@ -157,11 +157,10 @@ const savingSelectedStudents = ref(false);
 const studentsDialog = ref(false);
 const routeChanged = ref(true);
 const visualization = ref(0);
-const deleteDailyLessonBtn = useTemplateRef("deleteDailyLessonBtn");
 
 const total = computed(() => isNaN(dailyLesson.value?.salary ?? 0) ? 0 : dailyLesson.value?.salary)
 const areLessonSelected = computed(() => selectedLessons.value.length != 0)
-const loading = computed(() => loadingStudents.value || loadingSchool.value || !dailyLesson.value || routeChanged.value);
+const loading = computed(() => loadingStudents.value || loadingSchool.value || !school.value || !dailyLesson.value || routeChanged.value);
 let currentDailyLessonId: ID | undefined = undefined;
 
 watch(dailyLesson, () => updateStudentLesson())
@@ -259,7 +258,9 @@ async function updateLessonTime(event: StudentLesson, newDataEvent: EventTime) {
     return true;
 }
 
-function notes(event: StudentLesson) { }
+function notes(event: StudentLesson) {
+
+}
 
 function toggleAll() {
     if (!selectAllLessons.value) {

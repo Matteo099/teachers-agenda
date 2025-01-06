@@ -60,6 +60,10 @@ export class Time {
         return this.hour * 3600 + this.minutes * 60 + this.seconds;
     }
 
+    setSeconds(sec: number) {
+        this.seconds = sec;
+    }
+
     add(p: { hour?: number; minutes?: number; seconds?: number; }): Time {
         this.hour += p.hour ?? 0;
         this.minutes += p.minutes ?? 0;
@@ -132,20 +136,30 @@ export class yyyyMMdd {
     }
 }
 
+export interface DateSelectModel {
+    from?: IyyyyMMdd;
+    to?: IyyyyMMdd;
+}
+
 export interface Student {
     id: string;
     schoolId: string; // relation with the school
     name: string;
     surname: string;
-    contact: string;
-    lessonDay: number;
+    contact?: string;
+    lessonDay?: number;
+    note?: Note;
     level: string;
-    notes: string[];
     minutesLessonDuration: number;
 
     removed?: boolean;
 
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
+    updatedAt: Timestamp;
+}
+
+export interface Note {
+    text: string;
     updatedAt: Timestamp;
 }
 
@@ -229,6 +243,9 @@ export interface DailyLesson {
      */
     salaryStrategy?: SalaryStrategy;
 }
+
+export interface TodayLesson { school: School; lesson: DailyLesson | WeeklyLesson }
+
 
 export const lessonStatusName = ["", "presente", "assente", "cancellata"]
 export const lessonStatusColor = ["gray", "green", "red", "orange"]

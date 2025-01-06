@@ -102,8 +102,8 @@ const dialogLevels = ref(false)
 const dialogManager = ref(false)
 const saving = ref(false);
 const salaryStrategys = [
-    { key: SalaryStrategy.ABSENT_AND_PRESENT, value: "La lezione viene pagata sia se lo studente è presente sia se è assente" },
-    { key: SalaryStrategy.ONLY_PRESENT, value: "La lezione viene pagata solo se lo studente è presente" }
+    { key: SalaryStrategy.ABSENT_AND_PRESENT, value: "Pagamento automatico" },
+    { key: SalaryStrategy.ONLY_PRESENT, value: "Pagamento a presenza" }
 ];
 
 const schema = yup.object({

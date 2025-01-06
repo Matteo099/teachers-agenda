@@ -16,7 +16,7 @@
             </v-row>
             <v-data-table :headers="studentHeaders" :items="students" item-value="id">
                 <template v-slot:item.lessonDay="{ item }">
-                    {{ days[item.lessonDay] }}
+                    {{ item.lessonDay ? days[item.lessonDay] : "" }}
                 </template>
                 <template v-slot:item.actions="{ item }">
                     <v-dialog fullscreen>
