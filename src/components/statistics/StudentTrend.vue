@@ -1,7 +1,8 @@
 <template>
-    <BaseChart :schools="schools" :from="from" :to="to" :create-chart="createChart" :after-chart-created="afterChartCreated"
-        :are-update-condition-satistied="areUpdateConditionSatistied" :update-chart-data="updateChartData"
-        title="Andamento degli Studenti" subtitle="Andamento della presenza in un periodo di tempo per studente" />
+    <BaseChart :schools="schools" :from="from" :to="to" :create-chart="createChart"
+        :after-chart-created="afterChartCreated" :are-update-condition-satistied="areUpdateConditionSatistied"
+        :update-chart-data="updateChartData" title="Andamento degli Studenti"
+        subtitle="Andamento della presenza in un periodo di tempo per studente" />
 </template>
 
 <script setup lang="ts">
@@ -10,6 +11,7 @@ import { StatisticsService } from "@/models/services/statistics-service";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import BaseChart from "./BaseChart.vue";
+import { createEmptyBarChartModal } from "@/models/charts/chart-helper";
 
 interface Props {
     from?: IyyyyMMdd;
@@ -53,7 +55,7 @@ function createChart(_root: am5.Root) {
     })
 
     // xAxis.data.setAll(data);
-    series.push(xAxis.data);
+    series.push(xAxis);
 
     yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
         min: 0,
@@ -66,9 +68,13 @@ function createChart(_root: am5.Root) {
         x: am5.p50
     }));
 
-    series.push(makeSeries("Presente", "present").data);
-    series.push(makeSeries("Assente", "absent").data);
-    series.push(makeSeries("Recupero", "recovery").data);
+    const columnSeries = [
+        makeSeries("Presente", "present"),
+        makeSeries("Assente", "absent"),
+        makeSeries("Recupero", "recovery")
+    ];
+    series.push(...columnSeries);
+    createEmptyBarChartModal(root, xAxis, columnSeries);
 }
 
 function afterChartCreated() {
@@ -76,15 +82,12 @@ function afterChartCreated() {
 }
 
 function areUpdateConditionSatistied(): boolean {
-    // return !!series;
-    return true;
+    return !!series;
 }
 
 async function updateChartData(from: IyyyyMMdd, to: IyyyyMMdd, ...schools: School[]) {
     const data = await StatisticsService.instance.getStudentTrend(from, to, ...schools);
-    series.forEach(d => {
-        d.setAll(data);
-    });
+    series.forEach(s => s.data.setAll(data));
 }
 
 function makeSeries(name: string, fieldName: string) {

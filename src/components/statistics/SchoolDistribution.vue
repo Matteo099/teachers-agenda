@@ -10,6 +10,7 @@ import { StatisticsService } from '@/models/services/statistics-service';
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import BaseChart from './BaseChart.vue';
+import { createEmptyPieChartModal } from '@/models/charts/chart-helper';
 
 interface Props {
     from?: IyyyyMMdd;
@@ -20,10 +21,10 @@ interface Props {
 withDefaults(defineProps<Props>(), { schools: () => [] })
 let series: am5percent.PieSeries;
 let label: am5.Label;
-let _root: am5.Root;
+let root: am5.Root;
 
-function createChart(root: am5.Root) {
-    _root = root;
+function createChart(_root: am5.Root) {
+    root = _root;
 
     // Create container to hold charts
     let chartContainer = root.container.children.push(am5.Container.new(root, {
@@ -63,6 +64,8 @@ function createChart(root: am5.Root) {
     series.labels.template.setAll({
         textType: "circular"
     });
+
+    createEmptyPieChartModal(root, series);    
 }
 
 function afterChartCreated() {
@@ -83,7 +86,7 @@ async function updateChartData(from: IyyyyMMdd, to: IyyyyMMdd, ...schools: Schoo
 
 function updateLabel() {
     label?.dispose();
-    label = am5.Label.new(_root, {
+    label = am5.Label.new(root, {
         centerX: am5.percent(50),
         centerY: am5.percent(50),
         text: "Scuole: {valueSum}",

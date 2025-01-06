@@ -5,6 +5,7 @@
 </template>
 
 <script setup lang="ts">
+import { createEmptyLineChartModal } from "@/models/charts/chart-helper";
 import { type IyyyyMMdd, type School } from "@/models/model";
 import { StatisticsService } from "@/models/services/statistics-service";
 import * as am5 from "@amcharts/amcharts5";
@@ -69,6 +70,8 @@ function createChart(root: am5.Root) {
     chart.set("scrollbarX", am5.Scrollbar.new(root, {
         orientation: "horizontal"
     }));
+
+    createEmptyLineChartModal(root, series);
 }
 
 function afterChartCreated() {

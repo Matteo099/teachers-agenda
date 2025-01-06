@@ -27,7 +27,7 @@ export class StatisticsService {
             data.push(...seriesData);
         }
 
-        return data;
+        return data.sort((a, b) => a.date - b.date);
     }
 
     public async getSalaryDistribution(from: string, to: string, ...schools: School[]): Promise<TAPieData[]> {
@@ -67,10 +67,11 @@ export class StatisticsService {
         const students = await StudentRepository.instance.getAll();
         for (const school of schools) {
             const total = students.filter(s => s.schoolId == school.id).length;
-            data.push({
-                category: school.name,
-                value: total
-            })
+            if (total)
+                data.push({
+                    category: school.name,
+                    value: total
+                })
         }
         return data;
     }
@@ -96,13 +97,12 @@ export class StatisticsService {
                 for (const dl of dailyLessons) {
                     const lesson = dl.lessons.find(l => l.studentId == student.id)
                     if (lesson) {
-                        if (lesson.recovery?.ref == 'original') {
-                            item.recovery++;
-                        }
+                        if (lesson.recovery?.ref == 'original') item.recovery++;
                         if (lesson.status == LessonStatus.PRESENT) item.present++;
                         else if (lesson.status == LessonStatus.ABSENT) item.absent++;
                     }
                 }
+                if (!item.present && !item.absent && !item.recovery) return;
                 data.push(item);
             })
         }

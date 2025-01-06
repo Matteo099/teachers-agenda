@@ -91,7 +91,6 @@
         <v-card-actions>
             <v-spacer></v-spacer>
 
-            <v-btn text="Random" variant="plain" @click="randomData" v-if="development"></v-btn>
             <v-btn text="Chiudi" @click="emit('close')"></v-btn>
             <v-btn text="Salva" color="primary" @click="onSave" :loading="saving"></v-btn>
         </v-card-actions>
@@ -112,7 +111,6 @@ import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import DailyLessonCalendar from '../calendar/DailyLessonCalendar.vue';
-import { development, Random } from '@/models/random-utils';
 
 interface WeekLessonEditorProps {
     school: School;
@@ -328,19 +326,6 @@ function updateExcludeDates() {
         // Move to the next day
         currentDate.setDate(currentDate.getDate() + 1);
     }
-}
-
-function randomData() {
-    dayOfWeek.value = Random.item(days);
-    from.value = Random.date();
-    to.value = Random.date(from.value);
-    startingTime.value = Random.time();
-    // selectedStudents.value = Random.items(allStudents.value);
-
-    // if (scheduledLessons.value.length > 0) {
-    //     initializingStartingTime = true;
-    //     startingTime.value = Time.fromITime(minTime).format();
-    // }
 }
 
 async function save(values: GenericObject) {

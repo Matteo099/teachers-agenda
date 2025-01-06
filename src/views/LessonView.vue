@@ -21,7 +21,7 @@
 
                             <v-btn text="Chiudi" @click="isActive.value = false"></v-btn>
                             <v-btn text="Ok" color="primary" @click="routeToDailyLesson(dailyLessonDate!)"
-                                :disabled="!dailyLessonDate"></v-btn>
+                                :disabled="!dailyLessonDate" :loading="routingToDailyLesson"></v-btn>
                         </v-card-actions>
                     </v-card>
 
@@ -92,6 +92,7 @@ const dailyLessonDate: Ref<Date | undefined> = ref();
 const loadingLessons = ref(false);
 const loadingCalendar = ref(false);
 const computingLessonGroups = ref(false);
+const routingToDailyLesson = ref(false);
 
 // const schoolLessons: SchoolLessons = {
 //     dailyLessons: [],
@@ -111,7 +112,9 @@ function getColor(lesson: LessonProjection) {
 }
 
 async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
+    routingToDailyLesson.value = true;
     const dailyLessonId = await DailyLessonService.instance.getOrCreateDailyLessonId(props.school.id, lessonGroup);
+    routingToDailyLesson.value = false;
     router.push(`/lesson/${dailyLessonId}`);
 }
 
