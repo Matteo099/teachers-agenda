@@ -182,8 +182,8 @@ const auth = useFirebaseAuth()!;
 const theme = useTheme()
 const appLogo = new URL('@/assets/images/logor.png', import.meta.url).href
 const drawer = ref(false)
-const loginPage = ref(true)
 const appVersion = import.meta.env.VITE_APP_VERSION
+const loginPage = computed(() => route.name == "login")
 
 const tooltip = {
   text: `Versione ${appVersion}`,
@@ -223,8 +223,6 @@ watch(user, async (currentUser, previousUser) => {
       return router.push("/");
   }
 })
-
-watch(() => route.name, () => loginPage.value = route.name == "login")
 
 function toggleTheme() {
   const currentTheme = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';

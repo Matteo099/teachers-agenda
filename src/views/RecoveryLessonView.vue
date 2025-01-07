@@ -94,6 +94,7 @@ async function cancelScheduleRecovery(recovery: ExtendedStudentLesson) {
         await SchoolRecoveryLessonService.instance.cancelRecovery(recovery);
     } catch (error) {
         toast.warn("Impossibile annullare la lezione di recupero")
+        console.error("Unable to cancel recovery lesson", error);
     } finally {
         cancellingScheduleRecovery.value = false;
     }
@@ -108,6 +109,7 @@ async function computeDailyLessons() {
         console.log(extendedRecoveries);
     } catch (error) {
         toast.warning("Impossibile caricare le Lezioni di Recupero");
+        console.error("Unable to load recovery lessons", error);
     } finally {
         loadingExtendedRecoveries.value = false;
     }
