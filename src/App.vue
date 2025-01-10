@@ -207,10 +207,10 @@ watch(user, async (currentUser, previousUser) => {
   // route is only for authenticated users
   if (
     !currentUser &&
-    previousUser &&
     route.meta.requiresAuth
   ) {
-    return router.push({ name: 'login' })
+    if (route.name != "login")
+      return router.push({ name: 'login' })
   }
 
   // redirect the user if they are logged in but were
