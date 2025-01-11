@@ -169,6 +169,7 @@ export interface School {
     city?: string;
     email?: string;
     phoneNumber?: string;
+    color?: string;
 
     managed: boolean;
     levelRanges: LevelRange[];
