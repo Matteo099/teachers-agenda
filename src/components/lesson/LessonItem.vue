@@ -110,7 +110,7 @@ const props = defineProps<{
 }>()
 const item = defineModel<StudentLesson>('item', { required: true });
 const select = defineModel<string[]>('select');
-const emit = defineEmits(['present', 'absent', 'reset', 'cancel', 'updateLessonTime', 'notes', 'deleteStudent'])
+const emit = defineEmits(['present', 'absent', 'reset', 'cancel', 'updateLessonTime', 'deleteStudent'])
 const timeDialog = ref(false)
 const dateDialog = ref(false)
 const newLessonDate = ref();

@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import type { Student } from '@/models/model';
-import { computed, ref, type Ref } from 'vue';
+import { computed } from 'vue';
 
 interface VSelectStudentsProps {
     allStudents: Student[];

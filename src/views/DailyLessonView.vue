@@ -38,7 +38,7 @@
                     <template v-slot:default>
                         <v-card title="Tutti gli studenti della scuola" :loading="loadingAllStudents">
                             <v-card-text>
-                                <VSelectStudents v-model="selectedStudents" :all-students="availableStudents" />
+                                <SelectStudents v-model="selectedStudents" :all-students="availableStudents" />
                             </v-card-text>
                             <v-card-actions>
                                 <v-btn text="Annulla" @click="studentsDialog = false"></v-btn>
@@ -92,7 +92,7 @@
                             :moveLesson="async ($event) => await moveLesson(item, $event)" @cancel="cancel(item)"
                             @reset="reset(item)"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
-                            @notes="notes(item)" :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
+                            :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
                         </LessonItem>
                     </v-timeline-item>
                 </v-timeline>
@@ -117,7 +117,7 @@
 import DailyLessonCalendar from '@/components/calendar/DailyLessonCalendar.vue';
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
-import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
+import SelectStudents from '@/components/inputs/SelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
 import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
@@ -256,10 +256,6 @@ async function updateLessonTime(event: StudentLesson, newDataEvent: EventTime) {
     studentLessons.value.sort((a, b) => a.startTime - b.startTime);
     await save();
     return true;
-}
-
-function notes(event: StudentLesson) {
-
 }
 
 function toggleAll() {
