@@ -13,7 +13,7 @@
       <v-col v-for="school in schools" :key="school.name" cols="12" sm="4">
         <v-card append-icon="mdi-open-in-new" class="pa-2" :to="'/school/' + school.id" prepend-icon="mdi-town-hall"
           :subtitle="'Visualizza tutti gli aggiornamenti della scuola ' + school.name" :title="getSchoolName(school)"
-          :color="school.color ?? 'primary'">
+          :color="school.color ?? DEFAULT_SCHOOL_COLOR">
           <!-- target="_blank" -->
         </v-card>
       </v-col>
@@ -65,6 +65,7 @@
 
 <script setup lang="ts">
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
+import { DEFAULT_SCHOOL_COLOR } from '@/models/constants';
 import type { School, TodayLesson } from '@/models/model';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { SchoolService } from '@/models/services/school-service';

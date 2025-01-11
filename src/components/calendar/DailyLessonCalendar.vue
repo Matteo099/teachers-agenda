@@ -42,6 +42,7 @@ import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { ScheduleXCalendar } from '@schedule-x/vue';
 import { onMounted, ref, watch } from 'vue';
 import EditLessonTime from '../lesson/EditLessonTime.vue';
+import { useTheme } from 'vuetify';
 
 interface CalendarProps {
     date?: yyyyMMdd;
@@ -56,6 +57,7 @@ const props = withDefaults(defineProps<CalendarProps>(), {
     showDay: false,
     sort: false
 })
+const theme = useTheme();
 const emit = defineEmits(['edit']);
 const model = defineModel<(CalendarEventExt | StudentLesson)[]>({ default: [] });
 const _events = ref<CalendarEventExt[]>([]);
@@ -63,6 +65,7 @@ const _events = ref<CalendarEventExt[]>([]);
 const editTimeModal = ref(false);
 
 watch(model, () => updateInternalEvents(), { deep: true });
+watch(theme.global.name, updateCalendarTheme);
 
 const eventsServicePlugin = createEventsServicePlugin();
 const eventModal = createEventModalPlugin();
@@ -85,6 +88,17 @@ const calendarApp = createCalendar({
         },
     }
 })
+
+function updateCalendarTheme() {
+    if (!calendarApp) return;
+    
+    if (theme.global.name.value == 'myCustomDarkTheme') {
+        calendarApp.setTheme("dark");
+    } else {
+        calendarApp.setTheme("light");
+    }
+}
+
 
 function updateInternalEvents() {
     _events.value = transformModel();

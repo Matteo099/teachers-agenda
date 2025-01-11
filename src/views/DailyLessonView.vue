@@ -87,8 +87,9 @@
                 <v-timeline v-else side="end" truncate-line="both">
                     <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id + dailyLesson.id"
                         :dot-color="getColor(item)" size="small">
-                        <LessonItem :school="school" :key="item.id + dailyLesson.id" v-model:item="studentLessons[index]"
-                            v-model:select="selectedLessons" @present="present(item)" @absent="absent(item)"
+                        <LessonItem :school="school" :key="item.id + dailyLesson.id"
+                            v-model:item="studentLessons[index]" v-model:select="selectedLessons"
+                            @present="present(item)" @absent="absent(item)"
                             :moveLesson="async ($event) => await moveLesson(item, $event)" @cancel="cancel(item)"
                             @reset="reset(item)"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
@@ -119,7 +120,7 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import SelectStudents from '@/components/inputs/SelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
-import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
+import { LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
@@ -171,9 +172,14 @@ watch(selectedLessons, () => {
 })
 
 function getColor(event: StudentLesson): string {
-    if (event.trial) return 'yellow';
-    if (event.recovery && event.recovery.ref == 'recovery') return "blue";
-    return lessonStatusColor[event.status];
+    if (event.trial) return '#FFD166';
+    if (event.recovery && event.recovery.ref == 'recovery') return "#91E5F6";
+    if (event.status == LessonStatus.NONE) return "#808080";
+    if (event.status == LessonStatus.PRESENT) return "#06D6A0";
+    if (event.status == LessonStatus.ABSENT) return "#B3001B";
+    if (event.status == LessonStatus.CANCELLED) return "orange";
+
+    return "#808080";
 }
 
 async function present(event: StudentLesson) {

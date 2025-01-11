@@ -116,6 +116,7 @@ import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import LevelRangeEditor from './LevelRangeEditor.vue';
 import ManagerEditor from './ManagerEditor.vue';
+import { DEFAULT_SCHOOL_COLOR } from '@/models/constants';
 
 const props = defineProps<{ initialSchool?: School, edit?: boolean }>()
 const emit = defineEmits(['close', 'save'])
@@ -195,7 +196,7 @@ function updateSchool() {
         city.value = schoolClone.city ?? "";
         email.value = schoolClone.email ?? "";
         phoneNumber.value = schoolClone.phoneNumber ?? "";
-        color.value = schoolClone.color ?? "";
+        color.value = schoolClone.color ?? DEFAULT_SCHOOL_COLOR;
         salaryStrategy.value = schoolClone.salaryStrategy;
         managed.value = schoolClone.managed;
         managerOptions.value = schoolClone.managerOptions;
@@ -229,7 +230,7 @@ async function save(values: GenericObject) {
     if (values.city) school.city = values.city;
     if (values.email) school.email = values.email;
     if (values.phoneNumber) school.phoneNumber = values.phoneNumber;
-    if (values.color?.trim().length != 0) school.color = values.color;
+    if (values.color && values.color.trim().length != 0) school.color = values.color;
     if (managed.value) school.managerOptions = managerOptions.value;
 
     try {

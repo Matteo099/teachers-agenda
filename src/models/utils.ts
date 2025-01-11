@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase/firestore";
-import type { DayOfWeek } from "./model";
+import type { DayOfWeek, School } from "./model";
+import tinycolor from 'tinycolor2';
 
 export const nameof = <T>(name: keyof T) => name;
 
@@ -127,4 +128,38 @@ export const stringToHslColor = function (str: string, saturation: number = 30, 
 
 export const delay = async function (ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export const getCalendarsColor = function (schools: School[]) {
+    const calendars: any = {};
+    schools.forEach(s => {
+        if (s.color) {
+            const sid = s.id.toLowerCase();
+            const mainColor = tinycolor(s.color);
+
+            // Generate lightColors
+            const lightContainer = mainColor.lighten(20).toHexString();
+            const lightOnContainer = mainColor.isDark() ? "#FFFFFF" : "#000000"; // Contrasting color
+
+            // Generate darkColors
+            const darkMain = mainColor.darken(15).toHexString();
+            const darkContainer = mainColor.darken(25).toHexString();
+            const darkOnContainer = mainColor.isDark() ? "#FFFFFF" : "#000000"; // Contrasting color
+
+            calendars[sid] = {
+                colorName: sid,
+                lightColors: {
+                    main: mainColor.toHexString(),
+                    container: lightContainer,
+                    onContainer: lightOnContainer,
+                },
+                darkColors: {
+                    main: darkMain,
+                    container: darkContainer,
+                    onContainer: darkOnContainer,
+                }
+            }
+        }
+    });
+    return calendars;
 }
