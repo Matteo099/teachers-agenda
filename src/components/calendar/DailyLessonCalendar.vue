@@ -142,6 +142,9 @@ function updateCalendarBoundaries() {
         if (end <= "23:00") end = Time.fromHHMM(end)!.add({ hour: 1 }).format();
         else end = "24:00";
         calendarControls.setDayBoundaries({ start, end })
+        const opt = calendarControls.getWeekOptions();
+        const range = parseInt(end.split(":")[0]) - parseInt(start.split(":")[0]);
+        calendarControls.setWeekOptions({ ...opt, gridHeight: Math.max(1000 * range / 24, 400) });
     } else {
         calendarControls.setDayBoundaries({ start: "00:00", end: "24:00" })
     }

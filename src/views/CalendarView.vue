@@ -7,10 +7,7 @@
             <v-select variant="outlined" chips label="Scuole" v-model="selectedSchools" :items="schools" multiple
                 item-title="name" item-value="id" :loading="loadingSchools"></v-select>
             <v-progress-linear :active="loading" color="primary" indeterminate></v-progress-linear>
-            {{ calendarAvailable }}
-            <v-skeleton-loader v-if="!calendarAvailable" class="mx-auto" elevation="2"
-                type="card-avatar, article, actions" boilerplate></v-skeleton-loader>
-            <ScheduleXCalendar v-else :calendar-app="calendarApp">
+            <ScheduleXCalendar :calendar-app="calendarApp">
                 <template #eventModal="{ calendarEvent }">
                     <v-card elevation="3" :title="calendarEvent.title" :text="calendarEvent.description">
                         <template v-slot:subtitle>
@@ -38,13 +35,12 @@ import { LessonGroupService } from '@/models/services/lesson-group-service';
 import { StudentService } from '@/models/services/student-service';
 import { dateFormat, getCalendarsColor } from '@/models/utils';
 import {
-    CalendarApp,
     createCalendar,
     createViewDay,
     createViewMonthAgenda,
     createViewMonthGrid,
     createViewWeek,
-    viewWeek,
+    viewWeek
 } from '@schedule-x/calendar';
 import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
 import { createEventModalPlugin } from '@schedule-x/event-modal';
@@ -69,12 +65,27 @@ const lessons: CalendarEventExt[] = [];
 const loading = ref(false);
 const loadingSchools = ref(false);
 const selectedSchools: Ref<string[]> = ref([]);
-const calendarAvailable = ref(false);
 
 const eventsServicePlugin = createEventsServicePlugin();
 const eventModal = createEventModalPlugin();
 const calendarControls = createCalendarControlsPlugin()
-let calendarApp: CalendarApp;
+const calendarApp = createCalendar({
+    locale: 'it-IT',
+    views: [createViewDay(), createViewWeek(), createViewMonthGrid(), createViewMonthAgenda()],
+    defaultView: viewWeek.name,
+    events: [],
+    plugins: [eventsServicePlugin, eventModal, calendarControls],
+    callbacks: {
+        beforeRender($app) {
+            const range = $app.calendarState.range.value
+            loadLessons(range);
+        },
+        onRangeUpdate(range) {
+            loadLessons(range);
+        }
+    }
+});
+
 
 watch(selectedSchools, () => updateQueryRoute());
 watch(filters, () => updateFilters(), { immediate: true });
@@ -83,7 +94,7 @@ watch(theme.global.name, updateCalendarTheme);
 
 function updateCalendarTheme() {
     if (!calendarApp) return;
-    
+
     if (theme.global.name.value == 'myCustomDarkTheme') {
         calendarApp.setTheme("dark");
     } else {
@@ -128,8 +139,6 @@ function updateFilters() {
 }
 
 async function loadLessons(range?: DateRange | null) {
-    if (!calendarApp) return;
-
     range ??= calendarControls.getRange();
     if (!range) return;
 
@@ -166,38 +175,12 @@ async function loadLessons(range?: DateRange | null) {
 async function loadSchools() {
     loadingSchools.value = true;
     schools.value = await SchoolRepository.instance.getAll();
-    loadingSchools.value = false;
-}
-
-function createCalendarApp() {
     const calendars = getCalendarsColor(...schools.value);
-    // Do not use a ref here, as the calendar instance is not reactive, and doing so might cause issues
-    // For updating events, use the events service plugin
-    calendarApp = createCalendar({
-        locale: 'it-IT',
-        views: [createViewDay(), createViewWeek(), createViewMonthGrid(), createViewMonthAgenda()],
-        defaultView: viewWeek.name,
-        events: [],
-        plugins: [eventsServicePlugin, eventModal, calendarControls],
-        callbacks: {
-            beforeRender($app) {
-                const range = $app.calendarState.range.value
-                loadLessons(range);
-            },
-            onRangeUpdate(range) {
-                loadLessons(range);
-            }
-        },
-        calendars
-    });
-
-    calendarAvailable.value = true;
-
-    loadLessons();
+    calendarControls.setCalendars(calendars);
+    loadingSchools.value = false;
 }
 
 onMounted(async () => {
     await loadSchools();
-    createCalendarApp();
 })
 </script>
