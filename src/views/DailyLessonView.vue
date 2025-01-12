@@ -81,7 +81,7 @@
         <v-container fluid>
             <v-slide-x-transition leave-absolute>
                 <DailyLessonCalendar v-if="visualization == 1" :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)"
-                    v-model="studentLessons" editable sort @edit="save">
+                    :school="school" v-model="studentLessons" editable sort @edit="save">
                 </DailyLessonCalendar>
 
                 <v-timeline v-else side="end" truncate-line="both">

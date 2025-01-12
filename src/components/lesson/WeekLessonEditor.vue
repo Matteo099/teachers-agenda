@@ -50,7 +50,7 @@
 
             </v-form>
 
-            <DailyLessonCalendar v-model="events" editable></DailyLessonCalendar>
+            <DailyLessonCalendar v-model="events" editable :school="school"></DailyLessonCalendar>
         </v-card-text>
         <v-card-actions>
             <v-spacer></v-spacer>

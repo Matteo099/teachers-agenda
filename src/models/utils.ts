@@ -130,10 +130,10 @@ export const delay = async function (ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export const getCalendarsColor = function (schools: School[]) {
+export const getCalendarsColor = function (...schools: (School | undefined)[]) {
     const calendars: any = {};
     schools.forEach(s => {
-        if (s.color) {
+        if (s && s.color) {
             const sid = s.id.toLowerCase();
             const mainColor = tinycolor(s.color);
 

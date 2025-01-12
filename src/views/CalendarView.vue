@@ -170,7 +170,7 @@ async function loadSchools() {
 }
 
 function createCalendarApp() {
-    const calendars = getCalendarsColor(schools.value);
+    const calendars = getCalendarsColor(...schools.value);
     // Do not use a ref here, as the calendar instance is not reactive, and doing so might cause issues
     // For updating events, use the events service plugin
     calendarApp = createCalendar({
