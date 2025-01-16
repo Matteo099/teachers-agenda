@@ -5,6 +5,13 @@ import { type CalendarEvent } from '@schedule-x/calendar';
 export const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 export const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
+export interface LessonFilterObj {
+    name: string;
+    icon: string;
+    color: string;
+    predicate?: (lesson: StudentLesson) => boolean;
+}
+
 export type CalendarEventExt = CalendarEvent & { data?: any };
 
 export enum DayOfWeek {

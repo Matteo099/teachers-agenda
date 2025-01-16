@@ -1,6 +1,6 @@
 import { where } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, months, Time, yyyyMMdd, type CalendarEventExt, type DailyLesson, type IyyyyMMdd, type ScheduledLesson, type WeeklyLesson } from "../model";
+import { LessonStatus, months, Time, yyyyMMdd, type CalendarEventExt, type DailyLesson, type IyyyyMMdd, type LessonFilterObj, type ScheduledLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
 import { nameof, nextDay, pastDay } from "../utils";
@@ -27,6 +27,7 @@ export interface SchoolLessons {
 }
 
 export class LessonGroupService {
+
     private static _instance: LessonGroupService | null = null;
     private today!: {
         asDate: Date,
@@ -100,21 +101,21 @@ export class LessonGroupService {
         return lessons;
     }
 
-    public async getGroupedLessons(schoolLessons: SchoolLessons): Promise<LessonGroup[]> {
+    public async getGroupedLessons(schoolLessons: SchoolLessons, filters?: LessonFilterObj[]): Promise<LessonGroup[]> {
         const lessonProjections: LessonProjection[] = [];
         this.calculateToday();
 
         // Step 1: Filter the last 2 lessons from daily lessons or (if no daily lesson present) weekly lesson based on today
-        await this.addLastLessons(schoolLessons, lessonProjections, 2);
+        await this.addLastLessons(schoolLessons, lessonProjections, 2, filters);
 
         // Step 2: Add the upcoming 4 lessons from weekly lessons based on today
-        this.addUpcomingLessons(schoolLessons.dailyLessons, schoolLessons.weeklyLessons, lessonProjections, 4);
+        this.addUpcomingLessons(schoolLessons.dailyLessons, schoolLessons.weeklyLessons, lessonProjections, 4, filters);
 
         // Step 3: Group lessons by month
         return this.groupLessonsByMonth(lessonProjections);
     }
 
-    private async addLastLessons(schoolLessons: SchoolLessons, lessonProjections: LessonProjection[], count: number) {
+    private async addLastLessons(schoolLessons: SchoolLessons, lessonProjections: LessonProjection[], count: number, filters?: LessonFilterObj[]) {
         const dailyLessons: DailyLesson[] = schoolLessons.dailyLessons;
         const weeklyLessons: WeeklyLesson[] = schoolLessons.weeklyLessons;
         // Filter only lessons that are done (i.e., on or before today)
@@ -169,7 +170,8 @@ export class LessonGroupService {
         dailyLessons: DailyLesson[],
         weeklyLessons: WeeklyLesson[],
         lessonProjections: LessonProjection[],
-        count: number
+        count: number,
+        filters?: LessonFilterObj[]
     ) {
         const startingDay = new Date();
         const totalLessons = lessonProjections.length + count
