@@ -1,5 +1,5 @@
 import { Timestamp } from "firebase/firestore";
-import type { DayOfWeek, School } from "./model";
+import { yyyyMMdd, type DayOfWeek, type IyyyyMMdd, type School } from "./model";
 import tinycolor from 'tinycolor2';
 
 export const nameof = <T>(name: keyof T) => name;
@@ -54,6 +54,10 @@ export const pastDay = function (startingDate: Date, targetDayOfWeek: DayOfWeek)
     resultDate.setDate(startingDate.getDate() - daysToAdd);
 
     return resultDate;
+}
+
+export const extractDayOfWeek = function (date: IyyyyMMdd): DayOfWeek {
+    return yyyyMMdd.fromIyyyyMMdd(date).toDate().getDay();
 }
 
 export const dateFormatter = new Intl.DateTimeFormat('it-IT', {

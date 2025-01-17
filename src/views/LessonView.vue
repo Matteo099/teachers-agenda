@@ -57,7 +57,7 @@
 
         <v-card-text>
             <v-list lines="two">
-                <template v-for="lg of filteredLessonGroups" :key="lg.month">
+                <template v-for="lg of lessonGroups" :key="lg.month">
                     <v-list-subheader inset>{{ lg.month }}</v-list-subheader>
 
                     <v-list-item v-for="lesson in lg.lessons" :key="lesson.date.toString()"
@@ -103,7 +103,6 @@ const props = defineProps<LessonViewProps>();
 const subscriptions: Unsubscribe[] = [];
 
 const lessonGroups: Ref<LessonGroup[]> = ref([]);
-const filteredLessonGroups: Ref<LessonGroup[]> = ref([]);
 const dailyLessonDate: Ref<Date | undefined> = ref();
 const loadingLessons = ref(false);
 const loadingCalendar = ref(false);

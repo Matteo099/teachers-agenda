@@ -3,11 +3,11 @@
         <v-card-text>
             <v-row>
                 <v-col>
-                    <v-select v-model="selectedFilters" :items="filters" return-object item-title="name" label="Filtri"
-                        multiple chips>
-                        <template v-slot:chip="{ index, item }">
-                            <v-icon :color="filters[index].color">
-                                {{ filters[index].icon }}
+                    <v-select v-model="selectedFilters" :items="LESSON_FILTERS" return-object :item-props="itemProps"
+                        label="Filtri" multiple chips>
+                        <template v-slot:chip="{ item }">
+                            <v-icon :color="item.props.color">
+                                {{ item.props.icon }}
                             </v-icon>
                         </template>
                         <template v-slot:prepend-item>
@@ -34,29 +34,31 @@
 </template>
 
 <script setup lang="ts">
-import type { LessonFilterObj } from '@/models/model';
+import { LESSON_FILTERS, type LessonFilterObj } from '@/models/model';
 import { computed, onMounted, ref, type Ref } from 'vue';
 
 
 const model = defineModel<LessonFilterObj[]>({ default: [] });
 const emit = defineEmits(['close']);
 const selectedFilters: Ref<LessonFilterObj[]> = ref([]);
-const filters: LessonFilterObj[] = [
-    { name: "Recuperi", icon: "mdi-abacus", color: "blue" },
-    { name: "Spostate", icon: "mdi-account-box", color: "green" },
-    { name: "Settimanali", icon: "mdi-ab-testing", color: "purple" },
-    { name: "Giornaliere", icon: "mdi-account", color: "yellow" },
-]
 
-const likesAllFruit = computed(() => selectedFilters.value.length === filters.length);
+const likesAllFruit = computed(() => selectedFilters.value.length === LESSON_FILTERS.length);
 const likesSomeFruit = computed(() => selectedFilters.value.length > 0);
 
+function itemProps(item: LessonFilterObj) {
+    return {
+        title: item.name,
+        value: item.type,
+        color: item.color,
+        icon: item.icon
+    }
+}
 
 function toggle() {
     if (likesAllFruit.value) {
         selectedFilters.value = []
     } else {
-        selectedFilters.value = filters.slice()
+        selectedFilters.value = LESSON_FILTERS.slice()
     }
 }
 
