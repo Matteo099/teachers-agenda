@@ -89,7 +89,7 @@
                         :dot-color="getColor(item)" size="small">
                         <LessonItem :school="school" :key="item.id + dailyLesson.id"
                             v-model:item="studentLessons[index]" v-model:select="selectedLessons"
-                            @present="present(item)" @absent="absent(item)"
+                            @present="present(item)" @absent="absent(item, $event)"
                             :moveLesson="async ($event) => await moveLesson(item, $event)" @cancel="cancel(item)"
                             @reset="reset(item)"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
@@ -193,7 +193,7 @@ async function present(event: StudentLesson) {
     //@ts-ignore
     await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
-async function absent(event: StudentLesson) {
+async function absent(event: StudentLesson, canRecover = true) {
     doBackup();
     const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.id == id)).filter(s => !!s);
     _studentLessons.push(event);
@@ -202,7 +202,7 @@ async function absent(event: StudentLesson) {
     selectedLessons.value = []
     await save();
     //@ts-ignore
-    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
+    if (canRecover) await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
 async function cancel(event: StudentLesson) {
     if (event) {
