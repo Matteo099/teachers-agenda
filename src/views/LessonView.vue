@@ -61,8 +61,7 @@
                     <v-list-subheader inset>{{ lg.month }}</v-list-subheader>
 
                     <v-list-item v-for="lesson in lg.lessons" :key="lesson.date.toString()"
-                        :title="lesson.date.format()" @click="routeToDailyLesson(lesson)"
-                        :baseColor="lesson.next ? 'primary' : ''">
+                        @click="routeToDailyLesson(lesson)" :baseColor="lesson.next ? 'primary' : ''">
                         <template v-slot:prepend>
                             <v-avatar :color="getColor(lesson)">
                                 <v-icon color="white">mdi-calendar</v-icon>
@@ -72,6 +71,10 @@
                         <template v-slot:append v-if="lesson.pending || lesson.recovery">
                             <v-icon v-if="lesson.pending" color="warning">mdi-alert</v-icon>
                             <v-icon v-if="lesson.recovery" color="info">mdi-alpha-r-circle</v-icon>
+                        </template>
+
+                        <template v-slot:title>
+                            <b>{{ lesson.date.getDayString(2) }}</b> {{ lesson.date.format() }}
                         </template>
                     </v-list-item>
                 </template>

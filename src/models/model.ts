@@ -132,6 +132,18 @@ export class yyyyMMdd {
         return dateFormat(this.toDate());
     }
 
+    getDayString(dayLength?: number): string {
+        const date = this.toDate();
+        const day = days[date.getDay()].toUpperCase();
+        return (dayLength ? day.slice(0, dayLength) : day);
+    }
+
+    formatAndPreappendDay(dayLength?: number): string {
+        const date = this.toDate();
+        const day = days[date.getDay()].toUpperCase();
+        return (dayLength ? day.slice(0, dayLength) : day) + " " + dateFormat(date);
+    }
+
     equals(date: yyyyMMdd): boolean {
         return this.day == date.day && this.month == date.month && this.year == date.year;
     }
