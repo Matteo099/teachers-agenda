@@ -38,7 +38,7 @@
                         </v-card>
                     </template>
                 </v-dialog>
-                <v-btn class="ma-1" v-if="item.status != LessonStatus.TRIAL && !item.trial?.done"
+                <v-btn class="ma-1" v-if="item.status == LessonStatus.NONE && !item.trial?.done"
                     @click="emit('trial')">prova</v-btn>
                 <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE" @click="emit('reset')">reset</v-btn>
 
