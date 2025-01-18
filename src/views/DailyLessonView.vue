@@ -303,10 +303,11 @@ async function loadSchoolStudents() {
 
 async function saveSelectedStudents() {
     savingSelectedStudents.value = true;
-
+    
     const newDailyLesson = { ...dailyLesson.value };
     selectedStudents.value.forEach(s => {
-        const lastLessonEndTime = newDailyLesson.lessons?.length == 0 ? 0 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].endTime;
+        // 08:00 => 28800 seconds
+        const lastLessonEndTime = newDailyLesson.lessons?.length == 0 ? 28800 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].endTime;
         newDailyLesson.lessons?.push({
             lessonId: uuidv4(),
             status: LessonStatus.NONE,
