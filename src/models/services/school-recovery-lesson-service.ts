@@ -17,7 +17,7 @@ export interface ExtendedSchoolRecoveryLesson {
 }
 
 export enum LessonStatusAction {
-    SET_PRESENT, SET_ABSENT, CANCEL, RESET
+    SET_PRESENT, SET_ABSENT, RESET
 }
 
 export class SchoolRecoveryLessonService {
@@ -187,17 +187,7 @@ export class SchoolRecoveryLessonService {
                     await DailyLessonService.instance.moveRecoveryRefToUndoneList(O, originalLessonId);
                 }
             }
-            else if (action == LessonStatusAction.CANCEL) {
-                if (!isRecoveryLesson) {
-                    // const ref = { ...lesson };
-                    this.removeRecoveryByType(recovery, originalLessonRef, RecoveryType.UNSET);
-                } else {
-                    // const ref: LessonRef = { dailyLessonId: lesson.recovery!.lessonRef.dailyLessonId, lessonId: lesson.recovery!.lessonRef.lessonId }
-                    const info = LessonStatus.CANCELLED;
-                    // this.removeRecoveryByType(recovery, ref, RecoveryType.PENDING);
-                    this.addRecoveryByType(recovery, originalLessonRef, RecoveryType.DONE, info);
-                }
-            } else if (action == LessonStatusAction.RESET) {
+            else if (action == LessonStatusAction.RESET) {
                 if (!isRecoveryLesson) {
                     // const ref = { ...lesson };
                     this.removeRecoveryByType(recovery, originalLessonRef, RecoveryType.UNSET);
