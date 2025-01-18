@@ -178,9 +178,16 @@ export interface Student {
     minutesLessonDuration: number;
 
     removed?: boolean;
+    trial?: Trial;
 
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
     updatedAt: Timestamp;
+}
+
+export interface Trial {
+    done: boolean;
+    dailyLessonDate?: IyyyyMMdd;
+    dailyLessonId?: ID;
 }
 
 export interface Note {
@@ -279,12 +286,12 @@ export enum LessonStatus {
     NONE,
     PRESENT,
     ABSENT,
-    CANCELLED
+    UNJUSTIFIED_ABSENCE,
+    TRIAL
 }
 
 export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
-    trial?: boolean;
     recovery?: RecoveryLessonInfo;
     undoneRecoveryRef?: LessonRef[];
 

@@ -90,7 +90,7 @@
                         <LessonItem :school="school" :key="item.id + dailyLesson.id"
                             v-model:item="studentLessons[index]" v-model:select="selectedLessons"
                             @present="present(item)" @absent="absent(item, $event)"
-                            :moveLesson="async ($event) => await moveLesson(item, $event)" @cancel="cancel(item)"
+                            :moveLesson="async ($event) => await moveLesson(item, $event)" @trial="trial(item)"
                             @reset="reset(item)"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
                             :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
@@ -176,8 +176,8 @@ function getColor(event: StudentLesson): string {
     if (event.recovery && event.recovery.ref == 'recovery') return "#91E5F6";
     if (event.status == LessonStatus.NONE) return "#808080";
     if (event.status == LessonStatus.PRESENT) return "#06D6A0";
-    if (event.status == LessonStatus.ABSENT) return "#B3001B";
-    if (event.status == LessonStatus.CANCELLED) return "orange";
+    if (event.status == LessonStatus.ABSENT || event.status == LessonStatus.UNJUSTIFIED_ABSENCE) return "#B3001B";
+    if (event.status == LessonStatus.TRIAL) return "orange";
 
     return "#808080";
 }
@@ -198,26 +198,28 @@ async function absent(event: StudentLesson, canRecover = true) {
     const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.id == id)).filter(s => !!s);
     _studentLessons.push(event);
     //@ts-ignore
-    _studentLessons.forEach(s => s.status = LessonStatus.ABSENT)
+    _studentLessons.forEach(s => s.status = canRecover ? LessonStatus.ABSENT : LessonStatus.UNJUSTIFIED_ABSENCE)
     selectedLessons.value = []
     await save();
     //@ts-ignore
     if (canRecover) await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
-async function cancel(event: StudentLesson) {
+async function trial(event: StudentLesson) {
     if (event) {
         doBackup();
-        event.status = LessonStatus.CANCELLED
+        event.status = LessonStatus.TRIAL
         await save();
-        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
+        await StudentService.instance.setTrialDone(event, dailyLesson.value?.date, dailyLesson.value?.id);
     }
 }
 async function reset(event: StudentLesson) {
     if (event) {
         doBackup();
+        const wasTrial = event.status == LessonStatus.TRIAL;
         event.status = LessonStatus.NONE
         await save();
         await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
+        if (wasTrial) await StudentService.instance.unsetTrial(event);
     }
 }
 
@@ -425,7 +427,6 @@ function extractDailyLesson(): DailyLesson | undefined {
             updatedAt: Timestamp.now()
         }
         if (l.recovery) newLesson.recovery = l.recovery;
-        if (l.trial) newLesson.trial = l.trial;
         lessons.push(newLesson);
 
         salary += SalaryService.instance.computeSalaryByStudentLesson(school.value, less);

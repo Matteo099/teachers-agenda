@@ -1,5 +1,5 @@
 import { documentId, where } from "firebase/firestore";
-import type { Student } from "../model";
+import type { IyyyyMMdd, Student } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { StudentRepository } from "../repositories/student-repository";
 import { nameof } from "../utils";
@@ -24,9 +24,23 @@ export class StudentService {
     }
 
     public async getStudentsOfSchoolWithIds(schoolId: ID, studentIds: string[]): Promise<Student[]> {
-        if(studentIds.length == 0) return [];
+        if (studentIds.length == 0) return [];
         const _query1 = where(nameof<Student>('schoolId'), '==', schoolId);
         const _query2 = where(documentId(), 'in', studentIds);
         return StudentRepository.instance.getAll(_query1, _query2);
+    }
+
+    public async setTrialDone(student: Student, dailyLessonDate?: IyyyyMMdd, dailyLessonId?: ID) {
+        if (student.trial?.done) return;
+
+        student.trial = { done: true }
+        if(dailyLessonDate) student.trial.dailyLessonDate = dailyLessonDate;
+        if(dailyLessonId) student.trial.dailyLessonId = dailyLessonId;
+        await StudentRepository.instance.save(student, student.id);
+    }
+
+    public async unsetTrial(student: Student) {
+        delete student.trial;
+        await StudentRepository.instance.save(student, student.id);
     }
 }

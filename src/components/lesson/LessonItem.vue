@@ -11,13 +11,13 @@
         </v-card-title>
         <v-card-text>
             <template v-if="!item.recovery || item.recovery.ref == 'original'">
-                <v-btn class="ma-1" v-if="item.status != LessonStatus.PRESENT && item.status != LessonStatus.CANCELLED"
+                <v-btn class="ma-1" v-if="item.status != LessonStatus.TRIAL && item.status != LessonStatus.PRESENT"
                     @click="emit('present')">presente</v-btn>
 
                 <v-dialog transition="dialog-bottom-transition">
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn class="ma-1" v-bind="activatorProps"
-                            v-if="item.status != LessonStatus.ABSENT && item.status != LessonStatus.CANCELLED">assente</v-btn>
+                            v-if="item.status != LessonStatus.TRIAL && item.status != LessonStatus.ABSENT && item.status != LessonStatus.UNJUSTIFIED_ABSENCE">assente</v-btn>
                     </template>
 
                     <template v-slot:default="{ isActive }">
@@ -38,8 +38,8 @@
                         </v-card>
                     </template>
                 </v-dialog>
-                <v-btn class="ma-1" v-if="item.status != LessonStatus.CANCELLED"
-                    @click="emit('cancel')">cancella</v-btn>
+                <v-btn class="ma-1" v-if="item.status != LessonStatus.TRIAL && !item.trial?.done"
+                    @click="emit('trial')">prova</v-btn>
                 <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE" @click="emit('reset')">reset</v-btn>
 
                 <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen>
@@ -133,7 +133,7 @@ const props = defineProps<{
 }>()
 const item = defineModel<StudentLesson>('item', { required: true });
 const select = defineModel<string[]>('select');
-const emit = defineEmits(['present', 'absent', 'reset', 'cancel', 'updateLessonTime', 'deleteStudent'])
+const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent'])
 const timeDialog = ref(false)
 const dateDialog = ref(false)
 const newLessonDate = ref();
