@@ -64,7 +64,6 @@ function updateModel() {
     }
     // relative
     else if (selectedType.value == selectTypes[1]) {
-        console.log(selectedPeriod.value);
         let res: Date;
         // yesterday
         if (selectedPeriod.value == periods[1]) {
@@ -126,7 +125,6 @@ function updateValues() {
         selectedType.value = selectTypes[1];
         const today = new Date();
         const delta = getDeltaDates(today, yyyyMMdd.fromIyyyyMMdd(from).toDate());
-        console.log(delta);
         if (delta.days == 0 && delta.months == 0 && delta.years == 0) selectedPeriod.value = periods[0];
         else if (delta.days == 1 && delta.months == 0 && delta.years == 0) selectedPeriod.value = periods[1];
         else if (delta.days == 7 && delta.months == 0 && delta.years == 0) selectedPeriod.value = periods[2];
