@@ -62,13 +62,19 @@
 
       <v-menu transition="slide-y-transition">
         <template v-slot:activator="{ props }">
-          <v-btn icon class="mr-2" v-bind="props">
-            <v-icon right>mdi-bell</v-icon>
+          <v-btn icon class="mr-2 text-none" v-bind="props">
+            <v-badge v-if="notifications.length > 0" color="error" :content="notifications.length">
+              <v-icon>mdi-bell</v-icon>
+            </v-badge>
+            <v-icon v-else>mdi-bell</v-icon>
           </v-btn>
         </template>
         <v-list>
           <v-list-item v-for="(item, i) in notifications" :key="i">
-            <v-list-item-title>{{ item.title }}</v-list-item-title>
+            <v-list-item-subtitle>{{ item }}</v-list-item-subtitle>
+          </v-list-item>
+          <v-list-item v-if="notifications.length == 0">
+            <v-list-item-subtitle>Nessuna notifica</v-list-item-subtitle>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -163,6 +169,8 @@ import { useCurrentUser, useFirebaseAuth } from 'vuefire';
 import { useDisplay, useTheme } from 'vuetify';
 import { LocalStorageHandler } from './models/storage/local-storage-handler';
 import { stringToHslColor } from './models/utils';
+import { checkForNewVersion } from './models/utils/version';
+import { toast } from 'vue3-toastify';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);
@@ -184,6 +192,7 @@ const appLogo = new URL('@/assets/images/logor.png', import.meta.url).href
 const drawer = ref(false)
 const appVersion = import.meta.env.VITE_APP_VERSION
 const loginPage = computed(() => route.name == "login")
+const hasNewVersion = ref(false);
 
 const tooltip = {
   text: `Versione ${appVersion}`,
@@ -201,6 +210,21 @@ const route = useRoute()
 const userInitials: ComputedRef<string> = computed(() => user.value?.displayName?.split(" ").map(s => s.charAt(0)).join("") ?? "TA");
 const userImage = computed(() => user.value?.photoURL ?? appLogo);
 const avatarColor = computed(() => stringToHslColor(userInitials.value));
+
+watch(hasNewVersion, () => {
+  if (hasNewVersion.value) {
+    notifications.push("Scarica la nuova versione dell'applicazione")
+    toast.info("Scarica la nuova versione dell'applicazione", {
+      // Keeps the notification open until the user interacts
+      autoClose: false,
+      closeOnClick: true,
+      onClick: () => {
+        // Reload the page to fetch the new version
+        window.location.reload();
+      },
+    });
+  }
+})
 
 watch(user, async (currentUser, previousUser) => {
   // redirect to login if they logout and the current
@@ -230,7 +254,12 @@ function toggleTheme() {
   LocalStorageHandler.setItem('theme', theme.global.name.value);
 }
 
-onMounted(() => {
+async function checkForUpdates() {
+  hasNewVersion.value = await checkForNewVersion()
+}
+
+onMounted(async () => {
   theme.global.name.value = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
+  checkForUpdates();
 })
 </script>
