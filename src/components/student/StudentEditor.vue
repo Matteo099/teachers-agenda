@@ -191,8 +191,11 @@ async function save(values: GenericObject) {
     if (lessonDay.value) student.lessonDay = days.indexOf(lessonDay.value);
     if (note.value && note.value.trim().length != 0) student.note = { text: note.value.trim(), updatedAt: Timestamp.now() };
     else delete student.note;
-    if (trial.value) student.trial = { done: true, dailyLessonDate: props.initialStudent?.trial?.dailyLessonDate, dailyLessonId: props.initialStudent?.trial?.dailyLessonId }
-    else delete student.trial;
+    if (trial.value) {
+        student.trial = { done: true }
+        if(props.initialStudent?.trial?.dailyLessonDate) student.trial.dailyLessonDate = props.initialStudent?.trial?.dailyLessonDate;
+        if(props.initialStudent?.trial?.dailyLessonId) student.trial.dailyLessonId = props.initialStudent?.trial?.dailyLessonId;
+    } else delete student.trial;
 
     try {
         if (props.edit && props.initialStudent?.id != undefined) {
