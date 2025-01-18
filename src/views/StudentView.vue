@@ -2,17 +2,33 @@
     <v-card title="Studenti" elevation="3" :loading="loadingStudents">
         <v-card-text>
             <v-row class="mr-4 mb-1 align-center">
-                <v-text-field class="ma-2" prepend-inner-icon="mdi-magnify" density="comfortable"
-                    placeholder="Ricerca..." theme="light" variant="solo" hide-details></v-text-field>
+                <v-col cols="12" md="8">
+                    <v-text-field class="ma-2" density="compact" label="Ricerca" variant="outlined" hide-details>
+                        <template v-slot:append>
+                            <v-dialog transition="dialog-bottom-transition">
+                                <template v-slot:activator="{ props: activatorProps }">
+                                    <v-btn icon="mdi-filter" variant="text" v-bind="activatorProps"></v-btn>
+                                </template>
 
-                <v-dialog v-model="dialog" fullscreen>
-                    <template v-slot:activator="{ props: activatorProps }">
-                        <v-btn prepend-icon="mdi-plus" color="success" v-bind="activatorProps">nuovo studente</v-btn>
-                    </template>
+                                <template v-slot:default="{ isActive }">
+                                    <StudentFilter v-model="filters" @close="isActive.value = false"></StudentFilter>
+                                </template>
+                            </v-dialog>
+                        </template>
+                    </v-text-field>
+                </v-col>
+                <v-col cols="12" md="4">
+                    <v-dialog v-model="dialog" fullscreen>
+                        <template v-slot:activator="{ props: activatorProps }">
+                            <v-btn prepend-icon="mdi-plus" color="success" v-bind="activatorProps">
+                                studente
+                            </v-btn>
+                        </template>
 
-                    <StudentEditor :school="school" @close="dialog = false" @save="onSaveStudent($event)">
-                    </StudentEditor>
-                </v-dialog>
+                        <StudentEditor :school="school" @close="dialog = false" @save="onSaveStudent($event)">
+                        </StudentEditor>
+                    </v-dialog>
+                </v-col>
             </v-row>
             <v-data-table :headers="studentHeaders" :items="students" item-value="id">
                 <template v-slot:item.lessonDay="{ item }">
@@ -53,6 +69,7 @@
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import StudentEditor from '@/components/student/StudentEditor.vue';
+import StudentFilter from '@/components/student/StudentFilter.vue';
 import { days, yyyyMMdd, type School, type Student } from '@/models/model';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { StudentService } from '@/models/services/student-service';

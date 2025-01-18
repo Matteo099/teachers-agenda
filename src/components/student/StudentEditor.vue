@@ -40,6 +40,11 @@
                         hide-details></v-switch>
                 </v-col>
 
+                <v-col cols="12" md="6">
+                    <v-switch label="Supplenza" v-model="isSubstitution" v-bind="isSubstitutionProps" color="primary"
+                        hide-details></v-switch>
+                </v-col>
+
                 <v-col cols="12" md="12">
                     <v-textarea id="std_note" :disabled="isDisabled('note')" :focused="isFocussed('note')"
                         v-model="note" v-bind="noteProps" label="Note" counter></v-textarea>
@@ -98,6 +103,7 @@ const schema = yup.object({
     level: yup.string().required('Il Livello è obbligatorio').label('Livello'),
     minutesLessonDuration: yup.number().required('La Durata della Lezione è obbligatoria').min(1).label('Durata della Lezione'),
     trial: yup.boolean().label('Lezione di Prova'),
+    isSubstitution: yup.boolean().label('Supplenza'),
     note: yup.string().label('Note'),
 })
 
@@ -118,6 +124,7 @@ const [lessonDay, lessonDayProps] = defineField('lessonDay', vuetifyConfig);
 const [level, levelProps] = defineField('level', vuetifyConfig);
 const [minutesLessonDuration, minutesLessonDurationProps] = defineField('minutesLessonDuration', vuetifyConfig);
 const [trial, trialProps] = defineField('trial', vuetifyConfig);
+const [isSubstitution, isSubstitutionProps] = defineField('isSubstitution', vuetifyConfig);
 const [note, noteProps] = defineField('note', vuetifyConfig);
 
 const trialLabel = computed(() => {
@@ -155,6 +162,7 @@ function updateStudent() {
         contact.value = studentClone.contact ?? "";
         note.value = studentClone.note?.text ?? "";
         trial.value = studentClone.trial ?? false;
+        isSubstitution.value = studentClone.isSubstitution ?? false;
         if (studentClone.lessonDay) lessonDay.value = days[studentClone.lessonDay];
     }
 }
@@ -169,9 +177,11 @@ function randomData() {
     surname.value = Random.word();
     level.value = Random.item(_levels.value);
     lessonDay.value = Random.item(days);
+    isSubstitution.value = Random.bool();
+    trial.value = Random.bool();
     minutesLessonDuration.value = Random.int(30, 150);
-    contact.value = Random.word()
-    note.value = Random.text()
+    contact.value = Random.word();
+    note.value = Random.text();
 }
 
 async function save(values: GenericObject) {
@@ -184,6 +194,7 @@ async function save(values: GenericObject) {
         createdAt: props.edit ? props.initialStudent!.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now(),
         minutesLessonDuration: values.minutesLessonDuration,
+        isSubstitution: values.isSubstitution,
         level: values.level
     }
 
@@ -193,8 +204,8 @@ async function save(values: GenericObject) {
     else delete student.note;
     if (trial.value) {
         student.trial = { done: true }
-        if(props.initialStudent?.trial?.dailyLessonDate) student.trial.dailyLessonDate = props.initialStudent?.trial?.dailyLessonDate;
-        if(props.initialStudent?.trial?.dailyLessonId) student.trial.dailyLessonId = props.initialStudent?.trial?.dailyLessonId;
+        if (props.initialStudent?.trial?.dailyLessonDate) student.trial.dailyLessonDate = props.initialStudent?.trial?.dailyLessonDate;
+        if (props.initialStudent?.trial?.dailyLessonId) student.trial.dailyLessonId = props.initialStudent?.trial?.dailyLessonId;
     } else delete student.trial;
 
     try {

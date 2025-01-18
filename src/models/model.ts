@@ -179,6 +179,7 @@ export interface Student {
 
     removed?: boolean;
     trial?: Trial;
+    isSubstitution?: boolean;
 
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
     updatedAt: Timestamp;

@@ -8,7 +8,7 @@
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <v-card maxWidth="400px">
+                    <v-card class="mx-auto" min-width="400px">
                         <v-card-text>
                             <v-row class="justify-center">
                                 <v-col cols="auto">

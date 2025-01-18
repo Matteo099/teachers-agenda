@@ -37,15 +37,14 @@
 import { LESSON_FILTERS, type LessonFilterObj } from '@/models/model';
 import { computed, onMounted, ref, type Ref } from 'vue';
 
-
-const model = defineModel<LessonFilterObj[]>({ default: [] });
+const model = defineModel<StudentFilterObj[]>({ default: [] });
 const emit = defineEmits(['close']);
-const selectedFilters: Ref<LessonFilterObj[]> = ref([]);
+const selectedFilters: Ref<StudentFilterObj[]> = ref([]);
 
 const likesAllFruit = computed(() => selectedFilters.value.length === LESSON_FILTERS.length);
 const likesSomeFruit = computed(() => selectedFilters.value.length > 0);
 
-function itemProps(item: LessonFilterObj) {
+function itemProps(item: StudentFilterObj) {
     return {
         title: item.name,
         value: item.type,
