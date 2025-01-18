@@ -44,49 +44,13 @@
                         </v-text-field>
                     </v-col>
                     <v-col class="px-2" cols="12" md="6">
-                        <v-select v-model="selectedStudents" :items="allStudents" label="Studenti" item-title="name"
-                            item-value="id" :return-object="true" multiple
-                            no-data-text="Nessuno studente disponibile per questa scuola">
-                            <template v-slot:prepend-item v-if="allStudents.length > 1">
-                                <v-list-item title="Seleziona tutti" @click="toggle">
-                                    <template v-slot:prepend>
-                                        <v-checkbox-btn :color="selectSomeStudents ? 'indigo-darken-4' : undefined"
-                                            :indeterminate="selectSomeStudents && !selectAllStudents"
-                                            :model-value="selectAllStudents"></v-checkbox-btn>
-                                    </template>
-                                </v-list-item>
-
-                                <v-divider class="mt-2"></v-divider>
-                            </template>
-                        </v-select>
+                        <SelectStudents v-model="selectedStudents" :all-students="allStudents" />
                     </v-col>
                 </v-row>
 
             </v-form>
 
-            <DailyLessonCalendar v-model="events" editable></DailyLessonCalendar>
-            <!-- <v-list>
-                <v-list-subheader>STUDENTI</v-list-subheader>
-                <draggableComponent v-if="startingTime" :list="scheduledLessons" item-key="studentId"
-                    @end="updateScheduledLessonsTime">
-                    <template v-slot:item="{ element }">
-                        <v-list-item :key="element.studentId" :value="element" color="primary">
-                            <template v-slot:prepend>
-                                <p>
-                                    <b>
-                                        {{ Time.fromITime(element.startTime).format() }} -
-                                        {{ Time.fromITime(element.endTime).format() }}
-                                    </b>
-                                    <span> - </span>
-                                    <i>{{ getCompleteStudentName(element.studentId) }}</i>
-                                    <span> ({{ getStudentLessonDay(element.studentId) }})</span>
-                                </p>
-                            </template>
-                        </v-list-item>
-                    </template>
-
-                </draggableComponent>
-            </v-list> -->
+            <DailyLessonCalendar v-model="events" editable :school="school"></DailyLessonCalendar>
         </v-card-text>
         <v-card-actions>
             <v-spacer></v-spacer>
@@ -107,10 +71,11 @@ import { type CalendarEvent } from '@schedule-x/calendar';
 import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { useForm, type GenericObject } from 'vee-validate';
-import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import DailyLessonCalendar from '../calendar/DailyLessonCalendar.vue';
+import SelectStudents from '../inputs/SelectStudents.vue';
 
 interface WeekLessonEditorProps {
     school: School;
@@ -183,21 +148,6 @@ watch(startingTime, () => { updateScheduledLessonsTime(); initializingStartingTi
 watch(dayOfWeek, async () => await loadStudents())
 watch(events, () => updateScheduledLessonsByEvents(), { deep: true })
 
-const selectAllStudents = computed(() => {
-    return selectedStudents.value.length === allStudents.value.length
-});
-const selectSomeStudents = computed(() => {
-    return selectedStudents.value.length > 0;
-});
-
-function toggle() {
-    if (selectAllStudents.value) {
-        selectedStudents.value = []
-    } else {
-        selectedStudents.value = allStudents.value.slice();
-    }
-}
-
 function updateScheduledLessons() {
     // add new selected students at the end of the list
     for (const student of selectedStudents.value) {
@@ -260,8 +210,8 @@ function updateScheduledLessonsTime() {
         const st = getStudent(sl.studentId);
         return {
             id: sl.lessonId,
-            start: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.startTime).format(),
-            end: today.toIyyyyMMdd("-") + " " + Time.fromITime(sl.endTime).format(),
+            start: today.toIyyyyMMdd("-", 1) + " " + Time.fromITime(sl.startTime).format(),
+            end: today.toIyyyyMMdd("-", 1) + " " + Time.fromITime(sl.endTime).format(),
             title: `${getCompleteStudentName(sl.studentId)} - ${getStudentLessonDay(sl.studentId)}`,
             data: { ...sl, ...st }
         };

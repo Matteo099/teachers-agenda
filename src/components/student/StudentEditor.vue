@@ -35,6 +35,11 @@
                     </v-number-input>
                 </v-col>
 
+                <v-col cols="12" md="6">
+                    <v-switch :label="trialLabel" v-model="trial" v-bind="trialProps" color="primary"
+                        hide-details></v-switch>
+                </v-col>
+
                 <v-col cols="12" md="12">
                     <v-textarea id="std_note" :disabled="isDisabled('note')" :focused="isFocussed('note')"
                         v-model="note" v-bind="noteProps" label="Note" counter></v-textarea>
@@ -57,12 +62,12 @@
 </template>
 
 <script setup lang="ts">
-import { days, type School, type Student } from '@/models/model';
+import { days, yyyyMMdd, type School, type Student } from '@/models/model';
 import { development, Random } from '@/models/random-utils';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
-import { onMounted, ref, watch, type Ref } from 'vue';
+import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 
@@ -92,6 +97,7 @@ const schema = yup.object({
     lessonDay: yup.string().label('Giono di Lezione').nullable().optional(),
     level: yup.string().required('Il Livello è obbligatorio').label('Livello'),
     minutesLessonDuration: yup.number().required('La Durata della Lezione è obbligatoria').min(1).label('Durata della Lezione'),
+    trial: yup.boolean().label('Lezione di Prova'),
     note: yup.string().label('Note'),
 })
 
@@ -111,7 +117,15 @@ const [contact, contactProps] = defineField('contact', vuetifyConfig);
 const [lessonDay, lessonDayProps] = defineField('lessonDay', vuetifyConfig);
 const [level, levelProps] = defineField('level', vuetifyConfig);
 const [minutesLessonDuration, minutesLessonDurationProps] = defineField('minutesLessonDuration', vuetifyConfig);
+const [trial, trialProps] = defineField('trial', vuetifyConfig);
 const [note, noteProps] = defineField('note', vuetifyConfig);
+
+const trialLabel = computed(() => {
+    return trial.value ? (props.initialStudent?.trial?.dailyLessonDate ?
+        `Lezione di prova: fatta in data ${yyyyMMdd.fromIyyyyMMdd(props.initialStudent?.trial?.dailyLessonDate).format()}` :
+        'Lezione di prova: fatta') :
+        'Lezione di prova: da fare';
+})
 
 const onSave = handleSubmit(
     async (values: GenericObject) => {
@@ -140,6 +154,7 @@ function updateStudent() {
         minutesLessonDuration.value = studentClone.minutesLessonDuration;
         contact.value = studentClone.contact ?? "";
         note.value = studentClone.note?.text ?? "";
+        trial.value = studentClone.trial ?? false;
         if (studentClone.lessonDay) lessonDay.value = days[studentClone.lessonDay];
     }
 }
@@ -176,6 +191,11 @@ async function save(values: GenericObject) {
     if (lessonDay.value) student.lessonDay = days.indexOf(lessonDay.value);
     if (note.value && note.value.trim().length != 0) student.note = { text: note.value.trim(), updatedAt: Timestamp.now() };
     else delete student.note;
+    if (trial.value) {
+        student.trial = { done: true }
+        if(props.initialStudent?.trial?.dailyLessonDate) student.trial.dailyLessonDate = props.initialStudent?.trial?.dailyLessonDate;
+        if(props.initialStudent?.trial?.dailyLessonId) student.trial.dailyLessonId = props.initialStudent?.trial?.dailyLessonId;
+    } else delete student.trial;
 
     try {
         if (props.edit && props.initialStudent?.id != undefined) {

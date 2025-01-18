@@ -38,7 +38,7 @@
                     <template v-slot:default>
                         <v-card title="Tutti gli studenti della scuola" :loading="loadingAllStudents">
                             <v-card-text>
-                                <VSelectStudents v-model="selectedStudents" :all-students="availableStudents" />
+                                <SelectStudents v-model="selectedStudents" :all-students="availableStudents" />
                             </v-card-text>
                             <v-card-actions>
                                 <v-btn text="Annulla" @click="studentsDialog = false"></v-btn>
@@ -81,18 +81,19 @@
         <v-container fluid>
             <v-slide-x-transition leave-absolute>
                 <DailyLessonCalendar v-if="visualization == 1" :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)"
-                    v-model="studentLessons" editable sort @edit="save">
+                    :school="school" v-model="studentLessons" editable sort @edit="save">
                 </DailyLessonCalendar>
 
                 <v-timeline v-else side="end" truncate-line="both">
                     <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id + dailyLesson.id"
                         :dot-color="getColor(item)" size="small">
-                        <LessonItem :school="school" :key="item.id + dailyLesson.id" v-model:item="studentLessons[index]"
-                            v-model:select="selectedLessons" @present="present(item)" @absent="absent(item)"
-                            :moveLesson="async ($event) => await moveLesson(item, $event)" @cancel="cancel(item)"
+                        <LessonItem :school="school" :key="item.id + dailyLesson.id"
+                            v-model:item="studentLessons[index]" v-model:select="selectedLessons"
+                            @present="present(item)" @absent="absent(item, $event)"
+                            :moveLesson="async ($event) => await moveLesson(item, $event)" @trial="trial(item)"
                             @reset="reset(item)"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
-                            @notes="notes(item)" :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
+                            :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
                         </LessonItem>
                     </v-timeline-item>
                 </v-timeline>
@@ -117,9 +118,9 @@
 import DailyLessonCalendar from '@/components/calendar/DailyLessonCalendar.vue';
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
-import VSelectStudents from '@/components/inputs/VSelectStudents.vue';
+import SelectStudents from '@/components/inputs/SelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
-import { LessonStatus, lessonStatusColor, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
+import { LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
@@ -171,9 +172,14 @@ watch(selectedLessons, () => {
 })
 
 function getColor(event: StudentLesson): string {
-    if (event.trial) return 'yellow';
-    if (event.recovery && event.recovery.ref == 'recovery') return "blue";
-    return lessonStatusColor[event.status];
+    if (event.trial) return '#FFD166';
+    if (event.recovery && event.recovery.ref == 'recovery') return "#91E5F6";
+    if (event.status == LessonStatus.NONE) return "#808080";
+    if (event.status == LessonStatus.PRESENT) return "#06D6A0";
+    if (event.status == LessonStatus.ABSENT || event.status == LessonStatus.UNJUSTIFIED_ABSENCE) return "#B3001B";
+    if (event.status == LessonStatus.TRIAL) return "orange";
+
+    return "#808080";
 }
 
 async function present(event: StudentLesson) {
@@ -187,31 +193,33 @@ async function present(event: StudentLesson) {
     //@ts-ignore
     await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_PRESENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
-async function absent(event: StudentLesson) {
+async function absent(event: StudentLesson, canRecover = true) {
     doBackup();
     const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.id == id)).filter(s => !!s);
     _studentLessons.push(event);
     //@ts-ignore
-    _studentLessons.forEach(s => s.status = LessonStatus.ABSENT)
+    _studentLessons.forEach(s => s.status = canRecover ? LessonStatus.ABSENT : LessonStatus.UNJUSTIFIED_ABSENCE)
     selectedLessons.value = []
     await save();
     //@ts-ignore
-    await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
+    if (canRecover) await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.SET_ABSENT, dailyLesson.value!.schoolId, ..._studentLessons.map(s => ({ ...s, dailyLessonId: dailyLesson.value!.id })));
 }
-async function cancel(event: StudentLesson) {
+async function trial(event: StudentLesson) {
     if (event) {
         doBackup();
-        event.status = LessonStatus.CANCELLED
+        event.status = LessonStatus.TRIAL
         await save();
-        await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.CANCEL, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
+        await StudentService.instance.setTrialDone(event, dailyLesson.value?.date, dailyLesson.value?.id);
     }
 }
 async function reset(event: StudentLesson) {
     if (event) {
         doBackup();
+        const wasTrial = event.status == LessonStatus.TRIAL;
         event.status = LessonStatus.NONE
         await save();
         await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
+        if (wasTrial) await StudentService.instance.unsetTrial(event);
     }
 }
 
@@ -256,10 +264,6 @@ async function updateLessonTime(event: StudentLesson, newDataEvent: EventTime) {
     studentLessons.value.sort((a, b) => a.startTime - b.startTime);
     await save();
     return true;
-}
-
-function notes(event: StudentLesson) {
-
 }
 
 function toggleAll() {
@@ -423,7 +427,6 @@ function extractDailyLesson(): DailyLesson | undefined {
             updatedAt: Timestamp.now()
         }
         if (l.recovery) newLesson.recovery = l.recovery;
-        if (l.trial) newLesson.trial = l.trial;
         lessons.push(newLesson);
 
         salary += SalaryService.instance.computeSalaryByStudentLesson(school.value, less);

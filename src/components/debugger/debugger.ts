@@ -45,7 +45,12 @@ export class Debugger {
 
     public push(level: LogLevel, ...args: any[]) {
         if (!this.enabled) return;
-        const message = JSON.stringify(args, getCircularReplacer());
+        let message: string = "";
+        try {
+            message = JSON.stringify(args, getCircularReplacer());
+        } catch (ex) {
+            message = JSON.stringify(ex, getCircularReplacer());
+        }
         const timestamp = new Date();
         this.logs.push({ level, message, timestamp });
         this._subscription.next(this.logs);

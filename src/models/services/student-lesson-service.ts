@@ -1,4 +1,4 @@
-import type { DailyLesson } from "../model";
+import type { DailyLesson, StudentLesson } from "../model";
 import { StudentService } from "./student-service";
 
 export class StudentLessonService {
@@ -10,7 +10,7 @@ export class StudentLessonService {
         return this._instance;
     }
 
-    public async getStudentLesson(dailyLesson: DailyLesson, stundetIds?: string[]) {
+    public async getStudentLesson(dailyLesson: DailyLesson, stundetIds?: string[]): Promise<StudentLesson[]> {
         stundetIds ??= dailyLesson.lessons.map(l => l.studentId);
         const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.schoolId, stundetIds);
         return dailyLesson.lessons.map(l => {

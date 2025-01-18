@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { days, Time, yyyyMMdd, type CalendarEventExt, type EventTime, type StudentLesson } from '@/models/model';
+import { days, Time, yyyyMMdd, type CalendarEventExt, type EventTime, type School, type StudentLesson } from '@/models/model';
 import {
     createCalendar,
     createViewDay,
@@ -42,31 +42,43 @@ import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { ScheduleXCalendar } from '@schedule-x/vue';
 import { onMounted, ref, watch } from 'vue';
 import EditLessonTime from '../lesson/EditLessonTime.vue';
+import { useTheme } from 'vuetify';
+import { getCalendarsColor } from '@/models/utils';
+import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
 
 interface CalendarProps {
     date?: yyyyMMdd;
     editable?: boolean;
     showDay?: boolean;
-    sort?: boolean
+    sort?: boolean;
+    school?: School;
+    trimTime?: boolean;
 }
 
 const props = withDefaults(defineProps<CalendarProps>(), {
     date: () => yyyyMMdd.today(),
     editable: false,
     showDay: false,
-    sort: false
+    sort: false,
+    trimTime: true
 })
+const theme = useTheme();
 const emit = defineEmits(['edit']);
 const model = defineModel<(CalendarEventExt | StudentLesson)[]>({ default: [] });
 const _events = ref<CalendarEventExt[]>([]);
 
 const editTimeModal = ref(false);
+let start = "24:00";
+let end = "00:00";
 
 watch(model, () => updateInternalEvents(), { deep: true });
+watch(theme.global.name, updateCalendarTheme);
+watch(() => props.trimTime, updateCalendarBoundaries);
 
 const eventsServicePlugin = createEventsServicePlugin();
 const eventModal = createEventModalPlugin();
 const dndPlugin = createDragAndDropPlugin(15);
+const calendarControls = createCalendarControlsPlugin()
 // Do not use a ref here, as the calendar instance is not reactive, and doing so might cause issues
 // For updating events, use the events service plugin
 const calendarApp = createCalendar({
@@ -74,7 +86,7 @@ const calendarApp = createCalendar({
     selectedDate: props.date.toIyyyyMMdd("-", 1),
     views: [createViewDay()],
     events: [],
-    plugins: props.editable ? [dndPlugin, eventsServicePlugin, eventModal] : [dndPlugin, eventsServicePlugin],
+    plugins: props.editable ? [dndPlugin, eventsServicePlugin, eventModal, calendarControls] : [dndPlugin, eventsServicePlugin, calendarControls],
     callbacks: {
         onEventUpdate(calendarEvent: CalendarEvent) {
             const event = _events.value.find(e => e.id == calendarEvent.id);
@@ -83,10 +95,23 @@ const calendarApp = createCalendar({
             event.end = calendarEvent.end;
             updateModelEvent(calendarEvent);
         },
-    }
+    },
+    calendars: getCalendarsColor(props.school)
 })
 
+function updateCalendarTheme() {
+    if (!calendarApp) return;
+
+    if (theme.global.name.value == 'myCustomDarkTheme') {
+        calendarApp.setTheme("dark");
+    } else {
+        calendarApp.setTheme("light");
+    }
+}
+
 function updateInternalEvents() {
+    start = "24:00";
+    end = "00:00";
     _events.value = transformModel();
     _events.value.forEach(event => {
         if (!event._options) event._options = {};
@@ -95,6 +120,11 @@ function updateInternalEvents() {
         if (eventsServicePlugin.get(event.id)) {
             eventsServicePlugin.update(event);
         } else eventsServicePlugin.add(event);
+
+        let startTime = event.start.split(" ")[1];
+        let endTime = event.end.split(" ")[1];
+        if (startTime < start) start = startTime;
+        if (endTime > end) end = endTime;
     });
 
     eventsServicePlugin.getAll().forEach(e => {
@@ -102,7 +132,22 @@ function updateInternalEvents() {
         if (toDelete) eventsServicePlugin.remove(e.id);
     });
 
-    console.log(eventsServicePlugin.getAll())
+    updateCalendarBoundaries();
+}
+
+function updateCalendarBoundaries() {
+    if (props.trimTime) {
+        if (start >= "01:00") start = Time.fromHHMM(start)!.add({ hour: -1 }).format();
+        else start = "00:00";
+        if (end <= "23:00") end = Time.fromHHMM(end)!.add({ hour: 1 }).format();
+        else end = "24:00";
+        calendarControls.setDayBoundaries({ start, end })
+        const opt = calendarControls.getWeekOptions();
+        const range = parseInt(end.split(":")[0]) - parseInt(start.split(":")[0]);
+        calendarControls.setWeekOptions({ ...opt, gridHeight: Math.max(1000 * range / 24, 400) });
+    } else {
+        calendarControls.setDayBoundaries({ start: "00:00", end: "24:00" })
+    }
 }
 
 function transformModel(): CalendarEventExt[] {
@@ -115,7 +160,7 @@ function transformModel(): CalendarEventExt[] {
                 start: date + " " + Time.fromITime(sl.startTime).format(),
                 end: date + " " + Time.fromITime(sl.endTime).format(),
                 title: `${sl.name} ${sl.surname} - ${days[sl.lessonDay ?? 0]}`,
-                calendarId: sl.schoolId,
+                calendarId: sl.schoolId.toLowerCase(),
                 data: { ...sl }
             };
         } else {

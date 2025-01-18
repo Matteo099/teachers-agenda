@@ -45,9 +45,6 @@
                             v-model="extRecovery.recoveries[index]" :school="school"></ScheduleRecoveryLessonButton>
                         <v-btn v-else-if="extRecovery.type == 'pending'" @click="cancelScheduleRecovery(recovery)"
                             :loading="cancellingScheduleRecovery" :disabled="cancellingScheduleRecovery">annulla</v-btn>
-                        <v-icon v-else-if="recovery.recoveryStatus == LessonStatus.CANCELLED" color="warning">
-                            mdi-cancel
-                        </v-icon>
                         <v-icon v-else color="success">
                             mdi-check-all
                         </v-icon>
@@ -94,6 +91,7 @@ async function cancelScheduleRecovery(recovery: ExtendedStudentLesson) {
         await SchoolRecoveryLessonService.instance.cancelRecovery(recovery);
     } catch (error) {
         toast.warn("Impossibile annullare la lezione di recupero")
+        console.error("Unable to cancel recovery lesson", error);
     } finally {
         cancellingScheduleRecovery.value = false;
     }
@@ -108,6 +106,7 @@ async function computeDailyLessons() {
         console.log(extendedRecoveries);
     } catch (error) {
         toast.warning("Impossibile caricare le Lezioni di Recupero");
+        console.error("Unable to load recovery lessons", error);
     } finally {
         loadingExtendedRecoveries.value = false;
     }

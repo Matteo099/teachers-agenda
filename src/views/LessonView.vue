@@ -43,35 +43,53 @@
             </v-dialog>
 
             <v-btn icon="mdi-eye-arrow-right" variant="text" :to="'/calendar?filters=' + school.id"></v-btn>
+
+            <v-dialog transition="dialog-bottom-transition">
+                <template v-slot:activator="{ props: activatorProps }">
+                    <v-btn icon="mdi-filter" variant="text" v-bind="activatorProps"></v-btn>
+                </template>
+
+                <template v-slot:default="{ isActive }">
+                    <LessonFilter v-model="filters" @close="isActive.value = false"></LessonFilter>
+                </template>
+            </v-dialog>
         </template>
 
-        <v-list lines="two">
-            <template v-for="lg of lessonGroups" :key="lg.month">
-                <v-list-subheader inset>{{ lg.month }}</v-list-subheader>
+        <v-card-text>
+            <v-list lines="two">
+                <template v-for="lg of lessonGroups" :key="lg.month">
+                    <v-list-subheader inset>{{ lg.month }}</v-list-subheader>
 
-                <v-list-item v-for="lesson in lg.lessons" :key="lesson.date.toString()" :title="lesson.date.format()"
-                    @click="routeToDailyLesson(lesson)" :baseColor="lesson.next ? 'primary' : ''">
-                    <template v-slot:prepend>
-                        <v-avatar :color="getColor(lesson)">
-                            <v-icon color="white">mdi-calendar</v-icon>
-                        </v-avatar>
-                    </template>
+                    <v-list-item v-for="lesson in lg.lessons" :key="lesson.date.toString()"
+                        @click="routeToDailyLesson(lesson)" :baseColor="lesson.next ? 'primary' : ''">
+                        <template v-slot:prepend>
+                            <v-avatar :color="getColor(lesson)">
+                                <v-icon color="white">mdi-calendar</v-icon>
+                            </v-avatar>
+                        </template>
 
-                    <template v-slot:append v-if="lesson.pending || lesson.recovery">
-                        <v-icon v-if="lesson.pending" color="warning">mdi-alert</v-icon>
-                        <v-icon v-if="lesson.recovery" color="info">mdi-alpha-r-circle</v-icon>
-                    </template>
-                </v-list-item>
-            </template>
-        </v-list>
+                        <template v-slot:append v-if="lesson.pending || lesson.recovery">
+                            <v-icon v-if="lesson.pending" color="warning">mdi-alert</v-icon>
+                            <v-icon v-if="lesson.recovery" color="info">mdi-alpha-r-circle</v-icon>
+                        </template>
+
+                        <template v-slot:title>
+                            <b>{{ lesson.date.getDayString(2) }}</b> {{ lesson.date.format() }}
+                        </template>
+                    </v-list-item>
+                </template>
+            </v-list>
+        </v-card-text>
+
     </v-card>
 </template>
 
 <script setup lang="ts">
 import CalendarLessonEditor from '@/components/lesson/CalendarLessonEditor.vue';
+import LessonFilter from '@/components/lesson/LessonFilter.vue';
 import { type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
-import { LessonGroupService, type LessonGroup, type LessonProjection } from '@/models/services/lesson-group-service';
+import { LessonGroupService, type LessonGroup, type LessonProjection, type SchoolLessons } from '@/models/services/lesson-group-service';
 import { SchoolService } from '@/models/services/school-service';
 import { type Unsubscribe } from 'firebase/firestore';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
@@ -93,15 +111,13 @@ const loadingLessons = ref(false);
 const loadingCalendar = ref(false);
 const computingLessonGroups = ref(false);
 const routingToDailyLesson = ref(false);
+const filters = ref([]);
 
-// const schoolLessons: SchoolLessons = {
-//     dailyLessons: [],
-//     weeklyLessons: [],
-//     schoolId: props.school.id
-// };
+let schoolLessons: SchoolLessons;
 
 const loading = computed(() => props.school == undefined || loadingLessons.value || loadingCalendar.value || computingLessonGroups.value);
 watch(props.school, () => loadLessonGroup())
+watch(filters, () => loadLessonGroup(false));
 
 function getColor(lesson: LessonProjection) {
     if (lesson.next) return "primary";
@@ -118,14 +134,15 @@ async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
     router.push(`/lesson/${dailyLessonId}`);
 }
 
-async function loadLessonGroup() {
+async function loadLessonGroup(forceReload = true) {
     computingLessonGroups.value = true;
 
     const today = new Date(new Date().toDateString());
     const startingDate = date.addMonths(today, -12) as Date;
 
-    const _schoolLessons = await SchoolService.instance.getSchoolLessons(props.school.id, startingDate);
-    lessonGroups.value = await LessonGroupService.instance.getGroupedLessons(_schoolLessons);
+    if (!schoolLessons || forceReload)
+        schoolLessons = await SchoolService.instance.getSchoolLessons(props.school.id, startingDate);
+    lessonGroups.value = await LessonGroupService.instance.getGroupedLessons(schoolLessons, filters.value);
 
     computingLessonGroups.value = false;
 }

@@ -54,7 +54,8 @@ function createChart(_root: am5.Root) {
     updateLabel();
 
     series.slices.template.setAll({
-        cornerRadius: 8
+        cornerRadius: 8,
+        tooltipText: "{category}: {value}"
     })
 
     series.states.create("hidden", {

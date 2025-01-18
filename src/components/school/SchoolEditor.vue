@@ -18,12 +18,34 @@
                         label="Numero di Telefono"></v-text-field>
                 </v-col>
 
+                <v-col cols="12" md="6">
+
+                    <v-dialog v-model="dialogColor">
+                        <template v-slot:activator="{ props: activatorProps }">
+                            <v-text-field label="Colore" v-bind="activatorProps" :bg-color="color"
+                                v-model="color"></v-text-field>
+                        </template>
+                        <template v-slot:default="{ isActive }">
+                            <v-card class="mx-auto" max-width="400" rounded="lg" border>
+                                <v-card-text>
+                                    <v-color-picker v-model="color" elevation="0"></v-color-picker>
+                                </v-card-text>
+                                <v-card-actions>
+                                    <v-btn @click="isActive.value = false">Chiudi</v-btn>
+                                </v-card-actions>
+                            </v-card>
+                        </template>
+
+                    </v-dialog>
+                </v-col>
+
+                <v-col cols="12" md="6">
+                    <v-select v-model="salaryStrategy" v-bind="salaryStrategyProps" :items="salaryStrategys"
+                        item-title="value" item-value="key" label="Opzione di Pagamento" required></v-select>
+                </v-col>
+
                 <v-col cols="12" md="12">
                     <v-row justify-center>
-                        <v-col class="align-self-center">
-                            <v-select v-model="salaryStrategy" v-bind="salaryStrategyProps" :items="salaryStrategys"
-                                item-title="value" item-value="key" label="Opzione di Pagamento" required></v-select>
-                        </v-col>
                         <v-col class="align-self-center">
                             <v-checkbox v-model="managed" v-bind="managedProps" label="Gestione"></v-checkbox>
                         </v-col>
@@ -94,12 +116,14 @@ import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import LevelRangeEditor from './LevelRangeEditor.vue';
 import ManagerEditor from './ManagerEditor.vue';
+import { DEFAULT_SCHOOL_COLOR } from '@/models/constants';
 
 const props = defineProps<{ initialSchool?: School, edit?: boolean }>()
 const emit = defineEmits(['close', 'save'])
 
 const dialogLevels = ref(false)
 const dialogManager = ref(false)
+const dialogColor = ref(false);
 const saving = ref(false);
 const salaryStrategys = [
     { key: SalaryStrategy.ABSENT_AND_PRESENT, value: "Pagamento automatico" },
@@ -129,6 +153,7 @@ const schema = yup.object({
         exclusive: false,
         name: 'level'
     }).label('Livelli'),
+    color: yup.string().label('Color').nullable().optional(),
 })
 
 const { defineField, handleSubmit } = useForm({
@@ -145,6 +170,7 @@ const [name, nameProps] = defineField('name', vuetifyConfig);
 const [city, cityProps] = defineField('city', vuetifyConfig);
 const [email, emailProps] = defineField('email', vuetifyConfig);
 const [phoneNumber, phoneNumberProps] = defineField('phoneNumber', vuetifyConfig);
+const [color] = defineField('color', vuetifyConfig);
 const [managed, managedProps] = defineField('managed', vuetifyConfig);
 const [salaryStrategy, salaryStrategyProps] = defineField('salaryStrategy', vuetifyConfig);
 const [managerOptions, managerOptionsProps] = defineField('managerOptions', vuetifyConfig);
@@ -170,6 +196,7 @@ function updateSchool() {
         city.value = schoolClone.city ?? "";
         email.value = schoolClone.email ?? "";
         phoneNumber.value = schoolClone.phoneNumber ?? "";
+        color.value = schoolClone.color ?? DEFAULT_SCHOOL_COLOR;
         salaryStrategy.value = schoolClone.salaryStrategy;
         managed.value = schoolClone.managed;
         managerOptions.value = schoolClone.managerOptions;
@@ -203,6 +230,7 @@ async function save(values: GenericObject) {
     if (values.city) school.city = values.city;
     if (values.email) school.email = values.email;
     if (values.phoneNumber) school.phoneNumber = values.phoneNumber;
+    if (values.color && values.color.trim().length != 0) school.color = values.color;
     if (managed.value) school.managerOptions = managerOptions.value;
 
     try {

@@ -18,6 +18,9 @@
                 <template v-slot:item.lessonDay="{ item }">
                     {{ item.lessonDay ? days[item.lessonDay] : "" }}
                 </template>
+                <template v-slot:item.trial="{ item }">
+                    {{ getTrialLesson(item) }}
+                </template>
                 <template v-slot:item.actions="{ item }">
                     <v-dialog fullscreen>
                         <template v-slot:activator="{ props: activatorProps }">
@@ -50,7 +53,7 @@
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import StudentEditor from '@/components/student/StudentEditor.vue';
-import { days, type School, type Student } from '@/models/model';
+import { days, yyyyMMdd, type School, type Student } from '@/models/model';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { StudentService } from '@/models/services/student-service';
 import type { EventSubscription } from '@/models/utils/event';
@@ -79,8 +82,17 @@ const studentHeaders: any = [
     /// TODO: possibile problema!!! => uno studente può fare una lezione programmata più volte la stessa settimana? 
     // Esempio viene sia il lunedì che il venerdì. In tal caso bisogna gestire un'insieme di giorni e non un singolo giorno 
     { title: 'Giorno della Lezione', key: 'lessonDay' },
+    { title: 'Lezione di prova', key: 'trial' },
     { title: 'Operazioni', key: 'actions', sortable: false },
 ];
+
+function getTrialLesson(student: Student) {
+    if (student.trial?.done) {
+        return student.trial.dailyLessonDate ? yyyyMMdd.fromIyyyyMMdd(student.trial.dailyLessonDate).format() : "Fatta";
+    } else {
+        return "";
+    }
+}
 
 function onSaveStudent(student?: Student) {
     if (student)

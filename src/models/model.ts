@@ -5,6 +5,19 @@ import { type CalendarEvent } from '@schedule-x/calendar';
 export const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 export const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
+export const LESSON_FILTERS: LessonFilterObj[] = [
+    { name: "Recuperi", icon: "mdi-abacus", color: "blue", type: 'recovery' },
+    { name: "Spostate", icon: "mdi-account-box", color: "green", type: 'moved' },
+    { name: "Settimanali", icon: "mdi-ab-testing", color: "purple", type: 'weekly' },
+    { name: "Giornaliere", icon: "mdi-account", color: "yellow", type: 'daily' },
+];
+export interface LessonFilterObj {
+    name: string;
+    icon: string;
+    color: string;
+    type: 'recovery' | 'moved' | 'weekly' | 'daily';
+}
+
 export type CalendarEventExt = CalendarEvent & { data?: any };
 
 export enum DayOfWeek {
@@ -119,6 +132,18 @@ export class yyyyMMdd {
         return dateFormat(this.toDate());
     }
 
+    getDayString(dayLength?: number): string {
+        const date = this.toDate();
+        const day = days[date.getDay()].toUpperCase();
+        return (dayLength ? day.slice(0, dayLength) : day);
+    }
+
+    formatAndPreappendDay(dayLength?: number): string {
+        const date = this.toDate();
+        const day = days[date.getDay()].toUpperCase();
+        return (dayLength ? day.slice(0, dayLength) : day) + " " + dateFormat(date);
+    }
+
     equals(date: yyyyMMdd): boolean {
         return this.day == date.day && this.month == date.month && this.year == date.year;
     }
@@ -153,9 +178,16 @@ export interface Student {
     minutesLessonDuration: number;
 
     removed?: boolean;
+    trial?: Trial;
 
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
     updatedAt: Timestamp;
+}
+
+export interface Trial {
+    done: boolean;
+    dailyLessonDate?: IyyyyMMdd;
+    dailyLessonId?: ID;
 }
 
 export interface Note {
@@ -169,6 +201,7 @@ export interface School {
     city?: string;
     email?: string;
     phoneNumber?: string;
+    color?: string;
 
     managed: boolean;
     levelRanges: LevelRange[];
@@ -253,12 +286,12 @@ export enum LessonStatus {
     NONE,
     PRESENT,
     ABSENT,
-    CANCELLED
+    UNJUSTIFIED_ABSENCE,
+    TRIAL
 }
 
 export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
-    trial?: boolean;
     recovery?: RecoveryLessonInfo;
     undoneRecoveryRef?: LessonRef[];
 
