@@ -70,20 +70,12 @@ const students: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
 const dialog = ref(false);
 const studentHeaders: any = [
-    {
-        title: 'Nome',
-        align: 'start',
-        sortable: true,
-        key: 'name',
-    },
+    { title: 'Nome', key: 'name', align: 'start' },
     { title: 'Cognome', key: 'surname' },
-    { title: 'Contatto', key: 'contact' },
-
-    /// TODO: possibile problema!!! => uno studente può fare una lezione programmata più volte la stessa settimana? 
-    // Esempio viene sia il lunedì che il venerdì. In tal caso bisogna gestire un'insieme di giorni e non un singolo giorno 
     { title: 'Giorno della Lezione', key: 'lessonDay' },
-    { title: 'Lezione di prova', key: 'trial' },
     { title: 'Operazioni', key: 'actions', sortable: false },
+    { title: 'Contatto', key: 'contact' },
+    { title: 'Lezione di prova', key: 'trial' },
 ];
 
 function getTrialLesson(student: Student) {
