@@ -8,7 +8,7 @@
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <v-card maxWidth="400px">
+                    <v-card class="mx-auto" min-width="400px">
                         <v-card-text>
                             <v-row class="justify-center">
                                 <v-col cols="auto">
@@ -87,7 +87,7 @@
 <script setup lang="ts">
 import CalendarLessonEditor from '@/components/lesson/CalendarLessonEditor.vue';
 import LessonFilter from '@/components/lesson/LessonFilter.vue';
-import { type School } from '@/models/model';
+import { LESSON_FILTERS, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { LessonGroupService, type LessonGroup, type LessonProjection, type SchoolLessons } from '@/models/services/lesson-group-service';
 import { SchoolService } from '@/models/services/school-service';
@@ -111,7 +111,10 @@ const loadingLessons = ref(false);
 const loadingCalendar = ref(false);
 const computingLessonGroups = ref(false);
 const routingToDailyLesson = ref(false);
-const filters = ref([]);
+const filters = ref([
+    // weekly lessons only
+    LESSON_FILTERS[2]
+]);
 
 let schoolLessons: SchoolLessons;
 

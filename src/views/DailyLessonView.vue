@@ -172,12 +172,12 @@ watch(selectedLessons, () => {
 })
 
 function getColor(event: StudentLesson): string {
-    if (event.trial) return '#FFD166';
-    if (event.recovery && event.recovery.ref == 'recovery') return "#91E5F6";
-    if (event.status == LessonStatus.NONE) return "#808080";
-    if (event.status == LessonStatus.PRESENT) return "#06D6A0";
+    if (event.recovery && event.recovery.ref == 'recovery') return "#5193FC";
+    // if (event.moved && event.moved.ref == 'moved') return "#D5AC4E";
+    if (event.status == LessonStatus.NONE) return "#46494C";
+    if (event.status == LessonStatus.PRESENT) return "#00D138";
     if (event.status == LessonStatus.ABSENT || event.status == LessonStatus.UNJUSTIFIED_ABSENCE) return "#B3001B";
-    if (event.status == LessonStatus.TRIAL) return "orange";
+    if (event.status == LessonStatus.TRIAL) return "#57C282";
 
     return "#808080";
 }
@@ -303,10 +303,11 @@ async function loadSchoolStudents() {
 
 async function saveSelectedStudents() {
     savingSelectedStudents.value = true;
-
+    
     const newDailyLesson = { ...dailyLesson.value };
     selectedStudents.value.forEach(s => {
-        const lastLessonEndTime = newDailyLesson.lessons?.length == 0 ? 0 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].endTime;
+        // 08:00 => 28800 seconds
+        const lastLessonEndTime = newDailyLesson.lessons?.length == 0 ? 28800 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].endTime;
         newDailyLesson.lessons?.push({
             lessonId: uuidv4(),
             status: LessonStatus.NONE,

@@ -3,12 +3,14 @@ import { connectAuthEmulator, getAuth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import config from "./config";
 import { GoogleAuthProvider } from 'firebase/auth';
+import { initializeAnalytics } from "firebase/analytics";
 
 function initialize(existingApp?: FirebaseApp) {
     const firebaseApp = existingApp || initializeApp(config);
     const auth = getAuth(firebaseApp);
     const firestore = getFirestore(firebaseApp);
     // const storage = getStorage(firebaseApp);
+    initializeAnalytics(firebaseApp);
 
     // If on localhost, use all firebase services locally
     if (import.meta.env.VITE_FIREBASE_SIMULATOR.toLowerCase() === "true" && location.hostname === 'localhost') {

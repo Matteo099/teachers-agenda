@@ -26,10 +26,10 @@ import { useDate } from 'vuetify';
 
 const date = useDate();
 const selectTypes = ["Assoluto", "Relativo", "Per mese"];
-const periods = ["Ultima settimana", "Ultimo mese", "Ultimi 3 mesi", "Ultimi 6 mesi", "Ultimo anno"];
+const periods = ["Oggi", "Ieri", "Ultima settimana", "Ultimo mese", "Ultimi 3 mesi", "Ultimi 6 mesi", "Ultimo anno"];
 const months = [...Array(12).keys()].map(key => capitalize(new Date(0, key).toLocaleString('it', { month: 'long' })))
 const selectedType = ref(selectTypes[1]);
-const selectedPeriod = ref(periods[0]);
+const selectedPeriod = ref(periods[2]);
 const selectedMonth = ref(months[0]);
 const range = ref();
 let updatingInternalModel = false;
@@ -65,26 +65,34 @@ function updateModel() {
     // relative
     else if (selectedType.value == selectTypes[1]) {
         let res: Date;
-        // last month
+        // yesterday
         if (selectedPeriod.value == periods[1]) {
+            res = date.addDays(new Date(), -1) as Date;
+        }
+        // last week
+        else if (selectedPeriod.value == periods[2]) {
+            res = date.addDays(new Date(), -7) as Date;
+        }
+        // last month
+        else if (selectedPeriod.value == periods[3]) {
             res = date.addMonths(new Date(), -1) as Date;
         }
         // last 3 months
-        else if (selectedPeriod.value == periods[2]) {
+        else if (selectedPeriod.value == periods[4]) {
             res = date.addMonths(new Date(), -3) as Date;
         }
         // last 6 months
-        else if (selectedPeriod.value == periods[3]) {
+        else if (selectedPeriod.value == periods[5]) {
             res = date.addMonths(new Date(), -6) as Date;
         }
 
         // last year
-        else if (selectedPeriod.value == periods[4]) {
+        else if (selectedPeriod.value == periods[6]) {
             res = date.addMonths(new Date(), -12) as Date;
         }
-        // last week
+        // today
         else {
-            res = date.addDays(new Date(), -7) as Date;
+            res = new Date();
         }
         model.value = {
             from: yyyyMMdd.fromDate(res).toIyyyyMMdd()
@@ -117,14 +125,16 @@ function updateValues() {
         selectedType.value = selectTypes[1];
         const today = new Date();
         const delta = getDeltaDates(today, yyyyMMdd.fromIyyyyMMdd(from).toDate());
-        if (delta.days == 7 && delta.months == 0 && delta.years == 0) selectedPeriod.value = periods[0];
-        else if ((delta.days == 30 || delta.months == 1) && delta.years == 0) selectedPeriod.value = periods[1];
-        else if ((delta.days == 90 || delta.months == 3) && delta.years == 0) selectedPeriod.value = periods[2];
-        else if ((delta.days == 180 || delta.months == 6) && delta.years == 0) selectedPeriod.value = periods[3];
-        else if (delta.days == 365 || delta.months == 12 || delta.years == 1) selectedPeriod.value = periods[4];
+        if (delta.days == 0 && delta.months == 0 && delta.years == 0) selectedPeriod.value = periods[0];
+        else if (delta.days == 1 && delta.months == 0 && delta.years == 0) selectedPeriod.value = periods[1];
+        else if (delta.days == 7 && delta.months == 0 && delta.years == 0) selectedPeriod.value = periods[2];
+        else if ((delta.days == 30 || delta.months == 1) && delta.years == 0) selectedPeriod.value = periods[3];
+        else if ((delta.days == 90 || delta.months == 3) && delta.years == 0) selectedPeriod.value = periods[4];
+        else if ((delta.days == 180 || delta.months == 6) && delta.years == 0) selectedPeriod.value = periods[5];
+        else if (delta.days == 365 || delta.months == 12 || delta.years == 1) selectedPeriod.value = periods[6];
         else {
             console.warn("Selected period not recognized, falling to last week");
-            selectedPeriod.value = periods[0];
+            selectedPeriod.value = periods[2];
         }
     }
     // absolute or by month

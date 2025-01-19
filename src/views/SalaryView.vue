@@ -27,7 +27,7 @@
 
 
 <script setup lang="ts">
-import DateSelect from '@/components/DateSelect.vue';
+import DateSelect from '@/components/inputs/DateSelect.vue';
 import { yyyyMMdd, type IyyyyMMdd, type Salary, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { SalaryService } from '@/models/services/salary-service';

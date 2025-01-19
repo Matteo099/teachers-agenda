@@ -2,19 +2,35 @@
     <v-card title="Studenti" elevation="3" :loading="loadingStudents">
         <v-card-text>
             <v-row class="mr-4 mb-1 align-center">
-                <v-text-field class="ma-2" prepend-inner-icon="mdi-magnify" density="comfortable"
-                    placeholder="Ricerca..." theme="light" variant="solo" hide-details></v-text-field>
+                <v-col cols="12" md="8">
+                    <v-text-field class="ma-2" density="compact" label="Ricerca" variant="outlined" hide-details>
+                        <template v-slot:append>
+                            <v-dialog transition="dialog-bottom-transition">
+                                <template v-slot:activator="{ props: activatorProps }">
+                                    <v-btn icon="mdi-filter" variant="text" v-bind="activatorProps"></v-btn>
+                                </template>
 
-                <v-dialog v-model="dialog" fullscreen>
-                    <template v-slot:activator="{ props: activatorProps }">
-                        <v-btn prepend-icon="mdi-plus" color="success" v-bind="activatorProps">nuovo studente</v-btn>
-                    </template>
+                                <template v-slot:default="{ isActive }">
+                                    <StudentFilter v-model="filters" @close="isActive.value = false"></StudentFilter>
+                                </template>
+                            </v-dialog>
+                        </template>
+                    </v-text-field>
+                </v-col>
+                <v-col cols="12" md="4">
+                    <v-dialog v-model="dialog" fullscreen>
+                        <template v-slot:activator="{ props: activatorProps }">
+                            <v-btn prepend-icon="mdi-plus" color="success" v-bind="activatorProps">
+                                studente
+                            </v-btn>
+                        </template>
 
-                    <StudentEditor :school="school" @close="dialog = false" @save="onSaveStudent($event)">
-                    </StudentEditor>
-                </v-dialog>
+                        <StudentEditor :school="school" @close="dialog = false" @save="onSaveStudent($event)">
+                        </StudentEditor>
+                    </v-dialog>
+                </v-col>
             </v-row>
-            <v-data-table :headers="studentHeaders" :items="students" item-value="id">
+            <v-data-table :headers="studentHeaders" :items="filteredStudents" item-value="id">
                 <template v-slot:item.lessonDay="{ item }">
                     {{ item.lessonDay ? days[item.lessonDay] : "" }}
                 </template>
@@ -53,11 +69,12 @@
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import StudentEditor from '@/components/student/StudentEditor.vue';
-import { days, yyyyMMdd, type School, type Student } from '@/models/model';
+import StudentFilter from '@/components/student/StudentFilter.vue';
+import { days, STUDENT_FILTERS, yyyyMMdd, type School, type Student, type StudentFilterObj } from '@/models/model';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { StudentService } from '@/models/services/student-service';
 import type { EventSubscription } from '@/models/utils/event';
-import { onMounted, onUnmounted, ref, type Ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 
 interface StudentViewProps {
     school: School
@@ -67,24 +84,21 @@ const props = defineProps<StudentViewProps>();
 const subscriptions: EventSubscription[] = [];
 
 const students: Ref<Student[]> = ref([]);
+const filteredStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
 const dialog = ref(false);
 const studentHeaders: any = [
-    {
-        title: 'Nome',
-        align: 'start',
-        sortable: true,
-        key: 'name',
-    },
+    { title: 'Nome', key: 'name', align: 'start' },
     { title: 'Cognome', key: 'surname' },
-    { title: 'Contatto', key: 'contact' },
-
-    /// TODO: possibile problema!!! => uno studente può fare una lezione programmata più volte la stessa settimana? 
-    // Esempio viene sia il lunedì che il venerdì. In tal caso bisogna gestire un'insieme di giorni e non un singolo giorno 
     { title: 'Giorno della Lezione', key: 'lessonDay' },
-    { title: 'Lezione di prova', key: 'trial' },
     { title: 'Operazioni', key: 'actions', sortable: false },
+    { title: 'Contatto', key: 'contact' },
+    { title: 'Lezione di prova', key: 'trial' },
 ];
+const filters: Ref<StudentFilterObj[]> = ref(STUDENT_FILTERS);
+
+watch(filters, filterStudent);
+
 
 function getTrialLesson(student: Student) {
     if (student.trial?.done) {
@@ -115,11 +129,22 @@ async function loadStudents() {
     const studentSubscription = StudentService.instance.observeStudentsOfSchool(props.school.id).subscribe({
         next: data => {
             students.value = data;
+            filterStudent();
             loadingStudents.value = false;
         },
         error: _err => loadingStudents.value = false
     })
     subscriptions.push(studentSubscription);
+}
+
+function filterStudent() {
+    filteredStudents.value = students.value.filter(s => {
+        if(filters.value.length == 2) return true;
+        if (filters.value.map(f => f.type).includes("substistution"))
+            return !!s.isSubstitution;
+        if (filters.value.map(f => f.type).includes("normal"))
+            return !s.isSubstitution;
+    });
 }
 
 onMounted(async () => {

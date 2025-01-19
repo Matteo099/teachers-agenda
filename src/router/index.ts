@@ -8,6 +8,7 @@ import StatisticsView from '@/views/StatisticsView.vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { getCurrentUser } from 'vuefire'
 import HomeView from '../views/HomeView.vue'
+import NotFoundView from '@/views/NotFoundView.vue'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -73,7 +74,11 @@ const router = createRouter({
       meta: { requiresAuth: true },
       // component: () => import('../views/DebuggerView.vue'),
       component: DebuggerView,
-    }
+    },
+    { 
+      path: '/:pathMatch(.*)*', 
+      component: NotFoundView
+    },
 
     // {
     //   path: '/about',

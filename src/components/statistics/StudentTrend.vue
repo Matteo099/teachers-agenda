@@ -42,7 +42,8 @@ function createChart(_root: am5.Root) {
         orientation: "horizontal"
     }));
     const xRenderer = am5xy.AxisRendererX.new(root, {
-        minorGridEnabled: true
+        minorGridEnabled: true,
+        minGridDistance: 10
     });
     xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
         categoryField: "student",
@@ -53,6 +54,11 @@ function createChart(_root: am5.Root) {
     xRenderer.grid.template.setAll({
         location: 1
     })
+    xRenderer.labels.template.setAll({
+        rotation: 45,
+        centerY: am5.p50,
+        centerX: 0,
+    });
 
     // xAxis.data.setAll(data);
     series.push(xAxis);

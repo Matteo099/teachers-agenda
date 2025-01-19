@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import DateSelect from '@/components/DateSelect.vue';
+import DateSelect from '@/components/inputs/DateSelect.vue';
 import LessonDistribution from '@/components/statistics/LessonDistribution.vue';
 import SalaryDistribution from '@/components/statistics/SalaryDistribution.vue';
 import SalaryTrend from '@/components/statistics/SalaryTrend.vue';

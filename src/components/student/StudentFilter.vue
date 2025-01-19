@@ -3,7 +3,7 @@
         <v-card-text>
             <v-row>
                 <v-col>
-                    <v-select v-model="selectedFilters" :items="LESSON_FILTERS" return-object :item-props="itemProps"
+                    <v-select v-model="selectedFilters" :items="STUDENT_FILTERS" return-object :item-props="itemProps"
                         label="Filtri" multiple chips>
                         <template v-slot:chip="{ item }">
                             <v-icon :color="item.props.color">
@@ -13,9 +13,9 @@
                         <template v-slot:prepend-item>
                             <v-list-item title="Seleziona Tutti" @click="toggle">
                                 <template v-slot:prepend>
-                                    <v-checkbox-btn :color="someLesson ? 'indigo-darken-4' : undefined"
-                                        :indeterminate="someLesson && !allLesson"
-                                        :model-value="allLesson"></v-checkbox-btn>
+                                    <v-checkbox-btn :color="someStudents ? 'indigo-darken-4' : undefined"
+                                        :indeterminate="someStudents && !allStudents"
+                                        :model-value="allStudents"></v-checkbox-btn>
                                 </template>
                             </v-list-item>
 
@@ -34,18 +34,17 @@
 </template>
 
 <script setup lang="ts">
-import { LESSON_FILTERS, type LessonFilterObj } from '@/models/model';
+import { STUDENT_FILTERS, type StudentFilterObj } from '@/models/model';
 import { computed, onMounted, ref, type Ref } from 'vue';
 
-
-const model = defineModel<LessonFilterObj[]>({ default: [] });
+const model = defineModel<StudentFilterObj[]>({ default: [] });
 const emit = defineEmits(['close']);
-const selectedFilters: Ref<LessonFilterObj[]> = ref([]);
+const selectedFilters: Ref<StudentFilterObj[]> = ref([]);
 
-const allLesson = computed(() => selectedFilters.value.length === LESSON_FILTERS.length);
-const someLesson = computed(() => selectedFilters.value.length > 0);
+const allStudents = computed(() => selectedFilters.value.length === STUDENT_FILTERS.length);
+const someStudents = computed(() => selectedFilters.value.length > 0);
 
-function itemProps(item: LessonFilterObj) {
+function itemProps(item: StudentFilterObj) {
     return {
         title: item.name,
         value: item.type,
@@ -55,10 +54,10 @@ function itemProps(item: LessonFilterObj) {
 }
 
 function toggle() {
-    if (allLesson.value) {
+    if (allStudents.value) {
         selectedFilters.value = []
     } else {
-        selectedFilters.value = LESSON_FILTERS.slice()
+        selectedFilters.value = STUDENT_FILTERS.slice()
     }
 }
 
