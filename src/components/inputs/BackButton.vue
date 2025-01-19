@@ -5,10 +5,18 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 
+interface BackButtonProps {
+    delta?: number;
+}
+
+const props = withDefaults(defineProps<BackButtonProps>(), {
+    delta: 1
+});
 
 const router = useRouter();
 
 function back() {
-    router.go(-1);
+    const delta = Math.abs(props.delta ?? 1);
+    router.go(-delta);
 }
 </script>

@@ -67,7 +67,7 @@
             <v-col>
                 <v-btn-toggle v-model="visualization" mandatory shaped>
                     <v-btn>
-                        <v-icon>mdi-timeline-text-outline</v-icon>
+                        <v-icon>mdi-format-list-bulleted</v-icon>
                     </v-btn>
 
                     <v-btn>

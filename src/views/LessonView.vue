@@ -33,7 +33,7 @@
 
             <v-dialog transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn icon="mdi-pencil" variant="text" v-bind="activatorProps" :disabled="!school"></v-btn>
+                    <v-btn icon="mdi-calendar-edit" variant="text" v-bind="activatorProps" :disabled="!school"></v-btn>
                 </template>
 
                 <template v-slot:default="{ isActive }">
@@ -42,7 +42,7 @@
                 </template>
             </v-dialog>
 
-            <v-btn icon="mdi-eye-arrow-right" variant="text" :to="'/calendar?filters=' + school.id"></v-btn>
+            <v-btn icon="mdi-calendar-month" variant="text" :to="'/calendar?filters=' + school.id"></v-btn>
 
             <v-dialog transition="dialog-bottom-transition">
                 <template v-slot:activator="{ props: activatorProps }">

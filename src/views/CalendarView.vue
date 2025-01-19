@@ -1,7 +1,7 @@
 <template>
     <v-card class="pa-3" title="Calendario delle lezioni" elevation="0">
         <template v-slot:prepend>
-            <BackButton></BackButton>
+            <BackButton :delta="deltaHistory"></BackButton>
         </template>
         <v-card-text>
             <v-row class="mt-1 mb-3 justify-center align-center">
@@ -76,6 +76,7 @@ const schools: Ref<School[]> = ref([]);
 const lessons: CalendarEventExt[] = [];
 const loading = ref(false);
 const loadingSchools = ref(false);
+const deltaHistory = ref(1);
 const selectedSchools: Ref<string[]> = ref([]);
 const start = ref("00:00");
 const end = ref("24:00");
@@ -100,7 +101,7 @@ const calendarApp = createCalendar({
     }
 });
 
-
+watch(route, () => deltaHistory.value++);
 watch(selectedSchools, () => updateQueryRoute());
 watch(filters, () => updateFilters(), { immediate: true });
 watch(schools, () => updateFilters());

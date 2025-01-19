@@ -11,7 +11,7 @@
     </v-expand-transition>
     <v-row>
       <v-col v-for="school in schools" :key="school.name" cols="12" sm="4">
-        <v-card append-icon="mdi-open-in-new" class="pa-2" :to="'/school/' + school.id" prepend-icon="mdi-town-hall"
+        <v-card append-icon="mdi-open-in-new" class="pa-2" :to="'/school/' + school.id" prepend-icon="mdi-home"
           :subtitle="'Visualizza tutti gli aggiornamenti della scuola ' + school.name" :title="getSchoolName(school)"
           :color="school.color ?? DEFAULT_SCHOOL_COLOR">
           <!-- target="_blank" -->
