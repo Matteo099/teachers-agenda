@@ -13,9 +13,9 @@
                         <template v-slot:prepend-item>
                             <v-list-item title="Seleziona Tutti" @click="toggle">
                                 <template v-slot:prepend>
-                                    <v-checkbox-btn :color="likesSomeFruit ? 'indigo-darken-4' : undefined"
-                                        :indeterminate="likesSomeFruit && !likesAllFruit"
-                                        :model-value="likesAllFruit"></v-checkbox-btn>
+                                    <v-checkbox-btn :color="someLesson ? 'indigo-darken-4' : undefined"
+                                        :indeterminate="someLesson && !allLesson"
+                                        :model-value="allLesson"></v-checkbox-btn>
                                 </template>
                             </v-list-item>
 
@@ -42,8 +42,8 @@ const model = defineModel<LessonFilterObj[]>({ default: [] });
 const emit = defineEmits(['close']);
 const selectedFilters: Ref<LessonFilterObj[]> = ref([]);
 
-const likesAllFruit = computed(() => selectedFilters.value.length === LESSON_FILTERS.length);
-const likesSomeFruit = computed(() => selectedFilters.value.length > 0);
+const allLesson = computed(() => selectedFilters.value.length === LESSON_FILTERS.length);
+const someLesson = computed(() => selectedFilters.value.length > 0);
 
 function itemProps(item: LessonFilterObj) {
     return {
@@ -55,7 +55,7 @@ function itemProps(item: LessonFilterObj) {
 }
 
 function toggle() {
-    if (likesAllFruit.value) {
+    if (allLesson.value) {
         selectedFilters.value = []
     } else {
         selectedFilters.value = LESSON_FILTERS.slice()

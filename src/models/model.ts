@@ -5,17 +5,26 @@ import { type CalendarEvent } from '@schedule-x/calendar';
 export const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 export const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
+export interface AbstractFilter {
+    name: string;
+    icon: string;
+    color: string;
+}
 export const LESSON_FILTERS: LessonFilterObj[] = [
     { name: "Recuperi", icon: "mdi-abacus", color: "blue", type: 'recovery' },
     { name: "Spostate", icon: "mdi-account-box", color: "green", type: 'moved' },
     { name: "Settimanali", icon: "mdi-ab-testing", color: "purple", type: 'weekly' },
     { name: "Giornaliere", icon: "mdi-account", color: "yellow", type: 'daily' },
 ];
-export interface LessonFilterObj {
-    name: string;
-    icon: string;
-    color: string;
+export interface LessonFilterObj extends AbstractFilter {
     type: 'recovery' | 'moved' | 'weekly' | 'daily';
+}
+export const STUDENT_FILTERS: StudentFilterObj[] = [
+    { name: "Normale", icon: "mdi-account", color: "green", type: 'normal' },
+    { name: "Supplenza", icon: "mdi-account-box", color: "blue", type: 'substistution' },
+];
+export interface StudentFilterObj extends AbstractFilter {
+    type: 'substistution' | 'normal';
 }
 
 export type CalendarEventExt = CalendarEvent & { data?: any };

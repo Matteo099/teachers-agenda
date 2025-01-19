@@ -30,7 +30,7 @@
                     </v-dialog>
                 </v-col>
             </v-row>
-            <v-data-table :headers="studentHeaders" :items="students" item-value="id">
+            <v-data-table :headers="studentHeaders" :items="filteredStudents" item-value="id">
                 <template v-slot:item.lessonDay="{ item }">
                     {{ item.lessonDay ? days[item.lessonDay] : "" }}
                 </template>
@@ -70,11 +70,11 @@
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import StudentEditor from '@/components/student/StudentEditor.vue';
 import StudentFilter from '@/components/student/StudentFilter.vue';
-import { days, yyyyMMdd, type School, type Student } from '@/models/model';
+import { days, STUDENT_FILTERS, yyyyMMdd, type School, type Student, type StudentFilterObj } from '@/models/model';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { StudentService } from '@/models/services/student-service';
 import type { EventSubscription } from '@/models/utils/event';
-import { onMounted, onUnmounted, ref, type Ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 
 interface StudentViewProps {
     school: School
@@ -84,6 +84,7 @@ const props = defineProps<StudentViewProps>();
 const subscriptions: EventSubscription[] = [];
 
 const students: Ref<Student[]> = ref([]);
+const filteredStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
 const dialog = ref(false);
 const studentHeaders: any = [
@@ -94,6 +95,10 @@ const studentHeaders: any = [
     { title: 'Contatto', key: 'contact' },
     { title: 'Lezione di prova', key: 'trial' },
 ];
+const filters: Ref<StudentFilterObj[]> = ref(STUDENT_FILTERS);
+
+watch(filters, filterStudent);
+
 
 function getTrialLesson(student: Student) {
     if (student.trial?.done) {
@@ -124,11 +129,22 @@ async function loadStudents() {
     const studentSubscription = StudentService.instance.observeStudentsOfSchool(props.school.id).subscribe({
         next: data => {
             students.value = data;
+            filterStudent();
             loadingStudents.value = false;
         },
         error: _err => loadingStudents.value = false
     })
     subscriptions.push(studentSubscription);
+}
+
+function filterStudent() {
+    filteredStudents.value = students.value.filter(s => {
+        if(filters.value.length == 2) return true;
+        if (filters.value.map(f => f.type).includes("substistution"))
+            return !!s.isSubstitution;
+        if (filters.value.map(f => f.type).includes("normal"))
+            return !s.isSubstitution;
+    });
 }
 
 onMounted(async () => {
