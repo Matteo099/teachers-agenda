@@ -63,7 +63,7 @@ function isNewerVersion(local: string, remote: string): boolean {
 
 export async function checkForNewVersion(): Promise<boolean> {
   try {
-    const response = await fetch(GITHUB_VERSION_URL);
+    const response = await fetch(GITHUB_VERSION_URL, { cache: "no-store" });
     if (!response.ok) {
       console.error("Failed to fetch package.json:", response.statusText);
       return false;
@@ -75,6 +75,8 @@ export async function checkForNewVersion(): Promise<boolean> {
     if (isNewerVersion(LOCAL_VERSION, remoteVersion)) {
       console.log(`New version detected: ${remoteVersion} (local: ${LOCAL_VERSION})`);
       return true;
+    } else {
+      console.log(`Version is up-to-date (local: ${LOCAL_VERSION}, rmeote ${remoteVersion})`);
     }
   } catch (error) {
     console.error("Error checking for app version:", error);
