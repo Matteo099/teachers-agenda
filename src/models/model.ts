@@ -208,6 +208,7 @@ export interface School {
     levelRanges: LevelRange[];
     managerOptions?: ManagerOptions;
     salaryStrategy: SalaryStrategy;
+    trialLessonPaymentStrategy: TrialLessonPaymentStrategy;
 
     // Instead of embedding arrays of students, store students in a separate collection and use schoolId for filtering
     // students: Student[];
@@ -222,6 +223,12 @@ export interface School {
 export enum SalaryStrategy {
     ABSENT_AND_PRESENT,
     ONLY_PRESENT
+}
+
+export enum TrialLessonPaymentStrategy {
+    WHOLE,
+    HALF,
+    NOTHING
 }
 
 export interface Salary {

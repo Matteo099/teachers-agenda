@@ -44,6 +44,12 @@
                         item-title="value" item-value="key" label="Opzione di Pagamento" required></v-select>
                 </v-col>
 
+                <v-col cols="12" md="6">
+                    <v-select v-model="trialLessonPaymentStrategy" v-bind="trialLessonPaymentStrategyProps"
+                        :items="trialLessonPaymentStrategies" item-title="value" item-value="key"
+                        label="Opzione di pagamento della Lezione di Prova" required></v-select>
+                </v-col>
+
                 <v-col cols="12" md="12">
                     <v-row justify-center>
                         <v-col class="align-self-center">
@@ -107,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { SalaryStrategy, type LevelRange, type ManagerOptions, type School } from '@/models/model';
+import { SalaryStrategy, TrialLessonPaymentStrategy, type LevelRange, type ManagerOptions, type School } from '@/models/model';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -129,6 +135,11 @@ const salaryStrategys = [
     { key: SalaryStrategy.ABSENT_AND_PRESENT, value: "Pagamento automatico" },
     { key: SalaryStrategy.ONLY_PRESENT, value: "Pagamento a presenza" }
 ];
+const trialLessonPaymentStrategies = [
+    { key: TrialLessonPaymentStrategy.WHOLE, value: "Prezzo intero" },
+    { key: TrialLessonPaymentStrategy.HALF, value: "Metà prezzo" },
+    { key: TrialLessonPaymentStrategy.NOTHING, value: "Nessun pagamento" },
+]
 
 const schema = yup.object({
     name: yup.string().required('Il Nome è obbligatorio').min(1).label('Nome'),
@@ -137,6 +148,7 @@ const schema = yup.object({
     phoneNumber: yup.string().label('Numero di Telefono').nullable().optional(),
     managed: yup.bool().label('Gestione'),
     salaryStrategy: yup.string().required("L'Opzione di pagamento lezioni è obbligatorio").label('Opzione di Pagamento'),
+    trialLessonPaymentStrategy: yup.string().required("L'Opzione di pagamento della lezione di prova è obbligatorio").label('Opzione di pagamento della Lezione di Prova'),
     managerOptions: yup.object().test({
         test: (v: any | ManagerOptions) => {
             if (managed.value)
@@ -173,6 +185,7 @@ const [phoneNumber, phoneNumberProps] = defineField('phoneNumber', vuetifyConfig
 const [color] = defineField('color', vuetifyConfig);
 const [managed, managedProps] = defineField('managed', vuetifyConfig);
 const [salaryStrategy, salaryStrategyProps] = defineField('salaryStrategy', vuetifyConfig);
+const [trialLessonPaymentStrategy, trialLessonPaymentStrategyProps] = defineField('trialLessonPaymentStrategy', vuetifyConfig);
 const [managerOptions, managerOptionsProps] = defineField('managerOptions', vuetifyConfig);
 const [levelRanges, levelRangesProps] = defineField('levelRanges', vuetifyConfig);
 
@@ -198,6 +211,7 @@ function updateSchool() {
         phoneNumber.value = schoolClone.phoneNumber ?? "";
         color.value = schoolClone.color ?? DEFAULT_SCHOOL_COLOR;
         salaryStrategy.value = schoolClone.salaryStrategy;
+        trialLessonPaymentStrategy.value = schoolClone.trialLessonPaymentStrategy;
         managed.value = schoolClone.managed;
         managerOptions.value = schoolClone.managerOptions;
         levelRanges.value = schoolClone.levelRanges;
@@ -222,6 +236,7 @@ async function save(values: GenericObject) {
     const school: Partial<School> = {
         name: values.name,
         salaryStrategy: values.salaryStrategy,
+        trialLessonPaymentStrategy: values.trialLessonPaymentStrategy,
         managed: managed.value ?? false,
         levelRanges: values.levelRanges,
         createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),
