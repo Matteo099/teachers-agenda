@@ -217,6 +217,7 @@ async function reset(event: StudentLesson) {
         doBackup();
         const wasTrial = event.status == LessonStatus.TRIAL;
         event.status = LessonStatus.NONE
+        if (event.moved) await DailyLessonService.instance.undoMoveDailyLesson(event);
         await save();
         await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
         if (wasTrial) await StudentService.instance.unsetTrial(event);
@@ -229,27 +230,14 @@ async function moveLesson(event: StudentLesson, lessonDate: Date) {
         return false;
     }
 
-    // Step 1: get (or create) the new dailyLesson
-    const newDailyLessonId = await DailyLessonService.instance.getOrCreateDailyLessonId(school.value.id, lessonDate);
-    // Step 2: add the lesson to the new dailyLesson
-    const newDailyLesson = await DailyLessonRepository.instance.get(newDailyLessonId);
-    if (newDailyLesson) {
-        newDailyLesson.lessons.push({
-            lessonId: event.lessonId,
-            studentId: event.studentId,
-            endTime: event.endTime,
-            startTime: event.startTime,
-            status: LessonStatus.NONE,
-            updatedAt: Timestamp.now(),
-            createdAt: Timestamp.now()
-        });
-        await DailyLessonRepository.instance.save(newDailyLesson, newDailyLesson.id);
-    } else {
-        console.warn("Unable to move the lesson because the new daily lesson is undefined!");
+    try {
+        await DailyLessonService.instance.moveDailyLesson(school.value.id, dailyLesson.value!.id, event, lessonDate);
+        await save();
+        return true;
+    } catch (error) {
+        console.warn(error);
         return false;
     }
-    // Step 3: remove the lesson from the old dailyLesson
-    return await deleteStudentLesson(event, false);
 }
 
 async function updateLessonTime(event: StudentLesson, newDataEvent: EventTime) {
@@ -303,7 +291,7 @@ async function loadSchoolStudents() {
 
 async function saveSelectedStudents() {
     savingSelectedStudents.value = true;
-    
+
     const newDailyLesson = { ...dailyLesson.value };
     selectedStudents.value.forEach(s => {
         // 08:00 => 28800 seconds

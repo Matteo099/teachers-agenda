@@ -310,10 +310,28 @@ export enum LessonStatus {
 export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
     recovery?: RecoveryLessonInfo;
+    moved?: MovedLessonInfo;
     undoneRecoveryRef?: LessonRef[];
 
     createdAt: Timestamp;
     updatedAt: Timestamp;
+}
+
+export interface MovedLessonInfo {
+    /**
+     * Describes the context of the moved lesson.
+     * 
+     * - 'original': Refers to the original lesson that was moved.
+     * - 'moved': Refers to the moved lesson that has been scheduled to make up for the missed original lesson.
+     */
+    ref: 'original' | 'moved';
+
+    /**
+     * The `lessonRef` refers to:
+     * - The original daily lesson, if `ref` is 'original'.
+     * - The recovery daily lesson, if `ref` is 'recovery'.
+     */
+    lessonRef: LessonRef;
 }
 
 export interface RecoveryLessonInfo {

@@ -71,6 +71,7 @@
                         <template v-slot:append v-if="lesson.pending || lesson.recovery">
                             <v-icon v-if="lesson.pending" color="warning">mdi-alert</v-icon>
                             <v-icon v-if="lesson.recovery" color="info">mdi-alpha-r-circle</v-icon>
+                            <v-icon v-if="lesson.moved" color="success">mdi-alpha-s-circle</v-icon>
                         </template>
 
                         <template v-slot:title>

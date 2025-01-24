@@ -11,6 +11,7 @@ import { StudentLessonService } from "./student-lesson-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
 
 export class DailyLessonService {
+
     private static _instance: DailyLessonService | null = null;
 
     public static get instance(): DailyLessonService {
@@ -290,5 +291,55 @@ export class DailyLessonService {
             return dailyLesson;
         }
         return;
+    }
+
+    public async moveDailyLesson(schoolId: ID, originalDailyLessonId: ID, lessonToMove: Lesson, newLessonDate: Date) {
+        // Step 1: get (or create) the new dailyLesson
+        const newDailyLessonId = await DailyLessonService.instance.getOrCreateDailyLessonId(schoolId, newLessonDate);
+        // Step 2: add the lesson to the new dailyLesson
+        const newDailyLesson = await DailyLessonRepository.instance.get(newDailyLessonId);
+        if (newDailyLesson) {
+            newDailyLesson.lessons.push({
+                lessonId: lessonToMove.lessonId,
+                studentId: lessonToMove.studentId,
+                endTime: lessonToMove.endTime,
+                startTime: lessonToMove.startTime,
+                moved: {
+                    ref: 'original',
+                    lessonRef: {
+                        dailyLessonId: originalDailyLessonId,
+                        lessonId: lessonToMove.lessonId
+                    }
+                },
+                status: LessonStatus.NONE,
+                updatedAt: Timestamp.now(),
+                createdAt: Timestamp.now()
+            });
+            await DailyLessonRepository.instance.save(newDailyLesson, newDailyLesson.id);
+
+            lessonToMove.moved = {
+                ref: 'moved',
+                lessonRef: {
+                    dailyLessonId: newDailyLesson.id,
+                    lessonId: lessonToMove.lessonId
+                }
+            }
+        }
+
+        throw new Error("Unable to move the lesson because the new daily lesson is undefined!");
+    }
+
+    public async undoMoveDailyLesson(lesson: StudentLesson) {
+        if (!lesson.moved) return;
+
+        if (lesson.moved.ref == 'moved') {
+            const movedDailyLesson = await DailyLessonRepository.instance.get(lesson.moved.lessonRef.dailyLessonId);
+            const index = movedDailyLesson?.lessons.findIndex(l => l.lessonId == lesson.moved?.lessonRef.lessonId);
+            if (index != undefined && index != -1) {
+                movedDailyLesson?.lessons.splice(index, 1);
+                await DailyLessonRepository.instance.save(movedDailyLesson, movedDailyLesson?.id);
+                delete lesson.moved;
+            }
+        }
     }
 }

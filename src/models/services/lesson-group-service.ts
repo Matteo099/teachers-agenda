@@ -17,6 +17,7 @@ export interface LessonProjection {
     dailyLessonId?: string;
     pending?: boolean;
     recovery?: boolean;
+    moved?: boolean;
     lessons: ScheduledLesson[];
 }
 
@@ -148,9 +149,8 @@ export class LessonGroupService {
                 const lessons = schoolLessons.dailyLessons.filter(d => d.lessons.some(l => l.recovery?.ref == "original"));
                 addAll(lessons);
             } else if (filter.type == "moved") {
-                // TODO:
-                // const lessons = schoolLessons.dailyLessons.filter(d => d.lessons.some(l => l.moved?.ref == "original"));
-                // addAll(lessons);
+                const lessons = schoolLessons.dailyLessons.filter(d => d.lessons.some(l => l.moved?.ref == "original"));
+                addAll(lessons);
             } else if (filter.type == "daily") {
                 addAll(schoolLessons.dailyLessons);
             }
@@ -303,11 +303,13 @@ export class LessonGroupService {
     private createLessonProjection(dailyLesson: DailyLesson, next: boolean): LessonProjection {
         const pending = dailyLesson.date <= this.today.asString && dailyLesson.lessons.some(l => l.status == LessonStatus.NONE);
         const recovery = dailyLesson.lessons.some(l => l.recovery?.ref == 'original');
+        const moved = dailyLesson.lessons.some(l => l.moved?.ref == 'original');
 
         return {
             dailyLessonId: dailyLesson.id,
             date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date),
             recovery,
+            moved,
             pending,
             next,
             lessons: dailyLesson.lessons
