@@ -129,6 +129,7 @@ import { SalaryService } from '@/models/services/salary-service';
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
+import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
 import { arraysHaveSameElements } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
@@ -323,7 +324,8 @@ async function deleteDailyLesson() {
     if (!dailyLesson.value) return false;
 
     try {
-        await DailyLessonRepository.instance.delete(dailyLesson.value.id);
+        const excludedDate = await DailyLessonService.instance.delete(dailyLesson.value);
+        if (excludedDate) toast.info("La data è stata aggiunta ai giorni da escludere della lezione settimanale")
         router.push(`/school/${school.value!.id}`);
         return true;
     } catch (error) {
