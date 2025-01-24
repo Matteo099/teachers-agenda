@@ -337,9 +337,7 @@ export class DailyLessonService {
                     lessonId: lessonToMove.lessonId
                 }
             }
-        }
-
-        throw new Error("Unable to move the lesson because the new daily lesson is undefined!");
+        } else throw new Error("Unable to move the lesson because the new daily lesson is undefined!");
     }
 
     public async undoMoveDailyLesson(lesson: StudentLesson) {
