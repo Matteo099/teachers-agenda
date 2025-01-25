@@ -1,6 +1,6 @@
 {
   "name": "teachers-agenda",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
     "build": "run-p type-check \"build-only {@}\" --",
