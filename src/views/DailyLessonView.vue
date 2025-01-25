@@ -172,13 +172,13 @@ watch(selectedLessons, () => {
 })
 
 function getColor(event: StudentLesson): string {
-    console.log(event);
-    if (event.recovery && event.recovery.ref == 'recovery') return "#5193FC";
-    if (event.moved && event.moved.ref == 'moved') return "#D5AC4E";
+    if (event.recovery && event.recovery.ref == 'recovery') return "#5093fc";
+    if (event.moved && event.moved.ref == 'moved') return "#ffb135";
     if (event.status == LessonStatus.NONE) return "#46494C";
-    if (event.status == LessonStatus.PRESENT) return "#00D138";
-    if (event.status == LessonStatus.ABSENT || event.status == LessonStatus.UNJUSTIFIED_ABSENCE) return "#B3001B";
-    if (event.status == LessonStatus.TRIAL) return "#57C282";
+    if (event.status == LessonStatus.PRESENT) return "#45de62";
+    if (event.status == LessonStatus.ABSENT) return "#df4a36";
+    if (event.status == LessonStatus.UNJUSTIFIED_ABSENCE) return "#df4a36";
+    if (event.status == LessonStatus.TRIAL) return "#2ecfc0";
 
     return "#808080";
 }
