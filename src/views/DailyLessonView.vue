@@ -129,7 +129,6 @@ import { SalaryService } from '@/models/services/salary-service';
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
-import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
 import { arraysHaveSameElements } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
@@ -173,12 +172,13 @@ watch(selectedLessons, () => {
 })
 
 function getColor(event: StudentLesson): string {
-    if (event.recovery && event.recovery.ref == 'recovery') return "#5193FC";
-    // if (event.moved && event.moved.ref == 'moved') return "#D5AC4E";
+    if (event.recovery && event.recovery.ref == 'recovery') return "#5093fc";
+    if (event.moved && event.moved.ref == 'moved') return "#ffb135";
     if (event.status == LessonStatus.NONE) return "#46494C";
-    if (event.status == LessonStatus.PRESENT) return "#00D138";
-    if (event.status == LessonStatus.ABSENT || event.status == LessonStatus.UNJUSTIFIED_ABSENCE) return "#B3001B";
-    if (event.status == LessonStatus.TRIAL) return "#57C282";
+    if (event.status == LessonStatus.PRESENT) return "#45de62";
+    if (event.status == LessonStatus.ABSENT) return "#df4a36";
+    if (event.status == LessonStatus.UNJUSTIFIED_ABSENCE) return "#df4a36";
+    if (event.status == LessonStatus.TRIAL) return "#2ecfc0";
 
     return "#808080";
 }
@@ -352,7 +352,6 @@ async function deleteStudentLesson(student: StudentLesson, deleteDailyLessonWhen
 
 async function updateStudentLesson() {
     routeChanged.value = false;
-
     if (!dailyLesson.value) return;
     if (!school.value) {
         loadingSchool.value = true;
@@ -406,6 +405,7 @@ function extractDailyLesson(): DailyLesson | undefined {
     let salary = 0;
     dl.lessons.forEach(l => {
         const less = studentLessons.value.find(sl => sl.id == l.studentId);
+        console.log(less);
         if (less === undefined) return;
         const newLesson: Lesson = {
             // lessonId: uuidv4(),
