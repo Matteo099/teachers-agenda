@@ -218,10 +218,10 @@ watch(hasNewVersion, () => {
       // Keeps the notification open until the user interacts
       autoClose: false,
       closeOnClick: true,
-      onClick: () => {
-        // Reload the page to fetch the new version
-        window.location.reload();
-      },
+      // onClick: () => {
+      //   // Reload the page to fetch the new version
+      //   window.location.reload(true);
+      // },
     });
   }
 })

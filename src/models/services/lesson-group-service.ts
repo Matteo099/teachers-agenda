@@ -106,9 +106,9 @@ export class LessonGroupService {
         const lessonProjections: LessonProjection[] = [];
         this.calculateToday();
 
-        console.log("Before apply filter (base)", schoolLessons)
+        console.log("Before apply filter (base)", JSON.parse(JSON.stringify(schoolLessons)))
         const _schoolLessons = this.applyFilters(schoolLessons, filters);
-        console.log("After apply filter (base, new)", schoolLessons, _schoolLessons)
+        console.log("After apply filter (base, new)", JSON.parse(JSON.stringify(schoolLessons)), JSON.parse(JSON.stringify(_schoolLessons)))
 
         // Step 1: Filter the last 2 lessons from daily lessons or (if no daily lesson present) weekly lesson based on today
         await this.addLastLessons(_schoolLessons, lessonProjections, 2);
