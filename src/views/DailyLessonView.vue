@@ -129,7 +129,6 @@ import { SalaryService } from '@/models/services/salary-service';
 import { LessonStatusAction, SchoolRecoveryLessonService } from '@/models/services/school-recovery-lesson-service';
 import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
-import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
 import { arraysHaveSameElements } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
@@ -173,8 +172,9 @@ watch(selectedLessons, () => {
 })
 
 function getColor(event: StudentLesson): string {
+    console.log(event);
     if (event.recovery && event.recovery.ref == 'recovery') return "#5193FC";
-    // if (event.moved && event.moved.ref == 'moved') return "#D5AC4E";
+    if (event.moved && event.moved.ref == 'moved') return "#D5AC4E";
     if (event.status == LessonStatus.NONE) return "#46494C";
     if (event.status == LessonStatus.PRESENT) return "#00D138";
     if (event.status == LessonStatus.ABSENT || event.status == LessonStatus.UNJUSTIFIED_ABSENCE) return "#B3001B";
@@ -400,12 +400,14 @@ function computeSalaryAndSave() {
 }
 
 function extractDailyLesson(): DailyLesson | undefined {
+    debugger;
     const dl = dailyLesson.value;
     if (dl === undefined) return;
     const lessons: Lesson[] = [];
     let salary = 0;
     dl.lessons.forEach(l => {
         const less = studentLessons.value.find(sl => sl.id == l.studentId);
+        console.log(less);
         if (less === undefined) return;
         const newLesson: Lesson = {
             // lessonId: uuidv4(),

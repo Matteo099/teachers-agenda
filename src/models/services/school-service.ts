@@ -73,12 +73,6 @@ export class SchoolService {
         const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolFromDate(schoolId, start, 'desc');
         const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(schoolId);
 
-        console.log("getSchoolLessons(from) {dailyLessons, weeklyLessons, schoolId}",
-            from,
-            JSON.parse(JSON.stringify(dailyLessons)),
-            JSON.parse(JSON.stringify(weeklyLessons)),
-            schoolId)
-
         return {
             dailyLessons,
             weeklyLessons,
