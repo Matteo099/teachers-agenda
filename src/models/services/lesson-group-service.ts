@@ -17,6 +17,7 @@ export interface LessonProjection {
     dailyLessonId?: string;
     pending?: boolean;
     recovery?: boolean;
+    moved?: boolean;
     lessons: ScheduledLesson[];
 }
 
@@ -105,7 +106,9 @@ export class LessonGroupService {
         const lessonProjections: LessonProjection[] = [];
         this.calculateToday();
 
+        console.log("Before apply filter (base)", JSON.parse(JSON.stringify(schoolLessons)))
         const _schoolLessons = this.applyFilters(schoolLessons, filters);
+        console.log("After apply filter (base, new)", JSON.parse(JSON.stringify(schoolLessons)), JSON.parse(JSON.stringify(_schoolLessons)))
 
         // Step 1: Filter the last 2 lessons from daily lessons or (if no daily lesson present) weekly lesson based on today
         await this.addLastLessons(_schoolLessons, lessonProjections, 2);
@@ -120,7 +123,15 @@ export class LessonGroupService {
     private applyFilters(schoolLessons: SchoolLessons, filters?: LessonFilterObj[]): SchoolLessons {
         if (!filters || filters.length == 0) return schoolLessons;
 
-        const dailyLessons = new Set<DailyLesson>();
+        const dailyLessons = new Map<string, DailyLesson>();
+        const addAll = (lessons: DailyLesson[]) => {
+            lessons.forEach(l => {
+                if (!dailyLessons.has(l.id)) {
+                    dailyLessons.set(l.id, l);
+                }
+            });
+        }
+
         const _schoolLessons: SchoolLessons = {
             schoolId: schoolLessons.schoolId,
             dailyLessons: [],
@@ -130,17 +141,18 @@ export class LessonGroupService {
             if (filter.type == "weekly") {
                 _schoolLessons.weeklyLessons = schoolLessons.weeklyLessons;
                 schoolLessons.weeklyLessons.forEach(wl => {
-                    schoolLessons.dailyLessons
-                        .filter(d => wl.dayOfWeek == extractDayOfWeek(d.date) && (wl.from < d.date && d.date < wl.to) && !wl.exclude.includes(d.date))
-                        .forEach(e => dailyLessons.add(e));
+                    const lessons = schoolLessons.dailyLessons
+                        .filter(d => wl.dayOfWeek == extractDayOfWeek(d.date) && (wl.from < d.date && d.date < wl.to) && !wl.exclude.includes(d.date));
+                    addAll(lessons);
                 });
             } else if (filter.type == "recovery") {
-                schoolLessons.dailyLessons.filter(d => d.lessons.some(l => l.recovery?.ref == "original")).forEach(e => dailyLessons.add(e));
+                const lessons = schoolLessons.dailyLessons.filter(d => d.lessons.some(l => l.recovery?.ref == "original"));
+                addAll(lessons);
             } else if (filter.type == "moved") {
-                // TODO:
-                // schoolLessons.dailyLessons.filter(d => d.lessons.some(l => l.moved?.ref == "original")).forEach(e => dailyLessons.add(e));
+                const lessons = schoolLessons.dailyLessons.filter(d => d.lessons.some(l => l.moved?.ref == "original"));
+                addAll(lessons);
             } else if (filter.type == "daily") {
-                schoolLessons.dailyLessons.forEach(e => dailyLessons.add(e));
+                addAll(schoolLessons.dailyLessons);
             }
         }
         _schoolLessons.dailyLessons = Array.from(dailyLessons.values());
@@ -291,11 +303,13 @@ export class LessonGroupService {
     private createLessonProjection(dailyLesson: DailyLesson, next: boolean): LessonProjection {
         const pending = dailyLesson.date <= this.today.asString && dailyLesson.lessons.some(l => l.status == LessonStatus.NONE);
         const recovery = dailyLesson.lessons.some(l => l.recovery?.ref == 'original');
+        const moved = dailyLesson.lessons.some(l => l.moved?.ref == 'original');
 
         return {
             dailyLessonId: dailyLesson.id,
             date: yyyyMMdd.fromIyyyyMMdd(dailyLesson.date),
             recovery,
+            moved,
             pending,
             next,
             lessons: dailyLesson.lessons

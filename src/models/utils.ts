@@ -45,13 +45,13 @@ export const pastDay = function (startingDate: Date, targetDayOfWeek: DayOfWeek)
 
     // Calculate the difference between the target day and the current day
     // We add 7 to ensure the result is non-negative, then take mod 7
-    const daysToAdd = (targetDayOfWeek - startingDayOfWeek + 7) % 7 || 7;
+    const daysToSubtract = 7 - ((targetDayOfWeek - startingDayOfWeek + 7) % 7 || 7);
 
     // Create a new date object based on the starting date
     const resultDate = new Date(startingDate);
 
     // Add the calculated number of days to the result date
-    resultDate.setDate(startingDate.getDate() - daysToAdd);
+    resultDate.setDate(startingDate.getDate() - daysToSubtract);
 
     return resultDate;
 }

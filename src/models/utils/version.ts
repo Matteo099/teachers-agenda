@@ -76,7 +76,7 @@ export async function checkForNewVersion(): Promise<boolean> {
       console.log(`New version detected: ${remoteVersion} (local: ${LOCAL_VERSION})`);
       return true;
     } else {
-      console.log(`Version is up-to-date (local: ${LOCAL_VERSION}, rmeote ${remoteVersion})`);
+      console.log(`Version is up-to-date (local: ${LOCAL_VERSION}, remote ${remoteVersion})`);
     }
   } catch (error) {
     console.error("Error checking for app version:", error);
