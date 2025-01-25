@@ -30,17 +30,24 @@ export class StudentService {
         return StudentRepository.instance.getAll(_query1, _query2);
     }
 
-    public async setTrialDone(student: Student, dailyLessonDate?: IyyyyMMdd, dailyLessonId?: ID) {
-        if (student.trial?.done) return;
+    public async setTrialDone(student: Student, dailyLessonDate?: IyyyyMMdd, dailyLessonId?: ID): Promise<Student> {
+        const _student = await StudentRepository.instance.get(student.id);
+        if(!_student) return student;
+        if (_student.trial?.done) return _student;
 
-        student.trial = { done: true }
-        if(dailyLessonDate) student.trial.dailyLessonDate = dailyLessonDate;
-        if(dailyLessonId) student.trial.dailyLessonId = dailyLessonId;
-        await StudentRepository.instance.save(student, student.id);
+        _student.trial = { done: true }
+        if (dailyLessonDate) _student.trial.dailyLessonDate = dailyLessonDate;
+        if (dailyLessonId) _student.trial.dailyLessonId = dailyLessonId;
+        await StudentRepository.instance.save(_student, _student.id);
+        return _student;
     }
 
-    public async unsetTrial(student: Student) {
-        delete student.trial;
-        await StudentRepository.instance.save(student, student.id);
+    public async unsetTrial(student: Student): Promise<Student> {
+        const _student = await StudentRepository.instance.get(student.id);
+        if(!_student) return student;
+        if(!_student.trial) return _student;
+        delete _student.trial;
+        await StudentRepository.instance.save(_student, _student.id);
+        return _student;
     }
 }

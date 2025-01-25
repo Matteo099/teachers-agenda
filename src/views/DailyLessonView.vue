@@ -352,7 +352,6 @@ async function deleteStudentLesson(student: StudentLesson, deleteDailyLessonWhen
 
 async function updateStudentLesson() {
     routeChanged.value = false;
-
     if (!dailyLesson.value) return;
     if (!school.value) {
         loadingSchool.value = true;
@@ -400,7 +399,6 @@ function computeSalaryAndSave() {
 }
 
 function extractDailyLesson(): DailyLesson | undefined {
-    debugger;
     const dl = dailyLesson.value;
     if (dl === undefined) return;
     const lessons: Lesson[] = [];
