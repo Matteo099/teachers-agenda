@@ -28,9 +28,6 @@
                 </template>
             </v-dialog>
 
-            <v-btn icon="mdi-refresh" variant="text" :disabled="!school || computingLessonGroups"
-                @click="loadLessonGroup"></v-btn>
-
             <v-dialog transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn icon="mdi-calendar-edit" variant="text" v-bind="activatorProps" :disabled="!school"></v-btn>
@@ -53,6 +50,9 @@
                     <LessonFilter v-model="filters" @close="isActive.value = false"></LessonFilter>
                 </template>
             </v-dialog>
+            
+            <v-btn icon="mdi-refresh" variant="text" :disabled="!school || computingLessonGroups"
+                @click="loadLessonGroup"></v-btn>
         </template>
 
         <v-card-text>

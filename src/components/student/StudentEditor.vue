@@ -161,7 +161,7 @@ function updateStudent() {
         minutesLessonDuration.value = studentClone.minutesLessonDuration;
         contact.value = studentClone.contact ?? "";
         note.value = studentClone.note?.text ?? "";
-        trial.value = studentClone.trial ?? false;
+        trial.value = studentClone.trial?.done ?? false;
         isSubstitution.value = studentClone.isSubstitution ?? false;
         if (studentClone.lessonDay) lessonDay.value = days[studentClone.lessonDay];
     }
