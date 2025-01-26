@@ -11,13 +11,14 @@
         </v-card-title>
         <v-card-text>
             <template v-if="!item.recovery || item.recovery.ref == 'original'">
-                <v-btn class="ma-1" v-if="item.status != LessonStatus.TRIAL && item.status != LessonStatus.PRESENT"
+                <v-btn class="ma-1"
+                    v-if="item.status != LessonStatus.TRIAL && item.status != LessonStatus.PRESENT && !(item.moved?.ref == 'moved')"
                     @click="emit('present')">presente</v-btn>
 
                 <v-dialog transition="dialog-bottom-transition">
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn class="ma-1" v-bind="activatorProps"
-                            v-if="item.status != LessonStatus.TRIAL && item.status != LessonStatus.ABSENT && item.status != LessonStatus.UNJUSTIFIED_ABSENCE">assente</v-btn>
+                            v-if="item.status != LessonStatus.TRIAL && item.status != LessonStatus.ABSENT && item.status != LessonStatus.UNJUSTIFIED_ABSENCE && !(item.moved?.ref == 'moved')">assente</v-btn>
                     </template>
 
                     <template v-slot:default="{ isActive }">
@@ -40,12 +41,13 @@
                 </v-dialog>
                 <v-btn class="ma-1" v-if="item.status == LessonStatus.NONE && !item.trial?.done"
                     @click="emit('trial')">prova</v-btn>
-                <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE" @click="emit('reset')">reset</v-btn>
+                <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE || (item.moved?.ref == 'moved')"
+                    @click="emit('reset')">reset</v-btn>
 
-                <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen>
+                <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen v-if="!item.moved">
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn class="ma-1" v-bind="activatorProps"
-                            v-if="!item.recovery && !item.moved && item.status == LessonStatus.NONE">sposta</v-btn>
+                            v-if="!item.recovery && item.status == LessonStatus.NONE">sposta</v-btn>
                     </template>
 
                     <template v-slot:default="{ isActive }">
@@ -57,12 +59,25 @@
                                 <v-spacer></v-spacer>
                                 <v-btn text="Annulla"
                                     @click="isActive.value = false; newLessonDate = undefined;"></v-btn>
-                                <v-btn color="primary" text="Sposta" @click="_moveLesson"
+                                <v-btn color="primary" text="Sposta" @click="_moveLesson" :loading="movingLesson"
                                     :disabled="!newLessonDate"></v-btn>
                             </v-card-actions>
                         </v-card>
                     </template>
                 </v-dialog>
+                <template v-else-if="item.moved.ref == 'moved'">
+                    <v-btn class="ma-1" :to="`/lesson/${item.moved.lessonRef.dailyLessonId}`">
+                        <template v-slot:prepend>
+                            <v-icon>mdi-eye-arrow-right-outline</v-icon>
+                        </template>spostata</v-btn>
+                </template>
+                <template v-else>
+                    <v-btn class="ma-1" :to="`/lesson/${item.moved.lessonRef.dailyLessonId}`">
+                        <template v-slot:prepend>
+                            <v-icon>mdi-eye-arrow-left-outline</v-icon>
+                        </template>
+                        origine</v-btn>
+                </template>
 
                 <v-dialog v-model="timeDialog" transition="dialog-bottom-transition" fullscreen>
                     <template v-slot:activator="{ props: activatorProps }">
@@ -137,6 +152,7 @@ const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTi
 const timeDialog = ref(false)
 const dateDialog = ref(false)
 const newLessonDate = ref();
+const movingLesson = ref(false);
 
 
 async function _updateLessonTime(newTime: EventTime) {
@@ -145,6 +161,7 @@ async function _updateLessonTime(newTime: EventTime) {
 }
 
 async function _moveLesson() {
+    movingLesson.value = true;
     if (newLessonDate.value) {
         const res = await props.moveLesson(newLessonDate.value);
         if (res) {
@@ -152,7 +169,7 @@ async function _moveLesson() {
             newLessonDate.value = undefined;
         } else toast.warn("Impossibile spostare la lezione...")
     }
+    movingLesson.value = false;
 }
-
 
 </script>

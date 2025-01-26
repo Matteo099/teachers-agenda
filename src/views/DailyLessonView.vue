@@ -143,6 +143,7 @@ const router = useRouter();
 const id = computed(() => route.params.id as string);
 const dailyLessonSource = DailyLessonRepository.instance.observe(id);
 const dailyLesson = useDocument(dailyLessonSource);
+console.log(dailyLesson);
 const school: Ref<School | undefined> = ref();
 
 const selectedLessons: Ref<string[]> = ref([])
@@ -218,7 +219,13 @@ async function reset(event: StudentLesson) {
         doBackup();
         const wasTrial = event.status == LessonStatus.TRIAL;
         event.status = LessonStatus.NONE
-        if (event.moved) await DailyLessonService.instance.undoMoveDailyLesson(event);
+        if (event.moved) {
+            const lesson = dailyLesson.value?.lessons.find(l => l.lessonId == event.lessonId);
+            if (lesson) {
+                await DailyLessonService.instance.undoMoveDailyLesson(lesson);
+                event.moved = lesson.moved;
+            }
+        }
         await save();
         await SchoolRecoveryLessonService.instance.updateRecovery(LessonStatusAction.RESET, dailyLesson.value!.schoolId, { ...event, dailyLessonId: dailyLesson.value!.id });
         if (wasTrial) await StudentService.instance.unsetTrial(event);
@@ -232,7 +239,10 @@ async function moveLesson(event: StudentLesson, lessonDate: Date) {
     }
 
     try {
-        await DailyLessonService.instance.moveDailyLesson(school.value.id, dailyLesson.value!.id, event, lessonDate);
+        const lesson = dailyLesson.value?.lessons.find(l => l.lessonId == event.lessonId);
+        if (!lesson) return false;
+        await DailyLessonService.instance.moveDailyLesson(school.value.id, dailyLesson.value!.id, lesson, lessonDate);
+        event.moved = lesson.moved;
         await save();
         return true;
     } catch (error) {
@@ -405,7 +415,7 @@ function extractDailyLesson(): DailyLesson | undefined {
     let salary = 0;
     dl.lessons.forEach(l => {
         const less = studentLessons.value.find(sl => sl.id == l.studentId);
-        console.log(less);
+        console.log(less, l);
         if (less === undefined) return;
         const newLesson: Lesson = {
             // lessonId: uuidv4(),
@@ -418,6 +428,7 @@ function extractDailyLesson(): DailyLesson | undefined {
             updatedAt: Timestamp.now()
         }
         if (l.recovery) newLesson.recovery = l.recovery;
+        if (l.moved) newLesson.moved = l.moved;
         lessons.push(newLesson);
 
         salary += SalaryService.instance.computeSalaryByStudentLesson(school.value, less);
