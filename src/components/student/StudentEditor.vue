@@ -35,7 +35,7 @@
                         <v-row class="mb-4 mx-2 justify-center">
                             <v-col cols="12" md="6">
                                 <v-date-input v-model="from" v-bind="fromProps" label="Da" :disabled="!canUpdateDate"
-                                    hint="Il campo è opzionale" inputmode="none" persistent-hint></v-date-input>
+                                    inputmode="none"></v-date-input>
                             </v-col>
                             <v-col cols="12" md="6">
                                 <v-date-input v-model="to" v-bind="toProps" label="A" :disabled="!canUpdateDate"
@@ -160,7 +160,17 @@ const schema = yup.object({
     trial: yup.boolean().label('Lezione di Prova'),
     isSubstitution: yup.boolean().label('Supplenza'),
     note: yup.string().label('Note'),
-    from: yup.date().label('Da'),
+    from: yup.date().label('Da').nullable().optional().test({
+        test: (value: Date | null | undefined, context: any) => {
+            console.log(canUpdateDate.value, value)
+            if (canUpdateDate.value && !!value) return true;
+            return false;
+        },
+        message: 'La data di inizio è obbligatoria',
+        exclusive: false,
+        skipAbsent: true,
+        name: 'conditionalFrom'
+    }),
     to: yup.date().label('A'),
 })
 
@@ -323,9 +333,9 @@ function computeLevelHistory(): LevelHistory[] {
             levelHistory[0].to = yyyyMMdd.fromDate(from.value).toIyyyyMMdd();
         }
         const history: LevelHistory = {
-            level: level.value
+            level: level.value,
+            from: yyyyMMdd.fromDate(from.value).toIyyyyMMdd()
         }
-        if (from.value) history.from = yyyyMMdd.fromDate(from.value).toIyyyyMMdd();
         if (to.value) history.to = yyyyMMdd.fromDate(to.value).toIyyyyMMdd();
         levelHistory.push(history);
         levelHistory.sort((a, b) => {

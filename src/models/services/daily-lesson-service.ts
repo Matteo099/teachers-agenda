@@ -295,7 +295,7 @@ export class DailyLessonService {
         dailyLesson.lessons.forEach(l => {
             const less = studentLessons.find(sl => sl.id == l.studentId);
             if (less === undefined) return;
-            salary += SalaryService.instance.computeSalaryByStudentLesson(school, less);
+            salary += SalaryService.instance.computeSalaryByStudentLesson(school, less, dailyLesson.date);
         })
         if (salary != dailyLesson.salary) {
             dailyLesson.salary = salary;

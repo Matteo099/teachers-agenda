@@ -196,7 +196,7 @@ export interface Student {
 }
 
 export interface LevelHistory {
-    from?: IyyyyMMdd;
+    from: IyyyyMMdd;
     to?: IyyyyMMdd;
     level: string;
 }
