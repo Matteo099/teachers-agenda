@@ -88,7 +88,7 @@ export class SchoolService {
         const schools = await SchoolRepository.instance.getAll();
         for await (const school of schools) {
             const schoolLessons = await this.getSchoolLessons(school.id, date);
-            const todayLesson = schoolLessons.dailyLessons.find(dl => dl.date == dateString) ?? schoolLessons.weeklyLessons.find(wl => wl.dayOfWeek == date.getDay());
+            const todayLesson = schoolLessons.dailyLessons.find(dl => dl.date == dateString) ?? schoolLessons.weeklyLessons.find(wl => WeeklyLessonService.instance.isValid(wl, dateString));
             if (todayLesson) lessons.push({
                 school,
                 lesson: todayLesson

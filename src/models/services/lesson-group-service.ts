@@ -1,10 +1,11 @@
 import { where } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LESSON_FILTERS, LessonStatus, months, Time, yyyyMMdd, type CalendarEventExt, type DailyLesson, type IyyyyMMdd, type LessonFilterObj, type ScheduledLesson, type WeeklyLesson } from "../model";
+import { LessonStatus, months, Time, yyyyMMdd, type CalendarEventExt, type DailyLesson, type IyyyyMMdd, type LessonFilterObj, type ScheduledLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
-import { extractDayOfWeek, nameof, nextDay, pastDay } from "../utils";
+import { nameof, nextDay, pastDay } from "../utils";
 import { DailyLessonService } from "./daily-lesson-service";
+import { WeeklyLessonService } from "./weely-lesson-service";
 
 export interface LessonGroup {
     month: string;
@@ -140,7 +141,7 @@ export class LessonGroupService {
                 _schoolLessons.weeklyLessons = schoolLessons.weeklyLessons;
                 schoolLessons.weeklyLessons.forEach(wl => {
                     const lessons = schoolLessons.dailyLessons
-                        .filter(d => wl.dayOfWeek == extractDayOfWeek(d.date) && (wl.from < d.date && d.date < wl.to) && !wl.exclude.includes(d.date));
+                        .filter(d => WeeklyLessonService.instance.isValid(wl, d.date));
                     addAll(lessons);
                 });
             } else if (filter.type == "recovery") {

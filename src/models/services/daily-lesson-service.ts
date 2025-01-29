@@ -3,13 +3,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule, type School, type StudentLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
-import { extractDayOfWeek, nameof } from "../utils";
+import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
+import { nameof } from "../utils";
 import { type LessonProjection } from "./lesson-group-service";
 import { SalaryService } from "./salary-service";
 import { SchoolRecoveryLessonService, type ExpandedLesson, type ExtendedStudentLesson } from "./school-recovery-lesson-service";
 import { StudentLessonService } from "./student-lesson-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
-import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
 
 export class DailyLessonService {
 
@@ -45,7 +45,7 @@ export class DailyLessonService {
 
     public async delete(dailyLesson: DailyLesson) {
         const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(dailyLesson.schoolId);
-        const wl = weeklyLessons.find(wl => wl.dayOfWeek == extractDayOfWeek(dailyLesson.date) && (wl.from < dailyLesson.date && dailyLesson.date < wl.to) && !wl.exclude.includes(dailyLesson.date));
+        const wl = weeklyLessons.find(wl => WeeklyLessonService.instance.isValid(wl, dailyLesson.date));
         if (wl) {
             wl.exclude.push(dailyLesson.date);
             await WeeklyLessonRepository.instance.save(wl, wl.id);

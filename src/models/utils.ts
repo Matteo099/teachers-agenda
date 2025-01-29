@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
-import { yyyyMMdd, type DayOfWeek, type IyyyyMMdd, type School } from "./model";
 import tinycolor from 'tinycolor2';
+import { yyyyMMdd, type DayOfWeek, type IyyyyMMdd, type School } from "./model";
 
 export const nameof = <T>(name: keyof T) => name;
 
