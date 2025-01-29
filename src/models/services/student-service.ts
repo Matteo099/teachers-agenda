@@ -55,7 +55,7 @@ export class StudentService {
         let level = student.level;
         if (student.levelHistory) {
             const lv = student.levelHistory.find(l => {
-                l.from > date && date > (l.to ?? yyyyMMdd.today().toIyyyyMMdd())
+                l.from >= date && date > (l.to ?? yyyyMMdd.today().toIyyyyMMdd())
             });
             level = lv?.level ?? level;
         }
