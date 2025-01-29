@@ -4,7 +4,8 @@
         <template v-slot:append>
             <v-dialog transition="dialog-bottom-transition" class="justify-center">
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn icon="mdi-calendar" variant="text" :disabled="!school" v-bind="activatorProps"></v-btn>
+                    <v-btn icon="mdi-plus-box-outline" variant="text" :disabled="!school"
+                        v-bind="activatorProps"></v-btn>
                 </template>
 
                 <template v-slot:default="{ isActive }">
@@ -50,7 +51,7 @@
                     <LessonFilter v-model="filters" @close="isActive.value = false"></LessonFilter>
                 </template>
             </v-dialog>
-            
+
             <v-btn icon="mdi-refresh" variant="text" :disabled="!school || computingLessonGroups"
                 @click="loadLessonGroup"></v-btn>
         </template>
