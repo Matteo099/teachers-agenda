@@ -1,8 +1,8 @@
 import { orderBy, where } from "firebase/firestore";
-import type { WeeklyLesson } from "../model";
+import type { IyyyyMMdd, WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
-import { nameof } from "../utils";
+import { extractDayOfWeek, nameof } from "../utils";
 import type { IQueryEvent } from "../utils/event";
 
 export class WeeklyLessonService {
@@ -30,5 +30,9 @@ export class WeeklyLessonService {
         const _query1 = where(nameof<WeeklyLesson>('schoolId'), '==', schoolId);
         const _query2 = orderBy(nameof<WeeklyLesson>('dayOfWeek'));
         return WeeklyLessonRepository.instance.observeAll(_query1, _query2);
+    }
+
+    public isValid(wl: WeeklyLesson, date: IyyyyMMdd) {
+        return wl.dayOfWeek == extractDayOfWeek(date) && (wl.from < date && date < wl.to) && !wl.exclude.includes(date)
     }
 }

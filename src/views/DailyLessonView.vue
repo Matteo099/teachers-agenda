@@ -431,7 +431,7 @@ function extractDailyLesson(): DailyLesson | undefined {
         if (l.moved) newLesson.moved = l.moved;
         lessons.push(newLesson);
 
-        salary += SalaryService.instance.computeSalaryByStudentLesson(school.value, less);
+        salary += SalaryService.instance.computeSalaryByStudentLesson(school.value, less, dl.date);
     })
     const newDailyLesson: DailyLesson = {
         date: dl.date,

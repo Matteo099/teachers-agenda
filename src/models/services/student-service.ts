@@ -1,5 +1,5 @@
 import { documentId, where } from "firebase/firestore";
-import type { IyyyyMMdd, Student } from "../model";
+import { yyyyMMdd, type IyyyyMMdd, type Student } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { StudentRepository } from "../repositories/student-repository";
 import { nameof } from "../utils";
@@ -32,7 +32,7 @@ export class StudentService {
 
     public async setTrialDone(student: Student, dailyLessonDate?: IyyyyMMdd, dailyLessonId?: ID): Promise<Student> {
         const _student = await StudentRepository.instance.get(student.id);
-        if(!_student) return student;
+        if (!_student) return student;
         if (_student.trial?.done) return _student;
 
         _student.trial = { done: true }
@@ -44,10 +44,21 @@ export class StudentService {
 
     public async unsetTrial(student: Student): Promise<Student> {
         const _student = await StudentRepository.instance.get(student.id);
-        if(!_student) return student;
-        if(!_student.trial) return _student;
+        if (!_student) return student;
+        if (!_student.trial) return _student;
         delete _student.trial;
         await StudentRepository.instance.save(_student, _student.id);
         return _student;
+    }
+
+    public getLevelByDate(student: Student, date: IyyyyMMdd): string {
+        let level = student.level;
+        if (student.levelHistory) {
+            const lv = student.levelHistory.find(l => {
+                l.from >= date && date > (l.to ?? yyyyMMdd.today().toIyyyyMMdd())
+            });
+            level = lv?.level ?? level;
+        }
+        return level;
     }
 }

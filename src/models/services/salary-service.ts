@@ -1,5 +1,7 @@
+import StudentEditor from "@/components/student/StudentEditor.vue";
 import { LessonStatus, SalaryStrategy, TrialLessonPaymentStrategy, type DailyLesson, type IyyyyMMdd, type Salary, type School, type StudentLesson } from "../model";
 import { DailyLessonService } from "./daily-lesson-service";
+import { StudentService } from "./student-service";
 
 export class SalaryService {
     private static _instance: SalaryService | null = null;
@@ -32,7 +34,7 @@ export class SalaryService {
         return salaries;
     }
 
-    public computeSalaryByStudentLesson(school: School | undefined, less: StudentLesson): number {
+    public computeSalaryByStudentLesson(school: School | undefined, less: StudentLesson, lessonDate: IyyyyMMdd): number {
         if (!school) return 0;
 
         const computeSalary =
@@ -41,10 +43,11 @@ export class SalaryService {
             (school.trialLessonPaymentStrategy != TrialLessonPaymentStrategy.NOTHING && less.status == LessonStatus.TRIAL);
 
         if (computeSalary) {
-            const priceAtMinute = school.levelRanges.find(l => l.levels.includes(less.level))?.price;
+            const studentLevel = StudentService.instance.getLevelByDate(less, lessonDate);
+            const priceAtMinute = school.levelRanges.find(l => l.levels.includes(studentLevel))?.price;
             if (priceAtMinute != undefined) {
                 const tot = priceAtMinute * ((less.endTime - less.startTime) / 60);
-                if (less.status == LessonStatus.TRIAL && school.trialLessonPaymentStrategy == TrialLessonPaymentStrategy.HALF) 
+                if (less.status == LessonStatus.TRIAL && school.trialLessonPaymentStrategy == TrialLessonPaymentStrategy.HALF)
                     return tot / 2;
                 return tot;
             }

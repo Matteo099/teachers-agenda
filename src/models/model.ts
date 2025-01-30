@@ -186,12 +186,19 @@ export interface Student {
     level: string;
     minutesLessonDuration: number;
 
+    levelHistory?: LevelHistory[];
     removed?: boolean;
     trial?: Trial;
     isSubstitution?: boolean;
 
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
     updatedAt: Timestamp;
+}
+
+export interface LevelHistory {
+    from: IyyyyMMdd;
+    to?: IyyyyMMdd;
+    level: string;
 }
 
 export interface Trial {
