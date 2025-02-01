@@ -123,3 +123,21 @@ $ firebase emulators:start
     ``` sh
     git branch --list
     ```
+
+# PWA Asset generator
+
+To create the assets, install assets-generator:
+
+``` sh
+npm install -D @vite-pwa/assets-generator
+```
+
+Issue the command:
+
+``` sh
+pwa-assets-generator --preset minimal-2023 public/logo.jpeg
+```
+
+where public/logo.jpeg is the source image.
+
+Finally, update the images in the folder public/img/icons.
