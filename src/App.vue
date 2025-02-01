@@ -188,7 +188,7 @@ const notifications: any[] = [];
 
 const auth = useFirebaseAuth()!;
 const theme = useTheme()
-const appLogo = new URL('@/assets/images/logo.png', import.meta.url).href
+const appLogo = new URL('@/assets/images/logo.jpeg', import.meta.url).href
 const drawer = ref(false)
 const appVersion = import.meta.env.VITE_APP_VERSION
 const loginPage = computed(() => route.name == "login")
