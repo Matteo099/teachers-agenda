@@ -135,7 +135,7 @@ npm install -D @vite-pwa/assets-generator
 Issue the command:
 
 ``` sh
-pwa-assets-generator --preset minimal-2023 public/logo.jpeg
+./generate-assets.sh public/logo.jpeg
 ```
 
 where public/logo.jpeg is the source image.
