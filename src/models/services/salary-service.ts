@@ -38,7 +38,7 @@ export class SalaryService {
         if (!school) return 0;
 
         const computeSalary =
-            (school.salaryStrategy == SalaryStrategy.ABSENT_AND_PRESENT && (less.status == LessonStatus.PRESENT || less.status == LessonStatus.ABSENT || less.status == LessonStatus.UNJUSTIFIED_ABSENCE)) ||
+            (school.salaryStrategy == SalaryStrategy.ABSENT_AND_PRESENT && (less.status == LessonStatus.PRESENT || less.status == LessonStatus.ABSENT || less.status == LessonStatus.UNJUSTIFIED_ABSENCE || less.moved?.ref == 'moved') && !(less.recovery?.ref == 'original' || less.moved?.ref == 'original')) ||
             (school.salaryStrategy == SalaryStrategy.ONLY_PRESENT && less.status == LessonStatus.PRESENT) ||
             (school.trialLessonPaymentStrategy != TrialLessonPaymentStrategy.NOTHING && less.status == LessonStatus.TRIAL);
 
