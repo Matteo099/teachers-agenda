@@ -85,9 +85,9 @@
                 </DailyLessonCalendar>
 
                 <v-timeline v-else side="end" truncate-line="both">
-                    <v-timeline-item v-for="(item, index) in studentLessons" :key="item.id + dailyLesson.id"
-                        :dot-color="getColor(item)" size="small">
-                        <LessonItem :school="school" :key="item.id + dailyLesson.id"
+                    <v-timeline-item v-for="(item, index) in studentLessons"
+                        :key="item.id + dailyLesson.id + item.lessonId" :dot-color="getColor(item)" size="small">
+                        <LessonItem :school="school" :key="item.id + dailyLesson.id + item.lessonId"
                             v-model:item="studentLessons[index]" v-model:select="selectedLessons"
                             @present="present(item)" @absent="absent(item, $event)"
                             :moveLesson="async ($event) => await moveLesson(item, $event)" @trial="trial(item)"
@@ -347,7 +347,7 @@ async function deleteStudentLesson(student: StudentLesson, deleteDailyLessonWhen
     if (!dailyLesson.value) return false;
 
     try {
-        const res = await DailyLessonService.instance.deleteLessonAndRecoveryReferences(student, dailyLesson.value, deleteDailyLessonWhenNoLessons);
+        const res = await DailyLessonService.instance.deleteLessonAndReferences(student, dailyLesson.value, deleteDailyLessonWhenNoLessons);
         if (res) {
             if (!dailyLesson.value || dailyLesson.value.lessons.length == 0) {
                 router.push(`/school/${school.value!.id}`);
@@ -378,6 +378,7 @@ async function updateStudentLesson() {
 
     currentDailyLessonId = dailyLesson.value.id;
     studentLessons.value = await StudentLessonService.instance.getStudentLesson(dailyLesson.value, newStudentsId);
+    console.log(studentLessons.value);
     computeSalaryAndSave();
 
     loadingStudents.value = false;
