@@ -27,12 +27,12 @@
                             <v-card-actions>
                                 <v-row class="justify-end">
                                     <v-col cols="auto">
-                                        <v-btn text="Assenza Ingiustificata"
-                                            @click="isActive.value = false; emit('absent', false)"></v-btn>
+                                        <v-btn text="Assenza Recuperabile"
+                                            @click="isActive.value = false; emit('absent', true)"></v-btn>
                                     </v-col>
                                     <v-col cols="auto">
-                                        <v-btn text="Assenza Recuperabile" color="primary"
-                                            @click="isActive.value = false; emit('absent', true)"></v-btn>
+                                        <v-btn text="Assenza Ingiustificata" color="primary"
+                                            @click="isActive.value = false; emit('absent', false)"></v-btn>
                                     </v-col>
                                 </v-row>
                             </v-card-actions>
