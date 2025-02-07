@@ -225,13 +225,12 @@ export class DailyLessonService {
     }
 
     public async deleteLessonAndReferences(studentLesson: StudentLesson, dailyLesson: DailyLesson, deleteDailyLessonWhenNoLessons: boolean, deleteFromRecoveries?: boolean) {
-        const index = dailyLesson.lessons.findIndex(s => s.studentId == studentLesson.id) ?? -1;
+        const index = dailyLesson.lessons.findIndex(s => s.lessonId == studentLesson.lessonId) ?? -1;
         if (index == -1)
             return false;
 
         try {
             const lessonToDelete = dailyLesson.lessons[index];
-
             debugger;
 
             if (lessonToDelete.recovery?.ref == 'original') {
@@ -264,21 +263,19 @@ export class DailyLessonService {
                 dailyLesson.lessons.splice(index, 1);
                 await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id!);
             } else if (lessonToDelete.moved?.ref == 'original') {
+                debugger;
                 // update original daily lesson, by resetting moved lesson
                 const originalDailyLesson = await DailyLessonRepository.instance.get(lessonToDelete.moved.lessonRef.dailyLessonId);
-                const lesson = originalDailyLesson?.lessons.find(l => l.lessonId == lessonToDelete.moved?.lessonRef.lessonId);
-                if (!lesson) {
+                const index = originalDailyLesson?.lessons.findIndex(l => l.lessonId == lessonToDelete.moved?.lessonRef.lessonId);
+                if (!originalDailyLesson || index == undefined) {
                     console.warn("Unable to cancel moved lesson because original lesson does not exist");
                     return false;
                 }
-
-                await this.undoMoveDailyLesson(lesson);
-                dailyLesson.lessons.splice(index, 1);
-                await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id!);
+                await this.removeMovedLesson(originalDailyLesson, index);
             } else if (lessonToDelete.moved?.ref == 'moved') {
-                await this.undoMoveDailyLesson(lessonToDelete);
-                dailyLesson.lessons.splice(index, 1);
-                await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id!);
+                debugger;
+                await this.removeMovedLesson(dailyLesson, index);
+                await this.deleteLesson(dailyLesson, index, deleteDailyLessonWhenNoLessons);
             }
             else {
                 // lessonToDelete.recovery is undefined
@@ -330,7 +327,7 @@ export class DailyLessonService {
         // Step 2: add the lesson to the new dailyLesson
         const newDailyLesson = await DailyLessonRepository.instance.get(newDailyLessonId);
         if (newDailyLesson) {
-            newDailyLesson.lessons.push({
+            const newLesson: Lesson = {
                 lessonId: uuidv4(),
                 studentId: lessonToMove.studentId,
                 endTime: lessonToMove.endTime,
@@ -345,7 +342,8 @@ export class DailyLessonService {
                 status: LessonStatus.NONE,
                 updatedAt: Timestamp.now(),
                 createdAt: Timestamp.now()
-            });
+            };
+            newDailyLesson.lessons.push(newLesson);
             newDailyLesson.lessons.sort((a, b) => a.startTime - b.startTime);
             await DailyLessonRepository.instance.save(newDailyLesson, newDailyLesson.id);
 
@@ -353,7 +351,7 @@ export class DailyLessonService {
                 ref: 'moved',
                 lessonRef: {
                     dailyLessonId: newDailyLesson.id,
-                    lessonId: lessonToMove.lessonId
+                    lessonId: newLesson.lessonId
                 }
             }
         } else throw new Error("Unable to move the lesson because the new daily lesson is undefined!");
@@ -369,6 +367,29 @@ export class DailyLessonService {
                 movedDailyLesson?.lessons.splice(index, 1);
                 await DailyLessonRepository.instance.save(movedDailyLesson, movedDailyLesson?.id);
                 delete lesson.moved;
+            }
+        }
+    }
+
+    public async removeMovedLesson(originalDailyLesson: DailyLesson, movedLessonToDeleteIndex: number) {
+        if (movedLessonToDeleteIndex < 0 || movedLessonToDeleteIndex > originalDailyLesson?.lessons.length) return false;
+
+        const lesson = originalDailyLesson?.lessons[movedLessonToDeleteIndex];
+        if (!lesson) {
+            console.warn("Unable to cancel moved lesson because original lesson does not exist");
+            return false;
+        }
+
+        if (!lesson.moved) return;
+
+        if (lesson.moved.ref == 'moved') {
+            const movedDailyLesson = await DailyLessonRepository.instance.get(lesson.moved.lessonRef.dailyLessonId);
+            const index = movedDailyLesson?.lessons.findIndex(l => l.lessonId == lesson.moved?.lessonRef.lessonId);
+            if (index != undefined && index != -1) {
+                movedDailyLesson?.lessons.splice(index, 1);
+                await DailyLessonRepository.instance.save(movedDailyLesson, movedDailyLesson?.id);
+                delete lesson.moved;
+                await DailyLessonRepository.instance.save(originalDailyLesson, originalDailyLesson.id!);
             }
         }
     }

@@ -378,7 +378,6 @@ async function updateStudentLesson() {
 
     currentDailyLessonId = dailyLesson.value.id;
     studentLessons.value = await StudentLessonService.instance.getStudentLesson(dailyLesson.value, newStudentsId);
-    debugger;
     console.log(studentLessons.value);
     computeSalaryAndSave();
 
