@@ -311,14 +311,19 @@ export enum LessonStatus {
     PRESENT,
     ABSENT,
     UNJUSTIFIED_ABSENCE,
-    TRIAL
+    TRIAL,
+    MOVED
+}
+export enum RecoveryStatus {
+    UNSET,
+    PENDING,
+    DONE
 }
 
 export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
     recovery?: RecoveryLessonInfo;
     moved?: MovedLessonInfo;
-    undoneRecoveryRef?: LessonRef[];
 
     createdAt: Timestamp;
     updatedAt: Timestamp;
@@ -378,15 +383,10 @@ export interface SchoolRecoveryLesson {
     schoolId: string;
 }
 
-/**
- * Lesson is UNSET when !done && !recoveryLesson
- * Lesson is PENDING when !done && !!recoveryLesson
- * Lesson is DONE when done && !!recoveryLesson
- */
 export interface RecoveryInfo {
     originalLesson: LessonRef;
     recoveryLesson?: LessonRef;
-    status?: LessonStatus;
+    status?: RecoveryStatus;
 }
 
 export const recoveryTypes = {
@@ -396,6 +396,10 @@ export const recoveryTypes = {
 }
 
 export type StudentLesson = Lesson & Student;
+export interface StudentLesson2 {
+    lesson: Lesson
+    student: Student
+}
 
 
 export const updateDailyLessonTime = function (startingTimeInSeconds: number | string | undefined, studentLessons: StudentLesson[] | { scheduledLessons: ScheduledLesson[], students: Student[] }) {

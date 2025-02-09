@@ -30,9 +30,9 @@ export class StudentService {
         return StudentRepository.instance.getAll(_query1, _query2);
     }
 
-    public async setTrialDone(student: Student, dailyLessonDate?: IyyyyMMdd, dailyLessonId?: ID): Promise<Student> {
-        const _student = await StudentRepository.instance.get(student.id);
-        if (!_student) return student;
+    public async setTrialDone(studentId: ID, dailyLessonDate?: IyyyyMMdd, dailyLessonId?: ID): Promise<Student> {
+        const _student = await StudentRepository.instance.get(studentId);
+        if (!_student) throw new Error("Student not found");
         if (_student.trial?.done) return _student;
 
         _student.trial = { done: true }
@@ -42,9 +42,9 @@ export class StudentService {
         return _student;
     }
 
-    public async unsetTrial(student: Student): Promise<Student> {
-        const _student = await StudentRepository.instance.get(student.id);
-        if (!_student) return student;
+    public async unsetTrial(studentId: ID): Promise<Student> {
+        const _student = await StudentRepository.instance.get(studentId);
+        if (!_student) throw new Error("Student not found");
         if (!_student.trial) return _student;
         delete _student.trial;
         await StudentRepository.instance.save(_student, _student.id);

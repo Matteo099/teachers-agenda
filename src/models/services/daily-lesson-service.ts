@@ -191,38 +191,38 @@ export class DailyLessonService {
         return { ...recoveryLesson, dailyLessonId: recoveryDailyLesson.id };
     }
 
-    public async removeRecoveryRef(dailyLesson: DailyLesson, lessonId: ID) {
-        // remove recoveryRef from originalDailyLesson
-        const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
-        if (l && l.recovery) {
-            delete l.recovery;
-            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
-        }
-    }
+    // public async removeRecoveryRef(dailyLesson: DailyLesson, lessonId: ID) {
+    //     // remove recoveryRef from originalDailyLesson
+    //     const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
+    //     if (l && l.recovery) {
+    //         delete l.recovery;
+    //         await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
+    //     }
+    // }
 
-    public async moveRecoveryRefToUndoneList(dailyLesson: DailyLesson, lessonId: ID) {
-        // remove recoveryRef from originalDailyLesson
-        const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
-        if (l && l.recovery) {
-            const toMove = { ...l.recovery.lessonRef }
-            if (!l.undoneRecoveryRef) l.undoneRecoveryRef = [];
-            l.undoneRecoveryRef.push(toMove);
-            delete l.recovery;
-            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
-        }
-    }
+    // public async moveRecoveryRefToUndoneList(dailyLesson: DailyLesson, lessonId: ID) {
+    //     // remove recoveryRef from originalDailyLesson
+    //     const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
+    //     if (l && l.recovery) {
+    //         const toMove = { ...l.recovery.lessonRef }
+    //         if (!l.undoneRecoveryRef) l.undoneRecoveryRef = [];
+    //         l.undoneRecoveryRef.push(toMove);
+    //         delete l.recovery;
+    //         await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
+    //     }
+    // }
 
-    public async addRecoveryRef(dailyLesson: DailyLesson, lessonId: ID, recovery: RecoveryLessonInfo) {
-        // const originalDailyLessonDoc = await DailyLessonRepository.instance.getDoc(dailyLessonId);
-        // if (originalDailyLessonDoc.exists()) {
-        //     const originalDailyLesson = originalDailyLessonDoc.data();
-        const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
-        if (l) {
-            l.recovery = recovery;
-            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
-        }
-        // }
-    }
+    // public async addRecoveryRef(dailyLesson: DailyLesson, lessonId: ID, recovery: RecoveryLessonInfo) {
+    //     // const originalDailyLessonDoc = await DailyLessonRepository.instance.getDoc(dailyLessonId);
+    //     // if (originalDailyLessonDoc.exists()) {
+    //     //     const originalDailyLesson = originalDailyLessonDoc.data();
+    //     const l = dailyLesson.lessons.find(l => l.lessonId == lessonId);
+    //     if (l) {
+    //         l.recovery = recovery;
+    //         await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id)
+    //     }
+    //     // }
+    // }
 
     public async deleteLessonAndReferences(studentLesson: StudentLesson, dailyLesson: DailyLesson, deleteDailyLessonWhenNoLessons: boolean, deleteFromRecoveries?: boolean) {
         const index = dailyLesson.lessons.findIndex(s => s.lessonId == studentLesson.lessonId) ?? -1;
@@ -310,7 +310,7 @@ export class DailyLessonService {
         dailyLesson.lessons.forEach(l => {
             const less = studentLessons.find(sl => sl.id == l.studentId);
             if (less === undefined) return;
-            salary += SalaryService.instance.computeSalaryByStudentLesson(school, less, dailyLesson.date);
+            salary += SalaryService.instance.getSalaryOfStudentLesson(school, less, dailyLesson.date);
         })
         if (salary != dailyLesson.salary) {
             dailyLesson.salary = salary;

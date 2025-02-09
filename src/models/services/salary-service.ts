@@ -1,4 +1,3 @@
-import StudentEditor from "@/components/student/StudentEditor.vue";
 import { LessonStatus, SalaryStrategy, TrialLessonPaymentStrategy, type DailyLesson, type IyyyyMMdd, type Salary, type School, type StudentLesson } from "../model";
 import { DailyLessonService } from "./daily-lesson-service";
 import { StudentService } from "./student-service";
@@ -34,7 +33,7 @@ export class SalaryService {
         return salaries;
     }
 
-    public computeSalaryByStudentLesson(school: School | undefined, less: StudentLesson, lessonDate: IyyyyMMdd): number {
+    public getSalaryOfStudentLesson(school: School | undefined, less: StudentLesson, lessonDate: IyyyyMMdd): number {
         if (!school) return 0;
 
         const computeSalary =
@@ -55,5 +54,4 @@ export class SalaryService {
 
         return 0;
     }
-
 }
