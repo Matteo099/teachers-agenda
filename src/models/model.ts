@@ -386,14 +386,15 @@ export interface SchoolRecoveryLesson {
 export interface RecoveryInfo {
     originalLesson: LessonRef;
     recoveryLesson?: LessonRef;
-    status?: RecoveryStatus;
+    status: RecoveryStatus;
 }
 
 export const recoveryTypes = {
-    "unset": "Lezioni di Recupero da Programmare",
-    "pending": "Lezioni di Recupero Programmate",
-    "done": "Lezioni di Recupero Completate",
-}
+    [RecoveryStatus.UNSET]: "Lezioni di Recupero da Programmare",
+    [RecoveryStatus.PENDING]: "Lezioni di Recupero Programmate",
+    [RecoveryStatus.DONE]: "Lezioni di Recupero Completate"
+};
+
 
 export type StudentLesson = Lesson & Student;
 export interface StudentLesson2 {

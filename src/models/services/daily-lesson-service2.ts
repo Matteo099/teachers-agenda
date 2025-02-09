@@ -1,13 +1,15 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, Time, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type School, type Student, type StudentLesson2 } from "../model";
+import { LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type RecoverySchedule, type School, type Student, type StudentLesson2 } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
 import { nameof } from "../utils";
 import { DailyLessonService } from "./daily-lesson-service";
+import type { LessonProjection } from "./lesson-group-service";
 import { LessonService } from "./lesson-service";
 import { SalaryService } from "./salary-service";
+import type { ExpandedLesson, StudentLessonWithRecovery } from "./school-recovery-lesson-service2";
 import { WeeklyLessonService } from "./weely-lesson-service";
 
 export interface SaveOptions {
@@ -17,6 +19,7 @@ export interface SaveOptions {
 }
 
 export class DailyLessonService2 {
+
     private static _instance: DailyLessonService2 | null = null;
 
     public static get instance(): DailyLessonService2 {
@@ -47,6 +50,105 @@ export class DailyLessonService2 {
         const _query2 = where(nameof<DailyLesson>('date'), '>=', from);
         const _query3 = where(nameof<DailyLesson>('date'), '<=', to);
         return await DailyLessonRepository.instance.getAll(_query1, _query2, _query3);
+    }
+
+
+    public async getOrCreateDailyLessonId(
+        schoolId: ID,
+        lesson: LessonProjection | Date
+    ): Promise<ID> {
+        // If lesson is a Date, call the helper to create a daily lesson based on the date
+        if (lesson instanceof Date) {
+            return this.createDailyLessonByDate(schoolId, lesson);
+        }
+
+        // If lesson is a LessonProjection, handle it
+        return this.handleLessonProjection(schoolId, lesson);
+    }
+
+    private async handleLessonProjection(
+        schoolId: ID,
+        lessonGroup: LessonProjection
+    ): Promise<ID> {
+        if (!lessonGroup.dailyLessonId) {
+            // If lessonId is undefined, create a new daily lesson
+            const newDailyLesson = this.buildDailyLessonFromProjection(schoolId, lessonGroup);
+            return DailyLessonRepository.instance.save(newDailyLesson);
+        }
+
+        // If lessonId exists, return it directly
+        return lessonGroup.dailyLessonId;
+    }
+
+    public buildDailyLessonFromProjection(
+        schoolId: string,
+        lessonGroup: LessonProjection
+    ): Partial<DailyLesson> {
+        return {
+            date: lessonGroup.date.toIyyyyMMdd(),
+            schoolId,
+            lessons: lessonGroup.lessons.map(l => ({
+                lessonId: uuidv4(),
+                status: LessonStatus.NONE,
+                studentId: l.studentId,
+                startTime: l.startTime,
+                endTime: l.endTime,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+            })),
+        };
+    }
+
+    public async createDailyLessonByDate(
+        schoolId: ID,
+        lessonDate: Date
+    ): Promise<ID> {
+        const parseDate = yyyyMMdd.fromDate(lessonDate).toIyyyyMMdd();
+
+        // Try to retrieve the daily lesson for the given date
+        const existingData = await DailyLessonService.instance.getDailyLessonOfSchoolByDate(schoolId, parseDate);
+
+        if (existingData?.[0]?.id) {
+            return existingData[0].id; // If found, return the existing ID
+        }
+
+        // If no daily lesson found, create a new one from weekly lessons
+        const newDailyLesson = await this.buildDailyLessonFromWeeklyOrEmpty(schoolId, lessonDate, parseDate);
+        return DailyLessonRepository.instance.save(newDailyLesson);
+    }
+
+    public async buildDailyLessonFromWeeklyOrEmpty(
+        schoolId: ID,
+        lessonDate: Date,
+        formattedDate: string
+    ): Promise<Partial<DailyLesson>> {
+        const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchoolByDayBetweenDate(schoolId, lessonDate.getDay(), formattedDate);
+        const weeklyLesson = weeklyLessons?.[0];
+        // const weeklyLesson = schoolLessons.weeklyLessons.find(l => l.dayOfWeek === lessonDate.getDay());
+
+        if (weeklyLesson) {
+            // Create daily lesson from weekly lesson schedule
+            return {
+                date: formattedDate,
+                schoolId: schoolId,
+                lessons: weeklyLesson.schedule.map(l => ({
+                    lessonId: uuidv4(),
+                    status: LessonStatus.NONE,
+                    studentId: l.studentId,
+                    startTime: l.startTime,
+                    endTime: l.endTime,
+                    createdAt: Timestamp.now(),
+                    updatedAt: Timestamp.now(),
+                })),
+            };
+        }
+
+        // Create an empty daily lesson if no weekly lesson is found
+        return {
+            date: formattedDate,
+            schoolId: schoolId,
+            lessons: [],
+        };
     }
 
     public async delete(dailyLesson: DailyLesson) {
@@ -192,5 +294,48 @@ export class DailyLessonService2 {
         };
         if (opts?.school.salaryStrategy != undefined) newDailyLesson.salaryStrategy = opts.school.salaryStrategy;
         return newDailyLesson;
+    }
+
+    async createRecoveryLesson(schedule: RecoverySchedule): Promise<ExpandedLesson> {
+        const recoveryLesson: Lesson = {
+            lessonId: uuidv4(),
+            status: LessonStatus.NONE,
+            studentId: schedule.studentId,
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+            recovery: {
+                ref: 'original',
+                lessonRef: {
+                    dailyLessonId: schedule.originalDailyLessonId,
+                    lessonId: schedule.originalLessonId,
+                }
+            },
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now()
+        }
+
+        const recoveryDailyLessonId = await this.getOrCreateDailyLessonId(schedule.schoolId, schedule.date);
+        const recoveryDailyLesson = (await DailyLessonRepository.instance.get(recoveryDailyLessonId))!;
+        recoveryDailyLesson.lessons.push(recoveryLesson)
+        await DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
+        return {
+            dailyLessonId: recoveryDailyLesson.id,
+            lesson: recoveryLesson
+        }
+    }
+
+    async updateOriginalRecoveryLesson(lesson: StudentLessonWithRecovery, recoveryDailyLesson: ExpandedLesson) {
+        const originalDaillyLesson = await DailyLessonRepository.instance.get(lesson.recoveryReference.originalDailyLesson.id);
+        const _lesson = originalDaillyLesson?.lessons.find(l => l.lessonId == lesson.lesson.lessonId);
+        if (originalDaillyLesson && _lesson) {
+            _lesson.recovery = {
+                ref: 'recovery',
+                lessonRef: {
+                    dailyLessonId: recoveryDailyLesson.dailyLessonId,
+                    lessonId: recoveryDailyLesson.lesson.lessonId
+                }
+            }
+            await DailyLessonRepository.instance.save(originalDaillyLesson, originalDaillyLesson.id);
+        } else throw new Error("Lesson not found")
     }
 }
