@@ -18,8 +18,8 @@ export class SchoolRecoveryLessonService2 {
     }
 
     public async getOrCreate(schoolId: ID): Promise<SchoolRecoveryLesson> {
-        const doc = await SchoolRecoveryLessonRepository.instance.getDoc(schoolId)
-        if (doc.exists()) return doc.data();
+        const srl = await SchoolRecoveryLessonRepository.instance.get(schoolId)
+        if (srl) return srl;
 
         const newRecovery: SchoolRecoveryLesson = { recoveries: [], schoolId }
         await SchoolRecoveryLessonRepository.instance.save(newRecovery, schoolId);
@@ -163,7 +163,6 @@ export class SchoolRecoveryLessonService2 {
     }
 
     public async cancelRecovery(extStudentLesson: StudentLessonWithRecovery) {
-        debugger;
         const originalDailyLesson = extStudentLesson.recoveryReference.originalDailyLesson;
         const { originalLessonRef } = this.getLessonRefs(extStudentLesson.lesson, originalDailyLesson.id);
         const originalLessonIndex = originalDailyLesson?.lessons.findIndex(l => l.lessonId == originalLessonRef?.lessonId);

@@ -48,8 +48,8 @@ export abstract class AbstractRepository<T> {
     }
 
     public async save(obj: Partial<T> | any, id?: ID): Promise<ID> {
-        console.log(obj);
-        
+        console.log("saving", obj);
+
         if (id != undefined) {
             setDoc(doc(this.collectionReference, id), obj);
             return id;
