@@ -1,4 +1,5 @@
-import type { DailyLesson, Student, StudentLesson } from "../model";
+import type { Ref } from "vue";
+import type { DailyLesson, Student, StudentLesson, StudentLesson2 } from "../model";
 import { arraysHaveSameElements } from "../utils";
 import { StudentService } from "./student-service";
 
@@ -20,24 +21,24 @@ export class StudentLessonService {
         });
     }
 
-    public async getStudentLesson2(dailyLesson: DailyLesson, studentLessons: StudentLesson[]): Promise<StudentLesson[]> {
-        console.log("dailyLesson", dailyLesson);
-
-        const currentStudentsId: string[] = studentLessons.map(s => s.studentId);
+    public async updateStudentLesson2(dailyLesson: DailyLesson, studentLessons: StudentLesson2[], loading?: Ref<boolean>): Promise<StudentLesson2[]> {
+        const currentStudentsId: string[] = studentLessons.map(s => s.lesson.studentId);
         const newStudentsId: string[] = dailyLesson.lessons.map(l => l.studentId);
 
         const differentStudents = !arraysHaveSameElements(currentStudentsId, newStudentsId);
-        let students: Student[] = [...studentLessons];
+        let students: Student[] = studentLessons.map(sl => sl.student);
         if (differentStudents) {
+            if(loading) loading.value = true
             const stundetIds = dailyLesson.lessons.map(l => l.studentId);
             students = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.schoolId, stundetIds);
+            if(loading) loading.value = false
         }
 
-        
-        return dailyLesson.lessons.map(l => {
-            const s = students.find(st => st.id == l.studentId)!;
-            console.log(l);
-            return { ...l, ...s };
+        studentLessons.length = 0;
+        dailyLesson.lessons.map(lesson => {
+            const student = students.find(st => st.id == lesson.studentId)!;
+            studentLessons.push({ lesson, student });
         });
+        return studentLessons;
     }
 }

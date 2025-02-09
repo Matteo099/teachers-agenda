@@ -1,17 +1,19 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, Time, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type School, type Student } from "../model";
+import { LessonStatus, Time, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type School, type Student, type StudentLesson2 } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
 import { nameof } from "../utils";
 import { DailyLessonService } from "./daily-lesson-service";
 import { LessonService } from "./lesson-service";
+import { SalaryService } from "./salary-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
 
 export interface SaveOptions {
     school: School;
     updatedLessons?: Lesson[];
+    studentLessons?: StudentLesson2[];
 }
 
 export class DailyLessonService2 {
@@ -143,37 +145,43 @@ export class DailyLessonService2 {
     }
 
     public async save(dailyLesson: DailyLesson, opts?: SaveOptions) {
-        const dl = this.extractDailyLesson(dailyLesson, opts);
+        const dl = await this.extractDailyLesson(dailyLesson, opts);
         await DailyLessonRepository.instance.save(dl, dl.id);
     }
 
-    private extractDailyLesson(dailyLesson: DailyLesson, opts?: SaveOptions): DailyLesson {
+    private async extractDailyLesson(dailyLesson: DailyLesson, opts?: SaveOptions): Promise<DailyLesson> {
         const lessons: Lesson[] = [];
-        // TODO
-        const salary = 0;
-        dailyLesson.lessons.forEach(l => {
-            let less = l;
+        let salary = 0;
+        for await (const l of dailyLesson.lessons) {
+            let lesson: Lesson = l;
+            let student: Student | undefined;
             if (opts?.updatedLessons) {
                 const studentLesson = opts.updatedLessons.find(sl => sl.lessonId == l.lessonId);
-                if (studentLesson == undefined) return;
-                less = studentLesson;
+                if (studentLesson == undefined) continue;
+                lesson = studentLesson;
+            } else if (opts?.studentLessons) {
+                const studentLesson = opts.studentLessons.find(sl => sl.lesson.lessonId == l.lessonId);
+                if (studentLesson == undefined) continue;
+                lesson = studentLesson.lesson;
+                student = studentLesson.student;
             }
             const newLesson: Lesson = {
                 lessonId: l.lessonId,
                 createdAt: l.createdAt,
                 studentId: l.studentId,
-                startTime: less.startTime,
-                endTime: less.endTime,
-                status: less.status,
+                startTime: lesson.startTime,
+                endTime: lesson.endTime,
+                status: lesson.status,
                 updatedAt: Timestamp.now()
             }
             if (l.recovery) newLesson.recovery = l.recovery;
             if (l.moved) newLesson.moved = l.moved;
             lessons.push(newLesson);
 
-            // TODO
-            // salary += SalaryService.instance.getSalaryOfStudentLesson(school, less, dailyLesson.date);
-        })
+            if (opts?.school) {
+                salary += await SalaryService.instance.getSalaryOfStudentLesson(opts.school, lesson, student, dailyLesson.date);
+            }
+        }
         const newDailyLesson: DailyLesson = {
             id: dailyLesson.id,
             schoolId: dailyLesson.schoolId,

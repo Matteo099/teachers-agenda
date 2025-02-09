@@ -1,24 +1,24 @@
 <template>
     <v-card elevation=3>
         <v-card-title>
-            <v-checkbox v-model="select" :value="item.id" multiple>
+            <v-checkbox v-model="select" :value="item.student.id" multiple>
                 <template v-slot:label>
-                    <span><b>{{ Time.fromITime(item.startTime).format() }} - {{
-                        Time.fromITime(item.endTime).format() }}</b> &nbsp; <i>{{
-                                item.name }} {{ item.surname }}</i></span>
+                    <span><b>{{ Time.fromITime(item.lesson.startTime).format() }} - {{
+                        Time.fromITime(item.lesson.endTime).format() }}</b> &nbsp; <i>{{
+                                item.student.name }} {{ item.student.surname }}</i></span>
                 </template>
             </v-checkbox>
         </v-card-title>
         <v-card-text>
-            <template v-if="!item.recovery || item.recovery.ref == 'original'">
+            <template v-if="!item.lesson.recovery || item.lesson.recovery.ref == 'original'">
                 <v-btn class="ma-1"
-                    v-if="item.status != LessonStatus.TRIAL && item.status != LessonStatus.PRESENT && !(item.moved?.ref == 'moved')"
+                    v-if="item.lesson.status != LessonStatus.TRIAL && item.lesson.status != LessonStatus.PRESENT && !(item.lesson.moved?.ref == 'moved')"
                     @click="emit('present')">presente</v-btn>
 
                 <v-dialog transition="dialog-bottom-transition">
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn class="ma-1" v-bind="activatorProps"
-                            v-if="item.status != LessonStatus.TRIAL && item.status != LessonStatus.ABSENT && item.status != LessonStatus.UNJUSTIFIED_ABSENCE && !(item.moved?.ref == 'moved')">assente</v-btn>
+                            v-if="item.lesson.status != LessonStatus.TRIAL && item.lesson.status != LessonStatus.ABSENT && item.lesson.status != LessonStatus.UNJUSTIFIED_ABSENCE && !(item.lesson.moved?.ref == 'moved')">assente</v-btn>
                     </template>
 
                     <template v-slot:default="{ isActive }">
@@ -39,15 +39,15 @@
                         </v-card>
                     </template>
                 </v-dialog>
-                <v-btn class="ma-1" v-if="item.status == LessonStatus.NONE && !item.trial?.done"
+                <v-btn class="ma-1" v-if="item.lesson.status == LessonStatus.NONE && !item.student.trial?.done"
                     @click="emit('trial')">prova</v-btn>
-                <v-btn class="ma-1" v-if="item.status != LessonStatus.NONE || (item.moved?.ref == 'moved')"
+                <v-btn class="ma-1" v-if="item.lesson.status != LessonStatus.NONE || (item.lesson.moved?.ref == 'moved')"
                     @click="emit('reset')">reset</v-btn>
 
-                <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen v-if="!item.moved">
+                <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen v-if="!item.lesson.moved">
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn class="ma-1" v-bind="activatorProps"
-                            v-if="!item.recovery && item.status == LessonStatus.NONE">sposta</v-btn>
+                            v-if="!item.lesson.recovery && item.lesson.status == LessonStatus.NONE">sposta</v-btn>
                     </template>
 
                     <template v-slot:default="{ isActive }">
@@ -65,14 +65,14 @@
                         </v-card>
                     </template>
                 </v-dialog>
-                <template v-else-if="item.moved.ref == 'moved'">
-                    <v-btn class="ma-1" :to="`/lesson/${item.moved.lessonRef.dailyLessonId}`">
+                <template v-else-if="item.lesson.moved.ref == 'moved'">
+                    <v-btn class="ma-1" :to="`/lesson/${item.lesson.moved.lessonRef.dailyLessonId}`">
                         <template v-slot:prepend>
                             <v-icon>mdi-eye-arrow-right-outline</v-icon>
                         </template>spostata</v-btn>
                 </template>
                 <template v-else>
-                    <v-btn class="ma-1" :to="`/lesson/${item.moved.lessonRef.dailyLessonId}`">
+                    <v-btn class="ma-1" :to="`/lesson/${item.lesson.moved.lessonRef.dailyLessonId}`">
                         <template v-slot:prepend>
                             <v-icon>mdi-eye-arrow-left-outline</v-icon>
                         </template>
@@ -86,22 +86,22 @@
 
                     <template v-slot:default="{ isActive }">
                         <EditLessonTime @close="isActive.value = false" @save="_updateLessonTime"
-                            :startTime="Time.fromITime(item.startTime).format()"
-                            :endTime="Time.fromITime(item.endTime).format()"
-                            :minutesOfLesson="item.minutesLessonDuration">
+                            :startTime="Time.fromITime(item.lesson.startTime).format()"
+                            :endTime="Time.fromITime(item.lesson.endTime).format()"
+                            :minutesOfLesson="item.student.minutesLessonDuration">
                         </EditLessonTime>
                     </template>
                 </v-dialog>
 
-                <v-btn v-if="item.recovery?.ref == 'original'" class="ma-1"
-                    :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
+                <v-btn v-if="item.lesson.recovery?.ref == 'original'" class="ma-1"
+                    :to="`/lesson/${item.lesson.recovery.lessonRef.dailyLessonId}`">
                     <template v-slot:prepend>
                         <v-icon>mdi-eye-arrow-left-outline</v-icon>
                     </template>
                     origine</v-btn>
             </template>
             <template v-else>
-                <v-btn class="ma-1" :to="`/lesson/${item.recovery.lessonRef.dailyLessonId}`">
+                <v-btn class="ma-1" :to="`/lesson/${item.lesson.recovery.lessonRef.dailyLessonId}`">
                     <template v-slot:prepend>
                         <v-icon>mdi-eye-arrow-right-outline</v-icon>
                     </template>recupero</v-btn>
@@ -115,15 +115,14 @@
                 </template>
 
                 <template v-slot:default="{ isActive }">
-                    <StudentEditor edit :school="school" :initialStudent="item" focus="note"
+                    <StudentEditor edit :school="school" :initialStudent="item.student" focus="note"
                         :disableFields="['name', 'surname', 'contact', 'lessonDay', 'level', 'minutesLessonDuration']"
-                        @close="isActive.value = false" @save="item.note = $event.note; isActive.value = false">
+                        @close="isActive.value = false" @save="item.student.note = $event.note; isActive.value = false">
                     </StudentEditor>
                 </template>
             </v-dialog>
 
-            <!-- DeleteDialog v-if="!item.recovery || item.recovery.ref == 'original'" -->
-            <DeleteDialog :name="`${item.name} ${item.surname}`" objName="Studente" :onDelete="onDeleteLessonItem">
+            <DeleteDialog :name="`${item.student.name} ${item.student.surname}`" objName="Studente" :onDelete="onDeleteLessonItem">
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
                 </template>
@@ -134,10 +133,10 @@
 
 <script setup lang="ts">
 import EditLessonTime from '@/components/lesson/EditLessonTime.vue';
-import { LessonStatus, Time, type EventTime, type School, type StudentLesson } from '@/models/model';
+import { LessonStatus, Time, type EventTime, type School, type StudentLesson2 } from '@/models/model';
 import { ref } from 'vue';
-import DeleteDialog from '../DeleteDialog.vue';
 import { toast } from 'vue3-toastify';
+import DeleteDialog from '../DeleteDialog.vue';
 import StudentEditor from '../student/StudentEditor.vue';
 
 const props = defineProps<{
@@ -146,7 +145,7 @@ const props = defineProps<{
     updateLessonTime: (newTime: EventTime) => Promise<boolean>;
     moveLesson: (newLessonDate: Date) => Promise<boolean>
 }>()
-const item = defineModel<StudentLesson>('item', { required: true });
+const item = defineModel<StudentLesson2>('item', { required: true });
 const select = defineModel<string[]>('select');
 const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent'])
 const timeDialog = ref(false)

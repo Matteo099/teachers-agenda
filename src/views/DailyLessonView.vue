@@ -86,9 +86,8 @@
 
                 <v-timeline v-else side="end" truncate-line="both">
                     <v-timeline-item v-for="(item, index) in studentLessons"
-                        :key="item.id + dailyLesson.id + item.lessonId" :dot-color="getColor(item)" size="small">
-                        {{ item }}
-                        <LessonItem :school="school" :key="item.id + dailyLesson.id + item.lessonId"
+                        :key="dailyLesson.id + item.lesson.lessonId" :dot-color="getColor(item.lesson)" size="small">
+                        <LessonItem :school="school" :key="dailyLesson.id + item.lesson.lessonId"
                             v-model:item="studentLessons[index]" v-model:select="selectedLessons"
                             @present="present(item)" @absent="absent(item, $event)"
                             :moveLesson="async ($event) => await moveLesson(item, $event)" @trial="trial(item)"
@@ -121,7 +120,7 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import SelectStudents from '@/components/inputs/SelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
-import { LessonStatus, yyyyMMdd, type EventTime, type School, type Student, type StudentLesson } from '@/models/model';
+import { LessonStatus, yyyyMMdd, type EventTime, type Lesson, type School, type Student, type StudentLesson2 } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { DailyLessonService2 } from '@/models/services/daily-lesson-service2';
@@ -142,7 +141,7 @@ const school: Ref<School | undefined> = ref();
 
 const selectedLessons: Ref<string[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
-const studentLessons: Ref<StudentLesson[]> = ref([])
+const studentLessons: Ref<StudentLesson2[]> = ref([])
 const availableStudents: Ref<Student[]> = ref([]);
 const selectedStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
@@ -165,7 +164,7 @@ watch(selectedLessons, () => {
         selectAllLessons.value = false
 })
 
-function getColor(event: StudentLesson): string {
+function getColor(event: Lesson): string {
     if (event.recovery && event.recovery.ref == 'recovery') return "#5093fc";
     if (event.moved && event.moved.ref == 'moved') return "#ffb135";
     if (event.status == LessonStatus.NONE) return "#46494C";
@@ -177,72 +176,77 @@ function getColor(event: StudentLesson): string {
     return "#808080";
 }
 
-async function present(event: StudentLesson) {
+function getSelectedStudentLessons(event: StudentLesson2): StudentLesson2[] {
+    const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.student.id == id)).filter(s => !!s);
+    if(event && "student" in event && "lesson" in event) _studentLessons.push(event);
+    return _studentLessons;
+}
+
+async function present(event: StudentLesson2) {
     try {
-        const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.id == id)).filter(s => !!s);
-        _studentLessons.push(event);
-
-        await DailyLessonService2.instance.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson.value!, _studentLessons);
-
+        const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
+        await DailyLessonService2.instance.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson.value!, lessons);
         selectedLessons.value = []
-        return true;
     } catch (error) {
-        return false;
+        toast.warn("Impossibile impostare le presenze...")
+        console.error(error)
     }
 }
-async function absent(event: StudentLesson, canRecover = true) {
+async function absent(event: StudentLesson2, canRecover = true) {
     try {
-        const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.id == id)).filter(s => !!s);
-        _studentLessons.push(event);
-
+        const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
         const status = canRecover ? LessonStatus.ABSENT : LessonStatus.UNJUSTIFIED_ABSENCE
-        await DailyLessonService2.instance.updateLessonsStatus(status, dailyLesson.value!, _studentLessons);
-
+        await DailyLessonService2.instance.updateLessonsStatus(status, dailyLesson.value!, lessons);
         selectedLessons.value = []
         return true;
     } catch (error) {
-        return false;
+        toast.warn("Impossibile impostare le assenze...")
+        console.error(error)
     }
 }
-async function trial(event: StudentLesson) {
+async function trial(event: StudentLesson2) {
     try {
-        await DailyLessonService2.instance.updateLessonsStatus(LessonStatus.TRIAL, dailyLesson.value!, [event]);
+        await DailyLessonService2.instance.updateLessonsStatus(LessonStatus.TRIAL, dailyLesson.value!, [event.lesson]);
         return true;
     } catch (error) {
-        return false;
+        toast.warn("Impossibile impostare la lezione di prova...")
+        console.error(error)
     }
 }
-async function reset(event: StudentLesson) {
+async function reset(event: StudentLesson2) {
     try {
-        await DailyLessonService2.instance.resetLessons(dailyLesson.value!, [event]);
+        await DailyLessonService2.instance.resetLessons(dailyLesson.value!, [event.lesson]);
         return true;
     } catch (error) {
-        return false;
-    }
-}
-
-async function moveLesson(event: StudentLesson, lessonDate: Date) {
-    try {
-        await DailyLessonService2.instance.moveLessons(dailyLesson.value!, lessonDate, [event]);
-        return true;
-    } catch (error) {
-        return false;
+        toast.warn("Impossibile ripristinare la lezione")
+        console.error(error)
     }
 }
 
-async function updateLessonTime(event: StudentLesson, newDataEvent: EventTime) {
+async function moveLesson(event: StudentLesson2, lessonDate: Date) {
     try {
-        await DailyLessonService2.instance.updateLessonTime(dailyLesson.value!, newDataEvent, event);
-        studentLessons.value.sort((a, b) => a.startTime - b.startTime);
+        await DailyLessonService2.instance.moveLessons(dailyLesson.value!, lessonDate, [event.lesson]);
         return true;
     } catch (error) {
-        return false;
+        console.error(error)
+        return false
+    }
+}
+
+async function updateLessonTime(event: StudentLesson2, newDataEvent: EventTime) {
+    try {
+        await DailyLessonService2.instance.updateLessonTime(dailyLesson.value!, newDataEvent, event.lesson);
+        studentLessons.value.sort((a, b) => a.lesson.startTime - b.lesson.startTime);
+        return true;
+    } catch (error) {
+        console.error(error)
+        return false
     }
 }
 
 function toggleAll() {
     if (!selectAllLessons.value) {
-        selectedLessons.value = [...studentLessons.value.map(s => s.id)]
+        selectedLessons.value = [...studentLessons.value.map(s => s.student.id)]
     } else {
         selectedLessons.value = [];
     }
@@ -293,11 +297,11 @@ async function deleteDailyLesson() {
     }
 }
 
-async function deleteStudentLesson(_studentLesson: StudentLesson, deleteDailyLessonWhenNoLessons = true) {
+async function deleteStudentLesson(_studentLesson: StudentLesson2, deleteDailyLessonWhenNoLessons = true) {
     if (!dailyLesson.value) return false;
 
     try {
-        await DailyLessonService2.instance.deleteLessons(dailyLesson.value!, deleteDailyLessonWhenNoLessons, [_studentLesson]);
+        await DailyLessonService2.instance.deleteLessons(dailyLesson.value!, deleteDailyLessonWhenNoLessons, [_studentLesson.lesson]);
         if (!dailyLesson.value || dailyLesson.value.lessons.length == 0) {
             router.push(`/school/${school.value!.id}`);
         }
@@ -314,7 +318,6 @@ async function dailyLessonUpdate() {
 }
 
 async function updateStudentLesson() {
-    console.log("updateStudentLesson")
     routeChanged.value = false;
     if (!dailyLesson.value) return;
     if (!school.value) {
@@ -322,14 +325,11 @@ async function updateStudentLesson() {
         school.value = await SchoolRepository.instance.get(dailyLesson.value.schoolId);
         loadingSchool.value = false;
     }
-    loadingStudents.value = true;
-    studentLessons.value = await StudentLessonService.instance.getStudentLesson2(dailyLesson.value, studentLessons.value);
-    console.log(studentLessons.value);
-    loadingStudents.value = false;
+    await StudentLessonService.instance.updateStudentLesson2(dailyLesson.value, studentLessons.value, loadingStudents);
 }
 
 async function computeSalaryAndSave() {
-    if (dailyLesson.value?.salaryStrategy != school.value?.salaryStrategy) {
+    if (dailyLesson.value && dailyLesson.value?.salaryStrategy != school.value?.salaryStrategy) {
         toast.info("Aggiornamento dello stipendio giornaliero in corso...");
         await save();
     }
@@ -340,7 +340,7 @@ async function save() {
 
     saving.value = true;
     try {
-        await DailyLessonService2.instance.save(dailyLesson.value, { school: school.value });
+        await DailyLessonService2.instance.save(dailyLesson.value, { school: school.value, studentLessons: studentLessons.value });
         toast.success("Modifiche salvate", { autoClose: 1000 });
     } catch (e) {
         toast.error("Impossibile aggiornare la lezione giornaliera", { autoClose: 1000 });
