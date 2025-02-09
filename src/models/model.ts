@@ -237,14 +237,14 @@ export interface School {
 }
 
 export enum SalaryStrategy {
-    ABSENT_AND_PRESENT,
-    ONLY_PRESENT
+    ABSENT_AND_PRESENT = "ABSENT_AND_PRESENT",
+    ONLY_PRESENT = "ONLY_PRESENT"
 }
 
 export enum TrialLessonPaymentStrategy {
-    WHOLE,
-    HALF,
-    NOTHING
+    WHOLE = "WHOLE",
+    HALF = "HALF",
+    NOTHING = "NOTHING"
 }
 
 export interface Salary {
@@ -307,17 +307,17 @@ export interface TodayLesson { school: School; lesson: DailyLesson | WeeklyLesso
 export const lessonStatusName = ["", "presente", "assente", "cancellata"]
 export const lessonStatusColor = ["gray", "green", "red", "orange"]
 export enum LessonStatus {
-    NONE,
-    PRESENT,
-    ABSENT,
-    UNJUSTIFIED_ABSENCE,
-    TRIAL,
-    MOVED
+    NONE = "NONE",
+    PRESENT = "PRESENT",
+    ABSENT = "ABSENT",
+    UNJUSTIFIED_ABSENCE = "UNJUSTIFIED_ABSENCE",
+    TRIAL = "TRIAL",
+    MOVED = "MOVED"
 }
 export enum RecoveryStatus {
-    UNSET,
-    PENDING,
-    DONE
+    UNSET = "UNSET",
+    PENDING = "PENDING",
+    DONE = "DONE"
 }
 
 export interface Lesson extends ScheduledLesson {

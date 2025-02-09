@@ -165,6 +165,8 @@ export class DailyLessonService2 {
     }
 
     public async deleteLessons(dailyLesson: DailyLesson, deleteDailyLessonWhenNoLessons: boolean, lessons: Lesson[]) {
+        debugger;
+        
         for await (const lesson of lessons) {
             await this.lessonService.resetLesson(dailyLesson, lesson);
             const index = dailyLesson.lessons.findIndex(l => l.lessonId == lesson.lessonId);
