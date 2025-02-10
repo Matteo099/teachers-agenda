@@ -95,6 +95,12 @@ export class SchoolRecoveryLessonService2 {
             } else {
                 this.updateRecovery(recovery, originalLessonRef, RecoveryStatus.DONE);
             }
+        } else if (lesson.status === LessonStatus.NONE) {
+            if (!isRecoveryLesson) {
+                this.updateRecovery(recovery, originalLessonRef);
+            } else {
+                this.updateRecovery(recovery, originalLessonRef, RecoveryStatus.PENDING);
+            }
         } else {
             console.warn("updateRecoveries() - nothing to update...");
         }
@@ -118,7 +124,7 @@ export class SchoolRecoveryLessonService2 {
                 // delete recovery lesson
                 const recoveryDailyLesson = await DailyLessonRepository.instance.get(lesson.recovery.lessonRef.dailyLessonId);
                 const recoveryLesson = recoveryDailyLesson?.lessons.find(l => l.lessonId == lesson.recovery!.lessonRef.lessonId)
-                if(recoveryDailyLesson && recoveryLesson)
+                if (recoveryDailyLesson && recoveryLesson)
                     await DailyLessonService2.instance.deleteLessons(recoveryDailyLesson, true, [recoveryLesson]);
                 else console.warn("unable to remove recovery lesson")
             }
