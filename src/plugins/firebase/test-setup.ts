@@ -2,10 +2,18 @@ import { collection, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore"
 import { beforeEach } from "vitest";
 import seedData from "./seed.json" assert { type: "json" };
 import getFirebase from ".";
-import { useFirestore } from "vuefire";
+import { getCurrentUser, useFirebaseAuth, useFirestore } from "vuefire";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 const { firebaseApp } = getFirebase();
 const db = useFirestore();
+const auth = useFirebaseAuth();
+
+async function login() {
+  if (auth && !getCurrentUser()) {
+    await signInWithEmailAndPassword(auth, "admin@teachers.agenda", "teachers-agenda");
+  }
+}
 
 /** Resets all documents in Firestore (Client-Side) */
 async function resetFirestore() {
@@ -21,15 +29,16 @@ async function resetFirestore() {
 
 /** Seeds Firestore with test data */
 async function seedFirestore() {
-  for (const [collectionName, docs] of Object.entries(seedData)) {
+  for (const [collectionName, docs] of Object.entries<any>(seedData)) {
     const colRef = collection(db, collectionName);
-    await Promise.all(docs.map((docData) => setDoc(doc(colRef, docData.id), docData)));
+    await Promise.all(docs.map((docData: any) => setDoc(doc(colRef, docData.id), docData)));
   }
   console.log("Firestore seeded!");
 }
 
 /** Hook to reset and seed Firestore before each test */
 beforeEach(async () => {
+  await login();
   await resetFirestore();
   await seedFirestore();
 });
