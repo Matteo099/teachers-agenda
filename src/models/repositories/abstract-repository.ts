@@ -1,5 +1,5 @@
 import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData } from "firebase/firestore";
-import { useCurrentUser } from "vuefire";
+import { getCurrentUser, useCurrentUser } from "vuefire";
 import { QueryEvent, type IQueryEvent } from "../utils/event";
 import { computed, type Ref } from "vue";
 
@@ -11,8 +11,6 @@ export abstract class AbstractRepository<T> {
     private cache: { userId?: string, collectionReference?: CollectionReference<T, DocumentData> } = {};
 
     public get collectionReference(): CollectionReference<T, DocumentData> {
-        console.log(this.user);
-
         if (this.cache.userId != this.user.value?.uid || !this.cache.collectionReference) {
             this.cache = {
                 userId: this.user.value?.uid,

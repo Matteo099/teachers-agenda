@@ -25,7 +25,6 @@ function initialize(existingApp?: FirebaseApp) {
 }
 
 export default function getFirebase() {
-    console.log("getFirebase")
     const existingApp = getApps()[0];
     return initialize(existingApp);
 }
