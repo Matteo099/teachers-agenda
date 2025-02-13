@@ -11,6 +11,8 @@ export abstract class AbstractRepository<T> {
     private cache: { userId?: string, collectionReference?: CollectionReference<T, DocumentData> } = {};
 
     public get collectionReference(): CollectionReference<T, DocumentData> {
+        console.log(this.user);
+
         if (this.cache.userId != this.user.value?.uid || !this.cache.collectionReference) {
             this.cache = {
                 userId: this.user.value?.uid,
