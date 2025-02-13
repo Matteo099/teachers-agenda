@@ -9,7 +9,7 @@
     "dev": "concurrently npm:devL npm:firebase",
     "devL": "vite",
     "devE": "vite --host",
-    "firebase": "firebase emulators:start --import emulator_data --export-on-exit emulator_data",
+    "firebase": "firebase emulators:start --import emulator_data --export-on-exit emulator_data --config firebase.json",
     "format": "prettier --write src/",
     "preview": "vite preview",
     "test:unit": "vitest",
