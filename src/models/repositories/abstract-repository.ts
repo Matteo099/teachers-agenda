@@ -1,5 +1,5 @@
 import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData } from "firebase/firestore";
-import { useCurrentUser } from "vuefire";
+import { getCurrentUser, useCurrentUser } from "vuefire";
 import { QueryEvent, type IQueryEvent } from "../utils/event";
 import { computed, type Ref } from "vue";
 

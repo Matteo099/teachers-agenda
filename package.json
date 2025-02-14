@@ -9,9 +9,13 @@
     "dev": "concurrently npm:devL npm:firebase",
     "devL": "vite",
     "devE": "vite --host",
-    "firebase": "firebase emulators:start --import emulator_data --export-on-exit emulator_data",
+    "firebase": "firebase emulators:start --import emulator_data --export-on-exit emulator_data --config firebase.json",
     "format": "prettier --write src/",
     "preview": "vite preview",
+    "test:unit": "vitest",
+    "test:firebase": "firebase emulators:start --import emulator_data_test --config firebase-test.json",
+    "test:integration": "wait-on tcp:4000 && vitest",
+    "test:full": "npm-run-all --parallel test:firebase test:integration",
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
@@ -47,18 +51,23 @@
     "@vitejs/plugin-vue-jsx": "^4.1.1",
     "@vue/eslint-config-prettier": "^9.0.0",
     "@vue/eslint-config-typescript": "^13.0.0",
+    "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.5.1",
     "concurrently": "^9.1.2",
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.23.0",
+    "firebase-mock": "^2.3.2",
     "firebase-tools": "^13.29.1",
+    "jsdom": "^26.0.0",
     "npm-run-all2": "^7.0.2",
     "prettier": "^3.4.2",
     "typescript": "~5.4.0",
     "vite": "^5.3.1",
     "vite-plugin-pwa": "^0.20.5",
     "vite-plugin-vue-devtools": "^7.3.1",
-    "vue-tsc": "^2.2.0"
+    "vitest": "^3.0.5",
+    "vue-tsc": "^2.2.0",
+    "wait-on": "^8.0.2"
   },
   "type": "module"
 }

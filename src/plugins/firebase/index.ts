@@ -10,13 +10,15 @@ function initialize(existingApp?: FirebaseApp) {
     const auth = getAuth(firebaseApp);
     const firestore = getFirestore(firebaseApp);
     // const storage = getStorage(firebaseApp);
-    initializeAnalytics(firebaseApp);
+    if (!existingApp) initializeAnalytics(firebaseApp);
 
     // If on localhost, use all firebase services locally
     if (import.meta.env.VITE_FIREBASE_SIMULATOR.toLowerCase() === "true" && location.hostname === 'localhost') {
-        connectAuthEmulator(auth, "http://localhost:9099");
-        connectFirestoreEmulator(firestore, 'localhost', 8080);
-        // connectStorageEmulator(storage, 'localhost', 9002);
+        if (!existingApp) {
+            connectAuthEmulator(auth, "http://localhost:9099");
+            connectFirestoreEmulator(firestore, 'localhost', 8080);
+            // connectStorageEmulator(storage, 'localhost', 9002);
+        }
     }
 
     return { firebaseApp, auth, firestore/*, storage*/ }
