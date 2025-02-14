@@ -1,1 +1,1034 @@
-{}
+{
+    "schools": [
+        {
+            "id": "90iUvnbTwH8SrylaSRM4",
+            "createdAt": {
+                "seconds": 1735995966,
+                "nanoseconds": 348000000
+            },
+            "color": "#CFCFCF",
+            "levelRanges": [
+                {
+                    "price": 1,
+                    "levels": [
+                        "a",
+                        "s"
+                    ]
+                }
+            ],
+            "city": "Servi",
+            "managed": false,
+            "name": "Fenice",
+            "salaryStrategy": 1,
+            "trialLessonPaymentStrategy": 1,
+            "updatedAt": {
+                "seconds": 1737735296,
+                "nanoseconds": 473000000
+            }
+        },
+        {
+            "id": "EwAN1fcCToq9UkyhBylq",
+            "createdAt": {
+                "seconds": 1736620426,
+                "nanoseconds": 765000000
+            },
+            "levelRanges": [
+                {
+                    "price": 1,
+                    "levels": [
+                        "s"
+                    ]
+                }
+            ],
+            "managed": false,
+            "name": "asd",
+            "salaryStrategy": 0,
+            "updatedAt": {
+                "seconds": 1736620426,
+                "nanoseconds": 765000000
+            }
+        },
+        {
+            "id": "JCDHbpt749gja2PCo8If",
+            "createdAt": {
+                "seconds": 1735910961,
+                "nanoseconds": 569000000
+            },
+            "color": "#FCFF53",
+            "levelRanges": [
+                {
+                    "price": 1,
+                    "levels": [
+                        "base"
+                    ]
+                }
+            ],
+            "city": "Servigliano",
+            "managed": false,
+            "name": "CASA",
+            "salaryStrategy": 1,
+            "updatedAt": {
+                "seconds": 1736615669,
+                "nanoseconds": 937000000
+            }
+        },
+        {
+            "id": "OB52SpakjvJJS21SnETM",
+            "createdAt": {
+                "seconds": 1736601862,
+                "nanoseconds": 495000000
+            },
+            "color": "#F10000",
+            "levelRanges": [
+                {
+                    "price": 1,
+                    "levels": [
+                        "a"
+                    ]
+                }
+            ],
+            "managed": false,
+            "name": "prova",
+            "salaryStrategy": 0,
+            "updatedAt": {
+                "seconds": 1736602048,
+                "nanoseconds": 180000000
+            }
+        }
+    ],
+    "students": [
+        {
+            "id": "8ltmYmA85JLHb47RjFbC",
+            "minutesLessonDuration": 81,
+            "note": {
+                "text": "johwiw jopsoqxif qetkugwav dubnubdew weszented mopzagcev vahruv vorzuzzet wajqoddup feyfevduwzab lazlebpar gasbeh telqebwif.\nyuhladjuvyof mihcewnov nibfevyeh zoccuspuf sofpig quzhevlix zijdocxoc.\nvashib bamhot moxcekviq fasquh mejruv xeswor makpazrutqus yoxdel mulcot lutrelzof. deswupfoy hinsip jujbej jofgaymeq sikxay zabfej jihveqqeqyem jojguzmidfif tippunragsos yolkapzax.",
+                "updatedAt": {
+                    "seconds": 1738242004,
+                    "nanoseconds": 10000000
+                }
+            },
+            "level": "a",
+            "lessonDay": 1,
+            "levelHistory": [
+                {
+                    "level": "a",
+                    "from": "20250030"
+                },
+                {
+                    "level": "s",
+                    "from": "20250005",
+                    "to": "20250030"
+                }
+            ],
+            "trial": {
+                "dailyLessonId": "z30zDDfXqJdeRmd5hCeV",
+                "done": true,
+                "dailyLessonDate": "20250019"
+            },
+            "createdAt": {
+                "seconds": 1736101833,
+                "nanoseconds": 748000000
+            },
+            "surname": "noqsocbuf",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "contact": "deljozrab",
+            "name": "viwpetloy",
+            "isSubstitution": false,
+            "updatedAt": {
+                "seconds": 1738242004,
+                "nanoseconds": 10000000
+            }
+        },
+        {
+            "id": "GTHL5iiStrNQaGP9CJ9n",
+            "minutesLessonDuration": 40,
+            "createdAt": {
+                "seconds": 1735976631,
+                "nanoseconds": 612000000
+            },
+            "level": "base",
+            "surname": "Begni",
+            "schoolId": "JCDHbpt749gja2PCo8If",
+            "name": "Luca",
+            "updatedAt": {
+                "seconds": 1735986346,
+                "nanoseconds": 212000000
+            }
+        },
+        {
+            "id": "QQdrv6HwOAGQrl06Jpnk",
+            "minutesLessonDuration": 33,
+            "createdAt": {
+                "seconds": 1736101825,
+                "nanoseconds": 780000000
+            },
+            "note": {
+                "text": "qijlagxod tagragvip suqkopbus vevmiq cewmis cigsixqif kanjoknul kaqcez lihjaznuh rijbiz cinlad.\npirhemjoxqil futlimsut vufvinvet yuqyucsofpoz tamxokleb vopbuvjal gutlogxif. cagwimzez huvyas riqpec zefdoz veszim ficnehmuf riykokkem kabmow xuvduwwic pohcafxig necperyehkar. rovxas laztibxor zasfevfar golfepfamxid wunkoj kuhtipney tanraqcup tuqfodpacsaz lohniksev.",
+                "updatedAt": {
+                    "seconds": 1737912601,
+                    "nanoseconds": 870000000
+                }
+            },
+            "level": "s",
+            "surname": "maqsuvdos",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "contact": "luvhobriq",
+            "name": "xofgandem",
+            "lessonDay": 6,
+            "isSubstitution": false,
+            "trial": {
+                "done": true
+            },
+            "updatedAt": {
+                "seconds": 1737912601,
+                "nanoseconds": 870000000
+            }
+        },
+        {
+            "id": "Rav4kJmrTAqCPAdRYvBW",
+            "minutesLessonDuration": 60,
+            "createdAt": {
+                "seconds": 1735911017,
+                "nanoseconds": 313000000
+            },
+            "note": {
+                "text": "Prova 2",
+                "updatedAt": {
+                    "seconds": 1735985624,
+                    "nanoseconds": 689000000
+                }
+            },
+            "level": "base",
+            "surname": "Verdone",
+            "schoolId": "JCDHbpt749gja2PCo8If",
+            "name": "Carlo",
+            "updatedAt": {
+                "seconds": 1735985624,
+                "nanoseconds": 689000000
+            }
+        },
+        {
+            "minutesLessonDuration": 72,
+            "createdAt": {
+                "seconds": 1736101830,
+                "nanoseconds": 154000000
+            },
+            "note": {
+                "text": "fonridlakfub zagges qivkexfaq wefzaldat koxhihlir permitxay raznohgecdas tulbohdez xukwagxot. hegrigyur yongilmojjoh vizzax fibxex vuxsikbas voyvevgac miwviqdot ladvovquz jawguq. kejyijqos furhujgiq lacgux zatqapxif qodnoc. jusfas hiysofpef monhag cuxxiqjub tekwefkiy xukyicvol satziz.",
+                "updatedAt": {
+                    "seconds": 1736101830,
+                    "nanoseconds": 154000000
+                }
+            },
+            "level": "a",
+            "surname": "zubxapbon",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "contact": "pibkahheg",
+            "name": "luxteqdix",
+            "lessonDay": 0,
+            "id": "elgQ7MAqSOYTaUMDs9Tl",
+            "updatedAt": {
+                "seconds": 1736101830,
+                "nanoseconds": 154000000
+            }
+        },
+        {
+            "id": "gM3zKynu0fjxskX5qvjE",
+            "minutesLessonDuration": 35,
+            "createdAt": {
+                "seconds": 1736101821,
+                "nanoseconds": 554000000
+            },
+            "note": {
+                "text": "tezlulres nejyub mixtipmay zagfirxakrof jasfem zoynav zokbuw. kedwazxam bacgup quntew rihpepwim sillisruv xolbopjifway fatjew. mezfogjij xegjuy dimfubcez xufvef sajtez yitvap. jadpev fiqlow pufjuy jamgav fekwez qitciybah femrofloz.",
+                "updatedAt": {
+                    "seconds": 1737281270,
+                    "nanoseconds": 980000000
+                }
+            },
+            "level": "s",
+            "surname": "qagyoknay",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "contact": "kocjoncen",
+            "name": "karduldaq",
+            "lessonDay": 3,
+            "isSubstitution": true,
+            "updatedAt": {
+                "seconds": 1737281270,
+                "nanoseconds": 980000000
+            }
+        }
+    ],
+    "weeklyLessons": [
+        {
+            "id": "KjtrpQj5e36XLgaiQsei",
+            "schedule": [
+                {
+                    "studentId": "8ltmYmA85JLHb47RjFbC",
+                    "lessonId": "73f5383b-43e6-4494-9f00-2caeb82fc0bd",
+                    "startTime": 45000,
+                    "endTime": 49860
+                },
+                {
+                    "studentId": "QQdrv6HwOAGQrl06Jpnk",
+                    "lessonId": "6da96f9a-c375-4bcf-8d22-1bf32dabdfcc",
+                    "startTime": 49860,
+                    "endTime": 51840
+                },
+                {
+                    "studentId": "elgQ7MAqSOYTaUMDs9Tl",
+                    "lessonId": "8edb3ff8-0a05-4baf-afed-5798b02692a8",
+                    "startTime": 51840,
+                    "endTime": 56160
+                },
+                {
+                    "studentId": "gM3zKynu0fjxskX5qvjE",
+                    "lessonId": "9c2bad11-a3fd-4084-839c-41a09ca21d47",
+                    "startTime": 56160,
+                    "endTime": 58260
+                }
+            ],
+            "createdAt": {
+                "seconds": 1737104042,
+                "nanoseconds": 750000000
+            },
+            "dayOfWeek": 1,
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "from": "20250001",
+            "exclude": [
+                "20250020"
+            ],
+            "to": "20250128",
+            "updatedAt": {
+                "seconds": 1738915362,
+                "nanoseconds": 28000000
+            }
+        }
+    ],
+    "dailyLessons": [
+        {
+            "date": "20250030",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "id": "0ZxRRoR8ZUVZphBrRhL4",
+            "lessons": [
+                {
+                    "studentId": "elgQ7MAqSOYTaUMDs9Tl",
+                    "createdAt": {
+                        "seconds": 1737736103,
+                        "nanoseconds": 731000000
+                    },
+                    "moved": {
+                        "ref": "original",
+                        "lessonRef": {
+                            "dailyLessonId": "6zcldf8sV1za8G84X21A",
+                            "lessonId": "d4e9f31a-236b-4bd9-88ae-f0e868b8a95e"
+                        }
+                    },
+                    "lessonId": "d4e9f31a-236b-4bd9-88ae-f0e868b8a95e",
+                    "startTime": 51840,
+                    "endTime": 56160,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1737736103,
+                        "nanoseconds": 731000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20250027",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "salaryStrategy": 1,
+            "id": "11Yrfawci0o6zHJMNXzk",
+            "salary": 0,
+            "lastSalaryUpdate": {
+                "seconds": 1737912256,
+                "nanoseconds": 702000000
+            },
+            "lessons": [
+                {
+                    "studentId": "8ltmYmA85JLHb47RjFbC",
+                    "createdAt": {
+                        "seconds": 1737113040,
+                        "nanoseconds": 753000000
+                    },
+                    "lessonId": "e8208163-c78f-46b4-b119-9e17604d31f8",
+                    "startTime": 45000,
+                    "endTime": 49860,
+                    "status": 2,
+                    "updatedAt": {
+                        "seconds": 1737912256,
+                        "nanoseconds": 702000000
+                    }
+                },
+                {
+                    "studentId": "QQdrv6HwOAGQrl06Jpnk",
+                    "createdAt": {
+                        "seconds": 1737113040,
+                        "nanoseconds": 754000000
+                    },
+                    "lessonId": "c496c826-085f-41f4-9349-7635979d468d",
+                    "startTime": 49860,
+                    "endTime": 51840,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1737912256,
+                        "nanoseconds": 702000000
+                    }
+                },
+                {
+                    "studentId": "elgQ7MAqSOYTaUMDs9Tl",
+                    "createdAt": {
+                        "seconds": 1737113040,
+                        "nanoseconds": 754000000
+                    },
+                    "lessonId": "9edbb7da-4fa3-4536-9fae-4ec075a7640f",
+                    "startTime": 51840,
+                    "endTime": 56160,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1737912256,
+                        "nanoseconds": 702000000
+                    }
+                },
+                {
+                    "studentId": "gM3zKynu0fjxskX5qvjE",
+                    "createdAt": {
+                        "seconds": 1737113040,
+                        "nanoseconds": 754000000
+                    },
+                    "lessonId": "c1141d41-1e0e-4304-8f3f-5aa0be25e5b7",
+                    "startTime": 56160,
+                    "endTime": 58260,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1737912256,
+                        "nanoseconds": 702000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20250006",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "salaryStrategy": 1,
+            "id": "1rxEPuW0vYzBgJEDjJ7W",
+            "salary": 132.5,
+            "lastSalaryUpdate": {
+                "seconds": 1737805872,
+                "nanoseconds": 54000000
+            },
+            "lessons": [
+                {
+                    "studentId": "8ltmYmA85JLHb47RjFbC",
+                    "createdAt": {
+                        "seconds": 1736176848,
+                        "nanoseconds": 655000000
+                    },
+                    "lessonId": "00d27cb7-6690-4f14-bff2-7c7146a1a925",
+                    "startTime": 0,
+                    "endTime": 4860,
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1737805872,
+                        "nanoseconds": 54000000
+                    }
+                },
+                {
+                    "studentId": "elgQ7MAqSOYTaUMDs9Tl",
+                    "createdAt": {
+                        "seconds": 1736176848,
+                        "nanoseconds": 655000000
+                    },
+                    "lessonId": "13a47e38-58f7-462b-b716-97cc1e54af8d",
+                    "startTime": 6840,
+                    "endTime": 11160,
+                    "recovery": {
+                        "ref": "recovery",
+                        "lessonRef": {
+                            "dailyLessonId": "b1kajT7RKBVI61bpd20A",
+                            "lessonId": "b13308c6-3955-427c-a43b-98473c604023"
+                        }
+                    },
+                    "status": 2,
+                    "updatedAt": {
+                        "seconds": 1737805872,
+                        "nanoseconds": 54000000
+                    }
+                },
+                {
+                    "studentId": "gM3zKynu0fjxskX5qvjE",
+                    "createdAt": {
+                        "seconds": 1736176848,
+                        "nanoseconds": 655000000
+                    },
+                    "lessonId": "03bf1262-258a-41c0-a285-ab7b39eacf20",
+                    "startTime": 11160,
+                    "endTime": 13260,
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1737805872,
+                        "nanoseconds": 54000000
+                    }
+                },
+                {
+                    "studentId": "QQdrv6HwOAGQrl06Jpnk",
+                    "createdAt": {
+                        "seconds": 1736176848,
+                        "nanoseconds": 655000000
+                    },
+                    "lessonId": "110ea901-02a1-4576-91b6-42f4f2709c3e",
+                    "startTime": 49860,
+                    "endTime": 51840,
+                    "status": 4,
+                    "updatedAt": {
+                        "seconds": 1737805872,
+                        "nanoseconds": 54000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20241102",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "salaryStrategy": 1,
+            "id": "2zKVFwnjlctnT6V38IuO",
+            "salary": 221,
+            "lastSalaryUpdate": {
+                "seconds": 1736176811,
+                "nanoseconds": 245000000
+            },
+            "lessons": [
+                {
+                    "studentId": "8ltmYmA85JLHb47RjFbC",
+                    "createdAt": {
+                        "seconds": 1736176756,
+                        "nanoseconds": 978000000
+                    },
+                    "lessonId": "c3fae638-c09b-4f19-b6a7-b01d87dc9cb2",
+                    "startTime": 45000,
+                    "endTime": 49860,
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1736176811,
+                        "nanoseconds": 245000000
+                    }
+                },
+                {
+                    "studentId": "QQdrv6HwOAGQrl06Jpnk",
+                    "createdAt": {
+                        "seconds": 1736176756,
+                        "nanoseconds": 978000000
+                    },
+                    "lessonId": "7c661aa0-64a1-4475-a931-cb81d862d6ac",
+                    "startTime": 49860,
+                    "endTime": 51840,
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1736176811,
+                        "nanoseconds": 245000000
+                    }
+                },
+                {
+                    "studentId": "elgQ7MAqSOYTaUMDs9Tl",
+                    "createdAt": {
+                        "seconds": 1736176756,
+                        "nanoseconds": 978000000
+                    },
+                    "lessonId": "c9499ca0-c76e-472a-a465-95f2436825b3",
+                    "startTime": 51840,
+                    "endTime": 56160,
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1736176811,
+                        "nanoseconds": 245000000
+                    }
+                },
+                {
+                    "studentId": "gM3zKynu0fjxskX5qvjE",
+                    "createdAt": {
+                        "seconds": 1736176756,
+                        "nanoseconds": 978000000
+                    },
+                    "lessonId": "dab39b05-6121-4387-8c1f-c843d964bb13",
+                    "startTime": 56160,
+                    "endTime": 58260,
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1736176811,
+                        "nanoseconds": 245000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20250021",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "salaryStrategy": 1,
+            "id": "6zcldf8sV1za8G84X21A",
+            "salary": 16.5,
+            "lastSalaryUpdate": {
+                "seconds": 1737736091,
+                "nanoseconds": 94000000
+            },
+            "lessons": [
+                {
+                    "studentId": "8ltmYmA85JLHb47RjFbC",
+                    "createdAt": {
+                        "seconds": 1737736089,
+                        "nanoseconds": 385000000
+                    },
+                    "lessonId": "f8bb4a92-3bc6-4539-ba9b-e5fb590544f6",
+                    "startTime": 45000,
+                    "endTime": 49860,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1737736091,
+                        "nanoseconds": 94000000
+                    }
+                },
+                {
+                    "studentId": "QQdrv6HwOAGQrl06Jpnk",
+                    "createdAt": {
+                        "seconds": 1737736089,
+                        "nanoseconds": 385000000
+                    },
+                    "lessonId": "b5ee45c2-9abc-43a3-ae42-ff281e5fb190",
+                    "startTime": 49860,
+                    "endTime": 51840,
+                    "status": 4,
+                    "updatedAt": {
+                        "seconds": 1737736091,
+                        "nanoseconds": 94000000
+                    }
+                },
+                {
+                    "studentId": "elgQ7MAqSOYTaUMDs9Tl",
+                    "createdAt": {
+                        "seconds": 1737736089,
+                        "nanoseconds": 385000000
+                    },
+                    "lessonId": "d4e9f31a-236b-4bd9-88ae-f0e868b8a95e",
+                    "startTime": 51840,
+                    "endTime": 56160,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1737736091,
+                        "nanoseconds": 94000000
+                    }
+                },
+                {
+                    "studentId": "gM3zKynu0fjxskX5qvjE",
+                    "createdAt": {
+                        "seconds": 1737736089,
+                        "nanoseconds": 385000000
+                    },
+                    "lessonId": "d3e37327-1ea8-47c7-98e6-217e84505248",
+                    "startTime": 56160,
+                    "endTime": 58260,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1737736091,
+                        "nanoseconds": 94000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20250110",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "salaryStrategy": 1,
+            "id": "FijCGmTE9lHwoAjYFqUH",
+            "salary": 0,
+            "lastSalaryUpdate": {
+                "seconds": 1739126014,
+                "nanoseconds": 768000000
+            },
+            "lessons": [
+                {
+                    "studentId": "gM3zKynu0fjxskX5qvjE",
+                    "createdAt": {
+                        "seconds": 1739124425,
+                        "nanoseconds": 965000000
+                    },
+                    "lessonId": "6c934edb-490d-44c7-ae58-5c043f371e1c",
+                    "startTime": 56160,
+                    "endTime": 58260,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1739126014,
+                        "nanoseconds": 768000000
+                    }
+                },
+                {
+                    "studentId": "8ltmYmA85JLHb47RjFbC",
+                    "createdAt": {
+                        "seconds": 1739125121,
+                        "nanoseconds": 435000000
+                    },
+                    "lessonId": "3266de29-49b6-46a5-843d-55d7c4134e2c",
+                    "startTime": 65100,
+                    "endTime": 69960,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1739126014,
+                        "nanoseconds": 768000000
+                    }
+                },
+                {
+                    "studentId": "QQdrv6HwOAGQrl06Jpnk",
+                    "createdAt": {
+                        "seconds": 1739125189,
+                        "nanoseconds": 788000000
+                    },
+                    "lessonId": "1703386a-b2c7-4141-a143-f00b472a1da9",
+                    "startTime": 69960,
+                    "endTime": 71940,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1739126014,
+                        "nanoseconds": 768000000
+                    }
+                },
+                {
+                    "studentId": "elgQ7MAqSOYTaUMDs9Tl",
+                    "createdAt": {
+                        "seconds": 1739126006,
+                        "nanoseconds": 144000000
+                    },
+                    "lessonId": "b14447f1-eb27-43c2-b748-591bb48ffa75",
+                    "startTime": 71940,
+                    "endTime": 76260,
+                    "status": 2,
+                    "updatedAt": {
+                        "seconds": 1739126014,
+                        "nanoseconds": 768000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20241021",
+            "schoolId": "JCDHbpt749gja2PCo8If",
+            "salaryStrategy": 1,
+            "id": "G6if3FkPrNaUOVtB7KOn",
+            "salary": 100,
+            "lastSalaryUpdate": {
+                "seconds": 1736177032,
+                "nanoseconds": 712000000
+            },
+            "lessons": [
+                {
+                    "studentId": "GTHL5iiStrNQaGP9CJ9n",
+                    "createdAt": {
+                        "seconds": 1736177029,
+                        "nanoseconds": 965000000
+                    },
+                    "lessonId": "d8dd7af0-479e-4548-afe0-5aefdfdca4f6",
+                    "startTime": 0,
+                    "endTime": 2400,
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1736177032,
+                        "nanoseconds": 712000000
+                    }
+                },
+                {
+                    "studentId": "Rav4kJmrTAqCPAdRYvBW",
+                    "createdAt": {
+                        "seconds": 1736177029,
+                        "nanoseconds": 965000000
+                    },
+                    "lessonId": "37ac1829-1361-4318-bfb0-9ad93a786779",
+                    "startTime": 2400,
+                    "endTime": 6000,
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1736177032,
+                        "nanoseconds": 712000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20241127",
+            "schoolId": "JCDHbpt749gja2PCo8If",
+            "salaryStrategy": 1,
+            "id": "MePqUJsOdSzBjBtuBhQz",
+            "salary": 60,
+            "lastSalaryUpdate": {
+                "seconds": 1735911256,
+                "nanoseconds": 720000000
+            },
+            "lessons": [
+                {
+                    "studentId": "Rav4kJmrTAqCPAdRYvBW",
+                    "createdAt": {
+                        "seconds": 1735911254,
+                        "nanoseconds": 530000000
+                    },
+                    "lessonId": "bf62cbc0-e099-441e-8e71-c5a701e13c43",
+                    "startTime": 0,
+                    "endTime": 3600,
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1735911256,
+                        "nanoseconds": 720000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20250004",
+            "schoolId": "JCDHbpt749gja2PCo8If",
+            "salaryStrategy": 1,
+            "id": "UsQhwhw0fQT7IEh1umuV",
+            "salary": 0,
+            "lastSalaryUpdate": {
+                "seconds": 1735988669,
+                "nanoseconds": 886000000
+            },
+            "lessons": []
+        },
+        {
+            "date": "20250007",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "salaryStrategy": 1,
+            "id": "b1kajT7RKBVI61bpd20A",
+            "salary": 72,
+            "lastSalaryUpdate": {
+                "seconds": 1736713749,
+                "nanoseconds": 905000000
+            },
+            "lessons": [
+                {
+                    "studentId": "8ltmYmA85JLHb47RjFbC",
+                    "createdAt": {
+                        "seconds": 1736620765,
+                        "nanoseconds": 408000000
+                    },
+                    "lessonId": "a6ee473a-295e-45d6-92b2-5fdbc91e4462",
+                    "startTime": 8100,
+                    "endTime": 12960,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1736713749,
+                        "nanoseconds": 905000000
+                    }
+                },
+                {
+                    "studentId": "elgQ7MAqSOYTaUMDs9Tl",
+                    "createdAt": {
+                        "seconds": 1736176867,
+                        "nanoseconds": 513000000
+                    },
+                    "lessonId": "b13308c6-3955-427c-a43b-98473c604023",
+                    "startTime": 18900,
+                    "endTime": 23220,
+                    "recovery": {
+                        "ref": "original",
+                        "lessonRef": {
+                            "dailyLessonId": "1rxEPuW0vYzBgJEDjJ7W",
+                            "lessonId": "13a47e38-58f7-462b-b716-97cc1e54af8d"
+                        }
+                    },
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1736713749,
+                        "nanoseconds": 905000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20250002",
+            "schoolId": "JCDHbpt749gja2PCo8If",
+            "salaryStrategy": 1,
+            "id": "khrl1g87j12Ck9WiQx4V",
+            "salary": 40,
+            "lastSalaryUpdate": {
+                "seconds": 1736098886,
+                "nanoseconds": 192000000
+            },
+            "lessons": [
+                {
+                    "studentId": "Rav4kJmrTAqCPAdRYvBW",
+                    "createdAt": {
+                        "seconds": 1735976659,
+                        "nanoseconds": 907000000
+                    },
+                    "lessonId": "a577086e-2d1e-4ddc-aa8f-c5e885b2ac85",
+                    "startTime": 6900,
+                    "endTime": 10500,
+                    "recovery": {
+                        "ref": "recovery",
+                        "lessonRef": {
+                            "dailyLessonId": "pyseyeOX5e2YFNSA1j8s",
+                            "lessonId": "70a400bc-6387-4d59-bf0a-8b0a41418a48"
+                        }
+                    },
+                    "status": 2,
+                    "updatedAt": {
+                        "seconds": 1736098886,
+                        "nanoseconds": 192000000
+                    }
+                },
+                {
+                    "studentId": "GTHL5iiStrNQaGP9CJ9n",
+                    "createdAt": {
+                        "seconds": 1735976659,
+                        "nanoseconds": 907000000
+                    },
+                    "lessonId": "168d29be-16d6-40e1-a912-43b5ed6b29c4",
+                    "startTime": 52200,
+                    "endTime": 54600,
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1736098886,
+                        "nanoseconds": 192000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20250005",
+            "schoolId": "JCDHbpt749gja2PCo8If",
+            "salaryStrategy": 1,
+            "id": "pyseyeOX5e2YFNSA1j8s",
+            "salary": 60,
+            "lastSalaryUpdate": {
+                "seconds": 1736098813,
+                "nanoseconds": 171000000
+            },
+            "lessons": [
+                {
+                    "studentId": "Rav4kJmrTAqCPAdRYvBW",
+                    "createdAt": {
+                        "seconds": 1735991050,
+                        "nanoseconds": 640000000
+                    },
+                    "lessonId": "70a400bc-6387-4d59-bf0a-8b0a41418a48",
+                    "startTime": 65100,
+                    "endTime": 68700,
+                    "recovery": {
+                        "ref": "original",
+                        "lessonRef": {
+                            "dailyLessonId": "khrl1g87j12Ck9WiQx4V",
+                            "lessonId": "a577086e-2d1e-4ddc-aa8f-c5e885b2ac85"
+                        }
+                    },
+                    "status": 1,
+                    "updatedAt": {
+                        "seconds": 1736098813,
+                        "nanoseconds": 171000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20250019",
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "salaryStrategy": 1,
+            "id": "z30zDDfXqJdeRmd5hCeV",
+            "salary": 40.5,
+            "lastSalaryUpdate": {
+                "seconds": 1737813745,
+                "nanoseconds": 442000000
+            },
+            "lessons": [
+                {
+                    "studentId": "8ltmYmA85JLHb47RjFbC",
+                    "createdAt": {
+                        "seconds": 1737812485,
+                        "nanoseconds": 483000000
+                    },
+                    "lessonId": "85c3d3f3-7cb0-4b35-9cc3-18c7ae11689e",
+                    "startTime": 28800,
+                    "endTime": 33660,
+                    "status": 4,
+                    "updatedAt": {
+                        "seconds": 1737813745,
+                        "nanoseconds": 441000000
+                    }
+                },
+                {
+                    "studentId": "QQdrv6HwOAGQrl06Jpnk",
+                    "createdAt": {
+                        "seconds": 1737812501,
+                        "nanoseconds": 257000000
+                    },
+                    "lessonId": "8380875e-e861-4cc1-ba23-e722045e1825",
+                    "startTime": 33660,
+                    "endTime": 35640,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1737813745,
+                        "nanoseconds": 441000000
+                    }
+                },
+                {
+                    "studentId": "elgQ7MAqSOYTaUMDs9Tl",
+                    "createdAt": {
+                        "seconds": 1737812504,
+                        "nanoseconds": 75000000
+                    },
+                    "lessonId": "4c6a6c45-f440-4370-b92e-4aeb1504c110",
+                    "startTime": 35640,
+                    "endTime": 39960,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1737813745,
+                        "nanoseconds": 441000000
+                    }
+                },
+                {
+                    "studentId": "gM3zKynu0fjxskX5qvjE",
+                    "createdAt": {
+                        "seconds": 1737812506,
+                        "nanoseconds": 900000000
+                    },
+                    "lessonId": "b2d022c5-ea2a-453c-b745-16f926db1ac8",
+                    "startTime": 39960,
+                    "endTime": 42060,
+                    "status": 0,
+                    "updatedAt": {
+                        "seconds": 1737813745,
+                        "nanoseconds": 442000000
+                    }
+                }
+            ]
+        }
+    ],
+    "recoveryLessons": [
+        {
+            "schoolId": "90iUvnbTwH8SrylaSRM4",
+            "id": "90iUvnbTwH8SrylaSRM4",
+            "recoveries": [
+                {
+                    "originalLesson": {
+                        "dailyLessonId": "FijCGmTE9lHwoAjYFqUH",
+                        "lessonId": "b14447f1-eb27-43c2-b748-591bb48ffa75"
+                    },
+                    "status": 0
+                }
+            ]
+        },
+        {
+            "schoolId": "JCDHbpt749gja2PCo8If",
+            "id": "JCDHbpt749gja2PCo8If",
+            "recoveries": [
+                {
+                    "recoveryLesson": {
+                        "dailyLessonId": "pyseyeOX5e2YFNSA1j8s",
+                        "lessonId": "70a400bc-6387-4d59-bf0a-8b0a41418a48"
+                    },
+                    "originalLesson": {
+                        "dailyLessonId": "khrl1g87j12Ck9WiQx4V",
+                        "lessonId": "a577086e-2d1e-4ddc-aa8f-c5e885b2ac85"
+                    },
+                    "status": 1
+                }
+            ]
+        }
+    ]
+}

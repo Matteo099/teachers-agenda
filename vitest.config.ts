@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { mergeConfig, defineConfig, configDefaults } from 'vitest/config'
-import vue from '@vitejs/plugin-vue'
+import { configDefaults, defineConfig, mergeConfig } from 'vitest/config'
 import viteConfig from './vite.config'
 
 export default mergeConfig(
@@ -16,7 +15,7 @@ export default mergeConfig(
             },
             root: fileURLToPath(new URL('./', import.meta.url)),
             globals: true,
-            setupFiles: ["./src/plugins/firebase/test-setup.ts"]
+            setupFiles: ["./src/plugins/firebase/vitest.setup.ts"]
         }
     })
 )
