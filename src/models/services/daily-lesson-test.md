@@ -8,17 +8,18 @@ Lezione originale:
 - [x] presente -> assenza ingiustificata
 
 - [x] none -> assenza recuperabile
-- [x] assenza recuperabile (non programmata) -> presente
 - [x] assenza recuperabile (non programmata) -> reset
+- [x] assenza recuperabile (non programmata) -> presente
 - [x] none -> assenza ingiustificata
-- [x] assenza ingiustificata -> presente
 - [x] assenza ingiustificata -> reset
+- [x] assenza ingiustificata -> presente
 
 - [x] none -> prova
 - [x] prova -> reset
 
 - [x] none -> elimina
 - [x] presente -> elimina
+- [x] prova -> elimina
 - [x] assenza ingiustificata -> elimina
 - [x] assenza recuperabile (non programmata) -> elimina
 - [] assenza recuperabile (programmata ma non fatta) -> elimina

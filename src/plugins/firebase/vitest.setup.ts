@@ -1,9 +1,8 @@
+import { DatabaseRef } from "@/models/firestore-utils";
 import { collection, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
 import { beforeAll, beforeEach, vi } from "vitest";
 import getFirebase from ".";
 import seedData from "./seed.json" assert { type: "json" };
-import { DatabaseRef } from "@/models/firestore-utils";
-import { SchoolRepository } from "@/models/repositories/school-repository";
 
 const { firestore } = getFirebase();
 
@@ -78,13 +77,13 @@ async function seedFirestore() {
   console.log("Firestore seeded!");
 }
 
-beforeAll(async () => {
-  console.log("\n\n")
-  console.log("=".repeat(20))
-  await printdb();
-  console.log("=".repeat(20))
-  console.log("\n\n")
-})
+// beforeAll(async () => {
+//   console.log("\n\n")
+//   console.log("=".repeat(20))
+//   await printdb();
+//   console.log("=".repeat(20))
+//   console.log("\n\n")
+// })
 
 /** Hook to reset and seed Firestore before each test */
 beforeEach(async () => {

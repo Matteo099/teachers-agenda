@@ -262,7 +262,7 @@
                     "lessonId": "ad00833d-ff52-4ae9-8acb-41f92baf7215",
                     "startTime": 54600,
                     "endTime": 58200,
-                    "status": "NONE",
+                    "status": "UNJUSTIFIED_ABSENCE",
                     "updatedAt": {
                         "seconds": 1739524694,
                         "nanoseconds": 616000000
