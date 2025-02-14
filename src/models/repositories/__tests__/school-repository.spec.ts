@@ -3,14 +3,15 @@ import { describe, expect, it } from "vitest";
 
 describe("SchoolRepository", () => {
     it("retrieves a school by ID", async () => {
-        const school = await SchoolRepository.instance.get("90iUvnbTwH8SrylaSRM4");
+        const school = await SchoolRepository.instance.get("T0RYndQ7RkAjzmL3qjqJ");
         expect(school).toBeDefined();
         expect(school?.name).toBe("Fenice");
+        expect(school?.city).toBe("Servigliano");
     });
 
     it("retrieves all schools", async () => {
         const schools = await SchoolRepository.instance.getAll();
-        expect(schools.length).toBeGreaterThanOrEqual(4);
+        expect(schools.length).toBeGreaterThanOrEqual(2);
     });
 
     it("saves a new school and retrieves it", async () => {
@@ -32,7 +33,7 @@ describe("SchoolRepository", () => {
     });
 
     it("updates an existing school", async () => {
-        const id = "90iUvnbTwH8SrylaSRM4";
+        const id = "T0RYndQ7RkAjzmL3qjqJ";
         await SchoolRepository.instance.save({ name: "Updated Name" }, id);
 
         const updatedSchool = await SchoolRepository.instance.get(id);

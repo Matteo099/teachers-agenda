@@ -1,5 +1,5 @@
 import { collection, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
-import { beforeEach, vi } from "vitest";
+import { beforeAll, beforeEach, vi } from "vitest";
 import getFirebase from ".";
 import seedData from "./seed.json" assert { type: "json" };
 import { DatabaseRef } from "@/models/firestore-utils";
@@ -32,10 +32,27 @@ vi.mock("vuefire", async (importOriginal) => {
   }
 })
 
+async function printdb() {
+  const collections = Object.values(DatabaseRef);
+  const map: { [key: string]: any[] } = {};
+  for (const colName of collections) {
+    map[colName] = [];
+    const subcollectionPath = `${colName}/${user.uid}/user${colName.charAt(0).toUpperCase() + colName.slice(1)}`;
+    const colRef = collection(firestore, subcollectionPath);
+    const docs = await getDocs(colRef);
+    for (const docSnap of docs.docs) {
+      const data = { ...docSnap.data() };
+      data.id = docSnap.id;
+      map[colName]?.push(data);
+      // console.log(JSON.stringify(data));
+    }
+  }
+  console.log(JSON.stringify(map));
+}
+
 /** Resets all documents in Firestore */
 async function resetFirestore() {
   const collections = Object.keys(seedData); // Get collection names from seed.json
-  // const collections = Object.values(DatabaseRef);
   for (const colName of collections) {
     const subcollectionPath = `${colName}/${user.uid}/user${colName.charAt(0).toUpperCase() + colName.slice(1)}`;
     const colRef = collection(firestore, subcollectionPath);
@@ -60,6 +77,14 @@ async function seedFirestore() {
   }
   console.log("Firestore seeded!");
 }
+
+beforeAll(async () => {
+  console.log("\n\n")
+  console.log("=".repeat(20))
+  await printdb();
+  console.log("=".repeat(20))
+  console.log("\n\n")
+})
 
 /** Hook to reset and seed Firestore before each test */
 beforeEach(async () => {
