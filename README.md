@@ -141,3 +141,23 @@ Issue the command:
 where public/logo.jpeg is the source image.
 
 Finally, update the images in the folder public/img/icons.
+
+# Test
+
+To run the test use the command
+
+``` sh
+npm run test:full
+```
+
+If it does not work open 2 console in the root project and issue:
+
+- on the first terminal:
+    ``` sh
+    npm run test:firebase
+    ```
+
+- on the second terminal:
+    ``` sh
+    npm run test:integration
+    ```

@@ -2,15 +2,17 @@ import { SchoolRepository } from "@/models/repositories/school-repository";
 import { describe, expect, it } from "vitest";
 
 describe("SchoolRepository", () => {
+    let schoolRepository = SchoolRepository.instance;
+
     it("retrieves a school by ID", async () => {
-        const school = await SchoolRepository.instance.get("T0RYndQ7RkAjzmL3qjqJ");
+        const school = await schoolRepository.get("T0RYndQ7RkAjzmL3qjqJ");
         expect(school).toBeDefined();
         expect(school?.name).toBe("Fenice");
         expect(school?.city).toBe("Servigliano");
     });
 
     it("retrieves all schools", async () => {
-        const schools = await SchoolRepository.instance.getAll();
+        const schools = await schoolRepository.getAll();
         expect(schools.length).toBeGreaterThanOrEqual(2);
     });
 
@@ -25,28 +27,28 @@ describe("SchoolRepository", () => {
             trialLessonPaymentStrategy: 0,
         };
 
-        const id = await SchoolRepository.instance.save(newSchool);
+        const id = await schoolRepository.save(newSchool);
         expect(id).toBeDefined();
 
-        const savedSchool = await SchoolRepository.instance.get(id);
+        const savedSchool = await schoolRepository.get(id);
         expect(savedSchool?.name).toBe("Test School");
     });
 
     it("updates an existing school", async () => {
         const id = "T0RYndQ7RkAjzmL3qjqJ";
-        await SchoolRepository.instance.save({ name: "Updated Name" }, id);
+        await schoolRepository.save({ name: "Updated Name" }, id);
 
-        const updatedSchool = await SchoolRepository.instance.get(id);
+        const updatedSchool = await schoolRepository.get(id);
         expect(updatedSchool?.name).toBe("Updated Name");
     });
 
     it("deletes a school", async () => {
         const newSchool = { name: "To Be Deleted", managed: false };
-        const id = await SchoolRepository.instance.save(newSchool);
+        const id = await schoolRepository.save(newSchool);
         expect(id).toBeDefined();
 
-        await SchoolRepository.instance.delete(id);
-        const deletedSchool = await SchoolRepository.instance.get(id);
+        await schoolRepository.delete(id);
+        const deletedSchool = await schoolRepository.get(id);
         expect(deletedSchool).toBeUndefined();
     });
 });
