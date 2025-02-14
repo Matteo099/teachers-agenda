@@ -165,12 +165,12 @@
 import { signOut } from 'firebase/auth';
 import { computed, onMounted, ref, watch, type ComputedRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { toast } from 'vue3-toastify';
 import { useCurrentUser, useFirebaseAuth } from 'vuefire';
 import { useDisplay, useTheme } from 'vuetify';
 import { LocalStorageHandler } from './models/storage/local-storage-handler';
 import { stringToHslColor } from './models/utils';
 import { checkForNewVersion } from './models/utils/version';
-import { toast } from 'vue3-toastify';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);

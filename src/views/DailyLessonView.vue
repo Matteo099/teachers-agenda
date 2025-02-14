@@ -120,6 +120,7 @@ import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import SelectStudents from '@/components/inputs/SelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
+import { withCache } from '@/models/decorators/cache-decorator';
 import { LessonStatus, yyyyMMdd, type EventTime, type Lesson, type School, type Student, type StudentLesson2 } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
@@ -178,20 +179,20 @@ function getColor(event: Lesson): string {
 
 function getSelectedStudentLessons(event: StudentLesson2): StudentLesson2[] {
     const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.student.id == id)).filter(s => !!s);
-    if(event && "student" in event && "lesson" in event) _studentLessons.push(event);
+    if (event && "student" in event && "lesson" in event) _studentLessons.push(event);
     return _studentLessons;
 }
 
-async function present(event: StudentLesson2) {
-    try {
-        const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
-        await DailyLessonService2.instance.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson.value!, lessons);
-        selectedLessons.value = []
-    } catch (error) {
-        toast.warn("Impossibile impostare le presenze...")
-        console.error(error)
-    }
-}
+
+const present = withCache(async (event: StudentLesson2) => {
+    const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
+    await DailyLessonService2.instance.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson.value!, lessons);
+    selectedLessons.value = []
+}, (error) => {
+    toast.warn("Impossibile impostare le presenze...")
+    console.error(error)
+});
+
 async function absent(event: StudentLesson2, canRecover = true) {
     try {
         const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
