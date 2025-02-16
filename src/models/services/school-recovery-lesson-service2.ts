@@ -81,7 +81,7 @@ export class SchoolRecoveryLessonService2 {
     public async updateRecoveries(schoolId: ID, dailyLessonId: ID, lesson: Lesson) {
         const recovery = await this.getOrCreate(schoolId);
 
-        const { isRecoveryLesson, originalLessonRef } = this.getLessonRefs(lesson, dailyLessonId);
+        const { isRecoveryLesson, originalLessonRef, recoveryLessonRef } = this.getLessonRefs(lesson, dailyLessonId);
 
         if (lesson.status === LessonStatus.PRESENT) {
             if (!isRecoveryLesson) {
@@ -99,7 +99,7 @@ export class SchoolRecoveryLessonService2 {
             if (!isRecoveryLesson) {
                 this.updateRecovery(recovery, originalLessonRef);
             } else {
-                this.updateRecovery(recovery, originalLessonRef, RecoveryStatus.PENDING);
+                this.updateRecovery(recovery, originalLessonRef, RecoveryStatus.PENDING, recoveryLessonRef);
             }
         } else {
             console.warn("updateRecoveries() - nothing to update...");
@@ -115,7 +115,7 @@ export class SchoolRecoveryLessonService2 {
 
         const { isRecoveryLesson, originalLessonRef, recoveryLessonRef } = this.getLessonRefs(lesson, dailyLessonId);
 
-        if (!isRecoveryLesson) {
+        if (!isRecoveryLesson) {            
             this.updateRecovery(recovery, originalLessonRef);
             await SchoolRecoveryLessonRepository.instance.save(recovery, schoolId);
 

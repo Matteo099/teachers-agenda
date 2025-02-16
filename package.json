@@ -14,7 +14,7 @@
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:firebase": "firebase emulators:start --import emulator_data_test --config firebase-test.json",
-    "test:integration": "wait-on tcp:4000 && vitest",
+    "test:integration": "wait-on tcp:4000 && vitest --max-concurrency=1",
     "test:full": "npm-run-all --parallel test:firebase test:integration",
     "type-check": "vue-tsc --build --force"
   },

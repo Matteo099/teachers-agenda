@@ -6,8 +6,8 @@ import { StudentRepository } from "@/models/repositories/student-repository";
 import { SchoolRecoveryLessonRepository } from "@/models/repositories/recovery-lesson-repository";
 
 describe("DailyLessonService2.updateLessonsStatus", () => {
-    let dailyLessonService = DailyLessonService2.instance;
-    let dailyLessonRepository = DailyLessonRepository.instance;
+    const dailyLessonService = DailyLessonService2.instance;
+    const dailyLessonRepository = DailyLessonRepository.instance;
 
     it("should update lesson statuses correctly", async () => {
         // Retrieve an existing daily lesson
@@ -35,10 +35,10 @@ describe("DailyLessonService2.updateLessonsStatus", () => {
 });
 
 describe("DailyLessonService2.updateLessonsStatus - Original Lesson", () => {
-    let dailyLessonService = DailyLessonService2.instance;
-    let dailyLessonRepository = DailyLessonRepository.instance;
-    let studentRepository = StudentRepository.instance;
-    let schoolRecoveryLessonRepository = SchoolRecoveryLessonRepository.instance;
+    const dailyLessonService = DailyLessonService2.instance;
+    const dailyLessonRepository = DailyLessonRepository.instance;
+    const studentRepository = StudentRepository.instance;
+    const schoolRecoveryLessonRepository = SchoolRecoveryLessonRepository.instance;
 
     /**
      *  - [x] none -> presente
@@ -358,10 +358,10 @@ describe("DailyLessonService2.updateLessonsStatus - Original Lesson", () => {
 
 
 describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
-    let dailyLessonService = DailyLessonService2.instance;
-    let dailyLessonRepository = DailyLessonRepository.instance;
-    let studentRepository = StudentRepository.instance;
-    let schoolRecoveryLessonRepository = SchoolRecoveryLessonRepository.instance;
+    const dailyLessonService = DailyLessonService2.instance;
+    const dailyLessonRepository = DailyLessonRepository.instance;
+    const studentRepository = StudentRepository.instance;
+    const schoolRecoveryLessonRepository = SchoolRecoveryLessonRepository.instance;
 
     /**
      *  - [x] none -> elimina
@@ -502,23 +502,3 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
         // TODO
     });
 })
-
-
-describe("DailyLessonService2.TODO", () => {
-    let dailyLessonService = DailyLessonService2.instance;
-    let dailyLessonRepository = DailyLessonRepository.instance;
-    let studentRepository = StudentRepository.instance;
-    let schoolRecoveryLessonRepository = SchoolRecoveryLessonRepository.instance;
-
-    /**
-     *  - [x] da programmare -> programmata
-     *  - [x] programmata -> da programmare
-     */
-    it("Should schedule lesson UNSET => PENDING", async () => {
-        // TODO
-    });
-
-    it("Should unschedule lesson PENDING => UNSET", async () => {
-        // TODO
-    });
-});
