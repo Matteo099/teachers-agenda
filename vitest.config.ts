@@ -16,7 +16,7 @@ export default mergeConfig(
             root: fileURLToPath(new URL('./', import.meta.url)),
             globals: true,
             setupFiles: ["./src/plugins/firebase/vitest.setup.ts"],
-            testTimeout: 60 * 60 * 1000, // 1 hour
+            // testTimeout: 60 * 60 * 1000, // 1 hour
         }
     })
 )

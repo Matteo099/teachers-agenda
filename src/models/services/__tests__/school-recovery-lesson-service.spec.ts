@@ -62,7 +62,7 @@ describe("SchoolRecoveryLessonService2.schedule", () => {
         expect(recoveryDailyLesson.lessons[0].recovery?.ref).toBe('original');
         expect(recoveryDailyLesson.lessons[0].recovery?.lessonRef.dailyLessonId).toBe(recoveryAfterSchedule?.originalLesson?.dailyLessonId);
         expect(recoveryDailyLesson.lessons[0].recovery?.lessonRef.lessonId).toBe(recoveryAfterSchedule?.originalLesson?.lessonId);
-        
+
         originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(originalDailyLesson).toBeDefined();
         expect(originalDailyLesson.lessons[1].recovery).toBeDefined();
@@ -121,7 +121,7 @@ describe("SchoolRecoveryLessonService2.schedule", () => {
         // expect(recoveryDailyLesson.lessons[0].recovery?.ref).toBe('original');
         // expect(recoveryDailyLesson.lessons[0].recovery?.lessonRef.dailyLessonId).toBe(recoveryAfterSchedule?.originalLesson?.dailyLessonId);
         // expect(recoveryDailyLesson.lessons[0].recovery?.lessonRef.lessonId).toBe(recoveryAfterSchedule?.originalLesson?.lessonId);
-        
+
         // originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         // expect(originalDailyLesson).toBeDefined();
         // expect(originalDailyLesson.lessons[1].recovery).toBeDefined();

@@ -44,6 +44,9 @@ export class SchoolRecoveryLessonService2 {
         if (status === RecoveryStatus.PENDING) {
             recoveryEntry.recoveryLesson = info!;
         }
+        if (status === RecoveryStatus.UNSET) {
+            delete recoveryEntry.recoveryLesson;
+        }
         return true;
     }
 
@@ -115,7 +118,7 @@ export class SchoolRecoveryLessonService2 {
 
         const { isRecoveryLesson, originalLessonRef, recoveryLessonRef } = this.getLessonRefs(lesson, dailyLessonId);
 
-        if (!isRecoveryLesson) {            
+        if (!isRecoveryLesson) {
             this.updateRecovery(recovery, originalLessonRef);
             await SchoolRecoveryLessonRepository.instance.save(recovery, schoolId);
 
@@ -170,9 +173,27 @@ export class SchoolRecoveryLessonService2 {
 
     public async cancelRecovery(extStudentLesson: StudentLessonWithRecovery) {
         const originalDailyLesson = extStudentLesson.recoveryReference.originalDailyLesson;
-        const { originalLessonRef } = this.getLessonRefs(extStudentLesson.lesson, originalDailyLesson.id);
-        const originalLessonIndex = originalDailyLesson?.lessons.findIndex(l => l.lessonId == originalLessonRef?.lessonId);
+        const recoveryDailyLesson = extStudentLesson.recoveryReference.recoveryDailyLesson!;
+        const schoolId = originalDailyLesson.schoolId;
+        const { originalLessonRef, recoveryLessonRef } = this.getLessonRefs(extStudentLesson.lesson, originalDailyLesson.id);
+        const originalLesson = originalDailyLesson.lessons.find(l => l.lessonId == originalLessonRef.lessonId);
+        const recoveryLesson = recoveryDailyLesson.lessons.find(l => l.lessonId == recoveryLessonRef?.lessonId);
 
-        await this.resetRecoveries(originalDailyLesson, originalDailyLesson.lessons[originalLessonIndex]);
+        if (!originalLesson) {
+            console.warn("Unable to cancel recovery because original lesson is undefined")
+            return;
+        }
+
+        if (!recoveryLesson) {
+            console.warn("Unable to cancel recovery because recovery lesson is undefined")
+            return;
+        }
+
+        // delete recovery lesson
+        await DailyLessonService2.instance.deleteLessons(recoveryDailyLesson, true, [recoveryLesson]);
+        // remove recovery ref
+        await this.removeRecoveryRef(originalDailyLesson, originalLessonRef.lessonId);
+        // update original lesson status => UNSET
+        await this.updateRecoveries(schoolId, originalDailyLesson.id, originalLesson);
     }
 }
