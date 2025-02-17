@@ -209,6 +209,7 @@ export class DailyLessonService2 {
                 newDailyLesson.lessons.sort((a, b) => a.startTime - b.startTime);
                 await DailyLessonRepository.instance.save(newDailyLesson, newDailyLessonId);
             }
+            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
         } else throw new Error("Unable to move the lesson because the new daily lesson is undefined!");
     }
 

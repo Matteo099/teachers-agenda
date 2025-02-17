@@ -1,4 +1,4 @@
-import { LessonStatus, RecoveryStatus, Time, type DailyLesson, type RecoverySchedule } from "@/models/model";
+import { LessonStatus, RecoveryStatus, Time, yyyyMMdd, type DailyLesson, type RecoverySchedule } from "@/models/model";
 import { DailyLessonRepository } from "@/models/repositories/daily-lesson-repository";
 import { describe, expect, it } from "vitest";
 import { DailyLessonService2 } from "../daily-lesson-service2";
@@ -373,8 +373,8 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
      *  - [x] prova -> elimina
      *  - [x] assenza ingiustificata -> elimina
      *  - [x] assenza recuperabile (non programmata) -> elimina
-     *  - [] assenza recuperabile (programmata ma non fatta) -> elimina
-     *  - [] assenza recuperabile (programmata e fatta) -> elimina
+     *  - [x] assenza recuperabile (programmata ma non fatta) -> elimina
+     *  - [x] assenza recuperabile (programmata e fatta) -> elimina
      */
     it("Should delete lesson NONE => DELETED", async () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
@@ -543,3 +543,82 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
         // TODO
     });
 })
+
+
+describe("DailyLessonService2.moveLessons - Original Lesson", () => {
+    const dailyLessonService = DailyLessonService2.instance;
+    const dailyLessonRepository = DailyLessonRepository.instance;
+    const studentRepository = StudentRepository.instance;
+    const schoolRecoveryLessonRepository = SchoolRecoveryLessonRepository.instance;
+    const schoolRecoveryService = SchoolRecoveryLessonService2.instance;
+    const schoolRecoveryServiceExt = SchoolRecoveryLessonExtService.instance;
+
+    /**
+     *  - [x] move lesson to empty day
+     */
+    it("Should move lesson to an empty day", async () => {
+        const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
+        const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
+        const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        const lessonToMove = dailyLesson.lessons[0];
+
+        // sunday 12th february 2025
+        const newDate = new Date(2025, 1, 12);
+
+        // Delete lesson
+        await dailyLessonService.moveLessons(dailyLesson, newDate, [lessonToMove]);
+
+        // Fetch updated lesson
+        const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        expect(updatedDailyLesson).not.toBeNull();
+        expect(updatedDailyLesson.lessons.length).toBe(3);
+        for (let index = 0; index < dailyLesson.lessons.length; index++) {
+            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+        }
+        expect(updatedDailyLesson.lessons[0].moved).toBeDefined();
+        expect(updatedDailyLesson.lessons[0].moved?.ref).toBe('moved');
+
+        const movedDailyLesson = (await dailyLessonRepository.get(updatedDailyLesson.lessons[0].moved!.lessonRef.dailyLessonId))!;
+        expect(movedDailyLesson).toBeDefined();
+        expect(movedDailyLesson.date).toBe(yyyyMMdd.fromDate(newDate).toIyyyyMMdd());
+        expect(updatedDailyLesson.lessons[0].moved?.lessonRef.dailyLessonId).toBe(movedDailyLesson.id);
+        expect(updatedDailyLesson.lessons[0].moved?.lessonRef.lessonId).toBe(movedDailyLesson.lessons[0].lessonId);
+        expect(movedDailyLesson.lessons[0].moved).toBeDefined();
+        expect(movedDailyLesson.lessons[0].moved?.ref).toBe('original');
+        expect(movedDailyLesson.lessons[0].moved?.lessonRef.dailyLessonId).toBe(updatedDailyLesson.id);
+        expect(movedDailyLesson.lessons[0].moved?.lessonRef.lessonId).toBe(updatedDailyLesson.lessons[0].lessonId);
+    });
+
+    it("Should move lesson to a full day", async () => {
+        const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
+        const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
+        const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        const lessonToMove = dailyLesson.lessons[0];
+
+        // monday 3th jenuary 2025
+        const newDate = yyyyMMdd.fromIyyyyMMdd("20250103").toDate();
+
+        // Delete lesson
+        await dailyLessonService.moveLessons(dailyLesson, newDate, [lessonToMove]);
+
+        // Fetch updated lesson
+        const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        expect(updatedDailyLesson).not.toBeNull();
+        expect(updatedDailyLesson.lessons.length).toBe(3);
+        for (let index = 0; index < dailyLesson.lessons.length; index++) {
+            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+        }
+        expect(updatedDailyLesson.lessons[0].moved).toBeDefined();
+        expect(updatedDailyLesson.lessons[0].moved?.ref).toBe('moved');
+
+        const movedDailyLesson = (await dailyLessonRepository.get(updatedDailyLesson.lessons[0].moved!.lessonRef.dailyLessonId))!;
+        expect(movedDailyLesson).toBeDefined();
+        expect(movedDailyLesson.date).toBe(yyyyMMdd.fromDate(newDate).toIyyyyMMdd());
+        expect(updatedDailyLesson.lessons[0].moved?.lessonRef.dailyLessonId).toBe(movedDailyLesson.id);
+        expect(updatedDailyLesson.lessons[0].moved?.lessonRef.lessonId).toBe(movedDailyLesson.lessons[1].lessonId);
+        expect(movedDailyLesson.lessons[1].moved).toBeDefined();
+        expect(movedDailyLesson.lessons[1].moved?.ref).toBe('original');
+        expect(movedDailyLesson.lessons[1].moved?.lessonRef.dailyLessonId).toBe(updatedDailyLesson.id);
+        expect(movedDailyLesson.lessons[1].moved?.lessonRef.lessonId).toBe(updatedDailyLesson.lessons[0].lessonId);
+    });
+});
