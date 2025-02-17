@@ -1,4 +1,4 @@
-import { RecoveryStatus, Time, yyyyMMdd, type RecoverySchedule } from "@/models/model";
+import { LessonStatus, RecoveryStatus, Time, yyyyMMdd, type RecoverySchedule } from "@/models/model";
 import { DailyLessonRepository } from "@/models/repositories/daily-lesson-repository";
 import { SchoolRecoveryLessonRepository } from "@/models/repositories/recovery-lesson-repository";
 import { describe, expect, it } from "vitest";
@@ -75,7 +75,7 @@ describe("SchoolRecoveryLessonService2.schedule", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         let schoolRecovery = (await schoolRecoveryService.getOrCreate(schoolId));
-        const originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        let originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         let extendedRecoveries = await schoolRecoveryServiceExt.computeDailyLessons(schoolRecovery);
         let recoveries = extendedRecoveries.recoveryMap.get(RecoveryStatus.UNSET);
         let recovery = recoveries![0];
@@ -100,33 +100,25 @@ describe("SchoolRecoveryLessonService2.schedule", () => {
         extendedRecoveries = await schoolRecoveryServiceExt.computeDailyLessons(schoolRecovery);
         recoveries = extendedRecoveries.recoveryMap.get(RecoveryStatus.PENDING);
         recovery = recoveries![0];
+        const recoveryDailyLessonId = recovery.recoveryReference.recoveryDailyLesson?.id;
         await schoolRecoveryService.cancelRecovery(recovery);
 
 
         // Check school recovery
         schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId))!;
         const recoveryAfterCancel = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == originalDailyLesson.lessons[1].lessonId)
-        console.log(schoolRecovery);
         expect(recoveryAfterCancel).toBeDefined();
         expect(recoveryAfterCancel?.status).toBe(RecoveryStatus.UNSET);
         expect(recoveryAfterCancel?.originalLesson).toBeDefined();
         expect(recoveryAfterCancel?.recoveryLesson).not.toBeDefined();
 
-        // const recoveryDailyLesson = (await dailyLessonService.getDailyLessonOfSchoolByDate(schoolId, yyyyMMdd.fromDate(date).toIyyyyMMdd()))[0];
-        // expect(recoveryDailyLesson).toBeDefined();
-        // expect(recoveryAfterSchedule?.recoveryLesson).toBeDefined();
-        // expect(recoveryAfterSchedule?.recoveryLesson?.dailyLessonId).toBe(recoveryDailyLesson.id);
-        // expect(recoveryAfterSchedule?.recoveryLesson?.lessonId).toBe(recoveryDailyLesson.lessons[0].lessonId);
-        // expect(recoveryDailyLesson.lessons[0].recovery).toBeDefined();
-        // expect(recoveryDailyLesson.lessons[0].recovery?.ref).toBe('original');
-        // expect(recoveryDailyLesson.lessons[0].recovery?.lessonRef.dailyLessonId).toBe(recoveryAfterSchedule?.originalLesson?.dailyLessonId);
-        // expect(recoveryDailyLesson.lessons[0].recovery?.lessonRef.lessonId).toBe(recoveryAfterSchedule?.originalLesson?.lessonId);
+        // Check recovery daily lesson does not exist
+        expect((await dailyLessonRepository.get(recoveryDailyLessonId!))).not.toBeDefined();
 
-        // originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        // expect(originalDailyLesson).toBeDefined();
-        // expect(originalDailyLesson.lessons[1].recovery).toBeDefined();
-        // expect(originalDailyLesson.lessons[1].recovery?.ref).toBe('recovery');
-        // expect(originalDailyLesson.lessons[1].recovery?.lessonRef.dailyLessonId).toBe(recoveryDailyLesson.id);
-        // expect(originalDailyLesson.lessons[1].recovery?.lessonRef.lessonId).toBe(recoveryDailyLesson.lessons[0].lessonId);
+        // Check original lesson
+        originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        expect(originalDailyLesson).toBeDefined();
+        expect(originalDailyLesson.lessons[1].status).toBe(LessonStatus.ABSENT);
+        expect(originalDailyLesson.lessons[1].recovery).not.toBeDefined();
     });
 });

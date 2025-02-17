@@ -22,9 +22,9 @@ Lezione originale:
 - [x] prova -> elimina
 - [x] assenza ingiustificata -> elimina
 - [x] assenza recuperabile (non programmata) -> elimina
-- [] assenza recuperabile (programmata ma non fatta) -> elimina
+- [x] assenza recuperabile (programmata ma non fatta) -> elimina
     - non viene aggiornato l'array recoveryLessons.recoveries => rimane la lezione da recuperare...
-- [] assenza recuperabile (programmata e fatta) -> elimina
+- [x] assenza recuperabile (programmata e fatta) -> elimina
 
 - [] sposta
 - [] modifica orario
