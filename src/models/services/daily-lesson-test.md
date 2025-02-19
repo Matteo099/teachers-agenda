@@ -23,10 +23,10 @@ Lezione originale:
 - [x] assenza ingiustificata -> elimina
 - [x] assenza recuperabile (non programmata) -> elimina
 - [x] assenza recuperabile (programmata ma non fatta) -> elimina
-    - non viene aggiornato l'array recoveryLessons.recoveries => rimane la lezione da recuperare...
-- [x] assenza recuperabile (programmata e fatta) -> elimina
+- [] assenza recuperabile (programmata e fatta) -> elimina
 
-- [] sposta
+- [x] sposta -> lezione nuova
+- [x] sposta -> lezione con altre lezioni
 - [] modifica orario
 - [] note
 
@@ -39,9 +39,14 @@ Lezione da recuperare:
 
 Lezione di recupero:
 
-- [] presente
-- [] assenza
-- [] reset
+- [] none -> presente
+- [] none -> assente
+- [] presente -> reset
+- [] presente -> assente
+- [] assente -> reset
+- [] assente -> presente
+- [] none -> elimina
+- [] presente -> elimina
+- [] assente -> elimina
 - [] modifica orario
 - [] note
-- [] elimina

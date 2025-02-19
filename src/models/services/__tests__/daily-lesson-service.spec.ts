@@ -374,7 +374,7 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
      *  - [x] assenza ingiustificata -> elimina
      *  - [x] assenza recuperabile (non programmata) -> elimina
      *  - [x] assenza recuperabile (programmata ma non fatta) -> elimina
-     *  - [x] assenza recuperabile (programmata e fatta) -> elimina
+     *  - [] assenza recuperabile (programmata e fatta) -> elimina
      */
     it("Should delete lesson NONE => DELETED", async () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
@@ -540,7 +540,52 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
     });
 
     it("Should delete lesson DONE RECOVERABLE_ABSENCE => DELETED", async () => {
-        // TODO
+        const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
+        const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
+        let schoolRecovery = (await schoolRecoveryService.getOrCreate(schoolId));
+        let originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        let extendedRecoveries = await schoolRecoveryServiceExt.computeDailyLessons(schoolRecovery);
+        let recoveries = extendedRecoveries.recoveryMap.get(RecoveryStatus.UNSET);
+        let recovery = recoveries![0];
+        let lessonToDelete = originalDailyLesson.lessons[1];
+
+        // sunday 12th february 2025
+        const date = new Date(2025, 1, 12);
+        const startTime = Time.fromHHMM("12:00")!;
+        const schedule: RecoverySchedule = {
+            studentId: recovery.student.id,
+            schoolId,
+            originalDailyLessonId: dailyLessonId,
+            originalLessonId: recovery.lesson.lessonId,
+            date,
+            startTime: startTime.toITime(),
+            endTime: startTime.add({ minutes: recovery.student.minutesLessonDuration }).toITime()
+        }
+        // Schedule recovery
+        await schoolRecoveryService.scheduleRecovery(recovery, schedule);
+        originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        const recoveryLessonRef = originalDailyLesson.lessons[1].recovery;
+        // Set status present
+        let recoveryDailyLesson = (await dailyLessonRepository.get(recoveryLessonRef!.lessonRef.dailyLessonId))!;
+        const recoveryLesson = recoveryDailyLesson.lessons[0];
+        dailyLessonService.updateLessonsStatus(LessonStatus.PRESENT, recoveryDailyLesson, [recoveryLesson]);
+
+        // Delete lesson
+        await dailyLessonService.deleteLessons(originalDailyLesson, true, [lessonToDelete]);
+
+        // TODO: checks!!!
+
+        // // Fetch updated lesson
+        // originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        // expect(originalDailyLesson).not.toBeNull();
+        // expect(originalDailyLesson.lessons.length).toBe(2);
+        // expect(originalDailyLesson.lessons[0].status).toBe(LessonStatus.PRESENT);
+        // expect(originalDailyLesson.lessons[1].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+
+        // // Check school recovery
+        // schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId))!;
+        // const screcovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == lessonToDelete.lessonId)
+        // expect(screcovery).not.toBeDefined();
     });
 })
 
@@ -548,10 +593,6 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
 describe("DailyLessonService2.moveLessons - Original Lesson", () => {
     const dailyLessonService = DailyLessonService2.instance;
     const dailyLessonRepository = DailyLessonRepository.instance;
-    const studentRepository = StudentRepository.instance;
-    const schoolRecoveryLessonRepository = SchoolRecoveryLessonRepository.instance;
-    const schoolRecoveryService = SchoolRecoveryLessonService2.instance;
-    const schoolRecoveryServiceExt = SchoolRecoveryLessonExtService.instance;
 
     /**
      *  - [x] move lesson to empty day
