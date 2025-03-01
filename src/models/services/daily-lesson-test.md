@@ -23,7 +23,7 @@ Lezione originale:
 - [x] assenza ingiustificata -> elimina
 - [x] assenza recuperabile (non programmata) -> elimina
 - [x] assenza recuperabile (programmata ma non fatta) -> elimina
-- [] assenza recuperabile (programmata e fatta) -> elimina
+- [x] assenza recuperabile (programmata e fatta) -> elimina
 
 - [x] sposta -> lezione nuova
 - [x] sposta -> lezione con altre lezioni

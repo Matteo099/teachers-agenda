@@ -26,9 +26,9 @@ export class LessonService {
         }
     }
 
-    public async resetLesson(dailyLesson: DailyLesson, lesson: Lesson) {
+    public async resetLesson(dailyLesson: DailyLesson, lesson: Lesson, toDelete: boolean = false) {
         await this.updateLessonStatus(LessonStatus.NONE, dailyLesson, lesson);
-        await SchoolRecoveryLessonService2.instance.resetRecoveries(dailyLesson, lesson);
+        await SchoolRecoveryLessonService2.instance.resetRecoveries(dailyLesson, lesson, toDelete);
     }
 
     public createFrom(lesson: Lesson, newId?: ID): Lesson {

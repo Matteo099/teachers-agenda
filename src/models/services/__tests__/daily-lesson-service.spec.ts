@@ -506,7 +506,7 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
         const extendedRecoveries = await schoolRecoveryServiceExt.computeDailyLessons(schoolRecovery);
         const recoveries = extendedRecoveries.recoveryMap.get(RecoveryStatus.UNSET);
         const recovery = recoveries![0];
-        const lessonToDelete = originalDailyLesson.lessons[1];
+        let lessonToDelete = originalDailyLesson.lessons[1];
 
         // sunday 12th february 2025
         const date = new Date(2025, 1, 12);
@@ -523,6 +523,7 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
         // Schedule recovery
         await schoolRecoveryService.scheduleRecovery(recovery, schedule);
         originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        lessonToDelete = originalDailyLesson.lessons[1];
         const recoveryLessonRef = originalDailyLesson.lessons[1].recovery;
 
         // Delete lesson
@@ -551,7 +552,7 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
         const extendedRecoveries = await schoolRecoveryServiceExt.computeDailyLessons(schoolRecovery);
         const recoveries = extendedRecoveries.recoveryMap.get(RecoveryStatus.UNSET);
         const recovery = recoveries![0];
-        const lessonToDelete = originalDailyLesson.lessons[1];
+        let lessonToDelete = originalDailyLesson.lessons[1];
 
         // sunday 12th february 2025
         const date = new Date(2025, 1, 12);
@@ -573,6 +574,9 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
         let recoveryDailyLesson = (await dailyLessonRepository.get(recoveryLessonRef!.lessonRef.dailyLessonId))!;
         const recoveryLesson = recoveryDailyLesson.lessons[0];
         dailyLessonService.updateLessonsStatus(LessonStatus.PRESENT, recoveryDailyLesson, [recoveryLesson]);
+        
+        originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        lessonToDelete = originalDailyLesson.lessons[1];
 
         // Delete lesson
         await dailyLessonService.deleteLessons(originalDailyLesson, true, [lessonToDelete]);
@@ -589,6 +593,7 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
         // Check school recovery
         schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId))!;
         const screcovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == lessonToDelete.lessonId)
+        console.log(screcovery);
         expect(screcovery).not.toBeDefined();
     });
 })

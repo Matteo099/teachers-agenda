@@ -111,7 +111,7 @@ export class SchoolRecoveryLessonService2 {
         await SchoolRecoveryLessonRepository.instance.save(recovery, schoolId);
     }
 
-    public async resetRecoveries(dailyLesson: DailyLesson, lesson: Lesson) {
+    public async resetRecoveries(dailyLesson: DailyLesson, lesson: Lesson, toDelete: boolean = false) {
         const schoolId: ID = dailyLesson.schoolId;
         const dailyLessonId: ID = dailyLesson.id;
         const recovery = await this.getOrCreate(schoolId);
@@ -132,17 +132,20 @@ export class SchoolRecoveryLessonService2 {
                 else console.warn("unable to remove recovery lesson")
             }
         } else {
-            this.updateRecovery(recovery, originalLessonRef, RecoveryStatus.PENDING, recoveryLessonRef);
+            if (toDelete) this.updateRecovery(recovery, originalLessonRef);
+            else {
+                this.updateRecovery(recovery, originalLessonRef, RecoveryStatus.PENDING, recoveryLessonRef);
 
-            const originalDailyLesson = await DailyLessonRepository.instance.get(originalLessonRef.dailyLessonId);
-            const recoveryDailyLesson = await DailyLessonRepository.instance.get(dailyLessonId);
+                const originalDailyLesson = await DailyLessonRepository.instance.get(originalLessonRef.dailyLessonId);
+                const recoveryDailyLesson = await DailyLessonRepository.instance.get(dailyLessonId);
 
-            if (originalDailyLesson && recoveryDailyLesson) {
-                const originalRef: RecoveryLessonInfo = { lessonRef: { ...originalLessonRef }, ref: 'original' };
-                const recoveryRef: RecoveryLessonInfo = { lessonRef: { ...recoveryLessonRef! }, ref: 'recovery' };
+                if (originalDailyLesson && recoveryDailyLesson) {
+                    const originalRef: RecoveryLessonInfo = { lessonRef: { ...originalLessonRef }, ref: 'original' };
+                    const recoveryRef: RecoveryLessonInfo = { lessonRef: { ...recoveryLessonRef! }, ref: 'recovery' };
 
-                await this.setRecoveryRef(originalDailyLesson, originalLessonRef.lessonId, recoveryRef);
-                await this.setRecoveryRef(recoveryDailyLesson, recoveryLessonRef!.lessonId, originalRef);
+                    await this.setRecoveryRef(originalDailyLesson, originalLessonRef.lessonId, recoveryRef);
+                    await this.setRecoveryRef(recoveryDailyLesson, recoveryLessonRef!.lessonId, originalRef);
+                }
             }
 
             await SchoolRecoveryLessonRepository.instance.save(recovery, schoolId);
