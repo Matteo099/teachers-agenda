@@ -39,12 +39,12 @@ Lezione da recuperare:
 
 Lezione di recupero:
 
-- [] none -> presente
-- [] none -> assente
-- [] presente -> reset
-- [] presente -> assente
-- [] assente -> reset
-- [] assente -> presente
+- [x] none -> presente
+- [x] presente -> reset
+- [x] presente -> assente
+- [x] none -> assente
+- [x] assente -> reset
+- [x] assente -> presente
 - [] none -> elimina
 - [] presente -> elimina
 - [] assente -> elimina

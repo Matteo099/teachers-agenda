@@ -152,7 +152,7 @@ export class SchoolRecoveryLessonService2 {
         }
     }
 
-    public async scheduleRecovery(extStudentLesson: StudentLessonWithRecovery, schedule: RecoverySchedule) {
+    public async scheduleRecovery(extStudentLesson: StudentLessonWithRecovery, schedule: RecoverySchedule): Promise<LessonRef> {
         const schoolId = extStudentLesson.recoveryReference.originalDailyLesson.schoolId;
         const recovery = await this.getOrCreate(schoolId);
 
@@ -172,6 +172,8 @@ export class SchoolRecoveryLessonService2 {
         this.updateRecovery(recovery, ref, RecoveryStatus.PENDING, info)
 
         await SchoolRecoveryLessonRepository.instance.save(recovery, schoolId);
+
+        return info;
     }
 
     public async cancelRecovery(extStudentLesson: StudentLessonWithRecovery) {
