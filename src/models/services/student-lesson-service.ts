@@ -1,5 +1,5 @@
 import type { Ref } from "vue";
-import type { DailyLesson, Student, StudentLesson, StudentLesson2 } from "../model";
+import type { DailyLesson, Student, StudentLesson } from "../model";
 import { arraysHaveSameElements } from "../utils";
 import { StudentService } from "./student-service";
 
@@ -17,21 +17,21 @@ export class StudentLessonService {
         const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.schoolId, stundetIds);
         return dailyLesson.lessons.map(l => {
             const s = data.find(st => st.id == l.studentId)!;
-            return { ...l, ...s };
+            return { lesson: l, student: s };
         });
     }
 
-    public async updateStudentLesson2(dailyLesson: DailyLesson, studentLessons: StudentLesson2[], loading?: Ref<boolean>): Promise<StudentLesson2[]> {
+    public async updateStudentLesson(dailyLesson: DailyLesson, studentLessons: StudentLesson[], loading?: Ref<boolean>): Promise<StudentLesson[]> {
         const currentStudentsId: string[] = studentLessons.map(s => s.lesson.studentId);
         const newStudentsId: string[] = dailyLesson.lessons.map(l => l.studentId);
 
         const differentStudents = !arraysHaveSameElements(currentStudentsId, newStudentsId);
         let students: Student[] = studentLessons.map(sl => sl.student);
         if (differentStudents) {
-            if(loading) loading.value = true
+            if (loading) loading.value = true
             const stundetIds = dailyLesson.lessons.map(l => l.studentId);
             students = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.schoolId, stundetIds);
-            if(loading) loading.value = false
+            if (loading) loading.value = false
         }
 
         studentLessons.length = 0;

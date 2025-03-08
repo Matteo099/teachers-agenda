@@ -2,15 +2,15 @@ import { LessonStatus, RecoveryStatus, Time, type EventTime, type RecoverySchedu
 import { DailyLessonRepository } from "@/models/repositories/daily-lesson-repository";
 import { SchoolRecoveryLessonRepository } from "@/models/repositories/recovery-lesson-repository";
 import { describe, expect, it } from "vitest";
-import { DailyLessonService2 } from "../daily-lesson-service2";
+import { DailyLessonService } from "../daily-lesson-service";
 import { SchoolRecoveryLessonExtService } from "../school-recovery-lesson-ext-service";
-import { SchoolRecoveryLessonService2 } from "../school-recovery-lesson-service2";
+import { SchoolRecoveryLessonService } from "../school-recovery-lesson-service";
 
-describe("DailyLessonService2.updateLessonsStatus - Recovery Lesson", () => {
-    const dailyLessonService = DailyLessonService2.instance;
+describe("DailyLessonService.updateLessonsStatus - Recovery Lesson", () => {
+    const dailyLessonService = DailyLessonService.instance;
     const dailyLessonRepository = DailyLessonRepository.instance;
     const schoolRecoveryLessonRepository = SchoolRecoveryLessonRepository.instance;
-    const schoolRecoveryService = SchoolRecoveryLessonService2.instance;
+    const schoolRecoveryService = SchoolRecoveryLessonService.instance;
     const schoolRecoveryServiceExt = SchoolRecoveryLessonExtService.instance;
     const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc"
     const schoolId = "T0RYndQ7RkAjzmL3qjqJ"
@@ -182,11 +182,11 @@ describe("DailyLessonService2.updateLessonsStatus - Recovery Lesson", () => {
     });
 });
 
-describe("DailyLessonService2.deleteLessons - Recovery Lesson", () => {
-    const dailyLessonService = DailyLessonService2.instance;
+describe("DailyLessonService.deleteLessons - Recovery Lesson", () => {
+    const dailyLessonService = DailyLessonService.instance;
     const dailyLessonRepository = DailyLessonRepository.instance;
     const schoolRecoveryLessonRepository = SchoolRecoveryLessonRepository.instance;
-    const schoolRecoveryService = SchoolRecoveryLessonService2.instance;
+    const schoolRecoveryService = SchoolRecoveryLessonService.instance;
     const schoolRecoveryServiceExt = SchoolRecoveryLessonExtService.instance;
     const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc"
     const schoolId = "T0RYndQ7RkAjzmL3qjqJ"
@@ -285,10 +285,10 @@ describe("DailyLessonService2.deleteLessons - Recovery Lesson", () => {
     });
 })
 
-describe("DailyLessonService2.updateLessonTime - Recovery Lesson", () => {
-    const dailyLessonService = DailyLessonService2.instance;
+describe("DailyLessonService.updateLessonTime - Recovery Lesson", () => {
+    const dailyLessonService = DailyLessonService.instance;
     const dailyLessonRepository = DailyLessonRepository.instance;
-    const schoolRecoveryService = SchoolRecoveryLessonService2.instance;
+    const schoolRecoveryService = SchoolRecoveryLessonService.instance;
     const schoolRecoveryServiceExt = SchoolRecoveryLessonExtService.instance;
     const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc"
     const schoolId = "T0RYndQ7RkAjzmL3qjqJ"

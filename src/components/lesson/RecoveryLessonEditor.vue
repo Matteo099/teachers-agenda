@@ -98,7 +98,7 @@ async function loadDailyLesson() {
     // load dailyLesson
     loadingDailyLesson.value = true;
     try {
-        dailyLesson.value = (await DailyLessonService.instance.getDailyLessonOfSchoolByDate(props.schoolId, currentDate))?.[0];
+        dailyLesson.value = await DailyLessonService.instance.getDailyLessonOfSchoolByDate(props.schoolId, currentDate);
         if (dailyLesson.value == undefined) {
             const wl = await loadWeeklyLesson(currentDate);
             let dl: Partial<DailyLesson>;

@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import { Time, yyyyMMdd, type RecoverySchedule, type School } from '@/models/model';
-import { SchoolRecoveryLessonService2, type StudentLessonWithRecovery } from '@/models/services/school-recovery-lesson-service2';
+import { SchoolRecoveryLessonService, type StudentLessonWithRecovery } from '@/models/services/school-recovery-lesson-service';
 import { useForm, type GenericObject } from 'vee-validate';
 import { ref } from 'vue';
 import { toast } from 'vue3-toastify';
@@ -104,7 +104,7 @@ async function scheduleRecovery() {
             startTime: startTime.toITime(),
             endTime: startTime.add({ minutes: recovery.value.student.minutesLessonDuration }).toITime()
         }
-        await SchoolRecoveryLessonService2.instance.scheduleRecovery(recovery.value, schedule);
+        await SchoolRecoveryLessonService.instance.scheduleRecovery(recovery.value, schedule);
         scheduleRecoveryDialog.value = false
     } catch (error) {
         toast.error("Impossibile schedulare la lezione di recupero")

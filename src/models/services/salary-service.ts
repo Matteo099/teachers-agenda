@@ -1,4 +1,4 @@
-import { LessonStatus, SalaryStrategy, TrialLessonPaymentStrategy, type DailyLesson, type IyyyyMMdd, type Lesson, type Salary, type School, type Student, type StudentLesson, type StudentLesson2 } from "../model";
+import { LessonStatus, SalaryStrategy, TrialLessonPaymentStrategy, type DailyLesson, type IyyyyMMdd, type Lesson, type Salary, type School, type Student } from "../model";
 import { StudentRepository } from "../repositories/student-repository";
 import { DailyLessonService } from "./daily-lesson-service";
 import { StudentService } from "./student-service";

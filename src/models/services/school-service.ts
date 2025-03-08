@@ -8,9 +8,9 @@ import { SchoolRepository } from "../repositories/school-repository";
 import { StudentRepository } from "../repositories/student-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
 import { nameof } from "../utils";
-import { DailyLessonService } from "./daily-lesson-service";
 import { type SchoolLessons } from "./lesson-group-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
+import { DailyLessonService } from "./daily-lesson-service";
 
 export class SchoolService {
 

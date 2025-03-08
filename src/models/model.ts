@@ -399,9 +399,7 @@ export const recoveryTypes = {
     [RecoveryStatus.DONE]: "Lezioni di Recupero Completate"
 };
 
-
-export type StudentLesson = Lesson & Student;
-export interface StudentLesson2 {
+export interface StudentLesson {
     lesson: Lesson
     student: Student
 }
@@ -429,9 +427,9 @@ export const updateDailyLessonTime = function (startingTimeInSeconds: number | s
 
     if (Array.isArray(studentLessons)) {
         studentLessons.forEach(sl => {
-            sl.startTime = startingMinutes * 60;
-            startingMinutes += sl.minutesLessonDuration;
-            sl.endTime = startingMinutes * 60;
+            sl.lesson.startTime = startingMinutes * 60;
+            startingMinutes += sl.student.minutesLessonDuration;
+            sl.lesson.endTime = startingMinutes * 60;
         })
     } else {
         studentLessons.scheduledLessons.forEach(sl => {

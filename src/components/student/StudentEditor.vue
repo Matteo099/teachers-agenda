@@ -23,8 +23,7 @@
                             <v-fab-transition>
                                 <v-btn v-if="levelHistoryVisible" icon="mdi-chevron-up"
                                     @click="toggleLevelHistory"></v-btn>
-                                <v-btn v-else="levelHistoryVisible" icon="mdi-chevron-down"
-                                    @click="toggleLevelHistory"></v-btn>
+                                <v-btn v-else icon="mdi-chevron-down" @click="toggleLevelHistory"></v-btn>
                             </v-fab-transition>
                         </template>
                     </v-select>

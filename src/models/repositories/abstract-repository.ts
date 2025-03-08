@@ -1,8 +1,8 @@
 import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData } from "firebase/firestore";
-import { getCurrentUser, useCurrentUser } from "vuefire";
-import { QueryEvent, type IQueryEvent } from "../utils/event";
 import { computed, type Ref } from "vue";
+import { useCurrentUser } from "vuefire";
 import { DatabaseCache } from "../decorators/database-cache";
+import { QueryEvent, type IQueryEvent } from "../utils/event";
 
 export type ID = string;
 

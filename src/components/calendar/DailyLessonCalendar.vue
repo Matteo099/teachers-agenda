@@ -153,14 +153,13 @@ function updateCalendarBoundaries() {
 function transformModel(): CalendarEventExt[] {
     const date = props.date.toIyyyyMMdd("-", 1);
     return model.value.map(sl => {
-        if ("lessonId" in sl) {
-            console.log(sl);
+        if ("lesson" in sl) {
             return {
-                id: sl.lessonId,
-                start: date + " " + Time.fromITime(sl.startTime).format(),
-                end: date + " " + Time.fromITime(sl.endTime).format(),
-                title: `${sl.name} ${sl.surname} - ${days[sl.lessonDay ?? 0]}`,
-                calendarId: sl.schoolId.toLowerCase(),
+                id: sl.lesson.lessonId,
+                start: date + " " + Time.fromITime(sl.lesson.startTime).format(),
+                end: date + " " + Time.fromITime(sl.lesson.endTime).format(),
+                title: `${sl.student.name} ${sl.student.surname} - ${days[sl.student.lessonDay ?? 0]}`,
+                calendarId: sl.lesson.schoolId.toLowerCase(),
                 data: { ...sl }
             };
         } else {
@@ -187,8 +186,8 @@ function updateEventTime(calendarEvent: CalendarEvent, newEventTime: EventTime) 
 
 function updateModelEvent(calendarEvent: CalendarEvent) {
     const event = model.value.find(e => {
-        if ("lessonId" in e) {
-            return e.lessonId == calendarEvent.id
+        if ("lesson" in e) {
+            return e.lesson.lessonId == calendarEvent.id
         } else {
             return e.id == calendarEvent.id
         }
@@ -196,16 +195,16 @@ function updateModelEvent(calendarEvent: CalendarEvent) {
 
     if (!event) return;
 
-    if ("lessonId" in event) {
-        event.startTime = Time.fromHHMM(calendarEvent.start.split(' ')[1])?.toITime() ?? event.startTime;
-        event.endTime = Time.fromHHMM(calendarEvent.end.split(' ')[1])?.toITime() ?? event.endTime;
+    if ("lesson" in event) {
+        event.lesson.startTime = Time.fromHHMM(calendarEvent.start.split(' ')[1])?.toITime() ?? event.lesson.startTime;
+        event.lesson.endTime = Time.fromHHMM(calendarEvent.end.split(' ')[1])?.toITime() ?? event.lesson.endTime;
     } else {
         event.start = calendarEvent.start;
         event.end = calendarEvent.end;
     }
 
     if (props.sort) {
-        model.value.sort((a, b) => a.startTime - b.startTime);
+        model.value.sort((a, b) => a.lesson.startTime - b.lesson.startTime);
     }
     emit('edit');
 }

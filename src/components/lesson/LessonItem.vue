@@ -133,7 +133,7 @@
 
 <script setup lang="ts">
 import EditLessonTime from '@/components/lesson/EditLessonTime.vue';
-import { LessonStatus, Time, type EventTime, type School, type StudentLesson2 } from '@/models/model';
+import { LessonStatus, Time, type EventTime, type School, type StudentLesson } from '@/models/model';
 import { ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import DeleteDialog from '../DeleteDialog.vue';
@@ -145,7 +145,7 @@ const props = defineProps<{
     updateLessonTime: (newTime: EventTime) => Promise<boolean>;
     moveLesson: (newLessonDate: Date) => Promise<boolean>
 }>()
-const item = defineModel<StudentLesson2>('item', { required: true });
+const item = defineModel<StudentLesson>('item', { required: true });
 const select = defineModel<string[]>('select');
 const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent'])
 const timeDialog = ref(false)

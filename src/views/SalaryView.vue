@@ -32,7 +32,6 @@ import { yyyyMMdd, type IyyyyMMdd, type Salary, type School } from '@/models/mod
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { SalaryService } from '@/models/services/salary-service';
 import { timestampFormat, toDate } from '@/models/utils';
-import { Timestamp } from 'firebase/firestore';
 import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 

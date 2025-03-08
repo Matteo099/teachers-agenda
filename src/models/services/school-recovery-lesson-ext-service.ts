@@ -1,6 +1,6 @@
 import { RecoveryStatus, type SchoolRecoveryLesson } from "../model";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
-import type { StudentLessonWithRecovery } from "./school-recovery-lesson-service2";
+import type { StudentLessonWithRecovery } from "./school-recovery-lesson-service";
 import { StudentService } from "./student-service";
 
 export interface SchoolRecoveryLessonMap {

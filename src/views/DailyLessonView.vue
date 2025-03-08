@@ -121,10 +121,10 @@ import BackButton from '@/components/inputs/BackButton.vue';
 import SelectStudents from '@/components/inputs/SelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
 import { withCache } from '@/models/decorators/cache-decorator';
-import { LessonStatus, yyyyMMdd, type EventTime, type Lesson, type School, type Student, type StudentLesson2 } from '@/models/model';
+import { LessonStatus, yyyyMMdd, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
-import { DailyLessonService2 } from '@/models/services/daily-lesson-service2';
+import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
@@ -142,7 +142,7 @@ const school: Ref<School | undefined> = ref();
 
 const selectedLessons: Ref<string[]> = ref([])
 const selectAllLessons: Ref<boolean> = ref(false)
-const studentLessons: Ref<StudentLesson2[]> = ref([])
+const studentLessons: Ref<StudentLesson[]> = ref([])
 const availableStudents: Ref<Student[]> = ref([]);
 const selectedStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
@@ -177,73 +177,65 @@ function getColor(event: Lesson): string {
     return "#808080";
 }
 
-function getSelectedStudentLessons(event: StudentLesson2): StudentLesson2[] {
+function getSelectedStudentLessons(event: StudentLesson): StudentLesson[] {
     const _studentLessons = selectedLessons.value.map(id => studentLessons.value.find(st => st.student.id == id)).filter(s => !!s);
     if (event && "student" in event && "lesson" in event) _studentLessons.push(event);
+    //@ts-ignore
     return _studentLessons;
 }
 
-
-const present = withCache(async (event: StudentLesson2) => {
+const present = withCache(async (event: StudentLesson) => {
     const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
-    await DailyLessonService2.instance.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson.value!, lessons);
+    await DailyLessonService.instance.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson.value!, lessons);
     selectedLessons.value = []
 }, (error) => {
     toast.warn("Impossibile impostare le presenze...")
     console.error(error)
 });
 
-async function absent(event: StudentLesson2, canRecover = true) {
-    try {
-        const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
-        const status = canRecover ? LessonStatus.ABSENT : LessonStatus.UNJUSTIFIED_ABSENCE
-        await DailyLessonService2.instance.updateLessonsStatus(status, dailyLesson.value!, lessons);
-        selectedLessons.value = []
-        return true;
-    } catch (error) {
-        toast.warn("Impossibile impostare le assenze...")
-        console.error(error)
-    }
-}
-async function trial(event: StudentLesson2) {
-    try {
-        await DailyLessonService2.instance.updateLessonsStatus(LessonStatus.TRIAL, dailyLesson.value!, [event.lesson]);
-        return true;
-    } catch (error) {
-        toast.warn("Impossibile impostare la lezione di prova...")
-        console.error(error)
-    }
-}
-async function reset(event: StudentLesson2) {
-    try {
-        await DailyLessonService2.instance.resetLessons(dailyLesson.value!, [event.lesson]);
-        return true;
-    } catch (error) {
-        toast.warn("Impossibile ripristinare la lezione")
-        console.error(error)
-    }
-}
+const absent = withCache(async (event: StudentLesson, canRecover = true) => {
+    const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
+    const status = canRecover ? LessonStatus.ABSENT : LessonStatus.UNJUSTIFIED_ABSENCE
+    await DailyLessonService.instance.updateLessonsStatus(status, dailyLesson.value!, lessons);
+    selectedLessons.value = []
+    return true;
+}, (error) => {
+    toast.warn("Impossibile impostare le assenze...")
+    console.error(error)
+});
 
-async function moveLesson(event: StudentLesson2, lessonDate: Date) {
-    try {
-        await DailyLessonService2.instance.moveLessons(dailyLesson.value!, lessonDate, [event.lesson]);
-        return true;
-    } catch (error) {
-        console.error(error)
-        return false
-    }
-}
+const trial = withCache(async (event: StudentLesson) => {
+    await DailyLessonService.instance.updateLessonsStatus(LessonStatus.TRIAL, dailyLesson.value!, [event.lesson]);
+    return true;
+}, (error) => {
+    toast.warn("Impossibile impostare la lezione di prova...")
+    console.error(error)
+});
 
-async function updateLessonTime(event: StudentLesson2, newDataEvent: EventTime) {
-    try {
-        await DailyLessonService2.instance.updateLessonTime(dailyLesson.value!, newDataEvent, event.lesson);
-        studentLessons.value.sort((a, b) => a.lesson.startTime - b.lesson.startTime);
-        return true;
-    } catch (error) {
-        console.error(error)
-        return false
-    }
-}
+const reset = withCache(async (event: StudentLesson) => {
+    await DailyLessonService.instance.resetLessons(dailyLesson.value!, [event.lesson]);
+    return true;
+}, (error) => {
+    toast.warn("Impossibile ripristinare la lezione")
+    console.error(error)
+});
+
+const moveLesson = withCache(async (event: StudentLesson, lessonDate: Date) => {
+    await DailyLessonService.instance.moveLessons(dailyLesson.value!, lessonDate, [event.lesson]);
+    return true;
+}, (error) => {
+    console.error(error)
+    return false
+});
+
+const updateLessonTime = withCache(async (event: StudentLesson, newDataEvent: EventTime) => {
+    await DailyLessonService.instance.updateLessonTime(dailyLesson.value!, newDataEvent, event.lesson);
+    studentLessons.value.sort((a, b) => a.lesson.startTime - b.lesson.startTime);
+    return true;
+}, (error) => {
+    console.error(error)
+    return false
+});
 
 function toggleAll() {
     if (!selectAllLessons.value) {
@@ -274,7 +266,7 @@ async function saveSelectedStudents() {
     try {
         savingSelectedStudents.value = true;
 
-        await DailyLessonService2.instance.addStudents(dailyLesson.value!, selectedStudents.value);
+        await DailyLessonService.instance.addStudents(dailyLesson.value!, selectedStudents.value);
 
         toast.success("Studenti aggiunti!");
         studentsDialog.value = false;
@@ -289,7 +281,7 @@ async function deleteDailyLesson() {
     if (!dailyLesson.value) return false;
 
     try {
-        const excludedDate = await DailyLessonService2.instance.delete(dailyLesson.value);
+        const excludedDate = await DailyLessonService.instance.delete(dailyLesson.value);
         if (excludedDate) toast.info("La data è stata aggiunta ai giorni da escludere della lezione settimanale")
         router.push(`/school/${school.value!.id}`);
         return true;
@@ -298,11 +290,11 @@ async function deleteDailyLesson() {
     }
 }
 
-async function deleteStudentLesson(_studentLesson: StudentLesson2, deleteDailyLessonWhenNoLessons = true) {
+async function deleteStudentLesson(_studentLesson: StudentLesson, deleteDailyLessonWhenNoLessons = true) {
     if (!dailyLesson.value) return false;
 
     try {
-        await DailyLessonService2.instance.deleteLessons(dailyLesson.value!, deleteDailyLessonWhenNoLessons, [_studentLesson.lesson]);
+        await DailyLessonService.instance.deleteLessons(dailyLesson.value!, deleteDailyLessonWhenNoLessons, [_studentLesson.lesson]);
         if (!dailyLesson.value || dailyLesson.value.lessons.length == 0) {
             router.push(`/school/${school.value!.id}`);
         }
@@ -326,7 +318,7 @@ async function updateStudentLesson() {
         school.value = await SchoolRepository.instance.get(dailyLesson.value.schoolId);
         loadingSchool.value = false;
     }
-    await StudentLessonService.instance.updateStudentLesson2(dailyLesson.value, studentLessons.value, loadingStudents);
+    await StudentLessonService.instance.updateStudentLesson(dailyLesson.value, studentLessons.value, loadingStudents);
 }
 
 async function computeSalaryAndSave() {
@@ -341,7 +333,7 @@ async function save() {
 
     saving.value = true;
     try {
-        await DailyLessonService2.instance.save(dailyLesson.value, { school: school.value, studentLessons: studentLessons.value });
+        await DailyLessonService.instance.save(dailyLesson.value, { school: school.value, studentLessons: studentLessons.value });
         toast.success("Modifiche salvate", { autoClose: 1000 });
     } catch (e) {
         toast.error("Impossibile aggiornare la lezione giornaliera", { autoClose: 1000 });

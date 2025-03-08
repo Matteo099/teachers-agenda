@@ -2,14 +2,14 @@ import { LessonStatus, RecoveryStatus, Time, yyyyMMdd, type RecoverySchedule } f
 import { DailyLessonRepository } from "@/models/repositories/daily-lesson-repository";
 import { SchoolRecoveryLessonRepository } from "@/models/repositories/recovery-lesson-repository";
 import { describe, expect, it } from "vitest";
-import { DailyLessonService2 } from "../daily-lesson-service2";
+import { DailyLessonService } from "../daily-lesson-service";
 import { SchoolRecoveryLessonExtService } from "../school-recovery-lesson-ext-service";
-import { SchoolRecoveryLessonService2 } from "../school-recovery-lesson-service2";
+import { SchoolRecoveryLessonService } from "../school-recovery-lesson-service";
 
-describe("SchoolRecoveryLessonService2.schedule", () => {
-    const dailyLessonService = DailyLessonService2.instance;
+describe("SchoolRecoveryLessonService.schedule", () => {
+    const dailyLessonService = DailyLessonService.instance;
     const dailyLessonRepository = DailyLessonRepository.instance;
-    const schoolRecoveryService = SchoolRecoveryLessonService2.instance;
+    const schoolRecoveryService = SchoolRecoveryLessonService.instance;
     const schoolRecoveryServiceExt = SchoolRecoveryLessonExtService.instance;
     const schoolRecoveryLessonRepository = SchoolRecoveryLessonRepository.instance;
 
@@ -53,7 +53,7 @@ describe("SchoolRecoveryLessonService2.schedule", () => {
         expect(recoveryAfterSchedule?.status).toBe(RecoveryStatus.PENDING);
         expect(recoveryAfterSchedule?.originalLesson).toBeDefined();
 
-        const recoveryDailyLesson = (await dailyLessonService.getDailyLessonOfSchoolByDate(schoolId, yyyyMMdd.fromDate(date).toIyyyyMMdd()))[0];
+        const recoveryDailyLesson = (await dailyLessonService.getDailyLessonOfSchoolByDate(schoolId, yyyyMMdd.fromDate(date).toIyyyyMMdd()))!;
         expect(recoveryDailyLesson).toBeDefined();
         expect(recoveryAfterSchedule?.recoveryLesson).toBeDefined();
         expect(recoveryAfterSchedule?.recoveryLesson?.dailyLessonId).toBe(recoveryDailyLesson.id);

@@ -4,8 +4,8 @@ import { LessonStatus, months, Time, yyyyMMdd, type CalendarEventExt, type Daily
 import type { ID } from "../repositories/abstract-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
 import { nameof, nextDay, pastDay } from "../utils";
-import { DailyLessonService } from "./daily-lesson-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
+import { DailyLessonService } from "./daily-lesson-service";
 
 export interface LessonGroup {
     month: string;

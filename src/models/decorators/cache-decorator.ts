@@ -9,7 +9,7 @@ export function withCache<T extends (...args: any[]) => Promise<any>>(fn: T, err
             return result;
         } catch (error) {
             DatabaseCache.instance.clear();
-            errHandler?.(error);
+            return errHandler?.(error);
         }
     }) as T;
 }

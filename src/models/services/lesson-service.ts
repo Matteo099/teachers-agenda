@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DeleteMode, LessonStatus, type DailyLesson, type Lesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { MoveLessonService } from "./move-lesson-service";
-import { SchoolRecoveryLessonService2 } from "./school-recovery-lesson-service2";
+import { SchoolRecoveryLessonService } from "./school-recovery-lesson-service";
 import { StudentService } from "./student-service";
 
 export class LessonService {
@@ -22,13 +22,13 @@ export class LessonService {
         } else if (wasMoved) {
             await MoveLessonService.instance.cancelMovedLesson(schoolId, dailyLesson.id, lesson);
         } else {
-            await SchoolRecoveryLessonService2.instance.updateRecoveries(schoolId, dailyLesson.id, lesson);
+            await SchoolRecoveryLessonService.instance.updateRecoveries(schoolId, dailyLesson.id, lesson);
         }
     }
 
     public async resetLesson(dailyLesson: DailyLesson, lesson: Lesson, deleteMode?: DeleteMode) {
         await this.updateLessonStatus(LessonStatus.NONE, dailyLesson, lesson);
-        await SchoolRecoveryLessonService2.instance.resetRecoveries(dailyLesson, lesson, deleteMode);
+        await SchoolRecoveryLessonService.instance.resetRecoveries(dailyLesson, lesson, deleteMode);
     }
 
     public createFrom(lesson: Lesson, newId?: ID): Lesson {

@@ -65,7 +65,7 @@ import ScheduleRecoveryLessonButton from '@/components/lesson/ScheduleRecoveryLe
 import { RecoveryStatus, recoveryTypes, yyyyMMdd, type School } from '@/models/model';
 import { SchoolRecoveryLessonRepository } from '@/models/repositories/recovery-lesson-repository';
 import { SchoolRecoveryLessonExtService, type SchoolRecoveryLessonMap } from '@/models/services/school-recovery-lesson-ext-service';
-import { SchoolRecoveryLessonService2, type StudentLessonWithRecovery } from '@/models/services/school-recovery-lesson-service2';
+import { SchoolRecoveryLessonService, type StudentLessonWithRecovery } from '@/models/services/school-recovery-lesson-service';
 import { computed, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
@@ -89,7 +89,7 @@ watch(recoveries, async () => computeDailyLessons());
 async function cancelScheduleRecovery(recovery: StudentLessonWithRecovery) {
     try {
         cancellingScheduleRecovery.value = true;
-        await SchoolRecoveryLessonService2.instance.cancelRecovery(recovery);
+        await SchoolRecoveryLessonService.instance.cancelRecovery(recovery);
     } catch (error) {
         toast.warn("Impossibile annullare la lezione di recupero")
         console.error("Unable to cancel recovery lesson", error);
