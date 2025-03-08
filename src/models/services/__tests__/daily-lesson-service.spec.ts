@@ -541,6 +541,7 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
         // Check school recovery
         schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId))!;
         const screcovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == lessonToDelete.lessonId)
+        console.log("screcovery", screcovery);
         expect(screcovery).not.toBeDefined();
     });
 

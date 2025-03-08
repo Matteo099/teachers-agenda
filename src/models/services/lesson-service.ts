@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, type DailyLesson, type Lesson } from "../model";
+import { DeleteMode, LessonStatus, type DailyLesson, type Lesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { MoveLessonService } from "./move-lesson-service";
 import { SchoolRecoveryLessonService2 } from "./school-recovery-lesson-service2";
@@ -26,9 +26,9 @@ export class LessonService {
         }
     }
 
-    public async resetLesson(dailyLesson: DailyLesson, lesson: Lesson, toDelete: boolean = false) {
+    public async resetLesson(dailyLesson: DailyLesson, lesson: Lesson, deleteMode?: DeleteMode) {
         await this.updateLessonStatus(LessonStatus.NONE, dailyLesson, lesson);
-        await SchoolRecoveryLessonService2.instance.resetRecoveries(dailyLesson, lesson, toDelete);
+        await SchoolRecoveryLessonService2.instance.resetRecoveries(dailyLesson, lesson, deleteMode);
     }
 
     public createFrom(lesson: Lesson, newId?: ID): Lesson {

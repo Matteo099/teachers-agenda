@@ -319,6 +319,10 @@ export enum RecoveryStatus {
     PENDING = "PENDING",
     DONE = "DONE"
 }
+export enum DeleteMode {
+    DELETING_ORIGINAL_LESSON = "DELETING_ORIGINAL_LESSON",
+    DELETING_RECOVERY_LESSON = "DELETING_RECOVERY_LESSON",
+}
 
 export interface Lesson extends ScheduledLesson {
     status: LessonStatus;

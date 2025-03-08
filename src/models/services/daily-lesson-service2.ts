@@ -1,6 +1,6 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type RecoverySchedule, type School, type Student, type StudentLesson2 } from "../model";
+import { DeleteMode, LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type RecoverySchedule, type School, type Student, type StudentLesson2 } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
@@ -164,18 +164,30 @@ export class DailyLessonService2 {
         return false;
     }
 
-    public async deleteLessons(dailyLesson: DailyLesson, deleteDailyLessonWhenNoLessons: boolean, lessons: Lesson[]) {
-        for await (const lesson of lessons) {
-            await this.lessonService.resetLesson(dailyLesson, lesson, true);
-            const index = dailyLesson.lessons.findIndex(l => l.lessonId == lesson.lessonId);
-            dailyLesson.lessons.splice(index, 1);
-        }
+    private dailyLessonIdToDelete?: ID;
+    public async deleteLessons(dailyLesson: DailyLesson, deleteDailyLessonWhenNoLessons: boolean, lessons: Lesson[], deleteMode?: DeleteMode) {
+        if (!this.dailyLessonIdToDelete) this.dailyLessonIdToDelete = dailyLesson.id;
 
-        // if the recovery daily lesson has no more lessons, delete it
-        if (dailyLesson.lessons.length == 0 && deleteDailyLessonWhenNoLessons) {
-            await DailyLessonRepository.instance.delete(dailyLesson.id);
-        } else {
-            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
+        try {
+            for await (const lesson of lessons) {
+                let mode = deleteMode;
+                if (this.dailyLessonIdToDelete == dailyLesson.id) {
+                    if(lesson.recovery?.ref == 'recovery') mode = DeleteMode.DELETING_ORIGINAL_LESSON;
+                    else if(lesson.recovery?.ref == 'original') mode = DeleteMode.DELETING_RECOVERY_LESSON;
+                }
+                await this.lessonService.resetLesson(dailyLesson, lesson, mode);
+                const index = dailyLesson.lessons.findIndex(l => l.lessonId == lesson.lessonId);
+                dailyLesson.lessons.splice(index, 1);
+            }
+    
+            // if the recovery daily lesson has no more lessons, delete it
+            if (dailyLesson.lessons.length == 0 && deleteDailyLessonWhenNoLessons) {
+                await DailyLessonRepository.instance.delete(dailyLesson.id);
+            } else {
+                await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
+            }
+        } finally {
+            if (this.dailyLessonIdToDelete == dailyLesson.id) this.dailyLessonIdToDelete = undefined;
         }
     }
 

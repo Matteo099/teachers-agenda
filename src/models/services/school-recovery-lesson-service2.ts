@@ -1,4 +1,4 @@
-import { LessonStatus, RecoveryStatus, type DailyLesson, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule, type SchoolRecoveryLesson, type StudentLesson2 } from "../model";
+import { DeleteMode, LessonStatus, RecoveryStatus, type DailyLesson, type Lesson, type LessonRef, type RecoveryLessonInfo, type RecoverySchedule, type SchoolRecoveryLesson, type StudentLesson2 } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { SchoolRecoveryLessonRepository } from "../repositories/recovery-lesson-repository";
@@ -111,7 +111,7 @@ export class SchoolRecoveryLessonService2 {
         await SchoolRecoveryLessonRepository.instance.save(recovery, schoolId);
     }
 
-    public async resetRecoveries(dailyLesson: DailyLesson, lesson: Lesson, toDelete: boolean = false) {
+    public async resetRecoveries(dailyLesson: DailyLesson, lesson: Lesson, deleteMode?: DeleteMode) {
         const schoolId: ID = dailyLesson.schoolId;
         const dailyLessonId: ID = dailyLesson.id;
         const recovery = await this.getOrCreate(schoolId);
@@ -128,11 +128,12 @@ export class SchoolRecoveryLessonService2 {
                 const recoveryDailyLesson = await DailyLessonRepository.instance.get(lesson.recovery.lessonRef.dailyLessonId);
                 const recoveryLesson = recoveryDailyLesson?.lessons.find(l => l.lessonId == lesson.recovery!.lessonRef.lessonId)
                 if (recoveryDailyLesson && recoveryLesson)
-                    await DailyLessonService2.instance.deleteLessons(recoveryDailyLesson, true, [recoveryLesson]);
+                    await DailyLessonService2.instance.deleteLessons(recoveryDailyLesson, true, [recoveryLesson], deleteMode);
                 else console.warn("unable to remove recovery lesson")
             }
         } else {
-            if (toDelete) this.updateRecovery(recovery, originalLessonRef);
+            if (deleteMode == DeleteMode.DELETING_ORIGINAL_LESSON) this.updateRecovery(recovery, originalLessonRef);
+            else if (deleteMode == DeleteMode.DELETING_RECOVERY_LESSON) this.updateRecovery(recovery, originalLessonRef, RecoveryStatus.UNSET);
             else {
                 this.updateRecovery(recovery, originalLessonRef, RecoveryStatus.PENDING, recoveryLessonRef);
 
