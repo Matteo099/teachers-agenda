@@ -27,8 +27,7 @@ Lezione originale:
 
 - [x] sposta -> lezione nuova
 - [x] sposta -> lezione con altre lezioni
-- [] modifica orario
-- [] note
+- [x] modifica orario
 
 
 Lezione da recuperare:
@@ -45,8 +44,7 @@ Lezione di recupero:
 - [x] none -> assente
 - [x] assente -> reset
 - [x] assente -> presente
-- [] none -> elimina
-- [] presente -> elimina
-- [] assente -> elimina
-- [] modifica orario
-- [] note
+- [x] none -> elimina
+- [x] presente -> elimina
+- [x] assente -> elimina
+- [x] modifica orario

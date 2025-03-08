@@ -1,11 +1,11 @@
-import { LessonStatus, RecoveryStatus, Time, yyyyMMdd, type DailyLesson, type RecoverySchedule } from "@/models/model";
+import { LessonStatus, RecoveryStatus, Time, yyyyMMdd, type EventTime, type RecoverySchedule } from "@/models/model";
 import { DailyLessonRepository } from "@/models/repositories/daily-lesson-repository";
+import { SchoolRecoveryLessonRepository } from "@/models/repositories/recovery-lesson-repository";
+import { StudentRepository } from "@/models/repositories/student-repository";
 import { describe, expect, it } from "vitest";
 import { DailyLessonService2 } from "../daily-lesson-service2";
-import { StudentRepository } from "@/models/repositories/student-repository";
-import { SchoolRecoveryLessonRepository } from "@/models/repositories/recovery-lesson-repository";
-import { SchoolRecoveryLessonService2 } from "../school-recovery-lesson-service2";
 import { SchoolRecoveryLessonExtService } from "../school-recovery-lesson-ext-service";
+import { SchoolRecoveryLessonService2 } from "../school-recovery-lesson-service2";
 
 describe("DailyLessonService2.updateLessonsStatus", () => {
     const dailyLessonService = DailyLessonService2.instance;
@@ -575,7 +575,7 @@ describe("DailyLessonService2.deleteLessons - Original Lesson", () => {
         let recoveryDailyLesson = (await dailyLessonRepository.get(recoveryLessonRef!.lessonRef.dailyLessonId))!;
         const recoveryLesson = recoveryDailyLesson.lessons[0];
         dailyLessonService.updateLessonsStatus(LessonStatus.PRESENT, recoveryDailyLesson, [recoveryLesson]);
-        
+
         originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         lessonToDelete = originalDailyLesson.lessons[1];
 
@@ -606,6 +606,7 @@ describe("DailyLessonService2.moveLessons - Original Lesson", () => {
 
     /**
      *  - [x] move lesson to empty day
+     *  - [x] move lesson to full day
      */
     it("Should move lesson to an empty day", async () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
@@ -671,5 +672,38 @@ describe("DailyLessonService2.moveLessons - Original Lesson", () => {
         expect(movedDailyLesson.lessons[1].moved?.ref).toBe('original');
         expect(movedDailyLesson.lessons[1].moved?.lessonRef.dailyLessonId).toBe(updatedDailyLesson.id);
         expect(movedDailyLesson.lessons[1].moved?.lessonRef.lessonId).toBe(updatedDailyLesson.lessons[0].lessonId);
+    });
+});
+
+describe("DailyLessonService2.updateLessonTime - Original Lesson", () => {
+    const dailyLessonService = DailyLessonService2.instance;
+    const dailyLessonRepository = DailyLessonRepository.instance;
+
+    /**
+     *  - [x] update lesson time
+     */
+    it("Should update lesson time to 04:00 - 05:00", async () => {
+        const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
+        const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        const lessonToMove = dailyLesson.lessons[0];
+        const newDataEvent: EventTime = {
+            startTime: "04:00",
+            endTime: "05:00",
+        }
+
+        // Update lesson time
+        await dailyLessonService.updateLessonTime(dailyLesson, newDataEvent, lessonToMove);
+
+        // Fetch updated lesson
+        const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
+        expect(updatedDailyLesson).not.toBeNull();
+        expect(updatedDailyLesson.lessons.length).toBe(3);
+        for (let index = 0; index < dailyLesson.lessons.length; index++) {
+            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+        }
+        expect(updatedDailyLesson.lessons[0].startTime).toBeDefined();
+        expect(updatedDailyLesson.lessons[0].endTime).toBeDefined();
+        expect(updatedDailyLesson.lessons[0].startTime).toBe(Time.fromHHMM(newDataEvent.startTime)?.toITime());
+        expect(updatedDailyLesson.lessons[0].endTime).toBe(Time.fromHHMM(newDataEvent.endTime)?.toITime());
     });
 });
