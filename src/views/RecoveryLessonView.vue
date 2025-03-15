@@ -28,21 +28,25 @@
                         </div>
                         <div v-else-if="key == RecoveryStatus.PENDING">
                             Recupero della lezione del {{
-                                yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format() }} programmato
+                                yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format() }}
+                            programmato
                             <span v-if="recovery.recoveryReference.recoveryDailyLesson"> per il {{
-                                yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.recoveryDailyLesson.date).format() }}</span>
+                                yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.recoveryDailyLesson.date).format()
+                                }}</span>
                         </div>
                         <div v-else>
                             Recupero della lezione del {{
-                                yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format() }} effettuato
+                                yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format() }}
+                            effettuato
                             <span v-if="recovery.recoveryReference.recoveryDailyLesson"> il {{
-                                yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.recoveryDailyLesson.date).format() }}</span>
+                                yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.recoveryDailyLesson.date).format()
+                                }}</span>
                         </div>
                     </template>
 
                     <template v-slot:append>
-                        <ScheduleRecoveryLessonButton v-if="key == RecoveryStatus.UNSET"
-                            v-model="value[index]" :school="school"></ScheduleRecoveryLessonButton>
+                        <ScheduleRecoveryLessonButton v-if="key == RecoveryStatus.UNSET" v-model="value[index]"
+                            :school="school"></ScheduleRecoveryLessonButton>
                         <v-btn v-else-if="key == RecoveryStatus.PENDING" @click="cancelScheduleRecovery(recovery)"
                             :loading="cancellingScheduleRecovery" :disabled="cancellingScheduleRecovery">annulla</v-btn>
                         <v-icon v-else color="success">
@@ -62,6 +66,7 @@
 
 <script setup lang="ts">
 import ScheduleRecoveryLessonButton from '@/components/lesson/ScheduleRecoveryLessonButton.vue';
+import { withCache } from '@/models/decorators/cache-decorator';
 import { RecoveryStatus, recoveryTypes, yyyyMMdd, type School } from '@/models/model';
 import { SchoolRecoveryLessonRepository } from '@/models/repositories/recovery-lesson-repository';
 import { SchoolRecoveryLessonExtService, type SchoolRecoveryLessonMap } from '@/models/services/school-recovery-lesson-ext-service';
@@ -86,17 +91,15 @@ const cancellingScheduleRecovery = ref(false);
 
 watch(recoveries, async () => computeDailyLessons());
 
-async function cancelScheduleRecovery(recovery: StudentLessonWithRecovery) {
-    try {
-        cancellingScheduleRecovery.value = true;
-        await SchoolRecoveryLessonService.instance.cancelRecovery(recovery);
-    } catch (error) {
-        toast.warn("Impossibile annullare la lezione di recupero")
-        console.error("Unable to cancel recovery lesson", error);
-    } finally {
-        cancellingScheduleRecovery.value = false;
-    }
-}
+const cancelScheduleRecovery = withCache(async (recovery: StudentLessonWithRecovery) => {
+    cancellingScheduleRecovery.value = true;
+    await SchoolRecoveryLessonService.instance.cancelRecovery(recovery);
+}, (error) => {
+    toast.warn("Impossibile annullare la lezione di recupero")
+    console.error("Unable to cancel recovery lesson", error);
+}, async () => {
+    cancellingScheduleRecovery.value = false;
+});
 
 async function computeDailyLessons() {
     if (!recoveries.value) return;

@@ -16,7 +16,7 @@ export class DailyLessonRepository extends AbstractRepository<DailyLesson> {
 
     public override async save(obj: Partial<DailyLesson> | any, id?: ID): Promise<ID> {
         if (id == undefined) {
-            id = DailyLessonRepository.generateId(obj);
+            id = obj.id = DailyLessonRepository.generateId(obj);
         }
         return super.save(obj, id);
     }

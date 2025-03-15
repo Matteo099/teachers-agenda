@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import { withCache } from '@/models/decorators/cache-decorator';
 import { Time, yyyyMMdd, type RecoverySchedule, type School } from '@/models/model';
 import { SchoolRecoveryLessonService, type StudentLessonWithRecovery } from '@/models/services/school-recovery-lesson-service';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -89,27 +90,26 @@ function close() {
     resetForm();
 }
 
-async function scheduleRecovery() {
-    if (!date.value || !time.value || !recovery.value) return;
 
-    try {
-        loadingSchedulingRecovery.value = true;
-        const startTime = Time.fromHHMM(time.value)!;
-        const schedule: RecoverySchedule = {
-            studentId: recovery.value.student.id,
-            schoolId: props.school.id,
-            originalDailyLessonId: recovery.value.recoveryReference.originalDailyLesson.id,
-            originalLessonId: recovery.value.lesson.lessonId,
-            date: date.value,
-            startTime: startTime.toITime(),
-            endTime: startTime.add({ minutes: recovery.value.student.minutesLessonDuration }).toITime()
-        }
-        await SchoolRecoveryLessonService.instance.scheduleRecovery(recovery.value, schedule);
-        scheduleRecoveryDialog.value = false
-    } catch (error) {
-        toast.error("Impossibile schedulare la lezione di recupero")
-    } finally {
-        loadingSchedulingRecovery.value = false;
+const scheduleRecovery = withCache(async () => {
+    if (!date.value || !time.value || !recovery.value) return;
+    loadingSchedulingRecovery.value = true;
+    const startTime = Time.fromHHMM(time.value)!;
+    const schedule: RecoverySchedule = {
+        studentId: recovery.value.student.id,
+        schoolId: props.school.id,
+        originalDailyLessonId: recovery.value.recoveryReference.originalDailyLesson.id,
+        originalLessonId: recovery.value.lesson.lessonId,
+        date: date.value,
+        startTime: startTime.toITime(),
+        endTime: startTime.add({ minutes: recovery.value.student.minutesLessonDuration }).toITime()
     }
-}
+    await SchoolRecoveryLessonService.instance.scheduleRecovery(recovery.value, schedule);
+    scheduleRecoveryDialog.value = false
+}, (error) => {
+    toast.error("Impossibile schedulare la lezione di recupero")
+    console.error("Unable to cancel recovery lesson", error);
+}, async () => {
+    loadingSchedulingRecovery.value = false;
+});
 </script>

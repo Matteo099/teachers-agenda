@@ -188,7 +188,7 @@ function getSelectedStudentLessons(event: StudentLesson): StudentLesson[] {
 
 function updateOperationStatus(event: StudentLesson | Lesson, status: boolean) {
     const id = "lesson" in event ? event.lesson.lessonId : event.lessonId;
-    
+
     if (!(id in performingOperation.value)) {
         performingOperation.value[id] = ref(status);
     } else {
@@ -219,7 +219,7 @@ const absent = withCache(async (event: StudentLesson, canRecover = true) => {
 }, (error) => {
     toast.warn("Impossibile impostare le assenze...")
     console.error(error)
-}, async (event: StudentLesson, _canRecover = true) => {
+}, async (event: StudentLesson) => {
     updateOperationStatus(event, false);
     return false;
 });
@@ -320,7 +320,8 @@ const deleteDailyLesson = withCache(async () => {
     if (excludedDate) toast.info("La data è stata aggiunta ai giorni da escludere della lezione settimanale")
     router.push(`/school/${school.value!.id}`);
     return true;
-}, (_) => {
+}, (error) => {
+    console.warn("Unable to delete the lesson...", error)
     return false;
 });
 

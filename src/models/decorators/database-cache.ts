@@ -48,7 +48,7 @@ export class DatabaseCache {
             this._active = false;
             const data = await repository.get(id);
             this._active = true;
-            this.cache.set(id, data);
+            if (data) this.cache.set(id, data);
             metricType = OperationType.GET;
         } else {
             metricType = OperationCacheType.GET_CACHED;
@@ -58,7 +58,6 @@ export class DatabaseCache {
     }
 
     public async save<R extends AbstractRepository<any>>(repository: R, obj: any, id?: ID): Promise<ID> {
-        // console.log("save");
         let saveRequired = true;
         if (id == undefined) {
             id = await repository.save(obj);
@@ -114,13 +113,15 @@ export class DatabaseCache {
     }
 
     private printMetrics() {
-        console.log(`=== Cache Metrics ===`);
+        let msg = "";
         for (const entry of this.metrics.entries()) {
-            console.log(`${entry[0]} - ${entry[1]}`);
+            msg += `${entry[0]} - ${entry[1]}\n`;
         }
-        const getCacheUsage = 100 * (this.metrics.get(OperationCacheType.GET_CACHED) ?? 0) / (this.metrics.get(OperationType.GET) || 1);
-        const saveCacheUsage = 100 * (this.metrics.get(OperationCacheType.SAVE_CACHED) ?? 0) / (this.metrics.get(OperationType.SAVE) || 1);
-        const deleteCacheUsage = 100 * (this.metrics.get(OperationCacheType.DELETE_CACHED) ?? 0) / (this.metrics.get(OperationType.DELETE) || 1);
+        const getCacheUsage = 100 * (this.metrics.get(OperationType.GET) ?? 0) / (this.metrics.get(OperationCacheType.GET_CACHED) || 1);
+        const saveCacheUsage = 100 * (this.metrics.get(OperationType.SAVE) ?? 0) / (this.metrics.get(OperationCacheType.SAVE_CACHED) || 1);
+        const deleteCacheUsage = 100 * (this.metrics.get(OperationType.DELETE) ?? 0) / (this.metrics.get(OperationCacheType.DELETE_CACHED) || 1);
+        console.log(`=== Cache Metrics ===`);
+        console.log(msg);
         console.log(`pGET: ${getCacheUsage}%, pSAVE: ${saveCacheUsage}%, pDELETE: ${deleteCacheUsage}%`)
         console.log(`=== ============= ===`);
     }
