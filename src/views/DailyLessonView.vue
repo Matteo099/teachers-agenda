@@ -88,6 +88,7 @@
                     <v-timeline-item v-for="(item, index) in studentLessons"
                         :key="dailyLesson.id + item.lesson.lessonId" :dot-color="getColor(item.lesson)" size="small">
                         <LessonItem :school="school" :key="dailyLesson.id + item.lesson.lessonId"
+                            :loading="performingOperation[item.lesson.lessonId]?.value"
                             v-model:item="studentLessons[index]" v-model:select="selectedLessons"
                             @present="present(item)" @absent="absent(item, $event)"
                             :moveLesson="async ($event) => await moveLesson(item, $event)" @trial="trial(item)"
@@ -127,7 +128,7 @@ import { SchoolRepository } from '@/models/repositories/school-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
-import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
@@ -148,6 +149,7 @@ const selectedStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
 const loadingSchool = ref(false);
 const loadingAllStudents = ref(false);
+const performingOperation = shallowRef<Record<string, Ref<boolean>>>({});
 const saving = ref(false);
 const savingSelectedStudents = ref(false);
 const studentsDialog = ref(false);
@@ -184,16 +186,31 @@ function getSelectedStudentLessons(event: StudentLesson): StudentLesson[] {
     return _studentLessons;
 }
 
+function updateOperationStatus(event: StudentLesson | Lesson, status: boolean) {
+    const id = "lesson" in event ? event.lesson.lessonId : event.lessonId;
+    
+    if (!(id in performingOperation.value)) {
+        performingOperation.value[id] = ref(status);
+    } else {
+        performingOperation.value[id]!.value = status;
+    }
+}
+
+
 const present = withCache(async (event: StudentLesson) => {
+    updateOperationStatus(event, true);
     const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
     await DailyLessonService.instance.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson.value!, lessons);
     selectedLessons.value = []
 }, (error) => {
     toast.warn("Impossibile impostare le presenze...")
     console.error(error)
+}, async (event: StudentLesson) => {
+    updateOperationStatus(event, false);
 });
 
 const absent = withCache(async (event: StudentLesson, canRecover = true) => {
+    updateOperationStatus(event, true);
     const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
     const status = canRecover ? LessonStatus.ABSENT : LessonStatus.UNJUSTIFIED_ABSENCE
     await DailyLessonService.instance.updateLessonsStatus(status, dailyLesson.value!, lessons);
@@ -202,39 +219,58 @@ const absent = withCache(async (event: StudentLesson, canRecover = true) => {
 }, (error) => {
     toast.warn("Impossibile impostare le assenze...")
     console.error(error)
+}, async (event: StudentLesson, _canRecover = true) => {
+    updateOperationStatus(event, false);
+    return false;
 });
 
 const trial = withCache(async (event: StudentLesson) => {
+    updateOperationStatus(event, true);
     await DailyLessonService.instance.updateLessonsStatus(LessonStatus.TRIAL, dailyLesson.value!, [event.lesson]);
     return true;
 }, (error) => {
     toast.warn("Impossibile impostare la lezione di prova...")
     console.error(error)
+}, async (event: StudentLesson) => {
+    updateOperationStatus(event, false);
+    return false;
 });
 
 const reset = withCache(async (event: StudentLesson) => {
+    updateOperationStatus(event, true);
     await DailyLessonService.instance.resetLessons(dailyLesson.value!, [event.lesson]);
     return true;
 }, (error) => {
     toast.warn("Impossibile ripristinare la lezione")
     console.error(error)
+}, async (event: StudentLesson) => {
+    updateOperationStatus(event, false);
+    return false;
 });
 
 const moveLesson = withCache(async (event: StudentLesson, lessonDate: Date) => {
+    updateOperationStatus(event, true);
     await DailyLessonService.instance.moveLessons(dailyLesson.value!, lessonDate, [event.lesson]);
     return true;
 }, (error) => {
     console.error(error)
     return false
+}, async (event: StudentLesson) => {
+    updateOperationStatus(event, false);
+    return false;
 });
 
 const updateLessonTime = withCache(async (event: StudentLesson, newDataEvent: EventTime) => {
+    updateOperationStatus(event, true);
     await DailyLessonService.instance.updateLessonTime(dailyLesson.value!, newDataEvent, event.lesson);
     studentLessons.value.sort((a, b) => a.lesson.startTime - b.lesson.startTime);
     return true;
 }, (error) => {
     console.error(error)
     return false
+}, async (event: StudentLesson) => {
+    updateOperationStatus(event, false);
+    return false;
 });
 
 function toggleAll() {
@@ -277,33 +313,32 @@ async function saveSelectedStudents() {
     }
 }
 
-async function deleteDailyLesson() {
+const deleteDailyLesson = withCache(async () => {
     if (!dailyLesson.value) return false;
 
-    try {
-        const excludedDate = await DailyLessonService.instance.delete(dailyLesson.value);
-        if (excludedDate) toast.info("La data è stata aggiunta ai giorni da escludere della lezione settimanale")
+    const excludedDate = await DailyLessonService.instance.delete(dailyLesson.value);
+    if (excludedDate) toast.info("La data è stata aggiunta ai giorni da escludere della lezione settimanale")
+    router.push(`/school/${school.value!.id}`);
+    return true;
+}, (_) => {
+    return false;
+});
+
+const deleteStudentLesson = withCache(async (_studentLesson: StudentLesson, deleteDailyLessonWhenNoLessons = true) => {
+    if (!dailyLesson.value) return false;
+    updateOperationStatus(_studentLesson, true);
+    await DailyLessonService.instance.deleteLessons(dailyLesson.value!, deleteDailyLessonWhenNoLessons, [_studentLesson.lesson]);
+    if (!dailyLesson.value || dailyLesson.value.lessons.length == 0) {
         router.push(`/school/${school.value!.id}`);
-        return true;
-    } catch (error) {
-        return false;
     }
-}
-
-async function deleteStudentLesson(_studentLesson: StudentLesson, deleteDailyLessonWhenNoLessons = true) {
-    if (!dailyLesson.value) return false;
-
-    try {
-        await DailyLessonService.instance.deleteLessons(dailyLesson.value!, deleteDailyLessonWhenNoLessons, [_studentLesson.lesson]);
-        if (!dailyLesson.value || dailyLesson.value.lessons.length == 0) {
-            router.push(`/school/${school.value!.id}`);
-        }
-        return true;
-    } catch (error) {
-        console.warn("Unable to delete the student lesson...", error)
-        return false;
-    }
-}
+    return true;
+}, (error) => {
+    console.warn("Unable to delete the student lesson...", error)
+    return false;
+}, async (event: StudentLesson) => {
+    updateOperationStatus(event, false);
+    return false;
+});
 
 async function dailyLessonUpdate() {
     await updateStudentLesson();

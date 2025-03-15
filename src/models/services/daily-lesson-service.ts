@@ -166,13 +166,13 @@ export class DailyLessonService {
     private dailyLessonIdToDelete?: ID;
     public async deleteLessons(dailyLesson: DailyLesson, deleteDailyLessonWhenNoLessons: boolean, lessons: Lesson[], deleteMode?: DeleteMode) {
         if (!this.dailyLessonIdToDelete) this.dailyLessonIdToDelete = dailyLesson.id;
-
         try {
             for await (const lesson of lessons) {
                 let mode = deleteMode;
                 if (this.dailyLessonIdToDelete == dailyLesson.id) {
                     if (lesson.recovery?.ref == 'recovery') mode = DeleteMode.DELETING_ORIGINAL_LESSON;
                     else if (lesson.recovery?.ref == 'original') mode = DeleteMode.DELETING_RECOVERY_LESSON;
+                    else if (lesson.moved?.ref == 'original') mode = DeleteMode.DELETING_MOVE_LESSON;
                 }
                 await this.lessonService.resetLesson(dailyLesson, lesson, mode);
                 const index = dailyLesson.lessons.findIndex(l => l.lessonId == lesson.lessonId);

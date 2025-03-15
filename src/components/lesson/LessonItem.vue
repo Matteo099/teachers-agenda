@@ -1,5 +1,5 @@
 <template>
-    <v-card elevation=3>
+    <v-card elevation=3 :loading="loading">
         <v-card-title>
             <v-checkbox v-model="select" :value="item.student.id" multiple>
                 <template v-slot:label>
@@ -10,11 +10,11 @@
             </v-checkbox>
         </v-card-title>
         <v-card-text>
-            <v-btn class="ma-1" v-if="presentVisible" @click="emit('present')">presente</v-btn>
-            <v-btn class="ma-1" v-if="absentVisible" @click="emit('absent', false)">assente</v-btn>
+            <v-btn :disabled="loading" class="ma-1" v-if="presentVisible" @click="emit('present')">presente</v-btn>
+            <v-btn :disabled="loading" class="ma-1" v-if="absentVisible" @click="emit('absent', false)">assente</v-btn>
             <v-dialog transition="dialog-bottom-transition" v-else-if="recoverableAbsentVisible || unjustifiedAbsentVisible">
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn class="ma-1" v-bind="activatorProps">assente (R/I)</v-btn>
+                    <v-btn :disabled="loading" class="ma-1" v-bind="activatorProps">assente (R/I)</v-btn>
                 </template>
 
                 <template v-slot:default="{ isActive }">
@@ -36,12 +36,12 @@
                 </template>
             </v-dialog>
 
-            <v-btn class="ma-1" v-if="trialVisible" @click="emit('trial')">prova</v-btn>
-            <v-btn class="ma-1" v-if="resetVisible" @click="emit('reset')">reset</v-btn>
+            <v-btn :disabled="loading" class="ma-1" v-if="trialVisible" @click="emit('trial')">prova</v-btn>
+            <v-btn :disabled="loading" class="ma-1" v-if="resetVisible" @click="emit('reset')">reset</v-btn>
 
             <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen v-if="!item.lesson.moved">
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn class="ma-1" v-bind="activatorProps" v-if="moveVisible">sposta</v-btn>
+                    <v-btn :disabled="loading" class="ma-1" v-bind="activatorProps" v-if="moveVisible">sposta</v-btn>
                 </template>
 
                 <template v-slot:default="{ isActive }">
@@ -59,13 +59,13 @@
                 </template>
             </v-dialog>
             <template v-else-if="item.lesson.moved.ref == 'moved'">
-                <v-btn class="ma-1" :to="`/lesson/${item.lesson.moved.lessonRef.dailyLessonId}`">
+                <v-btn :disabled="loading" class="ma-1" :to="`/lesson/${item.lesson.moved.lessonRef.dailyLessonId}`">
                     <template v-slot:prepend>
                         <v-icon>mdi-eye-arrow-right-outline</v-icon>
                     </template>spostata</v-btn>
             </template>
             <template v-else>
-                <v-btn class="ma-1" :to="`/lesson/${item.lesson.moved.lessonRef.dailyLessonId}`">
+                <v-btn :disabled="loading" class="ma-1" :to="`/lesson/${item.lesson.moved.lessonRef.dailyLessonId}`">
                     <template v-slot:prepend>
                         <v-icon>mdi-eye-arrow-left-outline</v-icon>
                     </template>
@@ -74,7 +74,7 @@
 
             <v-dialog v-model="timeDialog" transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn class="ma-1" v-bind="activatorProps">modifica orario</v-btn>
+                    <v-btn :disabled="loading" class="ma-1" v-bind="activatorProps">modifica orario</v-btn>
                 </template>
 
                 <template v-slot:default="{ isActive }">
@@ -86,20 +86,20 @@
                 </template>
             </v-dialog>
 
-            <v-btn v-if="isRecoveryLesson" class="ma-1"
+            <v-btn :disabled="loading" v-if="isRecoveryLesson" class="ma-1"
                 :to="`/lesson/${item.lesson.recovery?.lessonRef.dailyLessonId}`">
                 <template v-slot:prepend>
                     <v-icon>mdi-eye-arrow-left-outline</v-icon>
                 </template>
                 origine</v-btn>
-            <v-btn v-if="isOriginalRecoverableLesson" class="ma-1" :to="`/lesson/${item.lesson.recovery?.lessonRef.dailyLessonId}`">
+            <v-btn :disabled="loading" v-if="isOriginalRecoverableLesson" class="ma-1" :to="`/lesson/${item.lesson.recovery?.lessonRef.dailyLessonId}`">
                 <template v-slot:prepend>
                     <v-icon>mdi-eye-arrow-right-outline</v-icon>
                 </template>recupero</v-btn>
 
             <v-dialog fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn class="ma-1" v-bind="activatorProps">
+                    <v-btn :disabled="loading" class="ma-1" v-bind="activatorProps">
                         note
                     </v-btn>
                 </template>
@@ -115,7 +115,7 @@
             <DeleteDialog :name="`${item.student.name} ${item.student.surname}`" objName="Studente"
                 :onDelete="onDeleteLessonItem">
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
+                    <v-btn :disabled="loading" color="error" v-bind="activatorProps">elimina</v-btn>
                 </template>
             </DeleteDialog>
         </v-card-text>
@@ -132,6 +132,7 @@ import StudentEditor from '../student/StudentEditor.vue';
 
 const props = defineProps<{
     school: School;
+    loading?: boolean;
     onDeleteLessonItem: () => Promise<boolean>;
     updateLessonTime: (newTime: EventTime) => Promise<boolean>;
     moveLesson: (newLessonDate: Date) => Promise<boolean>

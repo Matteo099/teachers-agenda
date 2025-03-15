@@ -322,6 +322,7 @@ export enum RecoveryStatus {
 export enum DeleteMode {
     DELETING_ORIGINAL_LESSON = "DELETING_ORIGINAL_LESSON",
     DELETING_RECOVERY_LESSON = "DELETING_RECOVERY_LESSON",
+    DELETING_MOVE_LESSON = "DELETING_MOVE_LESSON",
 }
 
 export interface Lesson extends ScheduledLesson {

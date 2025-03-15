@@ -14,7 +14,7 @@ export class LessonService {
     public async updateLessonStatus(status: LessonStatus, dailyLesson: DailyLesson, lesson: Lesson) {
         const schoolId: ID = dailyLesson.schoolId;
         const wasTrial = lesson.status == LessonStatus.TRIAL;
-        const wasMoved = !!lesson.moved;
+        // const wasMoved = !!lesson.moved;
 
         lesson.status = status;
 
@@ -22,9 +22,11 @@ export class LessonService {
             await StudentService.instance.setTrialDone(lesson.studentId, dailyLesson.date, dailyLesson.id);
         } else if (wasTrial) {
             await StudentService.instance.unsetTrial(lesson.studentId);
-        } else if (wasMoved) {
-            await this.cancelMovedLesson(dailyLesson, lesson);
-        } else {
+        }
+        // else if (wasMoved) {
+        //     await this.cancelMovedLesson(dailyLesson, lesson);
+        // } 
+        else {
             await SchoolRecoveryLessonService.instance.updateRecoveries(schoolId, dailyLesson.id, lesson);
         }
     }
@@ -33,6 +35,7 @@ export class LessonService {
         if (this.lessonIds.includes(lesson.lessonId)) return;
 
         this.lessonIds.push(lesson.lessonId);
+        await this.cancelMovedLesson(dailyLesson, lesson, deleteMode);
         await this.updateLessonStatus(LessonStatus.NONE, dailyLesson, lesson);
         await SchoolRecoveryLessonService.instance.resetRecoveries(dailyLesson, lesson, deleteMode);
         this.lessonIds = this.lessonIds.filter(i => i != lesson.lessonId);
@@ -82,9 +85,9 @@ export class LessonService {
         return newLesson;
     }
 
-    public async cancelMovedLesson(originalDailyLesson: DailyLesson, lesson: Lesson) {
+    public async cancelMovedLesson(dailyLesson: DailyLesson, lesson: Lesson, deleteMode?: DeleteMode) {
         // if has moved, delete the moved lesson
-        if (lesson.moved) {
+        if (lesson.moved?.ref == 'moved') {
             // delete moved lesson
             const movedDailyLesson = await DailyLessonRepository.instance.get(lesson.moved.lessonRef.dailyLessonId);
             const movedLesson = movedDailyLesson?.lessons.find(l => l.lessonId == lesson.moved!.lessonRef.lessonId)
@@ -94,8 +97,17 @@ export class LessonService {
             else console.warn("unable to remove moved lesson")
 
             delete lesson.moved;
-            console.log(originalDailyLesson, lesson);
-            await DailyLessonRepository.instance.save(originalDailyLesson, originalDailyLesson.id);
+            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
+        } else if (deleteMode == DeleteMode.DELETING_MOVE_LESSON && lesson.moved?.ref == 'original') {
+            // await DailyLessonService.instance.deleteLessons(dailyLesson, true, [lesson]);
+            const originalDailyLesson = await DailyLessonRepository.instance.get(lesson.moved.lessonRef.dailyLessonId);
+            const originalLesson = originalDailyLesson?.lessons.find(l => l.lessonId == lesson.moved!.lessonRef.lessonId);
+            console.log(originalDailyLesson, originalLesson);
+            if (originalDailyLesson && originalLesson) {
+                delete originalLesson.moved;
+                await DailyLessonRepository.instance.save(originalDailyLesson, originalDailyLesson.id);
+            }
+            else console.warn("unable to reset original move lesson")
         }
     }
 }
