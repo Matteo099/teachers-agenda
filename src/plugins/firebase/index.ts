@@ -15,8 +15,8 @@ function initialize(existingApp?: FirebaseApp) {
     // If on localhost, use all firebase services locally
     if (import.meta.env.VITE_FIREBASE_SIMULATOR.toLowerCase() === "true" && location.hostname === 'localhost') {
         if (!existingApp) {
-            connectAuthEmulator(auth, "http://localhost:9099");
-            connectFirestoreEmulator(firestore, 'localhost', 8080);
+            connectAuthEmulator(auth, `http://localhost:${import.meta.env.VITE_FIREBASE_EMULATOR_PORT ?? 9099}`);
+            connectFirestoreEmulator(firestore, 'localhost', import.meta.env.VITE_FIREBASE_EMULATOR_PORT ?? 8080);
             // connectStorageEmulator(storage, 'localhost', 9002);
         }
     }
