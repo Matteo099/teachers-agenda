@@ -133,6 +133,7 @@ function getColor(lesson: LessonProjection) {
 }
 
 async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
+    await loadLessonGroup(true);
     routingToDailyLesson.value = true;
     const dailyLessonId = await DailyLessonService.instance.getOrCreateDailyLessonId(props.school.id, lessonGroup);
     routingToDailyLesson.value = false;

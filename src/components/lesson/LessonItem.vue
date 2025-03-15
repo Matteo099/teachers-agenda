@@ -15,7 +15,11 @@
                     v-if="item.lesson.status != LessonStatus.TRIAL && item.lesson.status != LessonStatus.PRESENT && !(item.lesson.moved?.ref == 'moved')"
                     @click="emit('present')">presente</v-btn>
 
-                <v-dialog transition="dialog-bottom-transition">
+                <template v-if="item.lesson.recovery?.ref == 'original'">
+                    <v-btn class="ma-1" @click="emit('absent', false)"
+                        v-if="item.lesson.status != LessonStatus.TRIAL && item.lesson.status != LessonStatus.ABSENT && item.lesson.status != LessonStatus.UNJUSTIFIED_ABSENCE && !(item.lesson.moved?.ref == 'moved')">assente</v-btn>
+                </template>
+                <v-dialog transition="dialog-bottom-transition" v-else>
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn class="ma-1" v-bind="activatorProps"
                             v-if="item.lesson.status != LessonStatus.TRIAL && item.lesson.status != LessonStatus.ABSENT && item.lesson.status != LessonStatus.UNJUSTIFIED_ABSENCE && !(item.lesson.moved?.ref == 'moved')">assente</v-btn>
@@ -41,10 +45,12 @@
                 </v-dialog>
                 <v-btn class="ma-1" v-if="item.lesson.status == LessonStatus.NONE && !item.student.trial?.done"
                     @click="emit('trial')">prova</v-btn>
-                <v-btn class="ma-1" v-if="item.lesson.status != LessonStatus.NONE || (item.lesson.moved?.ref == 'moved')"
+                <v-btn class="ma-1"
+                    v-if="item.lesson.status != LessonStatus.NONE || (item.lesson.moved?.ref == 'moved')"
                     @click="emit('reset')">reset</v-btn>
 
-                <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen v-if="!item.lesson.moved">
+                <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen
+                    v-if="!item.lesson.moved">
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn class="ma-1" v-bind="activatorProps"
                             v-if="!item.lesson.recovery && item.lesson.status == LessonStatus.NONE">sposta</v-btn>
@@ -122,7 +128,8 @@
                 </template>
             </v-dialog>
 
-            <DeleteDialog :name="`${item.student.name} ${item.student.surname}`" objName="Studente" :onDelete="onDeleteLessonItem">
+            <DeleteDialog :name="`${item.student.name} ${item.student.surname}`" objName="Studente"
+                :onDelete="onDeleteLessonItem">
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn color="error" v-bind="activatorProps">elimina</v-btn>
                 </template>
@@ -134,7 +141,7 @@
 <script setup lang="ts">
 import EditLessonTime from '@/components/lesson/EditLessonTime.vue';
 import { LessonStatus, Time, type EventTime, type School, type StudentLesson } from '@/models/model';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import DeleteDialog from '../DeleteDialog.vue';
 import StudentEditor from '../student/StudentEditor.vue';
@@ -152,6 +159,15 @@ const timeDialog = ref(false)
 const dateDialog = ref(false)
 const newLessonDate = ref();
 const movingLesson = ref(false);
+
+const presentVisible = computed(() => false);
+const absentVisible = computed(() => false);
+const recoverableAbsentVisible = computed(() => false);
+const unjustifiedAbsentVisible = computed(() => false);
+const resetVisible = computed(() => false);
+const trialVisible = computed(() => false);
+const deleteVisible = computed(() => false);
+const updateTimeVisible = computed(() => false);
 
 
 async function _updateLessonTime(newTime: EventTime) {
