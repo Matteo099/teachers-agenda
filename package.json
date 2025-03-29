@@ -38,7 +38,7 @@
     "vue3-toastify": "^0.2.8",
     "vuedraggable": "^4.1.0",
     "vuefire": "^3.2.1",
-    "vuetify": "^3.7.6"
+    "vuetify": "^3.7.19"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",
