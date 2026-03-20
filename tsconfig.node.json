@@ -1,3 +1,4 @@
+// TSConfig for modules that run in Node.js environment via either transpilation or type-stripping.
 {
   "extends": "@tsconfig/node24/tsconfig.json",
   "include": [
@@ -10,10 +11,8 @@
   ],
   "compilerOptions": {
     "noEmit": true,
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "types": ["node"]
+    // `vue-tsc --build` produces a .tsbuildinfo file for incremental type-checking.
+    // Specified here to keep it out of the root directory.
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   }
 }
