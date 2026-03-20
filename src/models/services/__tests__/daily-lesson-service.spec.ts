@@ -52,7 +52,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[0];
+        const lessonToUpdate = dailyLesson.lessons[0]!;
         const student = (await studentRepository.get(lessonToUpdate.studentId))!;
 
         // Update lesson statuses
@@ -61,9 +61,9 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.PRESENT);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.PRESENT);
         for (let index = 1; index < dailyLesson.lessons.length; index++) {
-            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+            expect(updatedDailyLesson.lessons[index]!.status).toBe(LessonStatus.NONE);
         }
 
         // Check trial is not alterated
@@ -72,7 +72,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 
@@ -80,7 +80,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[0];
+        const lessonToUpdate = dailyLesson.lessons[0]!;
         const student = (await studentRepository.get(lessonToUpdate.studentId))!;
 
         // Update lesson statuses
@@ -89,9 +89,9 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.NONE);
-        expect(updatedDailyLesson.lessons[1].status).toBe(LessonStatus.ABSENT);
-        expect(updatedDailyLesson.lessons[2].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.NONE);
+        expect(updatedDailyLesson.lessons[1]!.status).toBe(LessonStatus.ABSENT);
+        expect(updatedDailyLesson.lessons[2]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
 
         // Check trial is not alterated
         // const studentAfter = (await studentRepository.get(lessonToUpdate.studentId))!;
@@ -99,7 +99,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 
@@ -107,7 +107,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[0];
+        const lessonToUpdate = dailyLesson.lessons[0]!;
 
         // Update lesson statuses
         await dailyLessonService.updateLessonsStatus(LessonStatus.ABSENT, dailyLesson, [lessonToUpdate]);
@@ -115,13 +115,13 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.ABSENT);
-        expect(updatedDailyLesson.lessons[1].status).toBe(LessonStatus.ABSENT);
-        expect(updatedDailyLesson.lessons[2].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.ABSENT);
+        expect(updatedDailyLesson.lessons[1]!.status).toBe(LessonStatus.ABSENT);
+        expect(updatedDailyLesson.lessons[2]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
 
         // Check school recovery
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).toBeDefined();
         expect(recovery?.status).toBe(RecoveryStatus.UNSET);
     });
@@ -130,7 +130,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[0];
+        const lessonToUpdate = dailyLesson.lessons[0]!;
 
         // Update lesson statuses
         await dailyLessonService.updateLessonsStatus(LessonStatus.UNJUSTIFIED_ABSENCE, dailyLesson, [lessonToUpdate]);
@@ -138,13 +138,13 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
-        expect(updatedDailyLesson.lessons[1].status).toBe(LessonStatus.ABSENT);
-        expect(updatedDailyLesson.lessons[2].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(updatedDailyLesson.lessons[1]!.status).toBe(LessonStatus.ABSENT);
+        expect(updatedDailyLesson.lessons[2]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
 
         // Check school recovery
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 
@@ -161,7 +161,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[0];
+        const lessonToUpdate = dailyLesson.lessons[0]!;
         const student = (await studentRepository.get(lessonToUpdate.studentId))!;
 
         // Update lesson statuses
@@ -170,14 +170,14 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.ABSENT);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.ABSENT);
         for (let index = 1; index < dailyLesson.lessons.length; index++) {
-            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+            expect(updatedDailyLesson.lessons[index]!.status).toBe(LessonStatus.NONE);
         }
 
         // Check school recovery
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).toBeDefined();
         expect(recovery?.status).toBe(RecoveryStatus.UNSET);
     });
@@ -186,7 +186,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[1];
+        const lessonToUpdate = dailyLesson.lessons[1]!;
 
         // Update lesson statuses
         await dailyLessonService.updateLessonsStatus(LessonStatus.NONE, dailyLesson, [lessonToUpdate]);
@@ -194,13 +194,13 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.PRESENT);
-        expect(updatedDailyLesson.lessons[1].status).toBe(LessonStatus.NONE);
-        expect(updatedDailyLesson.lessons[2].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.PRESENT);
+        expect(updatedDailyLesson.lessons[1]!.status).toBe(LessonStatus.NONE);
+        expect(updatedDailyLesson.lessons[2]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 
@@ -208,7 +208,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[1];
+        const lessonToUpdate = dailyLesson.lessons[1]!;
 
         // Update lesson statuses
         await dailyLessonService.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson, [lessonToUpdate]);
@@ -216,13 +216,13 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.PRESENT);
-        expect(updatedDailyLesson.lessons[1].status).toBe(LessonStatus.PRESENT);
-        expect(updatedDailyLesson.lessons[2].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.PRESENT);
+        expect(updatedDailyLesson.lessons[1]!.status).toBe(LessonStatus.PRESENT);
+        expect(updatedDailyLesson.lessons[2]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 
@@ -230,7 +230,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[0];
+        const lessonToUpdate = dailyLesson.lessons[0]!;
 
         // Update lesson statuses
         await dailyLessonService.updateLessonsStatus(LessonStatus.UNJUSTIFIED_ABSENCE, dailyLesson, [lessonToUpdate]);
@@ -238,14 +238,14 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
         for (let index = 1; index < dailyLesson.lessons.length; index++) {
-            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+            expect(updatedDailyLesson.lessons[index]!.status).toBe(LessonStatus.NONE);
         }
 
         // Check school recovery
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 
@@ -253,7 +253,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[2];
+        const lessonToUpdate = dailyLesson.lessons[2]!;
 
         // Update lesson statuses
         await dailyLessonService.updateLessonsStatus(LessonStatus.NONE, dailyLesson, [lessonToUpdate]);
@@ -261,13 +261,13 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.PRESENT);
-        expect(updatedDailyLesson.lessons[1].status).toBe(LessonStatus.ABSENT);
-        expect(updatedDailyLesson.lessons[2].status).toBe(LessonStatus.NONE);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.PRESENT);
+        expect(updatedDailyLesson.lessons[1]!.status).toBe(LessonStatus.ABSENT);
+        expect(updatedDailyLesson.lessons[2]!.status).toBe(LessonStatus.NONE);
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 
@@ -275,7 +275,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[2];
+        const lessonToUpdate = dailyLesson.lessons[2]!;
 
         // Update lesson statuses
         await dailyLessonService.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson, [lessonToUpdate]);
@@ -283,13 +283,13 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.PRESENT);
-        expect(updatedDailyLesson.lessons[1].status).toBe(LessonStatus.ABSENT);
-        expect(updatedDailyLesson.lessons[2].status).toBe(LessonStatus.PRESENT);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.PRESENT);
+        expect(updatedDailyLesson.lessons[1]!.status).toBe(LessonStatus.ABSENT);
+        expect(updatedDailyLesson.lessons[2]!.status).toBe(LessonStatus.PRESENT);
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 
@@ -302,7 +302,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToUpdate = dailyLesson.lessons[2];
+        const lessonToUpdate = dailyLesson.lessons[2]!;
 
         // Update lesson statuses
         await dailyLessonService.updateLessonsStatus(LessonStatus.TRIAL, dailyLesson, [lessonToUpdate]);
@@ -310,9 +310,9 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
-        expect(updatedDailyLesson.lessons[2].status).toBe(LessonStatus.TRIAL);
+        expect(updatedDailyLesson.lessons[2]!.status).toBe(LessonStatus.TRIAL);
         for (let index = 1; index < dailyLesson.lessons.length - 1; index++) {
-            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+            expect(updatedDailyLesson.lessons[index]!.status).toBe(LessonStatus.NONE);
         }
 
         // Check trial is not alterated
@@ -324,7 +324,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 
@@ -332,11 +332,11 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         let dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        let lessonToUpdate = dailyLesson.lessons[2];
+        let lessonToUpdate = dailyLesson.lessons[2]!;
         await dailyLessonService.updateLessonsStatus(LessonStatus.TRIAL, dailyLesson, [lessonToUpdate]);
 
         dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        lessonToUpdate = dailyLesson.lessons[2];
+        lessonToUpdate = dailyLesson.lessons[2]!;
         // Update lesson statuses
         await dailyLessonService.updateLessonsStatus(LessonStatus.NONE, dailyLesson, [lessonToUpdate]);
 
@@ -344,7 +344,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
         for (let index = 0; index < dailyLesson.lessons.length; index++) {
-            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+            expect(updatedDailyLesson.lessons[index]!.status).toBe(LessonStatus.NONE);
         }
 
         // Check trial is not alterated
@@ -353,7 +353,7 @@ describe("DailyLessonService.updateLessonsStatus - Original Lesson", () => {
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 });
@@ -380,7 +380,7 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToDelete = dailyLesson.lessons[0];
+        const lessonToDelete = dailyLesson.lessons[0]!;
 
         // Delete lesson
         await dailyLessonService.deleteLessons(dailyLesson, true, [lessonToDelete]);
@@ -390,12 +390,12 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         expect(updatedDailyLesson).not.toBeNull();
         expect(updatedDailyLesson.lessons.length).toBe(2);
         for (let index = 0; index < dailyLesson.lessons.length; index++) {
-            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+            expect(updatedDailyLesson.lessons[index]!.status).toBe(LessonStatus.NONE);
         }
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
-        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0].lessonId)
+        const recovery = schoolRecovery?.recoveries.find(r => r.originalLesson.dailyLessonId == dailyLessonId && r.originalLesson.lessonId == updatedDailyLesson.lessons[0]!.lessonId)
         expect(recovery).not.toBeDefined();
     });
 
@@ -403,7 +403,7 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToDelete = dailyLesson.lessons[0];
+        const lessonToDelete = dailyLesson.lessons[0]!;
 
         // Delete lesson
         await dailyLessonService.deleteLessons(dailyLesson, true, [lessonToDelete]);
@@ -411,8 +411,8 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         // Fetch updated lesson
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson.lessons.length).toBe(2);
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.ABSENT);
-        expect(updatedDailyLesson.lessons[1].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.ABSENT);
+        expect(updatedDailyLesson.lessons[1]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
@@ -424,11 +424,11 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         let dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        let lessonToDelete = dailyLesson.lessons[2];
+        let lessonToDelete = dailyLesson.lessons[2]!;
         await dailyLessonService.updateLessonsStatus(LessonStatus.TRIAL, dailyLesson, [lessonToDelete]);
 
         dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        lessonToDelete = dailyLesson.lessons[2];
+        lessonToDelete = dailyLesson.lessons[2]!;
         // Delete lesson
         await dailyLessonService.deleteLessons(dailyLesson, true, [lessonToDelete]);
 
@@ -436,7 +436,7 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson.lessons.length).toBe(2);
         for (let index = 0; index < dailyLesson.lessons.length; index++) {
-            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+            expect(updatedDailyLesson.lessons[index]!.status).toBe(LessonStatus.NONE);
         }
 
         // Check trial is not alterated
@@ -453,7 +453,7 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToDelete = dailyLesson.lessons[2];
+        const lessonToDelete = dailyLesson.lessons[2]!;
 
         // Delete lesson
         await dailyLessonService.deleteLessons(dailyLesson, true, [lessonToDelete]);
@@ -462,8 +462,8 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
         expect(updatedDailyLesson.lessons.length).toBe(2);
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.PRESENT);
-        expect(updatedDailyLesson.lessons[1].status).toBe(LessonStatus.ABSENT);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.PRESENT);
+        expect(updatedDailyLesson.lessons[1]!.status).toBe(LessonStatus.ABSENT);
 
         // Check school recovery is not alterated
         const schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
@@ -475,7 +475,7 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         const dailyLessonId = "LUMiJz3vcjJ9fSpYUSTc";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToDelete = dailyLesson.lessons[1];
+        const lessonToDelete = dailyLesson.lessons[1]!;
 
         // Check school recovery is not alterated
         let schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
@@ -489,8 +489,8 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         const updatedDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(updatedDailyLesson).not.toBeNull();
         expect(updatedDailyLesson.lessons.length).toBe(2);
-        expect(updatedDailyLesson.lessons[0].status).toBe(LessonStatus.PRESENT);
-        expect(updatedDailyLesson.lessons[1].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(updatedDailyLesson.lessons[0]!.status).toBe(LessonStatus.PRESENT);
+        expect(updatedDailyLesson.lessons[1]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
 
         // Check school recovery
         schoolRecovery = (await schoolRecoveryLessonRepository.get(schoolId));
@@ -505,7 +505,7 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         let originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         const extendedRecoveries = await schoolRecoveryServiceExt.computeDailyLessons(schoolRecovery);
         const recoveries = extendedRecoveries.recoveryMap.get(RecoveryStatus.UNSET);
-        const recovery = recoveries![0];
+        const recovery = recoveries![0]!;
         let lessonToDelete = originalDailyLesson.lessons[1];
 
         // sunday 12th february 2025
@@ -523,8 +523,8 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         // Schedule recovery
         await schoolRecoveryService.scheduleRecovery(recovery, schedule);
         originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        lessonToDelete = originalDailyLesson.lessons[1];
-        const recoveryLessonRef = originalDailyLesson.lessons[1].recovery;
+        lessonToDelete = originalDailyLesson.lessons[1]!;
+        const recoveryLessonRef = originalDailyLesson.lessons[1]!.recovery;
 
         // Delete lesson
         await dailyLessonService.deleteLessons(originalDailyLesson, true, [lessonToDelete]);
@@ -533,8 +533,8 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(originalDailyLesson).not.toBeNull();
         expect(originalDailyLesson.lessons.length).toBe(2);
-        expect(originalDailyLesson.lessons[0].status).toBe(LessonStatus.PRESENT);
-        expect(originalDailyLesson.lessons[1].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(originalDailyLesson.lessons[0]!.status).toBe(LessonStatus.PRESENT);
+        expect(originalDailyLesson.lessons[1]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
         // Check recovery lesson
         const recoveryDailyLesson = (await dailyLessonRepository.get(recoveryLessonRef!.lessonRef.dailyLessonId))!;
         expect(recoveryDailyLesson).not.toBeDefined();
@@ -552,7 +552,7 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         let originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         const extendedRecoveries = await schoolRecoveryServiceExt.computeDailyLessons(schoolRecovery);
         const recoveries = extendedRecoveries.recoveryMap.get(RecoveryStatus.UNSET);
-        const recovery = recoveries![0];
+        const recovery = recoveries![0]!;
         let lessonToDelete = originalDailyLesson.lessons[1];
 
         // sunday 12th february 2025
@@ -570,14 +570,14 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         // Schedule recovery
         await schoolRecoveryService.scheduleRecovery(recovery, schedule);
         originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const recoveryLessonRef = originalDailyLesson.lessons[1].recovery;
+        const recoveryLessonRef = originalDailyLesson.lessons[1]!.recovery;
         // Set status present
         let recoveryDailyLesson = (await dailyLessonRepository.get(recoveryLessonRef!.lessonRef.dailyLessonId))!;
-        const recoveryLesson = recoveryDailyLesson.lessons[0];
+        const recoveryLesson = recoveryDailyLesson.lessons[0]!;
         dailyLessonService.updateLessonsStatus(LessonStatus.PRESENT, recoveryDailyLesson, [recoveryLesson]);
 
         originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        lessonToDelete = originalDailyLesson.lessons[1];
+        lessonToDelete = originalDailyLesson.lessons[1]!;
 
         // Delete lesson
         await dailyLessonService.deleteLessons(originalDailyLesson, true, [lessonToDelete]);
@@ -586,8 +586,8 @@ describe("DailyLessonService.deleteLessons - Original Lesson", () => {
         originalDailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
         expect(originalDailyLesson).not.toBeNull();
         expect(originalDailyLesson.lessons.length).toBe(2);
-        expect(originalDailyLesson.lessons[0].status).toBe(LessonStatus.PRESENT);
-        expect(originalDailyLesson.lessons[1].status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
+        expect(originalDailyLesson.lessons[0]!.status).toBe(LessonStatus.PRESENT);
+        expect(originalDailyLesson.lessons[1]!.status).toBe(LessonStatus.UNJUSTIFIED_ABSENCE);
         // Check recovery lesson
         recoveryDailyLesson = (await dailyLessonRepository.get(recoveryLessonRef!.lessonRef.dailyLessonId))!;
         expect(recoveryDailyLesson).not.toBeDefined();
@@ -612,7 +612,7 @@ describe("DailyLessonService.moveLessons - Original Lesson", () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToMove = dailyLesson.lessons[0];
+        const lessonToMove = dailyLesson.lessons[0]!;
 
         // sunday 12th february 2025
         const newDate = new Date(2025, 1, 12);
@@ -625,27 +625,27 @@ describe("DailyLessonService.moveLessons - Original Lesson", () => {
         expect(updatedDailyLesson).not.toBeNull();
         expect(updatedDailyLesson.lessons.length).toBe(3);
         for (let index = 0; index < dailyLesson.lessons.length; index++) {
-            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+            expect(updatedDailyLesson.lessons[index]!.status).toBe(LessonStatus.NONE);
         }
-        expect(updatedDailyLesson.lessons[0].moved).toBeDefined();
-        expect(updatedDailyLesson.lessons[0].moved?.ref).toBe('moved');
+        expect(updatedDailyLesson.lessons[0]!.moved).toBeDefined();
+        expect(updatedDailyLesson.lessons[0]!.moved?.ref).toBe('moved');
 
-        const movedDailyLesson = (await dailyLessonRepository.get(updatedDailyLesson.lessons[0].moved!.lessonRef.dailyLessonId))!;
+        const movedDailyLesson = (await dailyLessonRepository.get(updatedDailyLesson.lessons[0]!.moved!.lessonRef.dailyLessonId))!;
         expect(movedDailyLesson).toBeDefined();
         expect(movedDailyLesson.date).toBe(yyyyMMdd.fromDate(newDate).toIyyyyMMdd());
-        expect(updatedDailyLesson.lessons[0].moved?.lessonRef.dailyLessonId).toBe(movedDailyLesson.id);
-        expect(updatedDailyLesson.lessons[0].moved?.lessonRef.lessonId).toBe(movedDailyLesson.lessons[0].lessonId);
-        expect(movedDailyLesson.lessons[0].moved).toBeDefined();
-        expect(movedDailyLesson.lessons[0].moved?.ref).toBe('original');
-        expect(movedDailyLesson.lessons[0].moved?.lessonRef.dailyLessonId).toBe(updatedDailyLesson.id);
-        expect(movedDailyLesson.lessons[0].moved?.lessonRef.lessonId).toBe(updatedDailyLesson.lessons[0].lessonId);
+        expect(updatedDailyLesson.lessons[0]!.moved?.lessonRef.dailyLessonId).toBe(movedDailyLesson.id);
+        expect(updatedDailyLesson.lessons[0]!.moved?.lessonRef.lessonId).toBe(movedDailyLesson.lessons[0]!.lessonId);
+        expect(movedDailyLesson.lessons[0]!.moved).toBeDefined();
+        expect(movedDailyLesson.lessons[0]!.moved?.ref).toBe('original');
+        expect(movedDailyLesson.lessons[0]!.moved?.lessonRef.dailyLessonId).toBe(updatedDailyLesson.id);
+        expect(movedDailyLesson.lessons[0]!.moved?.lessonRef.lessonId).toBe(updatedDailyLesson.lessons[0]!.lessonId);
     });
 
     it("Should move lesson to a full day", async () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
         const schoolId = "T0RYndQ7RkAjzmL3qjqJ";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToMove = dailyLesson.lessons[0];
+        const lessonToMove = dailyLesson.lessons[0]!;
 
         // monday 3th jenuary 2025
         const newDate = yyyyMMdd.fromIyyyyMMdd("20250103").toDate();
@@ -658,20 +658,20 @@ describe("DailyLessonService.moveLessons - Original Lesson", () => {
         expect(updatedDailyLesson).not.toBeNull();
         expect(updatedDailyLesson.lessons.length).toBe(3);
         for (let index = 0; index < dailyLesson.lessons.length; index++) {
-            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+            expect(updatedDailyLesson.lessons[index]!.status).toBe(LessonStatus.NONE);
         }
-        expect(updatedDailyLesson.lessons[0].moved).toBeDefined();
-        expect(updatedDailyLesson.lessons[0].moved?.ref).toBe('moved');
+        expect(updatedDailyLesson.lessons[0]!.moved).toBeDefined();
+        expect(updatedDailyLesson.lessons[0]!.moved?.ref).toBe('moved');
 
-        const movedDailyLesson = (await dailyLessonRepository.get(updatedDailyLesson.lessons[0].moved!.lessonRef.dailyLessonId))!;
+        const movedDailyLesson = (await dailyLessonRepository.get(updatedDailyLesson.lessons[0]!.moved!.lessonRef.dailyLessonId))!;
         expect(movedDailyLesson).toBeDefined();
         expect(movedDailyLesson.date).toBe(yyyyMMdd.fromDate(newDate).toIyyyyMMdd());
-        expect(updatedDailyLesson.lessons[0].moved?.lessonRef.dailyLessonId).toBe(movedDailyLesson.id);
-        expect(updatedDailyLesson.lessons[0].moved?.lessonRef.lessonId).toBe(movedDailyLesson.lessons[1].lessonId);
-        expect(movedDailyLesson.lessons[1].moved).toBeDefined();
-        expect(movedDailyLesson.lessons[1].moved?.ref).toBe('original');
-        expect(movedDailyLesson.lessons[1].moved?.lessonRef.dailyLessonId).toBe(updatedDailyLesson.id);
-        expect(movedDailyLesson.lessons[1].moved?.lessonRef.lessonId).toBe(updatedDailyLesson.lessons[0].lessonId);
+        expect(updatedDailyLesson.lessons[0]!.moved?.lessonRef.dailyLessonId).toBe(movedDailyLesson.id);
+        expect(updatedDailyLesson.lessons[0]!.moved?.lessonRef.lessonId).toBe(movedDailyLesson.lessons[1]!.lessonId);
+        expect(movedDailyLesson.lessons[1]!.moved).toBeDefined();
+        expect(movedDailyLesson.lessons[1]!.moved?.ref).toBe('original');
+        expect(movedDailyLesson.lessons[1]!.moved?.lessonRef.dailyLessonId).toBe(updatedDailyLesson.id);
+        expect(movedDailyLesson.lessons[1]!.moved?.lessonRef.lessonId).toBe(updatedDailyLesson.lessons[0]!.lessonId);
     });
 });
 
@@ -685,7 +685,7 @@ describe("DailyLessonService.updateLessonTime - Original Lesson", () => {
     it("Should update lesson time to 04:00 - 05:00", async () => {
         const dailyLessonId = "ZBNQtG8bOjB6bnWZxVWv";
         const dailyLesson = (await dailyLessonRepository.get(dailyLessonId))!;
-        const lessonToMove = dailyLesson.lessons[0];
+        const lessonToMove = dailyLesson.lessons[0]!;
         const newDataEvent: EventTime = {
             startTime: "04:00",
             endTime: "05:00",
@@ -699,11 +699,11 @@ describe("DailyLessonService.updateLessonTime - Original Lesson", () => {
         expect(updatedDailyLesson).not.toBeNull();
         expect(updatedDailyLesson.lessons.length).toBe(3);
         for (let index = 0; index < dailyLesson.lessons.length; index++) {
-            expect(updatedDailyLesson.lessons[index].status).toBe(LessonStatus.NONE);
+            expect(updatedDailyLesson.lessons[index]!.status).toBe(LessonStatus.NONE);
         }
-        expect(updatedDailyLesson.lessons[0].startTime).toBeDefined();
-        expect(updatedDailyLesson.lessons[0].endTime).toBeDefined();
-        expect(updatedDailyLesson.lessons[0].startTime).toBe(Time.fromHHMM(newDataEvent.startTime)?.toITime());
-        expect(updatedDailyLesson.lessons[0].endTime).toBe(Time.fromHHMM(newDataEvent.endTime)?.toITime());
+        expect(updatedDailyLesson.lessons[0]!.startTime).toBeDefined();
+        expect(updatedDailyLesson.lessons[0]!.endTime).toBeDefined();
+        expect(updatedDailyLesson.lessons[0]!.startTime).toBe(Time.fromHHMM(newDataEvent.startTime)?.toITime());
+        expect(updatedDailyLesson.lessons[0]!.endTime).toBe(Time.fromHHMM(newDataEvent.endTime)?.toITime());
     });
 });

@@ -28,8 +28,8 @@ export class DailyLessonRepository extends AbstractRepository<DailyLesson> {
     public static extract(id: ID): { date: IyyyyMMdd; schoolId: ID } {
         const s = id.split("_");
         return {
-            date: s[0],
-            schoolId: s[1],
+            date: s[0]!,
+            schoolId: s[1]!,
         }
     }
 }

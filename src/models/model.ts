@@ -1,7 +1,7 @@
-import { Timestamp } from "firebase/firestore";
-import { dateFormat } from "./utils";
-import type { ID } from "./repositories/abstract-repository";
 import { type CalendarEvent } from '@schedule-x/calendar';
+import { Timestamp } from "firebase/firestore";
+import type { ID } from "./repositories/abstract-repository";
+import { dateFormat } from "./utils";
 export const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 export const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
@@ -65,8 +65,8 @@ export class Time {
         try {
             const hhmm = t.split(":");
             if (hhmm.length != 2) return;
-            const h = parseInt(hhmm[0]);
-            const m = parseInt(hhmm[1]);
+            const h = parseInt(hhmm[0] ?? "");
+            const m = parseInt(hhmm[1] ?? "");
 
             return new Time(h, m);
         } catch (error) {
@@ -143,13 +143,13 @@ export class yyyyMMdd {
 
     getDayString(dayLength?: number): string {
         const date = this.toDate();
-        const day = days[date.getDay()].toUpperCase();
+        const day = (days[date.getDay()] ?? "").toUpperCase();
         return (dayLength ? day.slice(0, dayLength) : day);
     }
 
     formatAndPreappendDay(dayLength?: number): string {
         const date = this.toDate();
-        const day = days[date.getDay()].toUpperCase();
+        const day = (days[date.getDay()] ?? "").toUpperCase();
         return (dayLength ? day.slice(0, dayLength) : day) + " " + dateFormat(date);
     }
 

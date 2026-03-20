@@ -128,7 +128,7 @@ function toggleTrim() {
     }
     calendarControls.setDayBoundaries({ start: start.value, end: end.value });
     const opt = calendarControls.getWeekOptions();
-    const range = parseInt(end.value.split(":")[0]) - parseInt(start.value.split(":")[0]);
+    const range = parseInt(end.value.split(":")[0]!) - parseInt(start.value.split(":")[0]!);
     calendarControls.setWeekOptions({ ...opt, gridHeight: Math.max(1000 * range / 24, 400) });
 }
 
@@ -177,11 +177,11 @@ async function loadLessons(range?: DateRange | null) {
 
     const from = {
         date: yyyyMMdd.fromDate(new Date(range.start)),
-        time: Time.fromHHMM(range.start.split(" ")[1])
+        time: Time.fromHHMM(range.start.split(" ")[1]!)
     }
     const to = {
         date: yyyyMMdd.fromDate(new Date(range.end)),
-        time: Time.fromHHMM(range.end.split(" ")[1])
+        time: Time.fromHHMM(range.end.split(" ")[1]!)
     }
 
     for await (const schoolId of selectedSchools.value) {

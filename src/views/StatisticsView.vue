@@ -72,7 +72,7 @@ import { useRoute, useRouter } from 'vue-router';
 const tabs = ["salary", "schools", "lessons", "students"];
 const route = useRoute();
 const router = useRouter();
-const tab: Ref<string> = ref(tabs[0]);
+const tab = ref(tabs[0]);
 const dateRange: Ref<DateSelectModel | undefined> = ref();
 const loadingSchools = ref(false);
 const schools: Ref<School[]> = ref([]);

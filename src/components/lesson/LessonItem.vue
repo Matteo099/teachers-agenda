@@ -1,5 +1,5 @@
 <template>
-    <v-card elevation=3 :loading="loading">
+    <v-card elevation=3 :loading="loading" v-if="item.student">
         <v-card-title>
             <v-checkbox v-model="select" :value="item.student.id" multiple>
                 <template v-slot:label>
@@ -12,7 +12,8 @@
         <v-card-text>
             <v-btn :disabled="loading" class="ma-1" v-if="presentVisible" @click="emit('present')">presente</v-btn>
             <v-btn :disabled="loading" class="ma-1" v-if="absentVisible" @click="emit('absent', false)">assente</v-btn>
-            <v-dialog transition="dialog-bottom-transition" v-else-if="recoverableAbsentVisible || unjustifiedAbsentVisible">
+            <v-dialog transition="dialog-bottom-transition"
+                v-else-if="recoverableAbsentVisible || unjustifiedAbsentVisible">
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn :disabled="loading" class="ma-1" v-bind="activatorProps">assente (R/I)</v-btn>
                 </template>
@@ -92,7 +93,8 @@
                     <v-icon>mdi-eye-arrow-left-outline</v-icon>
                 </template>
                 origine</v-btn>
-            <v-btn :disabled="loading" v-if="isOriginalRecoverableLesson" class="ma-1" :to="`/lesson/${item.lesson.recovery?.lessonRef.dailyLessonId}`">
+            <v-btn :disabled="loading" v-if="isOriginalRecoverableLesson" class="ma-1"
+                :to="`/lesson/${item.lesson.recovery?.lessonRef.dailyLessonId}`">
                 <template v-slot:prepend>
                     <v-icon>mdi-eye-arrow-right-outline</v-icon>
                 </template>recupero</v-btn>

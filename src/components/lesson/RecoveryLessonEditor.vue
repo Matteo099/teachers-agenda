@@ -19,7 +19,7 @@
             </v-row>
             <v-row v-if="dailyLesson" class="my-1">
                 <DailyLessonStudentList :allStudents="[lessonToRecover]" v-model="dailyLesson.lessons"
-                    :startingTime="dailyLesson.lessons![0].startTime" />
+                    :startingTime="dailyLesson.lessons![0]!.startTime" />
             </v-row>
         </v-card-text>
         <v-card-actions>

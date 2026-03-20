@@ -32,7 +32,7 @@
                             programmato
                             <span v-if="recovery.recoveryReference.recoveryDailyLesson"> per il {{
                                 yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.recoveryDailyLesson.date).format()
-                                }}</span>
+                            }}</span>
                         </div>
                         <div v-else>
                             Recupero della lezione del {{
@@ -40,12 +40,12 @@
                             effettuato
                             <span v-if="recovery.recoveryReference.recoveryDailyLesson"> il {{
                                 yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.recoveryDailyLesson.date).format()
-                                }}</span>
+                            }}</span>
                         </div>
                     </template>
 
                     <template v-slot:append>
-                        <ScheduleRecoveryLessonButton v-if="key == RecoveryStatus.UNSET" v-model="value[index]"
+                        <ScheduleRecoveryLessonButton v-if="key == RecoveryStatus.UNSET" v-model="value[index]!"
                             :school="school"></ScheduleRecoveryLessonButton>
                         <v-btn v-else-if="key == RecoveryStatus.PENDING" @click="cancelScheduleRecovery(recovery)"
                             :loading="cancellingScheduleRecovery" :disabled="cancellingScheduleRecovery">annulla</v-btn>

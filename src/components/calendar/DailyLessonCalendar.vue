@@ -121,8 +121,8 @@ function updateInternalEvents() {
             eventsServicePlugin.update(event);
         } else eventsServicePlugin.add(event);
 
-        let startTime = event.start.split(" ")[1];
-        let endTime = event.end.split(" ")[1];
+        let startTime = event.start.split(" ")[1]!;
+        let endTime = event.end.split(" ")[1]!;
         if (startTime < start) start = startTime;
         if (endTime > end) end = endTime;
     });
@@ -143,7 +143,7 @@ function updateCalendarBoundaries() {
         else end = "24:00";
         calendarControls.setDayBoundaries({ start, end })
         const opt = calendarControls.getWeekOptions();
-        const range = parseInt(end.split(":")[0]) - parseInt(start.split(":")[0]);
+        const range = parseInt(end.split(":")[0]!) - parseInt(start.split(":")[0]!);
         calendarControls.setWeekOptions({ ...opt, gridHeight: Math.max(1000 * range / 24, 400) });
     } else {
         calendarControls.setDayBoundaries({ start: "00:00", end: "24:00" })
@@ -196,8 +196,8 @@ function updateModelEvent(calendarEvent: CalendarEvent) {
     if (!event) return;
 
     if ("lesson" in event) {
-        event.lesson.startTime = Time.fromHHMM(calendarEvent.start.split(' ')[1])?.toITime() ?? event.lesson.startTime;
-        event.lesson.endTime = Time.fromHHMM(calendarEvent.end.split(' ')[1])?.toITime() ?? event.lesson.endTime;
+        event.lesson.startTime = Time.fromHHMM(calendarEvent.start.split(' ')[1]!)?.toITime() ?? event.lesson.startTime;
+        event.lesson.endTime = Time.fromHHMM(calendarEvent.end.split(' ')[1]!)?.toITime() ?? event.lesson.endTime;
     } else {
         event.start = calendarEvent.start;
         event.end = calendarEvent.end;

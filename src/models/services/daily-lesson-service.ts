@@ -243,7 +243,7 @@ export class DailyLessonService {
         const newDailyLesson = { ...dailyLesson };
         students.forEach(s => {
             // 08:00 => 28800 seconds
-            const lastLessonEndTime = newDailyLesson.lessons?.length == 0 ? 28800 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1].endTime;
+            const lastLessonEndTime = newDailyLesson.lessons?.length == 0 ? 28800 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1]!.endTime;
             newDailyLesson.lessons?.push({
                 lessonId: uuidv4(),
                 status: LessonStatus.NONE,

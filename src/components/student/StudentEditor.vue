@@ -240,7 +240,7 @@ function updateLevelDateRange() {
         if (props.initialStudent) {
             const levelHistory = props.initialStudent?.levelHistory;
             if (levelHistory && levelHistory.length >= 1)
-                fromDate = levelHistory[0].to ? yyyyMMdd.fromIyyyyMMdd(levelHistory[0].to).toDate() : new Date();
+                fromDate = levelHistory[0]!.to ? yyyyMMdd.fromIyyyyMMdd(levelHistory[0]!.to).toDate() : new Date();
             else fromDate = toDate(props.initialStudent.createdAt);
         }
         from.value = fromDate;

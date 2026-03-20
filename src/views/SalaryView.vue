@@ -81,8 +81,8 @@ async function computeSalaryOfDailyLesson(salary: Salary, index: number) {
 
     const updatedDailyLesson = await DailyLessonService.instance.computeSalaryOfDailyLesson(props.school, salary.dailyLessonId);
     if (updatedDailyLesson) {
-        salaries.value[index].salary = updatedDailyLesson.salary;
-        salaries.value[index].lastUpdate = updatedDailyLesson.lastSalaryUpdate;
+        salaries.value[index]!.salary = updatedDailyLesson.salary;
+        salaries.value[index]!.lastUpdate = updatedDailyLesson.lastSalaryUpdate;
     } else {
         toast.info(`Lo stipendio della lezione del ${yyyyMMdd.fromIyyyyMMdd(salary.date).format()} è già aggiornato!`)
     }

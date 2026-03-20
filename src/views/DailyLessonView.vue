@@ -89,7 +89,7 @@
                         :key="dailyLesson.id + item.lesson.lessonId" :dot-color="getColor(item.lesson)" size="small">
                         <LessonItem :school="school" :key="dailyLesson.id + item.lesson.lessonId"
                             :loading="performingOperation[item.lesson.lessonId]?.value"
-                            v-model:item="studentLessons[index]" v-model:select="selectedLessons"
+                            v-model:item="studentLessons[index]!" v-model:select="selectedLessons"
                             @present="present(item)" @absent="absent(item, $event)"
                             :moveLesson="async ($event) => await moveLesson(item, $event)" @trial="trial(item)"
                             @reset="reset(item)"
@@ -221,7 +221,7 @@ const absent = withCache(async (event: StudentLesson, canRecover = true) => {
     console.error(error)
 }, async (event: StudentLesson) => {
     updateOperationStatus(event, false);
-    return false;
+    // return false;
 });
 
 const trial = withCache(async (event: StudentLesson) => {
@@ -233,7 +233,7 @@ const trial = withCache(async (event: StudentLesson) => {
     console.error(error)
 }, async (event: StudentLesson) => {
     updateOperationStatus(event, false);
-    return false;
+    // return false;
 });
 
 const reset = withCache(async (event: StudentLesson) => {
@@ -245,7 +245,7 @@ const reset = withCache(async (event: StudentLesson) => {
     console.error(error)
 }, async (event: StudentLesson) => {
     updateOperationStatus(event, false);
-    return false;
+    // return false;
 });
 
 const moveLesson = withCache(async (event: StudentLesson, lessonDate: Date) => {
@@ -257,7 +257,7 @@ const moveLesson = withCache(async (event: StudentLesson, lessonDate: Date) => {
     return false
 }, async (event: StudentLesson) => {
     updateOperationStatus(event, false);
-    return false;
+    // return false;
 });
 
 const updateLessonTime = withCache(async (event: StudentLesson, newDataEvent: EventTime) => {
@@ -270,7 +270,7 @@ const updateLessonTime = withCache(async (event: StudentLesson, newDataEvent: Ev
     return false
 }, async (event: StudentLesson) => {
     updateOperationStatus(event, false);
-    return false;
+    // return false;
 });
 
 function toggleAll() {
@@ -338,7 +338,7 @@ const deleteStudentLesson = withCache(async (_studentLesson: StudentLesson, dele
     return false;
 }, async (event: StudentLesson) => {
     updateOperationStatus(event, false);
-    return false;
+    // return false;
 });
 
 async function dailyLessonUpdate() {

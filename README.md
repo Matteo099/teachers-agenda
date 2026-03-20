@@ -74,6 +74,17 @@ and <enter> to proceed): **Authentication Emulator, Firestore Emulator**
 $ firebase emulators:start
 ```
 
+
+Create .env file on root directory with this content:
+
+```
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_SIMULATOR=true
+```
+
+where VITE_FIREBASE_API_KEY is something like `ABcdEfgHDSdfGGFDG_VerTd1213IFgI__assSDFjs3`
+
+
 ### github pages
 
 1. Update package.json version

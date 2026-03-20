@@ -229,7 +229,7 @@ export class LessonGroupService {
         // Step 2: Loop until we have the required number of upcoming lessons (or run out of lessons)
         while ((_weeklyLessons.length > 0 || futureDailyLessons.length > dailyLessonIndex) && lessonProjections.length < totalLessons) {
             if (_weeklyLessons.length == 0) {
-                const futureDailyLesson = futureDailyLessons[dailyLessonIndex];
+                const futureDailyLesson = futureDailyLessons[dailyLessonIndex]!;
                 lessonProjections.push(this.createLessonProjection(futureDailyLesson, false));
                 dailyLessonIndex++;
             }
@@ -247,8 +247,8 @@ export class LessonGroupService {
                 }
 
                 // Step 3: Add any future daily lessons that occur before the next weekly lesson's date
-                while (futureDailyLessons.length > dailyLessonIndex && futureDailyLessons[dailyLessonIndex].date <= nextLessonDateString && lessonProjections.length < totalLessons) {
-                    const futureDailyLesson = futureDailyLessons[dailyLessonIndex];
+                while (futureDailyLessons.length > dailyLessonIndex && futureDailyLessons[dailyLessonIndex]!.date <= nextLessonDateString && lessonProjections.length < totalLessons) {
+                    const futureDailyLesson = futureDailyLessons[dailyLessonIndex]!;
                     lessonProjections.push(this.createLessonProjection(futureDailyLesson, false));
                     dailyLessonIndex++;
                 }
@@ -283,7 +283,7 @@ export class LessonGroupService {
 
             let monthIndex = lessonGroup.findIndex(lg => lg.month == months[lessonMonth]);
             if (monthIndex == -1) {
-                lessonGroup.push({ month: months[lessonMonth], lessons: [] });
+                lessonGroup.push({ month: months[lessonMonth]!, lessons: [] });
                 monthIndex = lessonGroup.length - 1;
             }
 
@@ -293,7 +293,7 @@ export class LessonGroupService {
                 lesson.next = true;
             }
 
-            lessonGroup[monthIndex].lessons.push(lesson);
+            lessonGroup[monthIndex]!.lessons.push(lesson);
         });
 
         return lessonGroup;

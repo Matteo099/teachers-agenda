@@ -38,7 +38,7 @@ export class SchoolRecoveryLessonService {
             recovery.recoveries.push({ originalLesson: lessonRef, status });
         }
 
-        const recoveryEntry = recovery.recoveries[index !== -1 ? index : recovery.recoveries.length - 1];
+        const recoveryEntry = recovery.recoveries[index !== -1 ? index : recovery.recoveries.length - 1]!;
         recoveryEntry.status = status;
 
         if (status === RecoveryStatus.PENDING) {
