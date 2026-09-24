@@ -207,7 +207,7 @@ export class DailyLessonService {
         await this.save(dailyLesson, school ? { school } : undefined);
     }
 
-    public async moveLessons(dailyLesson: DailyLesson, newLessonDate: Date, lessons: Lesson[]) {
+    public async moveLessons(dailyLesson: DailyLesson, newLessonDate: Date, lessons: Lesson[], school?: School) {
         const schoolId = dailyLesson.schoolId;
         const originalDailyLessonId = dailyLesson.id;
 
@@ -220,9 +220,11 @@ export class DailyLessonService {
                 const newLesson = this.lessonService.moveLesson(lessonToMove, originalDailyLessonId, newDailyLessonId);
                 newDailyLesson.lessons.push(newLesson);
                 newDailyLesson.lessons.sort((a, b) => a.startTime - b.startTime);
-                await DailyLessonRepository.instance.save(newDailyLesson, newDailyLessonId);
+                if (school) await this.save(newDailyLesson, { school });
+                else await DailyLessonRepository.instance.save(newDailyLesson, newDailyLessonId);
             }
-            await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
+            if (school) await this.save(dailyLesson, { school });
+            else await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
         } else throw new Error("Unable to move the lesson because the new daily lesson is undefined!");
     }
 
@@ -263,6 +265,11 @@ export class DailyLessonService {
     public async save(dailyLesson: DailyLesson, opts?: SaveOptions) {
         const dl = await this.extractDailyLesson(dailyLesson, opts);
         await DailyLessonRepository.instance.save(dl, dl.id);
+    }
+
+    public async setOfficialCalendarDate(dailyLesson: DailyLesson, isOfficial: boolean): Promise<void> {
+        dailyLesson.isOfficialCalendarDate = isOfficial;
+        await this.save(dailyLesson);
     }
 
     private async extractDailyLesson(dailyLesson: DailyLesson, opts?: SaveOptions): Promise<DailyLesson> {
@@ -312,6 +319,8 @@ export class DailyLessonService {
             lastSalaryUpdate: Timestamp.now(),
             salary
         };
+        if (dailyLesson.isOfficialCalendarDate !== undefined)
+            newDailyLesson.isOfficialCalendarDate = dailyLesson.isOfficialCalendarDate;
         if (opts?.school.salaryStrategy != undefined) newDailyLesson.salaryStrategy = opts.school.salaryStrategy;
         return newDailyLesson;
     }

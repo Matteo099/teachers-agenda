@@ -93,7 +93,19 @@ watch(recoveries, async () => computeDailyLessons());
 
 const cancelScheduleRecovery = withCache(async (recovery: StudentLessonWithRecovery) => {
     cancellingScheduleRecovery.value = true;
-    await SchoolRecoveryLessonService.instance.cancelRecovery(recovery);
+    const recoveryLesson = recovery.recoveryReference.recoveryDailyLesson?.lessons.find(l =>
+        l.recovery?.ref === 'original' &&
+        l.recovery.lessonRef.dailyLessonId === recovery.recoveryReference.originalDailyLesson.id &&
+        l.recovery.lessonRef.lessonId === recovery.lesson.lessonId);
+    if (recoveryLesson?.recovery) {
+        await SchoolRecoveryLessonService.instance.cancelRecoveryFraction(
+            recovery.lesson.recovery?.lessonRef ?? { dailyLessonId: recovery.recoveryReference.originalDailyLesson.id, lessonId: recovery.lesson.lessonId },
+            { dailyLessonId: recovery.recoveryReference.recoveryDailyLesson!.id, lessonId: recoveryLesson.lessonId },
+            Math.round((recoveryLesson.endTime - recoveryLesson.startTime) / 60)
+        );
+    } else {
+        await SchoolRecoveryLessonService.instance.cancelRecovery(recovery);
+    }
 }, (error) => {
     toast.warn("Impossibile annullare la lezione di recupero")
     console.error("Unable to cancel recovery lesson", error);

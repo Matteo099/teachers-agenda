@@ -229,11 +229,8 @@ export interface School {
     salaryStrategy: SalaryStrategy;
     trialLessonPaymentStrategy: TrialLessonPaymentStrategy;
     /** Hourly rate for completed recoveries in pay-per-performance schools. */
-    /** @deprecated Recoveries use student level tariff. Kept for legacy documents. */
-    recoveryHourlyRate?: number;
     /** Flat reimbursement for every eligible activity day. */
     dailyExpenseReimbursement?: number;
-    reimbursementDayStrategy?: ReimbursementDayStrategy;
 
     // Instead of embedding arrays of students, store students in a separate collection and use schoolId for filtering
     // students: Student[];
@@ -318,6 +315,7 @@ export interface DailyLesson {
     date: IyyyyMMdd;
     schoolId: string;
     lessons: Lesson[];
+    /** Explicit official date; supports manual and irregular calendars. */
     isOfficialCalendarDate?: boolean;
     lastSalaryUpdate?: Timestamp;
     salary: number;

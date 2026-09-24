@@ -63,6 +63,11 @@
                     </template>
                 </DeleteDialog>
             </v-col>
+            <v-col>
+                <v-btn variant="tonal" @click="toggleOfficialCalendarDate">
+                    {{ dailyLesson.isOfficialCalendarDate ? 'data ufficiale' : 'segna data ufficiale' }}
+                </v-btn>
+            </v-col>
 
             <v-col>
                 <v-btn-toggle v-model="visualization" mandatory shaped>
@@ -251,7 +256,7 @@ const reset = withCache(async (event: StudentLesson) => {
 
 const moveLesson = withCache(async (event: StudentLesson, lessonDate: Date) => {
     updateOperationStatus(event, true);
-    await DailyLessonService.instance.moveLessons(dailyLesson.value!, lessonDate, [event.lesson]);
+    await DailyLessonService.instance.moveLessons(dailyLesson.value!, lessonDate, [event.lesson], school.value ?? undefined);
     return true;
 }, (error) => {
     console.error(error)
@@ -346,6 +351,13 @@ const hideStudentForDate = withCache(async (_studentLesson: StudentLesson) => {
     if (!dailyLesson.value) return false;
     await StudentLessonService.instance.hideStudentForDate(dailyLesson.value, _studentLesson.lesson.studentId);
     await updateStudentLesson();
+    return true;
+});
+
+const toggleOfficialCalendarDate = withCache(async () => {
+    if (!dailyLesson.value) return false;
+    await DailyLessonService.instance.setOfficialCalendarDate(dailyLesson.value, !dailyLesson.value.isOfficialCalendarDate);
+    toast.info(dailyLesson.value.isOfficialCalendarDate ? 'Data inclusa nei rimborsi' : 'Data esclusa dai rimborsi');
     return true;
 });
 

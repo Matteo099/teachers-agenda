@@ -59,12 +59,13 @@ export class MonthlySalaryService {
 
     private async countOfficialCalendarDays(schoolId: string, from: IyyyyMMdd, to: IyyyyMMdd, dailyLessons: DailyLesson[]): Promise<number> {
         const officialDates = new Set(dailyLessons.filter(d => d.isOfficialCalendarDate === true).map(d => d.date));
+        const explicitlyExcludedDates = new Set(dailyLessons.filter(d => d.isOfficialCalendarDate === false).map(d => d.date));
         const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(schoolId);
         let date = yyyyMMdd.fromIyyyyMMdd(from).toDate();
         const end = yyyyMMdd.fromIyyyyMMdd(to).toDate();
         while (date <= end) {
             const dateString = yyyyMMdd.fromDate(date).toIyyyyMMdd();
-            if (weeklyLessons.some(wl => WeeklyLessonService.instance.isValid(wl, dateString))) officialDates.add(dateString);
+            if (!explicitlyExcludedDates.has(dateString) && weeklyLessons.some(wl => WeeklyLessonService.instance.isValid(wl, dateString))) officialDates.add(dateString);
             date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
         }
         return officialDates.size;

@@ -43,7 +43,8 @@ export class SchoolRecoveryLessonService {
 
         if (status === RecoveryStatus.PENDING) {
             recoveryEntry.recoveryLesson = info!;
-            recoveryEntry.recoveryLessons = [...(recoveryEntry.recoveryLessons ?? []), info!];
+            if (!(recoveryEntry.recoveryLessons ?? []).some(r => r.dailyLessonId === info!.dailyLessonId && r.lessonId === info!.lessonId))
+                recoveryEntry.recoveryLessons = [...(recoveryEntry.recoveryLessons ?? []), info!];
         }
         if (status === RecoveryStatus.UNSET) {
             delete recoveryEntry.recoveryLesson;

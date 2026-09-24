@@ -120,7 +120,20 @@
                     <v-btn :disabled="loading" color="error" v-bind="activatorProps">elimina</v-btn>
                 </template>
             </DeleteDialog>
-            <v-btn :disabled="loading" class="ma-1" variant="text" @click="emit('hideForDate')">nascondi oggi</v-btn>
+            <v-dialog>
+                <template v-slot:activator="{ props: activatorProps }">
+                    <v-btn :disabled="loading" class="ma-1" variant="text" v-bind="activatorProps">nascondi oggi</v-btn>
+                </template>
+                <template v-slot:default="{ isActive }">
+                    <v-card title="Nascondi studente" text="Lo studente sarà nascosto solo da questa data.">
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn text="Annulla" @click="isActive.value = false" />
+                            <v-btn color="primary" text="Nascondi" @click="isActive.value = false; emit('hideForDate')" />
+                        </v-card-actions>
+                    </v-card>
+                </template>
+            </v-dialog>
         </v-card-text>
     </v-card>
 </template>

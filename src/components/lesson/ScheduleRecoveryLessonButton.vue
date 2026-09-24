@@ -14,6 +14,10 @@
                             <v-date-input v-model="date" v-bind="dateProps" label="Data della Lezione di Recupero"
                                 inputmode="none"></v-date-input>
                         </v-col>
+                        <v-col cols="12" lg="6">
+                            <v-number-input v-model="minutes" label="Minuti recupero" :min="1"
+                                :max="recovery.student.minutesLessonDuration" suffix="min" />
+                        </v-col>
                         <v-col cols="12" lg="12">
                             <v-text-field v-model="time" v-bind="timeProps" :active="modalTimePicker"
                                 :focused="modalTimePicker" inputmode="none" label="Orario della prima Lezione"
@@ -72,6 +76,7 @@ const vuetifyConfig = (state: any) => ({
 
 const [date, dateProps] = defineField('date', vuetifyConfig);
 const [time, timeProps] = defineField('time', vuetifyConfig);
+const [minutes] = defineField('minutes', vuetifyConfig);
 
 const save = handleSubmit(
     async (_: GenericObject) => {
@@ -102,7 +107,8 @@ const scheduleRecovery = withCache(async () => {
         originalLessonId: recovery.value.lesson.lessonId,
         date: date.value,
         startTime: startTime.toITime(),
-        endTime: startTime.add({ minutes: recovery.value.student.minutesLessonDuration }).toITime()
+        endTime: startTime.add({ minutes: Number(minutes.value ?? recovery.value.student.minutesLessonDuration) }).toITime(),
+        minutes: Number(minutes.value ?? recovery.value.student.minutesLessonDuration)
     }
     await SchoolRecoveryLessonService.instance.scheduleRecovery(recovery.value, schedule);
     scheduleRecoveryDialog.value = false
