@@ -131,7 +131,7 @@ import { toast } from 'vue3-toastify';
 import { useFirebaseAuth } from 'vuefire';
 import * as yup from 'yup';
 
-const appLogo = new URL('@/assets/images/logo.png', import.meta.url).href
+const appLogo = new URL('@/assets/images/logo.jpeg', import.meta.url).href
 
 const signinSchema = yup.object({
     lEmail: yup.string().required("L'email è obbligatoria").label('Email').email(),

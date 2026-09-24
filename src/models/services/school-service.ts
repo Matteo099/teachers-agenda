@@ -8,9 +8,9 @@ import { SchoolRepository } from "../repositories/school-repository";
 import { StudentRepository } from "../repositories/student-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
 import { nameof } from "../utils";
-import { DailyLessonService } from "./daily-lesson-service";
 import { type SchoolLessons } from "./lesson-group-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
+import { DailyLessonService } from "./daily-lesson-service";
 
 export class SchoolService {
 
@@ -88,7 +88,13 @@ export class SchoolService {
         const schools = await SchoolRepository.instance.getAll();
         for await (const school of schools) {
             const schoolLessons = await this.getSchoolLessons(school.id, date);
-            const todayLesson = schoolLessons.dailyLessons.find(dl => dl.date == dateString) ?? schoolLessons.weeklyLessons.find(wl => WeeklyLessonService.instance.isValid(wl, dateString));
+            let todayLesson = schoolLessons.dailyLessons.find(dl => dl.date == dateString);
+            // The daily-detail route requires a DailyLesson ID. Materialize today's
+            // recurring schedule before exposing it from the dashboard.
+            if (!todayLesson && schoolLessons.weeklyLessons.some(wl => WeeklyLessonService.instance.isValid(wl, dateString))) {
+                const dailyLessonId = await DailyLessonService.instance.createDailyLessonByDate(school.id, date);
+                todayLesson = await DailyLessonRepository.instance.get(dailyLessonId);
+            }
             if (todayLesson) lessons.push({
                 school,
                 lesson: todayLesson

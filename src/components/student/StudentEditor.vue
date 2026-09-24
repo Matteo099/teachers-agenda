@@ -1,7 +1,7 @@
 <template>
     <v-card prepend-icon="mdi-school" :title="`Studente (${school.name})`">
         <v-card-text>
-            <v-row dense>
+            <v-row density="comfortable">
                 <v-col cols="12" md="6">
                     <v-text-field id="std_name" :disabled="isDisabled('name')" :focused="isFocussed('name')"
                         v-model="name" v-bind="nameProps" label="Nome"></v-text-field>
@@ -23,8 +23,7 @@
                             <v-fab-transition>
                                 <v-btn v-if="levelHistoryVisible" icon="mdi-chevron-up"
                                     @click="toggleLevelHistory"></v-btn>
-                                <v-btn v-else="levelHistoryVisible" icon="mdi-chevron-down"
-                                    @click="toggleLevelHistory"></v-btn>
+                                <v-btn v-else icon="mdi-chevron-down" @click="toggleLevelHistory"></v-btn>
                             </v-fab-transition>
                         </template>
                     </v-select>
@@ -88,6 +87,12 @@
                 </v-col>
 
                 <v-col cols="12" md="6">
+                    <v-number-input id="std_hourlyRate" :disabled="isDisabled('hourlyRate')" :focused="isFocussed('hourlyRate')"
+                        v-model="hourlyRate" v-bind="hourlyRateProps" :min="0" :precision="2" controlVariant="default"
+                        label="Tariffa oraria personalizzata" prefix="€" hint="Vuoto: tariffa del livello" persistent-hint></v-number-input>
+                </v-col>
+
+                <v-col cols="12" md="6">
                     <v-switch :label="trialLabel" v-model="trial" v-bind="trialProps" color="primary"
                         hide-details></v-switch>
                 </v-col>
@@ -129,7 +134,7 @@ import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 
-type StudentEditorField = "name" | "surname" | "contact" | "lessonDay" | "level" | "minutesLessonDuration" | "note";
+type StudentEditorField = "name" | "surname" | "contact" | "lessonDay" | "level" | "minutesLessonDuration" | "hourlyRate" | "note";
 interface StudentEditorProps {
     school: School;
     initialStudent?: Student;
@@ -157,6 +162,7 @@ const schema = yup.object({
     lessonDay: yup.string().label('Giono di Lezione').nullable().optional(),
     level: yup.string().required('Il Livello è obbligatorio').label('Livello'),
     minutesLessonDuration: yup.number().required('La Durata della Lezione è obbligatoria').min(1).label('Durata della Lezione'),
+    hourlyRate: yup.number().min(0).nullable().optional(),
     trial: yup.boolean().label('Lezione di Prova'),
     isSubstitution: yup.boolean().label('Supplenza'),
     note: yup.string().label('Note'),
@@ -190,6 +196,7 @@ const [contact, contactProps] = defineField('contact', vuetifyConfig);
 const [lessonDay, lessonDayProps] = defineField('lessonDay', vuetifyConfig);
 const [level, levelProps] = defineField('level', vuetifyConfig);
 const [minutesLessonDuration, minutesLessonDurationProps] = defineField('minutesLessonDuration', vuetifyConfig);
+const [hourlyRate, hourlyRateProps] = defineField('hourlyRate', vuetifyConfig);
 const [trial, trialProps] = defineField('trial', vuetifyConfig);
 const [isSubstitution, isSubstitutionProps] = defineField('isSubstitution', vuetifyConfig);
 const [note, noteProps] = defineField('note', vuetifyConfig);
@@ -241,7 +248,7 @@ function updateLevelDateRange() {
         if (props.initialStudent) {
             const levelHistory = props.initialStudent?.levelHistory;
             if (levelHistory && levelHistory.length >= 1)
-                fromDate = levelHistory[0].to ? yyyyMMdd.fromIyyyyMMdd(levelHistory[0].to).toDate() : new Date();
+                fromDate = levelHistory[0]!.to ? yyyyMMdd.fromIyyyyMMdd(levelHistory[0]!.to).toDate() : new Date();
             else fromDate = toDate(props.initialStudent.createdAt);
         }
         from.value = fromDate;
@@ -255,6 +262,7 @@ function updateStudent() {
         surname.value = studentClone.surname;
         level.value = studentClone.level;
         minutesLessonDuration.value = studentClone.minutesLessonDuration;
+        hourlyRate.value = studentClone.hourlyRate;
         contact.value = studentClone.contact ?? "";
         note.value = studentClone.note?.text ?? "";
         trial.value = studentClone.trial?.done ?? false;
@@ -297,6 +305,7 @@ async function save(values: GenericObject) {
         level: values.level,
         levelHistory
     }
+    if (values.hourlyRate !== undefined && values.hourlyRate !== null && values.hourlyRate !== '') student.hourlyRate = Number(values.hourlyRate);
 
     if (contact.value && contact.value.trim().length != 0) student.contact = contact.value.trim();
     if (lessonDay.value) student.lessonDay = days.indexOf(lessonDay.value);

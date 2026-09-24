@@ -48,6 +48,6 @@ function getCompleteStudentName(studentId: string): string {
 
 function getStudentLessonDay(studentId: string): string {
     const student = props.allStudents.find(s => s.id == studentId);
-    return days[student?.lessonDay ?? 0];
+    return days[student?.lessonDay ?? 0]!;
 }
 </script>

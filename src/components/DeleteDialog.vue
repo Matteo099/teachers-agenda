@@ -37,7 +37,9 @@ const props = withDefaults(defineProps<DeleteDialogProps>(), {
     objName: "Oggetto",
     useToast: true
 });
-const emit = defineEmits(['delete']);
+
+defineEmits(['delete']);
+
 const dialog = ref(false);
 const removing = ref(false);
 

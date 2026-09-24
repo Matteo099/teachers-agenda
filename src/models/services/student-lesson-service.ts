@@ -1,5 +1,8 @@
-import type { DailyLesson, StudentLesson } from "../model";
+import type { Ref } from "vue";
+import type { DailyLesson, Student, StudentLesson } from "../model";
+import { arraysHaveSameElements } from "../utils";
 import { StudentService } from "./student-service";
+import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 
 export class StudentLessonService {
 
@@ -13,9 +16,37 @@ export class StudentLessonService {
     public async getStudentLesson(dailyLesson: DailyLesson, stundetIds?: string[]): Promise<StudentLesson[]> {
         stundetIds ??= dailyLesson.lessons.map(l => l.studentId);
         const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.schoolId, stundetIds);
-        return dailyLesson.lessons.map(l => {
+        return dailyLesson.lessons.filter(l => !l.hiddenForDate).map(l => {
             const s = data.find(st => st.id == l.studentId)!;
-            return { ...l, ...s };
+            return { lesson: l, student: s };
         });
+    }
+
+    public async updateStudentLesson(dailyLesson: DailyLesson, studentLessons: StudentLesson[], loading?: Ref<boolean>): Promise<StudentLesson[]> {
+        const currentStudentsId: string[] = studentLessons.map(s => s.lesson.studentId);
+        const newStudentsId: string[] = dailyLesson.lessons.map(l => l.studentId);
+
+        const differentStudents = !arraysHaveSameElements(currentStudentsId, newStudentsId);
+        let students: Student[] = studentLessons.map(sl => sl.student);
+        if (differentStudents) {
+            if (loading) loading.value = true
+            const stundetIds = dailyLesson.lessons.map(l => l.studentId);
+            students = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.schoolId, stundetIds);
+            if (loading) loading.value = false
+        }
+
+        studentLessons.length = 0;
+        dailyLesson.lessons.map(lesson => {
+            const student = students.find(st => st.id == lesson.studentId)!;
+            studentLessons.push({ lesson, student });
+        });
+        return studentLessons;
+    }
+
+    public async hideStudentForDate(dailyLesson: DailyLesson, studentId: string): Promise<void> {
+        const lesson = dailyLesson.lessons.find(l => l.studentId === studentId);
+        if (!lesson) return;
+        lesson.hiddenForDate = true;
+        await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
     }
 }

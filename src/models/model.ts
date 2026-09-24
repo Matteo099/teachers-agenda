@@ -1,7 +1,7 @@
-import { Timestamp } from "firebase/firestore";
-import { dateFormat } from "./utils";
-import type { ID } from "./repositories/abstract-repository";
 import { type CalendarEvent } from '@schedule-x/calendar';
+import { Timestamp } from "firebase/firestore";
+import type { ID } from "./repositories/abstract-repository";
+import { dateFormat } from "./utils";
 export const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 export const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
@@ -65,8 +65,8 @@ export class Time {
         try {
             const hhmm = t.split(":");
             if (hhmm.length != 2) return;
-            const h = parseInt(hhmm[0]);
-            const m = parseInt(hhmm[1]);
+            const h = parseInt(hhmm[0] ?? "");
+            const m = parseInt(hhmm[1] ?? "");
 
             return new Time(h, m);
         } catch (error) {
@@ -117,7 +117,8 @@ export class yyyyMMdd {
         if (date.length != 8) throw new Error("Unable to parse date, format not correct (yyyyMMdd): " + date);
 
         const y = parseInt(date.substring(0, 4));
-        const m = parseInt(date.substring(4, 6));
+        // Date's month is zero-based while the persisted yyyyMMdd representation is one-based.
+        const m = parseInt(date.substring(4, 6)) - 1;
         const d = parseInt(date.substring(6, 8));
         return new yyyyMMdd(d, m, y)
     }
@@ -143,13 +144,13 @@ export class yyyyMMdd {
 
     getDayString(dayLength?: number): string {
         const date = this.toDate();
-        const day = days[date.getDay()].toUpperCase();
+        const day = (days[date.getDay()] ?? "").toUpperCase();
         return (dayLength ? day.slice(0, dayLength) : day);
     }
 
     formatAndPreappendDay(dayLength?: number): string {
         const date = this.toDate();
-        const day = days[date.getDay()].toUpperCase();
+        const day = (days[date.getDay()] ?? "").toUpperCase();
         return (dayLength ? day.slice(0, dayLength) : day) + " " + dateFormat(date);
     }
 
@@ -185,6 +186,8 @@ export interface Student {
     note?: Note;
     level: string;
     minutesLessonDuration: number;
+    /** Optional hourly rate. When omitted the rate of the active level is used. */
+    hourlyRate?: number;
 
     levelHistory?: LevelHistory[];
     removed?: boolean;
@@ -225,6 +228,9 @@ export interface School {
     managerOptions?: ManagerOptions;
     salaryStrategy: SalaryStrategy;
     trialLessonPaymentStrategy: TrialLessonPaymentStrategy;
+    /** Hourly rate for completed recoveries in pay-per-performance schools. */
+    /** Flat reimbursement for every eligible activity day. */
+    dailyExpenseReimbursement?: number;
 
     // Instead of embedding arrays of students, store students in a separate collection and use schoolId for filtering
     // students: Student[];
@@ -237,14 +243,14 @@ export interface School {
 }
 
 export enum SalaryStrategy {
-    ABSENT_AND_PRESENT,
-    ONLY_PRESENT
+    ABSENT_AND_PRESENT = "ABSENT_AND_PRESENT",
+    ONLY_PRESENT = "ONLY_PRESENT"
 }
 
 export enum TrialLessonPaymentStrategy {
-    WHOLE,
-    HALF,
-    NOTHING
+    WHOLE = "WHOLE",
+    HALF = "HALF",
+    NOTHING = "NOTHING"
 }
 
 export interface Salary {
@@ -254,6 +260,18 @@ export interface Salary {
     salary: number;
     presents: number;
     absents: number;
+}
+
+export interface MonthlySalaryReport {
+    schoolId: string;
+    from: IyyyyMMdd;
+    to: IyyyyMMdd;
+    regularLessonsTotal: number;
+    recoveryTotal: number;
+    reimbursementTotal: number;
+    activityDays: number;
+    officialCalendarDays: number;
+    netTotal: number;
 }
 
 export interface ManagerOptions {
@@ -292,6 +310,8 @@ export interface DailyLesson {
     date: IyyyyMMdd;
     schoolId: string;
     lessons: Lesson[];
+    /** Explicit official date; supports manual and irregular calendars. */
+    isOfficialCalendarDate?: boolean;
     lastSalaryUpdate?: Timestamp;
     salary: number;
     /**
@@ -307,21 +327,42 @@ export interface TodayLesson { school: School; lesson: DailyLesson | WeeklyLesso
 export const lessonStatusName = ["", "presente", "assente", "cancellata"]
 export const lessonStatusColor = ["gray", "green", "red", "orange"]
 export enum LessonStatus {
-    NONE,
-    PRESENT,
-    ABSENT,
-    UNJUSTIFIED_ABSENCE,
-    TRIAL
+    NONE = "NONE",
+    PRESENT = "PRESENT",
+    ABSENT = "ABSENT",
+    UNJUSTIFIED_ABSENCE = "UNJUSTIFIED_ABSENCE",
+    TRIAL = "TRIAL",
+    MOVED = "MOVED"
+}
+export enum RecoveryStatus {
+    UNSET = "UNSET",
+    PENDING = "PENDING",
+    DONE = "DONE"
+}
+export enum DeleteMode {
+    DELETING_ORIGINAL_LESSON = "DELETING_ORIGINAL_LESSON",
+    DELETING_RECOVERY_LESSON = "DELETING_RECOVERY_LESSON",
+    DELETING_MOVE_LESSON = "DELETING_MOVE_LESSON",
 }
 
 export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
+    hiddenForDate?: boolean;
+    /** Frozen economic data for this lesson. Never overwrite once set. */
+    compensation?: LessonCompensation;
     recovery?: RecoveryLessonInfo;
     moved?: MovedLessonInfo;
-    undoneRecoveryRef?: LessonRef[];
 
     createdAt: Timestamp;
     updatedAt: Timestamp;
+}
+
+export interface LessonCompensation {
+    level: string;
+    hourlyRate: number;
+    minutes: number;
+    amount: number;
+    type: 'REGULAR' | 'TRIAL' | 'RECOVERY' | 'ABSENCE';
 }
 
 export interface MovedLessonInfo {
@@ -356,6 +397,7 @@ export interface RecoveryLessonInfo {
      * - The recovery daily lesson, if `ref` is 'recovery'.
      */
     lessonRef: LessonRef;
+    fractionMinutes?: number;
 }
 
 export interface RecoverySchedule {
@@ -366,6 +408,8 @@ export interface RecoverySchedule {
     date: Date;
     startTime: ITime;
     endTime: ITime;
+    /** Optional fraction size. Defaults to scheduled duration. */
+    minutes?: number;
 }
 
 export interface LessonRef {
@@ -378,24 +422,25 @@ export interface SchoolRecoveryLesson {
     schoolId: string;
 }
 
-/**
- * Lesson is UNSET when !done && !recoveryLesson
- * Lesson is PENDING when !done && !!recoveryLesson
- * Lesson is DONE when done && !!recoveryLesson
- */
 export interface RecoveryInfo {
     originalLesson: LessonRef;
     recoveryLesson?: LessonRef;
-    status?: LessonStatus;
+    recoveryLessons?: LessonRef[];
+    totalMinutes?: number;
+    recoveredMinutes?: number;
+    status: RecoveryStatus;
 }
 
 export const recoveryTypes = {
-    "unset": "Lezioni di Recupero da Programmare",
-    "pending": "Lezioni di Recupero Programmate",
-    "done": "Lezioni di Recupero Completate",
-}
+    [RecoveryStatus.UNSET]: "Lezioni di Recupero da Programmare",
+    [RecoveryStatus.PENDING]: "Lezioni di Recupero Programmate",
+    [RecoveryStatus.DONE]: "Lezioni di Recupero Completate"
+};
 
-export type StudentLesson = Lesson & Student;
+export interface StudentLesson {
+    lesson: Lesson
+    student: Student
+}
 
 
 export const updateDailyLessonTime = function (startingTimeInSeconds: number | string | undefined, studentLessons: StudentLesson[] | { scheduledLessons: ScheduledLesson[], students: Student[] }) {
@@ -420,9 +465,9 @@ export const updateDailyLessonTime = function (startingTimeInSeconds: number | s
 
     if (Array.isArray(studentLessons)) {
         studentLessons.forEach(sl => {
-            sl.startTime = startingMinutes * 60;
-            startingMinutes += sl.minutesLessonDuration;
-            sl.endTime = startingMinutes * 60;
+            sl.lesson.startTime = startingMinutes * 60;
+            startingMinutes += sl.student.minutesLessonDuration;
+            sl.lesson.endTime = startingMinutes * 60;
         })
     } else {
         studentLessons.scheduledLessons.forEach(sl => {

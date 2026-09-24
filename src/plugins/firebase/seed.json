@@ -1,0 +1,347 @@
+{
+    "schools": [
+        {
+            "createdAt": {
+                "seconds": 1739524172,
+                "nanoseconds": 916000000
+            },
+            "managerOptions": {
+                "cashFund": 245,
+                "totalStudents": 10,
+                "quotePerStudent": 1
+            },
+            "color": "#DBB8B8",
+            "levelRanges": [
+                {
+                    "price": 1,
+                    "levels": [
+                        "base"
+                    ]
+                },
+                {
+                    "price": 2,
+                    "levels": []
+                }
+            ],
+            "city": "Servigliano",
+            "managed": true,
+            "name": "Fenice",
+            "salaryStrategy": "ONLY_PRESENT",
+            "trialLessonPaymentStrategy": "NOTHING",
+            "updatedAt": {
+                "seconds": 1739524221,
+                "nanoseconds": 141000000
+            },
+            "id": "T0RYndQ7RkAjzmL3qjqJ"
+        },
+        {
+            "createdAt": {
+                "seconds": 1739524208,
+                "nanoseconds": 87000000
+            },
+            "color": "#AFFFD2",
+            "levelRanges": [
+                {
+                    "price": 1,
+                    "levels": [
+                        "a"
+                    ]
+                },
+                {
+                    "price": 2,
+                    "levels": [
+                        "b",
+                        "c"
+                    ]
+                }
+            ],
+            "city": "Macerata",
+            "managed": false,
+            "name": "Lizard",
+            "salaryStrategy": "ABSENT_AND_PRESENT",
+            "trialLessonPaymentStrategy": "HALF",
+            "updatedAt": {
+                "seconds": 1739524239,
+                "nanoseconds": 234000000
+            },
+            "id": "qdQFiFE8H0a9wW3OGyf8"
+        }
+    ],
+    "students": [
+        {
+            "minutesLessonDuration": 40,
+            "note": {
+                "text": "rezmep zijmulfel cujmit dusvuv nulgadtem funkid belpomvaq gumsefhex laqlinhov.\nkeyturyaw lemwehxullef fohnok xagjab cavkus roxmuzkuz. zibfobfedbeg zekmoh fadkutvex higsetwom goqwuzgux lufbivbic buxnubrum xawsat. saxwug sevjiyhih sejkebrudpiw xertab tizqaw napsonyaltif befneghig yijxep.",
+                "updatedAt": {
+                    "seconds": 1739524581,
+                    "nanoseconds": 192000000
+                }
+            },
+            "level": "base",
+            "lessonDay": 1,
+            "levelHistory": [
+                {
+                    "level": "base",
+                    "from": "20250114"
+                }
+            ],
+            "trial": {
+                "done": true
+            },
+            "createdAt": {
+                "seconds": 1739524581,
+                "nanoseconds": 192000000
+            },
+            "surname": "bugsegdeg",
+            "schoolId": "T0RYndQ7RkAjzmL3qjqJ",
+            "contact": "dacsamruy",
+            "name": "qevrofrof",
+            "isSubstitution": false,
+            "updatedAt": {
+                "seconds": 1739524581,
+                "nanoseconds": 192000000
+            },
+            "id": "4yjv9Et19I5BbvgOA6hn"
+        },
+        {
+            "minutesLessonDuration": 60,
+            "note": {
+                "text": "kupxaddehruw yegragnow pucluphoz ledqufhoz wajkubjav wiyvudvex lubqedzol geqwof tuyxeljum folsepfat nurnim. tuqjuy xoxyaj ronkod koqsun qakxiqset nikmoj siztow tirxafjuzkur. zugrahzuk nicbacfawqib coqnewzuf viysocyatvot jobdew gifwefzuy befratduq wednik moqxohsit. nafvonvuf doyqixpuc vaqborwet diglumgar povpobmic hogzukyepkug jewxuz nuhxanjec mushovkog dodbeq yovtik.",
+                "updatedAt": {
+                    "seconds": 1739524556,
+                    "nanoseconds": 170000000
+                }
+            },
+            "level": "base",
+            "lessonDay": 1,
+            "levelHistory": [
+                {
+                    "level": "base",
+                    "from": "20250114"
+                }
+            ],
+            "trial": {
+                "done": true
+            },
+            "createdAt": {
+                "seconds": 1739524458,
+                "nanoseconds": 919000000
+            },
+            "surname": "justarrah",
+            "schoolId": "T0RYndQ7RkAjzmL3qjqJ",
+            "contact": "lehpedcun",
+            "name": "vaxwabric",
+            "isSubstitution": false,
+            "updatedAt": {
+                "seconds": 1739524556,
+                "nanoseconds": 170000000
+            },
+            "id": "XtS6J59gfXzSSq1GOpgv"
+        },
+        {
+            "minutesLessonDuration": 60,
+            "createdAt": {
+                "seconds": 1739524484,
+                "nanoseconds": 226000000
+            },
+            "note": {
+                "text": "nipzurdav mujfojpup dafjiy guxweznir wulbipyofzur zusmofgopyat luvqihlur jopqomfebbud. zodgip sewpalsuk lowwunfay cidlit pubmil riwbik bohnef malnaqror kibsot. qemdeynum zitbuhtak jowyukyukqed puksufweknid xektinseyjud partajrok.\ndaykof gectoq sajhayxuk nikmepsar yivzawtuz quhwenqic beykit.",
+                "updatedAt": {
+                    "seconds": 1739524563,
+                    "nanoseconds": 211000000
+                }
+            },
+            "level": "base",
+            "surname": "vekzoyfum",
+            "schoolId": "T0RYndQ7RkAjzmL3qjqJ",
+            "contact": "xochuccuf",
+            "name": "commexxij",
+            "lessonDay": 1,
+            "isSubstitution": false,
+            "levelHistory": [
+                {
+                    "level": "base",
+                    "from": "20250114"
+                }
+            ],
+            "updatedAt": {
+                "seconds": 1739524563,
+                "nanoseconds": 211000000
+            },
+            "id": "d7ry44pzgtaVfgHkLxOA"
+        }
+    ],
+    "weeklyLessons": [
+        {
+            "schedule": [
+                {
+                    "studentId": "4yjv9Et19I5BbvgOA6hn",
+                    "lessonId": "bfbf4a84-dbc1-490e-bec5-f9a1442a924d",
+                    "startTime": 48600,
+                    "endTime": 51000
+                },
+                {
+                    "studentId": "XtS6J59gfXzSSq1GOpgv",
+                    "lessonId": "b8c98759-058b-4103-a27b-356c44ff27d3",
+                    "startTime": 51000,
+                    "endTime": 54600
+                },
+                {
+                    "studentId": "d7ry44pzgtaVfgHkLxOA",
+                    "lessonId": "95bca286-6bff-4310-8f81-b3a6da2cf85f",
+                    "startTime": 54600,
+                    "endTime": 58200
+                }
+            ],
+            "createdAt": {
+                "seconds": 1739524443,
+                "nanoseconds": 541000000
+            },
+            "dayOfWeek": 1,
+            "schoolId": "T0RYndQ7RkAjzmL3qjqJ",
+            "from": "20250001",
+            "exclude": [
+                "20250006"
+            ],
+            "to": "20250201",
+            "updatedAt": {
+                "seconds": 1739524600,
+                "nanoseconds": 391000000
+            },
+            "id": "hMer1bt4KcZDyzGW54z7"
+        }
+    ],
+    "dailyLessons": [
+        {
+            "date": "20250103",
+            "schoolId": "T0RYndQ7RkAjzmL3qjqJ",
+            "salaryStrategy": "ONLY_PRESENT",
+            "id": "LUMiJz3vcjJ9fSpYUSTc",
+            "salary": 40,
+            "lastSalaryUpdate": {
+                "seconds": 1739524694,
+                "nanoseconds": 616000000
+            },
+            "lessons": [
+                {
+                    "studentId": "4yjv9Et19I5BbvgOA6hn",
+                    "createdAt": {
+                        "seconds": 1739524620,
+                        "nanoseconds": 883000000
+                    },
+                    "lessonId": "81a959ed-0bdd-43eb-b87a-104f65eed5d5",
+                    "startTime": 48600,
+                    "endTime": 51000,
+                    "status": "PRESENT",
+                    "updatedAt": {
+                        "seconds": 1739524694,
+                        "nanoseconds": 616000000
+                    }
+                },
+                {
+                    "studentId": "XtS6J59gfXzSSq1GOpgv",
+                    "createdAt": {
+                        "seconds": 1739524620,
+                        "nanoseconds": 883000000
+                    },
+                    "lessonId": "75eaed08-f811-47bc-885b-b3fe133a3775",
+                    "startTime": 51000,
+                    "endTime": 54600,
+                    "status": "ABSENT",
+                    "updatedAt": {
+                        "seconds": 1739524694,
+                        "nanoseconds": 616000000
+                    }
+                },
+                {
+                    "studentId": "d7ry44pzgtaVfgHkLxOA",
+                    "createdAt": {
+                        "seconds": 1739524620,
+                        "nanoseconds": 883000000
+                    },
+                    "lessonId": "ad00833d-ff52-4ae9-8acb-41f92baf7215",
+                    "startTime": 54600,
+                    "endTime": 58200,
+                    "status": "UNJUSTIFIED_ABSENCE",
+                    "updatedAt": {
+                        "seconds": 1739524694,
+                        "nanoseconds": 616000000
+                    }
+                }
+            ]
+        },
+        {
+            "date": "20250110",
+            "schoolId": "T0RYndQ7RkAjzmL3qjqJ",
+            "salaryStrategy": "ONLY_PRESENT",
+            "id": "ZBNQtG8bOjB6bnWZxVWv",
+            "salary": 0,
+            "lastSalaryUpdate": {
+                "seconds": 1739524672,
+                "nanoseconds": 275000000
+            },
+            "lessons": [
+                {
+                    "studentId": "4yjv9Et19I5BbvgOA6hn",
+                    "createdAt": {
+                        "seconds": 1739524670,
+                        "nanoseconds": 226000000
+                    },
+                    "lessonId": "029b8089-66dc-49ff-a23f-c84d4e6eda13",
+                    "startTime": 48600,
+                    "endTime": 51000,
+                    "status": "NONE",
+                    "updatedAt": {
+                        "seconds": 1739524672,
+                        "nanoseconds": 275000000
+                    }
+                },
+                {
+                    "studentId": "XtS6J59gfXzSSq1GOpgv",
+                    "createdAt": {
+                        "seconds": 1739524670,
+                        "nanoseconds": 226000000
+                    },
+                    "lessonId": "6a2f3065-2a88-4e32-a116-7957fb1bfa60",
+                    "startTime": 51000,
+                    "endTime": 54600,
+                    "status": "NONE",
+                    "updatedAt": {
+                        "seconds": 1739524672,
+                        "nanoseconds": 275000000
+                    }
+                },
+                {
+                    "studentId": "d7ry44pzgtaVfgHkLxOA",
+                    "createdAt": {
+                        "seconds": 1739524670,
+                        "nanoseconds": 226000000
+                    },
+                    "lessonId": "cfd0ed6d-175b-456a-8030-2b9b482fa085",
+                    "startTime": 54600,
+                    "endTime": 58200,
+                    "status": "NONE",
+                    "updatedAt": {
+                        "seconds": 1739524672,
+                        "nanoseconds": 275000000
+                    }
+                }
+            ]
+        }
+    ],
+    "recoveryLessons": [
+        {
+            "schoolId": "T0RYndQ7RkAjzmL3qjqJ",
+            "id": "T0RYndQ7RkAjzmL3qjqJ",
+            "recoveries": [
+                {
+                    "originalLesson": {
+                        "dailyLessonId": "LUMiJz3vcjJ9fSpYUSTc",
+                        "lessonId": "75eaed08-f811-47bc-885b-b3fe133a3775"
+                    },
+                    "status": "UNSET"
+                }
+            ]
+        }
+    ]
+}

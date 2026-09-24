@@ -1,7 +1,7 @@
 <template>
     <v-card prepend-icon="mdi-school" title="Scuola">
         <v-card-text>
-            <v-row dense>
+            <v-row density="comfortable">
                 <v-col cols="12" md="6">
                     <v-text-field v-model="name" v-bind="nameProps" label="Nome" required></v-text-field>
                 </v-col>
@@ -48,6 +48,11 @@
                     <v-select v-model="trialLessonPaymentStrategy" v-bind="trialLessonPaymentStrategyProps"
                         :items="trialLessonPaymentStrategies" item-title="value" item-value="key"
                         label="Opzione di pagamento della Lezione di Prova" required></v-select>
+                </v-col>
+
+                <v-col cols="12" md="6">
+                    <v-number-input v-model="dailyExpenseReimbursement" v-bind="dailyExpenseReimbursementProps" :min="0" :precision="2"
+                        label="Rimborso spese giornaliero" prefix="€"></v-number-input>
                 </v-col>
 
                 <v-col cols="12" md="12">
@@ -149,6 +154,7 @@ const schema = yup.object({
     managed: yup.bool().label('Gestione'),
     salaryStrategy: yup.string().required("L'Opzione di pagamento lezioni è obbligatorio").label('Opzione di Pagamento'),
     trialLessonPaymentStrategy: yup.string().required("L'Opzione di pagamento della lezione di prova è obbligatorio").label('Opzione di pagamento della Lezione di Prova'),
+    dailyExpenseReimbursement: yup.number().min(0).nullable().optional(),
     managerOptions: yup.object().test({
         test: (v: any | ManagerOptions) => {
             if (managed.value)
@@ -188,6 +194,7 @@ const [salaryStrategy, salaryStrategyProps] = defineField('salaryStrategy', vuet
 const [trialLessonPaymentStrategy, trialLessonPaymentStrategyProps] = defineField('trialLessonPaymentStrategy', vuetifyConfig);
 const [managerOptions, managerOptionsProps] = defineField('managerOptions', vuetifyConfig);
 const [levelRanges, levelRangesProps] = defineField('levelRanges', vuetifyConfig);
+const [dailyExpenseReimbursement, dailyExpenseReimbursementProps] = defineField('dailyExpenseReimbursement', vuetifyConfig);
 
 const onSave = handleSubmit(
     async (values: GenericObject) => {
@@ -215,6 +222,7 @@ function updateSchool() {
         managed.value = schoolClone.managed;
         managerOptions.value = schoolClone.managerOptions;
         levelRanges.value = schoolClone.levelRanges;
+        dailyExpenseReimbursement.value = schoolClone.dailyExpenseReimbursement ?? 0;
     }
 }
 
@@ -239,6 +247,7 @@ async function save(values: GenericObject) {
         trialLessonPaymentStrategy: values.trialLessonPaymentStrategy,
         managed: managed.value ?? false,
         levelRanges: values.levelRanges,
+        dailyExpenseReimbursement: Number(values.dailyExpenseReimbursement ?? 0),
         createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now()
     };

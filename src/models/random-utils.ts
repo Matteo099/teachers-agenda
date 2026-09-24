@@ -46,7 +46,7 @@ export class Random {
         const cloneArr = [...arr];
         for (let i = 0; i < size; i++) {
             const index = this.int(0, cloneArr.length);
-            res.push(cloneArr[index]);
+            res.push(cloneArr[index]!);
             cloneArr.splice(index, 1);
         }
         return res;
@@ -65,7 +65,7 @@ export class Random {
 
     public static time(min: ITime = 0, max: ITime = 86400, precision: "minute" | "second" = "minute"): string {
         const t = Time.fromITime(this.int(min, max))
-        if(precision == "minute") t.setSeconds(0);
+        if (precision == "minute") t.setSeconds(0);
         return t.format();
     }
 

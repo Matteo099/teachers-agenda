@@ -23,7 +23,7 @@
                             no-data-text="Nessuna Data Disponibile" clearable>
                             <template v-slot:selection="{ item, index }">
                                 <v-chip v-if="index < 2">
-                                    <span>{{ item.title }}</span>
+                                    <span>{{ item.name }}</span>
                                 </v-chip>
                                 <span v-if="index === 2" class="text-grey text-caption align-self-center">
                                     (+{{ excludeDates.length - 2 }} others)
@@ -196,7 +196,7 @@ function updateScheduledLessonsTime() {
             return a.startTime - b.startTime;
         });
         const time = Time.fromHHMM(startingTime.value)?.getTotalMinutes() ?? 0;
-        const deltaTime = time * 60 - scheduledLessons.value[0].startTime;
+        const deltaTime = time * 60 - scheduledLessons.value[0]!.startTime;
         scheduledLessons.value.forEach(sl => {
             sl.startTime += deltaTime;
             sl.endTime += deltaTime;
@@ -220,8 +220,8 @@ function updateScheduledLessonsTime() {
 
 function updateScheduledLessonsByEvents() {
     scheduledLessons.value = events.value.map(e => {
-        const start = e.start.split(" ")[1]
-        const end = e.end.split(" ")[1]
+        const start = e.start.split(" ")[1]!
+        const end = e.end.split(" ")[1]!
         return {
             lessonId: e.data.lessonId,
             startTime: Time.fromHHMM(start)!.toITime(),
@@ -244,7 +244,7 @@ function updateWeekLesson() {
 
         if (scheduledLessons.value.length > 0) {
             initializingStartingTime = true;
-            const minTime = scheduledLessons.value[0].startTime;
+            const minTime = scheduledLessons.value[0]!.startTime;
             startingTime.value = Time.fromITime(minTime).format();
         }
     }
@@ -331,7 +331,7 @@ function getStudentLessonDay(studentId: string | Student): string {
     } else {
         student = studentId;
     }
-    return days[student?.lessonDay ?? 0];
+    return days[student?.lessonDay ?? 0]!;
 }
 
 async function loadStudents() {

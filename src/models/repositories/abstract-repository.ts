@@ -1,7 +1,8 @@
 import { addDoc, deleteDoc, doc, DocumentSnapshot, getDoc, getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot, setDoc, type CollectionReference, type DocumentData } from "firebase/firestore";
-import { useCurrentUser } from "vuefire";
-import { QueryEvent, type IQueryEvent } from "../utils/event";
 import { computed, type Ref } from "vue";
+import { useCurrentUser } from "vuefire";
+import { DatabaseCache } from "../decorators/database-cache";
+import { QueryEvent, type IQueryEvent } from "../utils/event";
 
 export type ID = string;
 
@@ -29,6 +30,9 @@ export abstract class AbstractRepository<T> {
     }
 
     public async get(id: ID): Promise<T | undefined> {
+        if (DatabaseCache.instance.isActive) {
+            return DatabaseCache.instance.get(this, id);
+        }
         return (await this.getDoc(id)).data();
     }
 
@@ -48,10 +52,12 @@ export abstract class AbstractRepository<T> {
     }
 
     public async save(obj: Partial<T> | any, id?: ID): Promise<ID> {
-        console.log(obj);
-        
+        if (DatabaseCache.instance.isActive) {
+            return await DatabaseCache.instance.save(this, obj, id);
+        }
+
         if (id != undefined) {
-            setDoc(doc(this.collectionReference, id), obj);
+            await setDoc(doc(this.collectionReference, id), obj);
             return id;
         }
         const docRef = await addDoc(this.collectionReference, obj);
@@ -72,7 +78,11 @@ export abstract class AbstractRepository<T> {
     }
 
     public async delete(id: ID): Promise<void> {
-        await deleteDoc(doc(this.collectionReference, id));
+        if (DatabaseCache.instance.isActive) {
+            DatabaseCache.instance.delete(this, id);
+        } else {
+            await deleteDoc(doc(this.collectionReference, id));
+        }
     }
 
     public deleteAll(): T {

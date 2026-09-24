@@ -6,13 +6,17 @@
 
         <template v-slot:default>
             <v-card title="Programma Lezione di Recupero"
-                :subtitle="recovery.name + ' ' + recovery.surname + ' - ' + yyyyMMdd.fromIyyyyMMdd(recovery.originalDailyLesson.date).format()"
+                :subtitle="recovery.student.name + ' ' + recovery.student.surname + ' - ' + yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format()"
                 :loading="loadingSchedulingRecovery">
                 <v-card-text class="pa-6">
                     <v-row>
                         <v-col cols="12" md="12">
                             <v-date-input v-model="date" v-bind="dateProps" label="Data della Lezione di Recupero"
                                 inputmode="none"></v-date-input>
+                        </v-col>
+                        <v-col cols="12" lg="6">
+                            <v-number-input v-model="minutes" label="Minuti recupero" :min="1"
+                                :max="recovery.student.minutesLessonDuration" suffix="min" />
                         </v-col>
                         <v-col cols="12" lg="12">
                             <v-text-field v-model="time" v-bind="timeProps" :active="modalTimePicker"
@@ -36,8 +40,9 @@
 </template>
 
 <script setup lang="ts">
+import { withCache } from '@/models/decorators/cache-decorator';
 import { Time, yyyyMMdd, type RecoverySchedule, type School } from '@/models/model';
-import { SchoolRecoveryLessonService, type ExtendedStudentLesson } from '@/models/services/school-recovery-lesson-service';
+import { SchoolRecoveryLessonService, type StudentLessonWithRecovery } from '@/models/services/school-recovery-lesson-service';
 import { useForm, type GenericObject } from 'vee-validate';
 import { ref } from 'vue';
 import { toast } from 'vue3-toastify';
@@ -48,7 +53,7 @@ export interface ScheduleRecoveryLessonButtonProps {
 }
 
 const props = defineProps<ScheduleRecoveryLessonButtonProps>();
-const recovery = defineModel<ExtendedStudentLesson>({ required: true });
+const recovery = defineModel<StudentLessonWithRecovery>({ required: true });
 
 const modalTimePicker = ref(false);
 const scheduleRecoveryDialog = ref(false);
@@ -71,6 +76,7 @@ const vuetifyConfig = (state: any) => ({
 
 const [date, dateProps] = defineField('date', vuetifyConfig);
 const [time, timeProps] = defineField('time', vuetifyConfig);
+const [minutes] = defineField('minutes', vuetifyConfig);
 
 const save = handleSubmit(
     async (_: GenericObject) => {
@@ -89,27 +95,27 @@ function close() {
     resetForm();
 }
 
-async function scheduleRecovery() {
-    if (!date.value || !time.value || !recovery.value) return;
 
-    try {
-        loadingSchedulingRecovery.value = true;
-        const startTime = Time.fromHHMM(time.value)!;
-        const schedule: RecoverySchedule = {
-            studentId: recovery.value.studentId,
-            schoolId: props.school.id,
-            originalDailyLessonId: recovery.value.originalDailyLesson.id,
-            originalLessonId: recovery.value.lessonId,
-            date: date.value,
-            startTime: startTime.toITime(),
-            endTime: startTime.add({ minutes: recovery.value.minutesLessonDuration }).toITime()
-        }
-        await SchoolRecoveryLessonService.instance.scheduleRecovery(recovery.value, schedule);
-        scheduleRecoveryDialog.value = false
-    } catch (error) {
-        toast.error("Impossibile schedulare la lezione di recupero")
-    } finally {
-        loadingSchedulingRecovery.value = false;
+const scheduleRecovery = withCache(async () => {
+    if (!date.value || !time.value || !recovery.value) return;
+    loadingSchedulingRecovery.value = true;
+    const startTime = Time.fromHHMM(time.value)!;
+    const schedule: RecoverySchedule = {
+        studentId: recovery.value.student.id,
+        schoolId: props.school.id,
+        originalDailyLessonId: recovery.value.recoveryReference.originalDailyLesson.id,
+        originalLessonId: recovery.value.lesson.lessonId,
+        date: date.value,
+        startTime: startTime.toITime(),
+        endTime: startTime.add({ minutes: Number(minutes.value ?? recovery.value.student.minutesLessonDuration) }).toITime(),
+        minutes: Number(minutes.value ?? recovery.value.student.minutesLessonDuration)
     }
-}
+    await SchoolRecoveryLessonService.instance.scheduleRecovery(recovery.value, schedule);
+    scheduleRecoveryDialog.value = false
+}, (error) => {
+    toast.error("Impossibile schedulare la lezione di recupero")
+    console.error("Unable to cancel recovery lesson", error);
+}, async () => {
+    loadingSchedulingRecovery.value = false;
+});
 </script>

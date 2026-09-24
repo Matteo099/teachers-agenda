@@ -52,7 +52,7 @@ function updateModel() {
 
     // by month
     if (selectedType.value == selectTypes[2]) {
-        let month = months.indexOf(selectedMonth.value);
+        let month = months.indexOf(selectedMonth.value!);
         month = month == -1 ? 0 : month;
         const year = new Date().getFullYear();
         const start = new Date(year, month, 1);

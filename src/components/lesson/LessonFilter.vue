@@ -6,8 +6,8 @@
                     <v-select v-model="selectedFilters" :items="LESSON_FILTERS" return-object :item-props="itemProps"
                         label="Filtri" multiple chips>
                         <template v-slot:chip="{ item }">
-                            <v-icon :color="item.props.color">
-                                {{ item.props.icon }}
+                            <v-icon :color="item.color">
+                                {{ item.icon }}
                             </v-icon>
                         </template>
                         <template v-slot:prepend-item>

@@ -165,12 +165,12 @@
 import { signOut } from 'firebase/auth';
 import { computed, onMounted, ref, watch, type ComputedRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { toast } from 'vue3-toastify';
 import { useCurrentUser, useFirebaseAuth } from 'vuefire';
 import { useDisplay, useTheme } from 'vuetify';
 import { LocalStorageHandler } from './models/storage/local-storage-handler';
 import { stringToHslColor } from './models/utils';
 import { checkForNewVersion } from './models/utils/version';
-import { toast } from 'vue3-toastify';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const data = ref(1);
@@ -188,7 +188,7 @@ const notifications: any[] = [];
 
 const auth = useFirebaseAuth()!;
 const theme = useTheme()
-const appLogo = new URL('@/assets/images/logo.png', import.meta.url).href
+const appLogo = new URL('@/assets/images/logo.jpeg', import.meta.url).href
 const drawer = ref(false)
 const appVersion = import.meta.env.VITE_APP_VERSION
 const loginPage = computed(() => route.name == "login")
@@ -250,8 +250,9 @@ watch(user, async (currentUser, previousUser) => {
 
 function toggleTheme() {
   const currentTheme = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
-  theme.global.name.value = currentTheme == 'myCustomDarkTheme' ? 'myCustomLightTheme' : 'myCustomDarkTheme';
-  LocalStorageHandler.setItem('theme', theme.global.name.value);
+  const nextTheme = currentTheme == 'myCustomDarkTheme' ? 'myCustomLightTheme' : 'myCustomDarkTheme';
+  theme.change(nextTheme);
+  LocalStorageHandler.setItem('theme', nextTheme);
 }
 
 async function checkForUpdates() {
@@ -259,7 +260,7 @@ async function checkForUpdates() {
 }
 
 onMounted(async () => {
-  theme.global.name.value = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
+  theme.change(LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme');
   checkForUpdates();
 })
 </script>

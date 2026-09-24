@@ -3,7 +3,7 @@
         <v-card-text>
             <v-row class="my-3 mb-10 justify-center">
                 <v-col class="px-2" cols="12" md="4">
-                    <v-number-input max-width="500" v-model="levelRangePrice" :reverse="false" controlVariant="default"
+                    <v-number-input max-width="500" :precision=3 v-model="levelRangePrice" :reverse="false" controlVariant="default"
                         label="Fascia di Prezzo" prefix="€" :hideInput="false" :inset="false" :min="0">
                     </v-number-input>
                 </v-col>
