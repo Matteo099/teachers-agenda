@@ -85,35 +85,36 @@ VITE_FIREBASE_SIMULATOR=true
 where VITE_FIREBASE_API_KEY is something like `ABcdEfgHDSdfGGFDG_VerTd1213IFgI__assSDFjs3`
 
 
-### github pages
+### GitHub Pages and releases
 
-1. Update package.json version
+Deployment is managed by GitHub Actions. Do not commit `dist` and do not push the
+`gh-pages` branch manually.
 
-2. run 
+1. Use Conventional Commits, for example:
 
-    ``` sh
-    npm run build
-    ```
-3. push updates to git
-
-    ``` sh
-    git push
+    ```sh
+    git commit -m "feat(calendar): add irregular lesson dates"
+    git commit -m "fix(salary): exclude recovery-only days"
     ```
 
-4. push to git pages
+2. Open a pull request to `main`. CI validates commit messages, types, core tests,
+   and the production build.
 
-    ``` sh
-    git subtree push --prefix dist origin gh-pages
-    ```
+3. Merge the pull request. The release workflow:
+   - calculates the next semantic version;
+   - creates the Git tag and GitHub Release;
+   - builds `dist`;
+   - deploys the artifact to GitHub Pages.
 
-    if there are some errors, run:
+Release rules:
 
-    ``` sh
-    git push origin --delete gh-pages
-    git subtree push --prefix dist origin gh-pages
-    ```
+- `fix:` creates a patch release;
+- `feat:` creates a minor release;
+- `BREAKING CHANGE:` or `type!:` creates a major release;
+- `docs:`, `test:`, `chore:` and `ci:` do not create a release by default.
 
-5. merge to main and create the release/tag
+Before the first automated deployment, set repository **Settings → Pages → Build
+and deployment → Source** to **GitHub Actions**.
 
 ### git utils
 

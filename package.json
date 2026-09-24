@@ -23,7 +23,9 @@
     "test:core": "vitest --config vitest.core.config.ts",
     "test:firebase": "firebase emulators:start --import emulator_data_test --config firebase-test.json",
     "test:integration": "wait-on tcp:4000 && vitest --max-concurrency=1",
-    "test:full": "npm-run-all --parallel test:firebase test:integration"
+    "test:full": "npm-run-all --parallel test:firebase test:integration",
+    "commitlint": "commitlint",
+    "release": "semantic-release"
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.14.4",
@@ -47,8 +49,13 @@
     "vuetify": "^4.0.3"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
     "@mdi/font": "^7.4.47",
     "@rushstack/eslint-patch": "^1.8.0",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/github": "^12.0.10",
+    "@semantic-release/release-notes-generator": "^14.1.1",
     "@tsconfig/node24": "^24.0.4",
     "@types/jsdom": "^28.0.0",
     "@types/node": "^24.11.0",
@@ -72,6 +79,7 @@
     "npm-run-all2": "^8.0.4",
     "oxlint": "~1.50.0",
     "prettier": "3.8.1",
+    "semantic-release": "^25.0.9",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-pwa": "^1.2.0",

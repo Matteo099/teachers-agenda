@@ -55,7 +55,7 @@ export default defineConfig({
       }    
     })
   ],
-  base: "/teachers-agenda",
+  base: "/teachers-agenda/",
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
