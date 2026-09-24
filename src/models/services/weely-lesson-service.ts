@@ -33,6 +33,6 @@ export class WeeklyLessonService {
     }
 
     public isValid(wl: WeeklyLesson, date: IyyyyMMdd) {
-        return wl.dayOfWeek == extractDayOfWeek(date) && (wl.from < date && date < wl.to) && !wl.exclude.includes(date)
+        return wl.dayOfWeek == extractDayOfWeek(date) && (wl.from <= date && date <= wl.to) && !wl.exclude.includes(date)
     }
 }

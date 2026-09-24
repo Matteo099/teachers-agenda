@@ -15,8 +15,12 @@ function initialize(existingApp?: FirebaseApp) {
     // If on localhost, use all firebase services locally
     if (import.meta.env.VITE_FIREBASE_SIMULATOR.toLowerCase() === "true" && location.hostname === 'localhost') {
         if (!existingApp) {
-            connectAuthEmulator(auth, `http://localhost:${import.meta.env.VITE_FIREBASE_EMULATOR_PORT ?? 9099}`);
-            connectFirestoreEmulator(firestore, 'localhost', import.meta.env.VITE_FIREBASE_EMULATOR_PORT ?? 8080);
+            // Use the loopback IP so environments with a localhost proxy do not
+            // accidentally send emulator traffic through that proxy.
+            const authPort = import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_PORT ?? import.meta.env.VITE_FIREBASE_EMULATOR_PORT ?? 9099;
+            const firestorePort = import.meta.env.VITE_FIRESTORE_EMULATOR_PORT ?? 8080;
+            connectAuthEmulator(auth, `http://127.0.0.1:${authPort}`);
+            connectFirestoreEmulator(firestore, '127.0.0.1', firestorePort);
             // connectStorageEmulator(storage, 'localhost', 9002);
         }
     }

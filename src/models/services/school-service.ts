@@ -88,7 +88,13 @@ export class SchoolService {
         const schools = await SchoolRepository.instance.getAll();
         for await (const school of schools) {
             const schoolLessons = await this.getSchoolLessons(school.id, date);
-            const todayLesson = schoolLessons.dailyLessons.find(dl => dl.date == dateString) ?? schoolLessons.weeklyLessons.find(wl => WeeklyLessonService.instance.isValid(wl, dateString));
+            let todayLesson = schoolLessons.dailyLessons.find(dl => dl.date == dateString);
+            // The daily-detail route requires a DailyLesson ID. Materialize today's
+            // recurring schedule before exposing it from the dashboard.
+            if (!todayLesson && schoolLessons.weeklyLessons.some(wl => WeeklyLessonService.instance.isValid(wl, dateString))) {
+                const dailyLessonId = await DailyLessonService.instance.createDailyLessonByDate(school.id, date);
+                todayLesson = await DailyLessonRepository.instance.get(dailyLessonId);
+            }
             if (todayLesson) lessons.push({
                 school,
                 lesson: todayLesson

@@ -200,7 +200,7 @@ function updateOperationStatus(event: StudentLesson | Lesson, status: boolean) {
 const present = withCache(async (event: StudentLesson) => {
     updateOperationStatus(event, true);
     const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
-    await DailyLessonService.instance.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson.value!, lessons);
+    await DailyLessonService.instance.updateLessonsStatus(LessonStatus.PRESENT, dailyLesson.value!, lessons, school.value);
     selectedLessons.value = []
 }, (error) => {
     toast.warn("Impossibile impostare le presenze...")
@@ -213,7 +213,7 @@ const absent = withCache(async (event: StudentLesson, canRecover = true) => {
     updateOperationStatus(event, true);
     const lessons = getSelectedStudentLessons(event).map(l => l.lesson);
     const status = canRecover ? LessonStatus.ABSENT : LessonStatus.UNJUSTIFIED_ABSENCE
-    await DailyLessonService.instance.updateLessonsStatus(status, dailyLesson.value!, lessons);
+    await DailyLessonService.instance.updateLessonsStatus(status, dailyLesson.value!, lessons, school.value);
     selectedLessons.value = []
     return true;
 }, (error) => {
@@ -226,7 +226,7 @@ const absent = withCache(async (event: StudentLesson, canRecover = true) => {
 
 const trial = withCache(async (event: StudentLesson) => {
     updateOperationStatus(event, true);
-    await DailyLessonService.instance.updateLessonsStatus(LessonStatus.TRIAL, dailyLesson.value!, [event.lesson]);
+    await DailyLessonService.instance.updateLessonsStatus(LessonStatus.TRIAL, dailyLesson.value!, [event.lesson], school.value);
     return true;
 }, (error) => {
     toast.warn("Impossibile impostare la lezione di prova...")
@@ -238,7 +238,7 @@ const trial = withCache(async (event: StudentLesson) => {
 
 const reset = withCache(async (event: StudentLesson) => {
     updateOperationStatus(event, true);
-    await DailyLessonService.instance.resetLessons(dailyLesson.value!, [event.lesson]);
+    await DailyLessonService.instance.resetLessons(dailyLesson.value!, [event.lesson], school.value);
     return true;
 }, (error) => {
     toast.warn("Impossibile ripristinare la lezione")

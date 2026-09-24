@@ -2,6 +2,12 @@
     <v-card title="Stipendio" elevation="3" :loading="loadingSalary">
         <v-card-text>
             <DateSelect v-model="selectedRange" />
+            <v-row v-if="report" dense class="mb-3">
+                <v-col cols="6" md="3"><v-card variant="tonal" title="Lezioni regolari" :text="currency(report.regularLessonsTotal)"></v-card></v-col>
+                <v-col cols="6" md="3"><v-card variant="tonal" title="Recuperi extra" :text="currency(report.recoveryTotal)"></v-card></v-col>
+                <v-col cols="6" md="3"><v-card variant="tonal" :title="`Rimborsi (${report.activityDays} gg)`" :text="currency(report.reimbursementTotal)"></v-card></v-col>
+                <v-col cols="6" md="3"><v-card color="primary" title="Totale netto" :text="currency(report.netTotal)"></v-card></v-col>
+            </v-row>
             <v-data-table :headers="salaryHeaders" :items="salaries" item-value="id">
                 <template v-slot:item.date="{ item }">
                     {{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}
@@ -28,9 +34,10 @@
 
 <script setup lang="ts">
 import DateSelect from '@/components/inputs/DateSelect.vue';
-import { yyyyMMdd, type IyyyyMMdd, type Salary, type School } from '@/models/model';
+import { yyyyMMdd, type IyyyyMMdd, type MonthlySalaryReport, type Salary, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { SalaryService } from '@/models/services/salary-service';
+import { MonthlySalaryService } from '@/models/services/monthly-salary-service';
 import { timestampFormat, toDate } from '@/models/utils';
 import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
@@ -42,6 +49,7 @@ interface SalaryViewProps {
 const props = defineProps<SalaryViewProps>();
 
 const salaries: Ref<Salary[]> = ref([]);
+const report: Ref<MonthlySalaryReport | undefined> = ref();
 const loadingSalary = ref(false);
 const computingSalary: Ref<{ [key: string]: boolean }> = ref({});
 const selectedRange: Ref<{ from?: IyyyyMMdd, to?: IyyyyMMdd }> = ref({});
@@ -73,7 +81,12 @@ async function loadSalary() {
 
     loadingSalary.value = true;
     salaries.value = await SalaryService.instance.computeSalary(props.school, selectedRange.value.from, to);
+    report.value = await MonthlySalaryService.instance.compute(props.school, selectedRange.value.from, to);
     loadingSalary.value = false;
+}
+
+function currency(value: number) {
+    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value);
 }
 
 async function computeSalaryOfDailyLesson(salary: Salary, index: number) {
@@ -83,6 +96,10 @@ async function computeSalaryOfDailyLesson(salary: Salary, index: number) {
     if (updatedDailyLesson) {
         salaries.value[index]!.salary = updatedDailyLesson.salary;
         salaries.value[index]!.lastUpdate = updatedDailyLesson.lastSalaryUpdate;
+        if (selectedRange.value.from) {
+            const to = selectedRange.value.to ?? yyyyMMdd.today().toIyyyyMMdd();
+            report.value = await MonthlySalaryService.instance.compute(props.school, selectedRange.value.from, to);
+        }
     } else {
         toast.info(`Lo stipendio della lezione del ${yyyyMMdd.fromIyyyyMMdd(salary.date).format()} è già aggiornato!`)
     }

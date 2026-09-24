@@ -50,6 +50,21 @@
                         label="Opzione di pagamento della Lezione di Prova" required></v-select>
                 </v-col>
 
+                <v-col cols="12" md="6">
+                    <v-number-input v-model="recoveryHourlyRate" v-bind="recoveryHourlyRateProps" :min="0" :precision="2"
+                        label="Tariffa oraria recuperi" prefix="€"></v-number-input>
+                </v-col>
+
+                <v-col cols="12" md="6">
+                    <v-number-input v-model="dailyExpenseReimbursement" v-bind="dailyExpenseReimbursementProps" :min="0" :precision="2"
+                        label="Rimborso spese giornaliero" prefix="€"></v-number-input>
+                </v-col>
+
+                <v-col cols="12" md="6">
+                    <v-select v-model="reimbursementDayStrategy" v-bind="reimbursementDayStrategyProps" :items="reimbursementDayStrategies"
+                        item-title="value" item-value="key" label="Giorni rimborsabili"></v-select>
+                </v-col>
+
                 <v-col cols="12" md="12">
                     <v-row justify-center>
                         <v-col class="align-self-center">
@@ -113,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { SalaryStrategy, TrialLessonPaymentStrategy, type LevelRange, type ManagerOptions, type School } from '@/models/model';
+import { ReimbursementDayStrategy, SalaryStrategy, TrialLessonPaymentStrategy, type LevelRange, type ManagerOptions, type School } from '@/models/model';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -140,6 +155,10 @@ const trialLessonPaymentStrategies = [
     { key: TrialLessonPaymentStrategy.HALF, value: "Metà prezzo" },
     { key: TrialLessonPaymentStrategy.NOTHING, value: "Nessun pagamento" },
 ]
+const reimbursementDayStrategies = [
+    { key: ReimbursementDayStrategy.COMPLETED, value: 'Con almeno una lezione svolta' },
+    { key: ReimbursementDayStrategy.SCHEDULED, value: 'Con lezioni programmate' },
+]
 
 const schema = yup.object({
     name: yup.string().required('Il Nome è obbligatorio').min(1).label('Nome'),
@@ -149,6 +168,9 @@ const schema = yup.object({
     managed: yup.bool().label('Gestione'),
     salaryStrategy: yup.string().required("L'Opzione di pagamento lezioni è obbligatorio").label('Opzione di Pagamento'),
     trialLessonPaymentStrategy: yup.string().required("L'Opzione di pagamento della lezione di prova è obbligatorio").label('Opzione di pagamento della Lezione di Prova'),
+    recoveryHourlyRate: yup.number().min(0).nullable().optional(),
+    dailyExpenseReimbursement: yup.number().min(0).nullable().optional(),
+    reimbursementDayStrategy: yup.string().nullable().optional(),
     managerOptions: yup.object().test({
         test: (v: any | ManagerOptions) => {
             if (managed.value)
@@ -188,6 +210,9 @@ const [salaryStrategy, salaryStrategyProps] = defineField('salaryStrategy', vuet
 const [trialLessonPaymentStrategy, trialLessonPaymentStrategyProps] = defineField('trialLessonPaymentStrategy', vuetifyConfig);
 const [managerOptions, managerOptionsProps] = defineField('managerOptions', vuetifyConfig);
 const [levelRanges, levelRangesProps] = defineField('levelRanges', vuetifyConfig);
+const [recoveryHourlyRate, recoveryHourlyRateProps] = defineField('recoveryHourlyRate', vuetifyConfig);
+const [dailyExpenseReimbursement, dailyExpenseReimbursementProps] = defineField('dailyExpenseReimbursement', vuetifyConfig);
+const [reimbursementDayStrategy, reimbursementDayStrategyProps] = defineField('reimbursementDayStrategy', vuetifyConfig);
 
 const onSave = handleSubmit(
     async (values: GenericObject) => {
@@ -215,6 +240,9 @@ function updateSchool() {
         managed.value = schoolClone.managed;
         managerOptions.value = schoolClone.managerOptions;
         levelRanges.value = schoolClone.levelRanges;
+        recoveryHourlyRate.value = schoolClone.recoveryHourlyRate ?? 0;
+        dailyExpenseReimbursement.value = schoolClone.dailyExpenseReimbursement ?? 0;
+        reimbursementDayStrategy.value = schoolClone.reimbursementDayStrategy ?? ReimbursementDayStrategy.COMPLETED;
     }
 }
 
@@ -239,6 +267,9 @@ async function save(values: GenericObject) {
         trialLessonPaymentStrategy: values.trialLessonPaymentStrategy,
         managed: managed.value ?? false,
         levelRanges: values.levelRanges,
+        recoveryHourlyRate: Number(values.recoveryHourlyRate ?? 0),
+        dailyExpenseReimbursement: Number(values.dailyExpenseReimbursement ?? 0),
+        reimbursementDayStrategy: values.reimbursementDayStrategy ?? ReimbursementDayStrategy.COMPLETED,
         createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now()
     };

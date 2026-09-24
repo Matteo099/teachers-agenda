@@ -37,17 +37,21 @@ export class SalaryService {
     public async getSalaryOfStudentLesson(school: School | undefined, lesson: Lesson, student: Student | undefined, lessonDate: IyyyyMMdd): Promise<number> {
         if (!school) return 0;
 
+        // A recovery is accounted for separately, on the date it is physically performed.
+        if (lesson.recovery?.ref === 'original') return 0;
+
         const computeSalary =
-            (school.salaryStrategy == SalaryStrategy.ABSENT_AND_PRESENT && (lesson.status == LessonStatus.PRESENT || lesson.status == LessonStatus.ABSENT || lesson.status == LessonStatus.UNJUSTIFIED_ABSENCE || lesson.moved?.ref == 'moved') && !(lesson.recovery?.ref == 'original' || lesson.moved?.ref == 'original')) ||
+            (school.salaryStrategy == SalaryStrategy.ABSENT_AND_PRESENT && (lesson.status == LessonStatus.PRESENT || lesson.status == LessonStatus.ABSENT || lesson.status == LessonStatus.UNJUSTIFIED_ABSENCE || lesson.moved?.ref == 'moved') && !lesson.moved?.ref?.includes('original')) ||
             (school.salaryStrategy == SalaryStrategy.ONLY_PRESENT && lesson.status == LessonStatus.PRESENT) ||
             (school.trialLessonPaymentStrategy != TrialLessonPaymentStrategy.NOTHING && lesson.status == LessonStatus.TRIAL);
 
         if (computeSalary) {
             student ??= await StudentRepository.instance.get(lesson.studentId);
+            if (!student) return 0;
             const studentLevel = StudentService.instance.getLevelByDate(student!, lessonDate);
-            const priceAtMinute = school.levelRanges.find(l => l.levels.includes(studentLevel))?.price;
-            if (priceAtMinute != undefined) {
-                const tot = priceAtMinute * ((lesson.endTime - lesson.startTime) / 60);
+            const hourlyRate = student.hourlyRate ?? school.levelRanges.find(l => l.levels.includes(studentLevel))?.price;
+            if (hourlyRate != undefined) {
+                const tot = hourlyRate * ((lesson.endTime - lesson.startTime) / 3600);
                 if (lesson.status == LessonStatus.TRIAL && school.trialLessonPaymentStrategy == TrialLessonPaymentStrategy.HALF)
                     return tot / 2;
                 return tot;

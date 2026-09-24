@@ -57,7 +57,7 @@ export abstract class AbstractRepository<T> {
         }
 
         if (id != undefined) {
-            setDoc(doc(this.collectionReference, id), obj);
+            await setDoc(doc(this.collectionReference, id), obj);
             return id;
         }
         const docRef = await addDoc(this.collectionReference, obj);

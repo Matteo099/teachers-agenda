@@ -190,19 +190,19 @@ export class DailyLessonService {
         }
     }
 
-    public async updateLessonsStatus(status: LessonStatus, dailyLesson: DailyLesson, lessons: Lesson[]) {
+    public async updateLessonsStatus(status: LessonStatus, dailyLesson: DailyLesson, lessons: Lesson[], school?: School) {
         for await (const lesson of lessons) {
             const _lesson = dailyLesson.lessons.find(l => l.lessonId == lesson.lessonId);
             await this.lessonService.updateLessonStatus(status, dailyLesson, _lesson!);
         }
-        await this.save(dailyLesson);
+        await this.save(dailyLesson, school ? { school } : undefined);
     }
 
-    public async resetLessons(dailyLesson: DailyLesson, lessons: Lesson[]) {
+    public async resetLessons(dailyLesson: DailyLesson, lessons: Lesson[], school?: School) {
         for await (const lesson of lessons) {
             await this.lessonService.resetLesson(dailyLesson, lesson);
         }
-        await this.save(dailyLesson);
+        await this.save(dailyLesson, school ? { school } : undefined);
     }
 
     public async moveLessons(dailyLesson: DailyLesson, newLessonDate: Date, lessons: Lesson[]) {
@@ -265,7 +265,9 @@ export class DailyLessonService {
 
     private async extractDailyLesson(dailyLesson: DailyLesson, opts?: SaveOptions): Promise<DailyLesson> {
         const lessons: Lesson[] = [];
-        let salary = 0;
+        // Status-only updates do not always have the school available. Preserve the
+        // persisted amount in that case instead of silently overwriting it with zero.
+        let salary = opts?.school ? 0 : (dailyLesson.salary ?? 0);
         for await (const l of dailyLesson.lessons) {
             let lesson: Lesson = l;
             let student: Student | undefined;
@@ -358,11 +360,11 @@ export class DailyLessonService {
         const studentLessons = await StudentLessonService.instance.getStudentLesson(dailyLesson, studentIds);
 
         let salary = 0;
-        dailyLesson.lessons.forEach(async l => {
+        for (const l of dailyLesson.lessons) {
             const st = studentLessons.find(sl => sl.student.id == l.studentId);
-            if (st === undefined) return;
+            if (st === undefined) continue;
             salary += await SalaryService.instance.getSalaryOfStudentLesson(school, st.lesson, st.student, dailyLesson.date);
-        })
+        }
         if (salary != dailyLesson.salary) {
             dailyLesson.salary = salary;
             dailyLesson.lastSalaryUpdate = Timestamp.now();

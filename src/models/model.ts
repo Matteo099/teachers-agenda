@@ -117,7 +117,8 @@ export class yyyyMMdd {
         if (date.length != 8) throw new Error("Unable to parse date, format not correct (yyyyMMdd): " + date);
 
         const y = parseInt(date.substring(0, 4));
-        const m = parseInt(date.substring(4, 6));
+        // Date's month is zero-based while the persisted yyyyMMdd representation is one-based.
+        const m = parseInt(date.substring(4, 6)) - 1;
         const d = parseInt(date.substring(6, 8));
         return new yyyyMMdd(d, m, y)
     }
@@ -185,6 +186,8 @@ export interface Student {
     note?: Note;
     level: string;
     minutesLessonDuration: number;
+    /** Optional hourly rate. When omitted the rate of the active level is used. */
+    hourlyRate?: number;
 
     levelHistory?: LevelHistory[];
     removed?: boolean;
@@ -225,6 +228,11 @@ export interface School {
     managerOptions?: ManagerOptions;
     salaryStrategy: SalaryStrategy;
     trialLessonPaymentStrategy: TrialLessonPaymentStrategy;
+    /** Hourly rate for completed recoveries in pay-per-performance schools. */
+    recoveryHourlyRate?: number;
+    /** Flat reimbursement for every eligible activity day. */
+    dailyExpenseReimbursement?: number;
+    reimbursementDayStrategy?: ReimbursementDayStrategy;
 
     // Instead of embedding arrays of students, store students in a separate collection and use schoolId for filtering
     // students: Student[];
@@ -247,6 +255,11 @@ export enum TrialLessonPaymentStrategy {
     NOTHING = "NOTHING"
 }
 
+export enum ReimbursementDayStrategy {
+    SCHEDULED = "SCHEDULED",
+    COMPLETED = "COMPLETED",
+}
+
 export interface Salary {
     dailyLessonId: ID;
     date: IyyyyMMdd;
@@ -254,6 +267,17 @@ export interface Salary {
     salary: number;
     presents: number;
     absents: number;
+}
+
+export interface MonthlySalaryReport {
+    schoolId: string;
+    from: IyyyyMMdd;
+    to: IyyyyMMdd;
+    regularLessonsTotal: number;
+    recoveryTotal: number;
+    reimbursementTotal: number;
+    activityDays: number;
+    netTotal: number;
 }
 
 export interface ManagerOptions {
