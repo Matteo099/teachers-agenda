@@ -250,8 +250,9 @@ watch(user, async (currentUser, previousUser) => {
 
 function toggleTheme() {
   const currentTheme = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
-  theme.global.name.value = currentTheme == 'myCustomDarkTheme' ? 'myCustomLightTheme' : 'myCustomDarkTheme';
-  LocalStorageHandler.setItem('theme', theme.global.name.value);
+  const nextTheme = currentTheme == 'myCustomDarkTheme' ? 'myCustomLightTheme' : 'myCustomDarkTheme';
+  theme.change(nextTheme);
+  LocalStorageHandler.setItem('theme', nextTheme);
 }
 
 async function checkForUpdates() {
@@ -259,7 +260,7 @@ async function checkForUpdates() {
 }
 
 onMounted(async () => {
-  theme.global.name.value = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
+  theme.change(LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme');
   checkForUpdates();
 })
 </script>

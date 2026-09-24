@@ -1,7 +1,7 @@
 <template>
     <v-card prepend-icon="mdi-school" title="Scuola">
         <v-card-text>
-            <v-row dense>
+            <v-row density="comfortable">
                 <v-col cols="12" md="6">
                     <v-text-field v-model="name" v-bind="nameProps" label="Nome" required></v-text-field>
                 </v-col>

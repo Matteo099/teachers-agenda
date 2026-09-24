@@ -1,7 +1,7 @@
 <template>
     <v-card prepend-icon="mdi-school" :title="`Studente (${school.name})`">
         <v-card-text>
-            <v-row dense>
+            <v-row density="comfortable">
                 <v-col cols="12" md="6">
                     <v-text-field id="std_name" :disabled="isDisabled('name')" :focused="isFocussed('name')"
                         v-model="name" v-bind="nameProps" label="Nome"></v-text-field>
