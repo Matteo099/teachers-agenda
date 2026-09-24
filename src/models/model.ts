@@ -253,11 +253,6 @@ export enum TrialLessonPaymentStrategy {
     NOTHING = "NOTHING"
 }
 
-export enum ReimbursementDayStrategy {
-    SCHEDULED = "SCHEDULED",
-    COMPLETED = "COMPLETED",
-}
-
 export interface Salary {
     dailyLessonId: ID;
     date: IyyyyMMdd;
