@@ -93,6 +93,7 @@
                             @present="present(item)" @absent="absent(item, $event)"
                             :moveLesson="async ($event) => await moveLesson(item, $event)" @trial="trial(item)"
                             @reset="reset(item)"
+                            @hideForDate="async () => await hideStudentForDate(item)"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
                             :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
                         </LessonItem>
@@ -339,6 +340,13 @@ const deleteStudentLesson = withCache(async (_studentLesson: StudentLesson, dele
 }, async (event: StudentLesson) => {
     updateOperationStatus(event, false);
     // return false;
+});
+
+const hideStudentForDate = withCache(async (_studentLesson: StudentLesson) => {
+    if (!dailyLesson.value) return false;
+    await StudentLessonService.instance.hideStudentForDate(dailyLesson.value, _studentLesson.lesson.studentId);
+    await updateStudentLesson();
+    return true;
 });
 
 async function dailyLessonUpdate() {

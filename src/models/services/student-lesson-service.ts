@@ -2,6 +2,7 @@ import type { Ref } from "vue";
 import type { DailyLesson, Student, StudentLesson } from "../model";
 import { arraysHaveSameElements } from "../utils";
 import { StudentService } from "./student-service";
+import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 
 export class StudentLessonService {
 
@@ -15,7 +16,7 @@ export class StudentLessonService {
     public async getStudentLesson(dailyLesson: DailyLesson, stundetIds?: string[]): Promise<StudentLesson[]> {
         stundetIds ??= dailyLesson.lessons.map(l => l.studentId);
         const data = await StudentService.instance.getStudentsOfSchoolWithIds(dailyLesson.schoolId, stundetIds);
-        return dailyLesson.lessons.map(l => {
+        return dailyLesson.lessons.filter(l => !l.hiddenForDate).map(l => {
             const s = data.find(st => st.id == l.studentId)!;
             return { lesson: l, student: s };
         });
@@ -40,5 +41,12 @@ export class StudentLessonService {
             studentLessons.push({ lesson, student });
         });
         return studentLessons;
+    }
+
+    public async hideStudentForDate(dailyLesson: DailyLesson, studentId: string): Promise<void> {
+        const lesson = dailyLesson.lessons.find(l => l.studentId === studentId);
+        if (!lesson) return;
+        lesson.hiddenForDate = true;
+        await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
     }
 }

@@ -43,6 +43,7 @@ export class SchoolRecoveryLessonService {
 
         if (status === RecoveryStatus.PENDING) {
             recoveryEntry.recoveryLesson = info!;
+            recoveryEntry.recoveryLessons = [...(recoveryEntry.recoveryLessons ?? []), info!];
         }
         if (status === RecoveryStatus.UNSET) {
             delete recoveryEntry.recoveryLesson;
@@ -170,7 +171,14 @@ export class SchoolRecoveryLessonService {
             dailyLessonId: recoveryDailyLesson.dailyLessonId,
             lessonId: recoveryDailyLesson.lesson.lessonId
         }
+        const fractionMinutes = schedule.minutes ?? Math.round((schedule.endTime - schedule.startTime) / 60);
         this.updateRecovery(recovery, ref, RecoveryStatus.PENDING, info)
+        const entry = recovery.recoveries.find(r => r.originalLesson.dailyLessonId === ref.dailyLessonId && r.originalLesson.lessonId === ref.lessonId);
+        if (entry) {
+            entry.totalMinutes ??= extStudentLesson.lesson.endTime - extStudentLesson.lesson.startTime > 0
+                ? Math.round((extStudentLesson.lesson.endTime - extStudentLesson.lesson.startTime) / 60) : fractionMinutes;
+            entry.recoveredMinutes = (entry.recoveredMinutes ?? 0) + fractionMinutes;
+        }
 
         await SchoolRecoveryLessonRepository.instance.save(recovery, schoolId);
 
@@ -201,5 +209,27 @@ export class SchoolRecoveryLessonService {
         await this.removeRecoveryRef(originalDailyLesson, originalLessonRef.lessonId);
         // update original lesson status => UNSET
         await this.updateRecoveries(schoolId, originalDailyLesson.id, originalLesson);
+    }
+
+    /** Remove one scheduled fraction without cancelling other fractions. */
+    public async cancelRecoveryFraction(originalLesson: LessonRef, recoveryLesson: LessonRef, minutes: number): Promise<void> {
+        const recoveryDailyLesson = await DailyLessonRepository.instance.get(recoveryLesson.dailyLessonId);
+        if (recoveryDailyLesson) {
+            const index = recoveryDailyLesson.lessons.findIndex(l => l.lessonId === recoveryLesson.lessonId);
+            if (index !== -1) {
+                recoveryDailyLesson.lessons.splice(index, 1);
+                await DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
+            }
+        }
+        const recovery = await this.getOrCreate((await DailyLessonRepository.instance.get(originalLesson.dailyLessonId))!.schoolId);
+        const entry = recovery.recoveries.find(r => r.originalLesson.dailyLessonId === originalLesson.dailyLessonId && r.originalLesson.lessonId === originalLesson.lessonId);
+        if (entry) {
+            entry.recoveryLessons = (entry.recoveryLessons ?? []).filter(r => r.dailyLessonId !== recoveryLesson.dailyLessonId || r.lessonId !== recoveryLesson.lessonId);
+            entry.recoveredMinutes = Math.max(0, (entry.recoveredMinutes ?? 0) - minutes);
+            if (entry.recoveryLesson?.dailyLessonId === recoveryLesson.dailyLessonId && entry.recoveryLesson.lessonId === recoveryLesson.lessonId)
+                entry.recoveryLesson = entry.recoveryLessons[entry.recoveryLessons.length - 1];
+            if ((entry.recoveredMinutes ?? 0) === 0) entry.status = RecoveryStatus.UNSET;
+        }
+        await SchoolRecoveryLessonRepository.instance.save(recovery, recovery.schoolId);
     }
 }

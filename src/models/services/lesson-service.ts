@@ -51,8 +51,11 @@ export class LessonService {
             updatedAt: Timestamp.now(),
             createdAt: Timestamp.now()
         };
+        if (lesson.compensation) newLesson.compensation = lesson.compensation;
+        if (lesson.hiddenForDate) newLesson.hiddenForDate = lesson.hiddenForDate;
 
         if (lesson.moved) newLesson.moved = lesson.moved;
+        if (lesson.compensation) newLesson.compensation = lesson.compensation;
         if (lesson.recovery) newLesson.recovery = lesson.recovery;
 
         return newLesson;

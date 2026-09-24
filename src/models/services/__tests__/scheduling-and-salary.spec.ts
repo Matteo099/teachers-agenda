@@ -97,4 +97,11 @@ describe("SalaryService.getSalaryOfStudentLesson", () => {
             student, "20240101"
         )).resolves.toBe(15);
     });
+
+    it("uses student level tariff for completed recoveries", async () => {
+        const lesson = { lessonId: "recovery", studentId: "student", startTime: 0, endTime: 1800, status: LessonStatus.PRESENT,
+            recovery: { ref: 'original' as const, lessonRef: { dailyLessonId: 'old', lessonId: 'old' } }, createdAt: timestamp, updatedAt: timestamp };
+        await expect(SalaryService.instance.getSalaryOfRecoveryLesson(school, lesson, student, "20240101")).resolves.toBe(15);
+        await expect(SalaryService.instance.getSalaryOfRecoveryLesson({ ...school, levelRanges: [{ levels: ["base"], price: 40 }] }, lesson, student, "20240101")).resolves.toBe(20);
+    });
 });

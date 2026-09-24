@@ -229,6 +229,7 @@ export interface School {
     salaryStrategy: SalaryStrategy;
     trialLessonPaymentStrategy: TrialLessonPaymentStrategy;
     /** Hourly rate for completed recoveries in pay-per-performance schools. */
+    /** @deprecated Recoveries use student level tariff. Kept for legacy documents. */
     recoveryHourlyRate?: number;
     /** Flat reimbursement for every eligible activity day. */
     dailyExpenseReimbursement?: number;
@@ -277,6 +278,7 @@ export interface MonthlySalaryReport {
     recoveryTotal: number;
     reimbursementTotal: number;
     activityDays: number;
+    officialCalendarDays: number;
     netTotal: number;
 }
 
@@ -316,6 +318,7 @@ export interface DailyLesson {
     date: IyyyyMMdd;
     schoolId: string;
     lessons: Lesson[];
+    isOfficialCalendarDate?: boolean;
     lastSalaryUpdate?: Timestamp;
     salary: number;
     /**
@@ -351,11 +354,22 @@ export enum DeleteMode {
 
 export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
+    hiddenForDate?: boolean;
+    /** Frozen economic data for this lesson. Never overwrite once set. */
+    compensation?: LessonCompensation;
     recovery?: RecoveryLessonInfo;
     moved?: MovedLessonInfo;
 
     createdAt: Timestamp;
     updatedAt: Timestamp;
+}
+
+export interface LessonCompensation {
+    level: string;
+    hourlyRate: number;
+    minutes: number;
+    amount: number;
+    type: 'REGULAR' | 'TRIAL' | 'RECOVERY' | 'ABSENCE';
 }
 
 export interface MovedLessonInfo {
@@ -390,6 +404,7 @@ export interface RecoveryLessonInfo {
      * - The recovery daily lesson, if `ref` is 'recovery'.
      */
     lessonRef: LessonRef;
+    fractionMinutes?: number;
 }
 
 export interface RecoverySchedule {
@@ -400,6 +415,8 @@ export interface RecoverySchedule {
     date: Date;
     startTime: ITime;
     endTime: ITime;
+    /** Optional fraction size. Defaults to scheduled duration. */
+    minutes?: number;
 }
 
 export interface LessonRef {
@@ -415,6 +432,9 @@ export interface SchoolRecoveryLesson {
 export interface RecoveryInfo {
     originalLesson: LessonRef;
     recoveryLesson?: LessonRef;
+    recoveryLessons?: LessonRef[];
+    totalMinutes?: number;
+    recoveredMinutes?: number;
     status: RecoveryStatus;
 }
 

@@ -7,6 +7,9 @@
                     <v-date-input v-model="date" v-bind="dateProps" label="Data della Lezione di Recupero"
                         inputmode="none"></v-date-input>
                 </v-col>
+                <v-col class="px-2" cols="12" md="4">
+                    <v-number-input v-model="minutes" label="Minuti recupero" :min="1" :max="lessonToRecover.minutesLessonDuration" suffix="min" />
+                </v-col>
                 <v-col class="px-2" cols="12" md="6">
                     <v-text-field v-model="time" v-bind="timeProps" :active="modalTimePicker" :focused="modalTimePicker"
                         inputmode="none" label="Orario della Lezione di Recupero"
@@ -75,9 +78,11 @@ const vuetifyConfig = (state: any) => ({
 
 const [date, dateProps] = defineField('date', vuetifyConfig);
 const [time, timeProps] = defineField('time', vuetifyConfig);
+const [minutes] = defineField('minutes', vuetifyConfig);
 
 watch(date, async () => loadDailyLesson());
 watch(time, async () => updateDailyLesson());
+watch(minutes, async () => updateDailyLesson());
 
 const onSave = handleSubmit(
     async (values: GenericObject) => {
@@ -162,13 +167,14 @@ function updateDailyLesson() {
         status: LessonStatus.NONE,
         studentId: props.lessonToRecover.studentId,
         startTime: t.toITime(),
-        endTime: t.add({ minutes: props.lessonToRecover.minutesLessonDuration }).toITime(),
+        endTime: t.add({ minutes: Number(minutes.value ?? props.lessonToRecover.minutesLessonDuration) }).toITime(),
         recovery: {
             ref: "original",
             lessonRef: {
                 lessonId: props.lessonToRecover.lessonId,
                 dailyLessonId: dailyLesson.value.id!,
-            }
+            },
+            fractionMinutes: Number(minutes.value ?? props.lessonToRecover.minutesLessonDuration)
         },
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),

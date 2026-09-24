@@ -130,6 +130,7 @@ export class DailyLessonService {
             return {
                 date: formattedDate,
                 schoolId: schoolId,
+                isOfficialCalendarDate: !!weeklyLesson,
                 lessons: weeklyLesson.schedule.map(l => ({
                     lessonId: uuidv4(),
                     status: LessonStatus.NONE,
@@ -146,6 +147,7 @@ export class DailyLessonService {
         return {
             date: formattedDate,
             schoolId: schoolId,
+            isOfficialCalendarDate: false,
             lessons: [],
         };
     }
@@ -290,12 +292,16 @@ export class DailyLessonService {
                 status: lesson.status,
                 updatedAt: Timestamp.now()
             }
+            if (l.hiddenForDate) newLesson.hiddenForDate = l.hiddenForDate;
+            if (l.compensation) newLesson.compensation = l.compensation;
             if (l.recovery) newLesson.recovery = l.recovery;
             if (l.moved) newLesson.moved = l.moved;
             lessons.push(newLesson);
 
             if (opts?.school) {
-                salary += await SalaryService.instance.getSalaryOfStudentLesson(opts.school, lesson, student, dailyLesson.date);
+                const compensation = await SalaryService.instance.getLessonCompensation(opts.school, lesson, student, dailyLesson.date);
+                salary += compensation?.amount ?? await SalaryService.instance.getSalaryOfStudentLesson(opts.school, lesson, student, dailyLesson.date);
+                if (compensation && !l.compensation) newLesson.compensation = compensation;
             }
         }
         const newDailyLesson: DailyLesson = {
@@ -322,7 +328,8 @@ export class DailyLessonService {
                 lessonRef: {
                     dailyLessonId: schedule.originalDailyLessonId,
                     lessonId: schedule.originalLessonId,
-                }
+                },
+                fractionMinutes: schedule.minutes ?? Math.round((schedule.endTime - schedule.startTime) / 60)
             },
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()

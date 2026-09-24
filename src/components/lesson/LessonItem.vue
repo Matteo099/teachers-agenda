@@ -120,6 +120,7 @@
                     <v-btn :disabled="loading" color="error" v-bind="activatorProps">elimina</v-btn>
                 </template>
             </DeleteDialog>
+            <v-btn :disabled="loading" class="ma-1" variant="text" @click="emit('hideForDate')">nascondi oggi</v-btn>
         </v-card-text>
     </v-card>
 </template>
@@ -141,7 +142,7 @@ const props = defineProps<{
 }>()
 const item = defineModel<StudentLesson>('item', { required: true });
 const select = defineModel<string[]>('select');
-const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent'])
+const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent', 'hideForDate'])
 const timeDialog = ref(false)
 const dateDialog = ref(false)
 const newLessonDate = ref();
