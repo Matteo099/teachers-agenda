@@ -38,6 +38,7 @@ jobs:
       - name: Build
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_SIMULATOR: "false"
         run: npm run build-only
 
       - name: Configure Pages
@@ -74,6 +75,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run release
+
+      - name: Commit released package version
+        run: |
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "No package version change to commit"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: update package version"
+          git push
 
   deploy:
     needs: [build, release]
