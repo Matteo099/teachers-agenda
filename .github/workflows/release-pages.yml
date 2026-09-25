@@ -36,6 +36,8 @@ jobs:
         run: npm run test:core -- --run
 
       - name: Build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
         run: npm run build-only
 
       - name: Configure Pages
