@@ -123,15 +123,30 @@ export class yyyyMMdd {
         return new yyyyMMdd(d, m, y)
     }
 
-    toIyyyyMMdd(delimiter: string = "", startingMonthIndex = 0): IyyyyMMdd {
-        return `${this.year.toString().padStart(4, '0')}${delimiter}${(this.month + startingMonthIndex).toString().padStart(2, '0')}${delimiter}${this.day.toString().padStart(2, '0')}`
+    toIyyyyMMdd(delimiter: string = ""): IyyyyMMdd {
+        return `${this.year.toString().padStart(4, '0')}${delimiter}${(this.month + 1).toString().padStart(2, '0')}${delimiter}${this.day.toString().padStart(2, '0')}`
     }
 
-    static fromDate(date: Date): yyyyMMdd {
+    /** Convert a date-only value without letting the browser apply UTC rules. */
+    static fromDate(date: Date | string): yyyyMMdd {
+        if (typeof date === 'string') {
+            const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(date);
+            if (match) return new yyyyMMdd(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+            date = new Date(date);
+        }
         const y = date.getFullYear();
         const m = date.getMonth();
         const d = date.getDate();
         return new yyyyMMdd(d, m, y)
+    }
+
+    /** Parse Schedule-X's YYYY-MM-DD (optionally followed by a time) locally. */
+    static fromScheduleX(value: string): yyyyMMdd {
+        return this.fromDate(value);
+    }
+
+    toScheduleX(): string {
+        return this.toIyyyyMMdd("-");
     }
 
     toDate(): Date {

@@ -176,11 +176,11 @@ async function loadLessons(range?: DateRange | null) {
     loading.value = true;
 
     const from = {
-        date: yyyyMMdd.fromDate(new Date(range.start)),
+        date: yyyyMMdd.fromScheduleX(range.start),
         time: Time.fromHHMM(range.start.split(" ")[1]!)
     }
     const to = {
-        date: yyyyMMdd.fromDate(new Date(range.end)),
+        date: yyyyMMdd.fromScheduleX(range.end),
         time: Time.fromHHMM(range.end.split(" ")[1]!)
     }
 

@@ -59,7 +59,7 @@ export class LessonGroupService {
 
         const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(schoolId, from.date.toIyyyyMMdd(), to.date.toIyyyyMMdd());
         lessons.push(...dailyLessons.flatMap(dl => {
-            const date = yyyyMMdd.fromIyyyyMMdd(dl.date).toIyyyyMMdd("-", 1);
+            const date = yyyyMMdd.fromIyyyyMMdd(dl.date).toScheduleX();
             return dl.lessons.map(l => {
                 return {
                     id: dl.id + "_" + l.lessonId,
@@ -84,7 +84,7 @@ export class LessonGroupService {
                 const next = nextDay(startingDate, w.dayOfWeek);
                 if (next > toDate) return;
                 if (next > yyyyMMdd.fromIyyyyMMdd(w.to).toDate() || next < yyyyMMdd.fromIyyyyMMdd(w.from).toDate()) return;
-                const date = yyyyMMdd.fromDate(next).toIyyyyMMdd("-", 1);
+                    const date = yyyyMMdd.fromDate(next).toScheduleX();
                 if (lessons.find(l => l.data?.date == date)) return;
 
                 lessons.push(...w.schedule.map(s => {

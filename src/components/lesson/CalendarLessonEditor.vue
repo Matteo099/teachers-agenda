@@ -1,12 +1,11 @@
 <template>
     <v-card title="Calendario" :loading="loadingCalendar || loadingStudents">
         <template v-slot:append>
-
             <v-dialog v-model="dialog" transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn icon="mdi-plus" v-bind="activatorProps" variant="text"></v-btn>
                 </template>
-
+            
                 <WeekLessonEditor :school="school" @close="dialog = false" @save="$event ? dialog = false : null">
                 </WeekLessonEditor>
             </v-dialog>
@@ -137,7 +136,7 @@ async function loadCalendar() {
 
 async function loadStudents() {
     loadingStudents.value = true;
-    
+
     const subscription = StudentService.instance.observeStudentsOfSchool(props.school.id).subscribe({
         next: data => {
             allStudents.value = data;

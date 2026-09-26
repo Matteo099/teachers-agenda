@@ -83,7 +83,7 @@ const calendarControls = createCalendarControlsPlugin()
 // For updating events, use the events service plugin
 const calendarApp = createCalendar({
     locale: 'it-IT',
-    selectedDate: props.date.toIyyyyMMdd("-", 1),
+                selectedDate: props.date.toScheduleX(),
     views: [createViewDay()],
     events: [],
     plugins: props.editable ? [dndPlugin, eventsServicePlugin, eventModal, calendarControls] : [dndPlugin, eventsServicePlugin, calendarControls],
@@ -151,7 +151,7 @@ function updateCalendarBoundaries() {
 }
 
 function transformModel(): CalendarEventExt[] {
-    const date = props.date.toIyyyyMMdd("-", 1);
+    const date = props.date.toScheduleX();
     return model.value.map(sl => {
         if ("lesson" in sl) {
             return {

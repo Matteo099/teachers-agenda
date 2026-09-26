@@ -243,12 +243,10 @@ export class DailyLessonService {
     }
 
     public async addStudents(dailyLesson: DailyLesson, students: Student[]) {
-
-        const newDailyLesson = { ...dailyLesson };
         students.forEach(s => {
             // 08:00 => 28800 seconds
-            const lastLessonEndTime = newDailyLesson.lessons?.length == 0 ? 28800 : newDailyLesson.lessons![newDailyLesson.lessons!.length - 1]!.endTime;
-            newDailyLesson.lessons?.push({
+            const lastLessonEndTime = dailyLesson.lessons.length == 0 ? 28800 : dailyLesson.lessons[dailyLesson.lessons.length - 1]!.endTime;
+            dailyLesson.lessons.push({
                 lessonId: uuidv4(),
                 status: LessonStatus.NONE,
                 studentId: s.id,
@@ -259,7 +257,10 @@ export class DailyLessonService {
             });
         })
 
-        await this.save(newDailyLesson);
+        // Keep the reactive object used by DailyLessonView in sync with the
+        // persisted document. Saving a shallow copy here left the view with
+        // the old lesson list; the next save could therefore delete students.
+        await this.save(dailyLesson);
     }
 
     public async save(dailyLesson: DailyLesson, opts?: SaveOptions) {
@@ -286,9 +287,12 @@ export class DailyLessonService {
                 lesson = studentLesson;
             } else if (opts?.studentLessons) {
                 const studentLesson = opts.studentLessons.find(sl => sl.lesson.lessonId == l.lessonId);
-                if (studentLesson == undefined) continue;
-                lesson = studentLesson.lesson;
-                student = studentLesson.student;
+                // Hidden lessons are intentionally absent from the UI list;
+                // preserve them instead of dropping them from Firestore.
+                if (studentLesson) {
+                    lesson = studentLesson.lesson;
+                    student = studentLesson.student;
+                }
             }
             const newLesson: Lesson = {
                 lessonId: l.lessonId,

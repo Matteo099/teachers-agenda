@@ -210,8 +210,8 @@ function updateScheduledLessonsTime() {
         const st = getStudent(sl.studentId);
         return {
             id: sl.lessonId,
-            start: today.toIyyyyMMdd("-", 1) + " " + Time.fromITime(sl.startTime).format(),
-            end: today.toIyyyyMMdd("-", 1) + " " + Time.fromITime(sl.endTime).format(),
+            start: today.toScheduleX() + " " + Time.fromITime(sl.startTime).format(),
+            end: today.toScheduleX() + " " + Time.fromITime(sl.endTime).format(),
             title: `${getCompleteStudentName(sl.studentId)} - ${getStudentLessonDay(sl.studentId)}`,
             data: { ...sl, ...st }
         };
