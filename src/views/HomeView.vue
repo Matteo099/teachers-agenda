@@ -20,7 +20,7 @@
       <v-col cols="12" sm="4">
         <v-dialog v-model="dialog" fullscreen>
           <template v-slot:activator="{ props: activatorProps }">
-            <v-card class="pa-2" color="secondary" v-bind="activatorProps">
+            <v-card class="pa-2" color="grey" v-bind="activatorProps">
               <div class="text-center ma-4">
                 <p class="text-h6 font-weight">Aggiungi una scuola</p>
                 <v-icon size="x-large">mdi-plus</v-icon>
