@@ -17,11 +17,17 @@
                         </v-fab-transition>
                     </v-btn>
                 </v-col>
+                <v-col cols="auto" class="d-flex ga-1">
+                    <v-btn icon="mdi-chevron-left" variant="text" aria-label="Mese precedente"
+                        @click="changeMonth(-1)"></v-btn>
+                    <v-btn icon="mdi-chevron-right" variant="text" aria-label="Mese successivo"
+                        @click="changeMonth(1)"></v-btn>
+                </v-col>
             </v-row>
             <v-progress-linear :active="loading" color="primary" indeterminate></v-progress-linear>
             <ScheduleXCalendar :calendar-app="calendarApp">
                 <template #eventModal="{ calendarEvent }">
-                    <v-card elevation="3" :title="calendarEvent.title" :text="calendarEvent.description">
+                    <v-card class="lesson-event-modal" elevation="3" :title="calendarEvent.title" :text="calendarEvent.description">
                         <template v-slot:subtitle>
                             <v-icon>mdi-clock-outline</v-icon>
                             {{ dateFormat(calendarEvent.start.split(' ')[0]) + ' ⋅ ' + calendarEvent.start.split(' ')[1]
@@ -132,6 +138,12 @@ function toggleTrim() {
     calendarControls.setWeekOptions({ ...opt, gridHeight: Math.max(1000 * range / 24, 400) });
 }
 
+function changeMonth(delta: number) {
+    const currentDate = new Date(calendarControls.getDate() + "T12:00:00");
+    currentDate.setMonth(currentDate.getMonth() + delta);
+    calendarControls.setDate(currentDate.toISOString().slice(0, 10));
+}
+
 function updateQueryRoute() {
     if (selectedSchools.value.length == 0)
         router.push("/calendar")
@@ -215,3 +227,22 @@ onMounted(async () => {
     await loadSchools();
 })
 </script>
+
+<style>
+.lesson-event-modal .v-card-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+@media (max-width: 600px) {
+    .lesson-event-modal {
+        max-width: calc(100vw - 32px) !important;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+    }
+
+    .lesson-event-modal .v-card-actions {
+        justify-content: flex-end;
+    }
+}
+</style>

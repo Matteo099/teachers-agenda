@@ -9,7 +9,7 @@ type VersionParts = {
   preRelease: string | null;
 };
 
-// Parse a semantic version string into its components
+// Parse a semantic version string into its components 
 function parseVersion(version: string): VersionParts {
   const versionRegex =
     /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-.]+))?$/;
