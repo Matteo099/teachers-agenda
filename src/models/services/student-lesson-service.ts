@@ -1,8 +1,9 @@
 import type { Ref } from "vue";
-import type { DailyLesson, Student, StudentLesson } from "../model";
+import type { DailyLesson, School, Student, StudentLesson } from "../model";
 import { arraysHaveSameElements } from "../utils";
 import { StudentService } from "./student-service";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
+import { DailyLessonService } from "./daily-lesson-service";
 
 export class StudentLessonService {
 
@@ -43,10 +44,11 @@ export class StudentLessonService {
         return studentLessons;
     }
 
-    public async hideStudentForDate(dailyLesson: DailyLesson, studentId: string): Promise<void> {
+    public async hideStudentForDate(dailyLesson: DailyLesson, studentId: string, school?: School): Promise<void> {
         const lesson = dailyLesson.lessons.find(l => l.studentId === studentId);
         if (!lesson) return;
         lesson.hiddenForDate = true;
-        await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
+        if (school) await DailyLessonService.instance.save(dailyLesson, { school });
+        else await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
     }
 }

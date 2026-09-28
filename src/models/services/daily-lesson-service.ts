@@ -310,6 +310,7 @@ export class DailyLessonService {
             lessons.push(newLesson);
 
             if (opts?.school) {
+                if (l.hiddenForDate) continue;
                 const compensation = await SalaryService.instance.getLessonCompensation(opts.school, lesson, student, dailyLesson.date);
                 salary += compensation?.amount ?? await SalaryService.instance.getSalaryOfStudentLesson(opts.school, lesson, student, dailyLesson.date);
                 if (compensation && !l.compensation) newLesson.compensation = compensation;
