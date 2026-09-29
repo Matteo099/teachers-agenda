@@ -162,21 +162,30 @@ export class LessonGroupService {
     private async addLastLessons(schoolLessons: SchoolLessons, lessonProjections: LessonProjection[], count: number) {
         const dailyLessons: DailyLesson[] = schoolLessons.dailyLessons;
         const weeklyLessons: WeeklyLesson[] = schoolLessons.weeklyLessons;
-        // Filter only lessons that are done (i.e., on or before today)
-        const pastLessons = dailyLessons.filter(dailyLesson => dailyLesson.date <= this.today.asString);
-
-        // Sort the past lessons by date in descending order to get the most recent ones
-        pastLessons.sort((a, b) => b.date.localeCompare(a.date));
-
-        const lastLessons = pastLessons.slice(0, count).reverse();
-        lastLessons.forEach(dailyLesson => {
-            lessonProjections.push(this.createLessonProjection(dailyLesson, false));
-        });
+        const byDate = new Map<string, LessonProjection>();
+        dailyLessons.filter(d => d.date <= this.today.asString)
+            .forEach(d => byDate.set(d.date, this.createLessonProjection(d, false)));
 
         const startingDay = new Date();
         const _weeklyLessons = [...weeklyLessons];
-        // Step 2: Loop until we have the required number of past lessons (or run out of lessons)
-        while (lessonProjections.length < count && _weeklyLessons.length > 0) {
+        // Merge weekly occurrences before selecting the last dates. This prevents
+        // an older materialized daily lesson from taking the place of a nearer
+        // scheduled occurrence which has not been materialized yet.
+        for (let offset = 1; offset <= 60; offset++) {
+            const date = new Date(this.today.asDate);
+            date.setDate(date.getDate() - offset);
+            const formattedDate = yyyyMMdd.fromDate(date);
+            const dateString = formattedDate.toIyyyyMMdd();
+            weeklyLessons.forEach(weekLesson => {
+                if (weekLesson.dayOfWeek !== date.getDay() || weekLesson.from > dateString || dateString > weekLesson.to || weekLesson.exclude.includes(dateString)) return;
+                if (!byDate.has(dateString)) byDate.set(dateString, { date: formattedDate, pending: true, next: false, lessons: weekLesson.schedule });
+            });
+        }
+        Array.from(byDate.values()).sort((a, b) => a.date.toIyyyyMMdd().localeCompare(b.date.toIyyyyMMdd()))
+            .slice(-count).forEach(lesson => lessonProjections.push(lesson));
+        /* legacy weekly backfill implementation removed */
+        /*
+        while (false) {
             _weeklyLessons.forEach(async (weekLesson, index) => {
                 if (lessonProjections.length >= count) return;
 
@@ -208,6 +217,7 @@ export class LessonGroupService {
             // Move the starting day one week forward for the next batch of weekly lessons
             startingDay.setDate(startingDay.getDate() - 7);
         }
+        */
     }
 
     private addUpcomingLessons(
