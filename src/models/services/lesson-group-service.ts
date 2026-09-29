@@ -67,7 +67,7 @@ export class LessonGroupService {
                     start: date + " " + Time.fromITime(l.startTime).format(),
                     end: date + " " + Time.fromITime(l.endTime).format(),
                     calendarId: schoolId.toLowerCase(),
-                    data: { date, dailyLessonId: dl.id }
+                    data: { date, dailyLessonId: dl.id, studentId: l.studentId }
                 }
             });
         }));
@@ -94,7 +94,7 @@ export class LessonGroupService {
                         start: date + " " + Time.fromITime(s.startTime).format(),
                         end: date + " " + Time.fromITime(s.endTime).format(),
                         calendarId: schoolId.toLowerCase(),
-                        data: { schoolId, date }
+                        data: { schoolId, date, studentId: s.studentId }
                     };
                 }))
             });

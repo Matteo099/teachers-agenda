@@ -227,7 +227,10 @@ async function loadLessons(range?: DateRange | null) {
                 l.title = st.name + " " + st.surname;
             }
         });
-        loadedLessons.push(..._lessons);
+        // Do not show historical lessons whose student was deleted.
+        // Their records remain stored for historical consistency, but they
+        // must not appear as anonymous events in the general calendar.
+        loadedLessons.push(..._lessons.filter(l => students.some(s => s.id == l.data?.studentId || s.id == l.title)));
     }
 
     // A range/filter change can start another load while this one is waiting
