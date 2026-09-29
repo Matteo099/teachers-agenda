@@ -287,6 +287,16 @@ export class DailyLessonService {
         await this.save(dailyLesson);
     }
 
+    public async ensureOfficialCalendarDate(dailyLesson: DailyLesson): Promise<void> {
+        if (dailyLesson.isOfficialCalendarDate !== undefined) return;
+        const weeklyLessons = await WeeklyLessonService.instance
+            .getWeeklyLessonOfSchoolByDayBetweenDate(dailyLesson.schoolId,
+                yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).toDate().getDay(), dailyLesson.date);
+        if (weeklyLessons.length === 0) return;
+        dailyLesson.isOfficialCalendarDate = true;
+        await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
+    }
+
     private async extractDailyLesson(dailyLesson: DailyLesson, opts?: SaveOptions): Promise<DailyLesson> {
         const lessons: Lesson[] = [];
         // Status-only updates do not always have the school available. Preserve the

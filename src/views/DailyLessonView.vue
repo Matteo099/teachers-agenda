@@ -65,7 +65,7 @@
             </v-col>
             <v-col>
                 <v-btn variant="tonal" @click="toggleOfficialCalendarDate">
-                    {{ dailyLesson.isOfficialCalendarDate ? 'data ufficiale' : 'segna data ufficiale' }}
+                    {{ dailyLesson.isOfficialCalendarDate ? 'rimuovi data ufficiale' : 'segna data ufficiale' }}
                 </v-btn>
             </v-col>
 
@@ -382,6 +382,7 @@ async function updateStudentLesson() {
         school.value = await SchoolRepository.instance.get(dailyLesson.value.schoolId);
         loadingSchool.value = false;
     }
+    await DailyLessonService.instance.ensureOfficialCalendarDate(dailyLesson.value);
     await StudentLessonService.instance.updateStudentLesson(dailyLesson.value, studentLessons.value, loadingStudents);
 }
 
