@@ -57,6 +57,10 @@
         </template>
 
         <v-card-text>
+            <div class="d-flex justify-center">
+                <v-btn icon="mdi-chevron-up" variant="text" aria-label="Visualizza lezioni precedenti"
+                    :disabled="loading || computingLessonGroups" @click="showPreviousLessons"></v-btn>
+            </div>
             <v-list lines="two">
                 <template v-for="lg of lessonGroups" :key="lg.month">
                     <v-list-subheader inset>{{ lg.month }}</v-list-subheader>
@@ -81,6 +85,10 @@
                     </v-list-item>
                 </template>
             </v-list>
+            <div class="d-flex justify-center">
+                <v-btn icon="mdi-chevron-down" variant="text" aria-label="Visualizza lezioni successive"
+                    :disabled="loading || computingLessonGroups" @click="showUpcomingLessons"></v-btn>
+            </div>
         </v-card-text>
 
     </v-card>
@@ -112,6 +120,8 @@ const dailyLessonDate: Ref<Date | undefined> = ref();
 const loadingLessons = ref(false);
 const loadingCalendar = ref(false);
 const computingLessonGroups = ref(false);
+const previousLessonsCount = ref(2);
+const upcomingLessonsCount = ref(3);
 const routingToDailyLesson = ref(false);
 const filters = ref([
     // weekly lessons only
@@ -148,9 +158,20 @@ async function loadLessonGroup(forceReload = true) {
 
     if (!schoolLessons || forceReload)
         schoolLessons = await SchoolService.instance.getSchoolLessons(props.school.id, startingDate);
-    lessonGroups.value = await LessonGroupService.instance.getGroupedLessons(schoolLessons, filters.value);
+    lessonGroups.value = await LessonGroupService.instance.getGroupedLessons(
+        schoolLessons, filters.value, previousLessonsCount.value, upcomingLessonsCount.value);
 
     computingLessonGroups.value = false;
+}
+
+async function showPreviousLessons() {
+    previousLessonsCount.value += 3;
+    await loadLessonGroup(false);
+}
+
+async function showUpcomingLessons() {
+    upcomingLessonsCount.value += 3;
+    await loadLessonGroup(false);
 }
 
 onMounted(async () => {

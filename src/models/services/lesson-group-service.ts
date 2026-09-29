@@ -104,17 +104,17 @@ export class LessonGroupService {
         return lessons;
     }
 
-    public async getGroupedLessons(schoolLessons: SchoolLessons, filters?: LessonFilterObj[]): Promise<LessonGroup[]> {
+    public async getGroupedLessons(schoolLessons: SchoolLessons, filters?: LessonFilterObj[], previousCount = 2, upcomingCount = 3): Promise<LessonGroup[]> {
         const lessonProjections: LessonProjection[] = [];
         this.calculateToday();
 
         const _schoolLessons = this.applyFilters(schoolLessons, filters);
 
         // Step 1: Filter the last 2 lessons from daily lessons or (if no daily lesson present) weekly lesson based on today
-        await this.addLastLessons(_schoolLessons, lessonProjections, 2);
+        await this.addLastLessons(_schoolLessons, lessonProjections, previousCount);
 
         // Step 2: Add the upcoming 4 lessons from weekly lessons based on today
-        this.addUpcomingLessons(_schoolLessons, lessonProjections, 4);
+        this.addUpcomingLessons(_schoolLessons, lessonProjections, upcomingCount);
 
         // Step 3: Group lessons by month
         return this.groupLessonsByMonth(lessonProjections);
