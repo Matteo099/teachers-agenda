@@ -15,7 +15,7 @@
 
             <v-card class="mx-5 mt-5 pa-2" v-if="tab" elevation="3">
                 <v-tabs v-model="tab" class="my-2" align-tabs="center" color="primary" show-arrows>
-                    <v-tab v-for="i in levelRanges" :key="i.price" :text="i.price + ' €'" :value="i"></v-tab>
+                        <v-tab v-for="i in levelRanges" :key="i.price" :text="numberFormat(i.price) + ' €'" :value="i"></v-tab>
                 </v-tabs>
 
                 <v-tabs-window v-model="tab">
@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import type { LevelRange } from '@/models/model';
+import { numberFormat } from '@/models/utils';
 import { onMounted, ref, watch, type Ref } from 'vue';
 
 const props = defineProps<{ initialLevelRanges?: LevelRange[] }>()

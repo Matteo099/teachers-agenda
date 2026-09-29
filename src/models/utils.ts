@@ -73,6 +73,11 @@ export const dateFormat = function (date?: Date | string): string {
     return dateFormatter.format(d);
 }
 
+export const numberFormat = function (value: number | undefined | null): string {
+    if (value == null || isNaN(value)) return "";
+    return new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 }).format(value);
+}
+
 export const timestampFormatter = new Intl.DateTimeFormat('it-IT', {
     timeStyle: "medium",
     dateStyle: "short",

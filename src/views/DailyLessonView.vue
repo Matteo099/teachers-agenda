@@ -16,7 +16,7 @@
                 <v-row class="justify-center">
                     <v-col cols="auto">
                         <span class="text-subtitle">
-                            Totale: <b> {{ total }} €</b>
+                            Totale: <b> {{ numberFormat(total) }} €</b>
                         </span>
                     </v-col>
                 </v-row>
@@ -139,6 +139,7 @@ import { computed, onMounted, onUnmounted, ref, shallowRef, watch, type Ref } fr
 import { useRoute, useRouter } from 'vue-router';
 import { toast } from 'vue3-toastify';
 import { useDocument } from 'vuefire';
+import { numberFormat } from '@/models/utils';
 
 const route = useRoute();
 const router = useRouter();

@@ -11,6 +11,9 @@
                 <v-col cols="6" md="3"><v-card color="primary" title="Totale netto" :text="currency(report.netTotal)"></v-card></v-col>
             </v-row>
             <v-data-table :headers="salaryHeaders" :items="salaries" item-value="id">
+                <template v-slot:item.salary="{ item }">
+                    {{ currency(item.salary) }}
+                </template>
                 <template v-slot:item.date="{ item }">
                     {{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}
                 </template>
