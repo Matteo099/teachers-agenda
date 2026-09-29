@@ -1,5 +1,5 @@
 <template>
-    <v-card elevation=3 :loading="loading" v-if="item.student">
+    <v-card elevation=3 :loading="loading" v-if="item.student" :class="{ 'hidden-lesson': item.lesson.hiddenForDate }">
         <v-card-title>
             <v-checkbox v-model="select" :value="item.student.id" multiple>
                 <template v-slot:label>
@@ -10,10 +10,13 @@
             </v-checkbox>
         </v-card-title>
         <v-card-text>
-            <v-btn :disabled="loading" class="ma-1" v-if="presentVisible" @click="emit('present')">presente</v-btn>
-            <v-btn :disabled="loading" class="ma-1" v-if="absentVisible" @click="emit('absent', false)">assente</v-btn>
+            <v-chip v-if="item.lesson.hiddenForDate" class="ma-1" color="grey" size="small" prepend-icon="mdi-eye-off">
+                Nascosto oggi
+            </v-chip>
+            <v-btn :disabled="loading" class="ma-1" v-if="presentVisible && !item.lesson.hiddenForDate" @click="emit('present')">presente</v-btn>
+            <v-btn :disabled="loading" class="ma-1" v-if="absentVisible && !item.lesson.hiddenForDate" @click="emit('absent', false)">assente</v-btn>
             <v-dialog transition="dialog-bottom-transition"
-                v-else-if="recoverableAbsentVisible || unjustifiedAbsentVisible">
+                v-else-if="!item.lesson.hiddenForDate && (recoverableAbsentVisible || unjustifiedAbsentVisible)">
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn :disabled="loading" class="ma-1" v-bind="activatorProps">assente (R/I)</v-btn>
                 </template>
@@ -37,8 +40,8 @@
                 </template>
             </v-dialog>
 
-            <v-btn :disabled="loading" class="ma-1" v-if="trialVisible" @click="emit('trial')">prova</v-btn>
-            <v-btn :disabled="loading" class="ma-1" v-if="resetVisible" @click="emit('reset')">reset</v-btn>
+            <v-btn :disabled="loading" class="ma-1" v-if="trialVisible && !item.lesson.hiddenForDate" @click="emit('trial')">prova</v-btn>
+            <v-btn :disabled="loading" class="ma-1" v-if="resetVisible && !item.lesson.hiddenForDate" @click="emit('reset')">reset</v-btn>
 
             <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen v-if="!item.lesson.moved">
                 <template v-slot:activator="{ props: activatorProps }">
@@ -120,7 +123,7 @@
                     <v-btn :disabled="loading" color="error" v-bind="activatorProps">elimina</v-btn>
                 </template>
             </DeleteDialog>
-            <v-dialog>
+            <v-dialog v-if="!item.lesson.hiddenForDate">
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn :disabled="loading" class="ma-1" variant="text" v-bind="activatorProps">nascondi oggi</v-btn>
                 </template>
@@ -134,6 +137,8 @@
                     </v-card>
                 </template>
             </v-dialog>
+            <v-btn v-else :disabled="loading" class="ma-1" variant="text" color="primary"
+                prepend-icon="mdi-eye" @click="emit('showForDate')">rendi visibile</v-btn>
         </v-card-text>
     </v-card>
 </template>
@@ -155,7 +160,7 @@ const props = defineProps<{
 }>()
 const item = defineModel<StudentLesson>('item', { required: true });
 const select = defineModel<string[]>('select');
-const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent', 'hideForDate'])
+const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent', 'hideForDate', 'showForDate'])
 const timeDialog = ref(false)
 const dateDialog = ref(false)
 const newLessonDate = ref();
@@ -199,3 +204,9 @@ async function _moveLesson() {
 }
 
 </script>
+
+<style scoped>
+.hidden-lesson {
+    opacity: 0.5;
+}
+</style>

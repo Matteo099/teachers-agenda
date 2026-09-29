@@ -51,4 +51,11 @@ export class StudentLessonService {
         if (school) await DailyLessonService.instance.save(dailyLesson, { school });
         else await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
     }
+
+    public async showStudentForDate(dailyLesson: DailyLesson, studentId: string, school?: School): Promise<void> {
+        const lesson = dailyLesson.lessons.find(l => l.studentId === studentId);
+        if (!lesson) return;
+        lesson.hiddenForDate = false;
+        await DailyLessonService.instance.save(dailyLesson, school ? { school } : undefined);
+    }
 }
