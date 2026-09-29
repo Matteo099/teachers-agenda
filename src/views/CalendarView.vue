@@ -35,7 +35,7 @@
                         </template>
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn text="vai" @click="goto(calendarEvent.data.dailyLessonId)"></v-btn>
+                            <v-btn text="vai" @click="goto(calendarEvent.data)"></v-btn>
                         </v-card-actions>
                     </v-card>
                 </template>
@@ -50,6 +50,7 @@ import { Time, yyyyMMdd, type CalendarEventExt, type School } from '@/models/mod
 import type { ID } from '@/models/repositories/abstract-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { LessonGroupService } from '@/models/services/lesson-group-service';
+import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { dateFormat, getCalendarsColor } from '@/models/utils';
 import {
@@ -151,8 +152,14 @@ function updateQueryRoute() {
         router.push("/calendar?filters=" + selectedSchools.value.join(","))
 }
 
-async function goto(dailyLessonId: ID) {
+async function goto(data: { dailyLessonId?: ID, schoolId?: ID, date?: string }) {
     eventModal.close()
+    let dailyLessonId = data.dailyLessonId;
+    if (!dailyLessonId && data.schoolId && data.date) {
+        dailyLessonId = await DailyLessonService.instance.getOrCreateDailyLessonId(
+            data.schoolId, yyyyMMdd.fromScheduleX(data.date).toDate());
+    }
+    if (!dailyLessonId) return;
     router.push(`/lesson/${dailyLessonId}`);
 }
 

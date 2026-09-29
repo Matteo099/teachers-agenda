@@ -94,6 +94,7 @@ export class LessonGroupService {
                         start: date + " " + Time.fromITime(s.startTime).format(),
                         end: date + " " + Time.fromITime(s.endTime).format(),
                         calendarId: schoolId.toLowerCase(),
+                        data: { schoolId, date }
                     };
                 }))
             });
