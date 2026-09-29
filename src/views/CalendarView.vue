@@ -7,7 +7,7 @@
             <v-row class="mt-1 mb-3 justify-center align-center">
                 <v-col cols="12" md="8">
                     <v-select variant="outlined" chips label="Scuole" v-model="selectedSchools" :items="schools"
-                        multiple item-title="name" item-value="id" :loading="loadingSchools" hide-details></v-select>
+                        multiple :item-title="schoolTitle" item-value="id" :loading="loadingSchools" hide-details></v-select>
                 </v-col>
                 <v-col cols="auto">
                     <v-btn @click="toggleTrim" hide-details>
@@ -116,6 +116,10 @@ watch(filters, () => updateFilters(), { immediate: true });
 watch(schools, () => updateFilters());
 watch(theme.global.name, updateCalendarTheme);
 const trimmed = computed(() => start.value == "08:00");
+
+function schoolTitle(school: School): string {
+    return school.city ? `${school.name} - ${school.city}` : school.name;
+}
 
 function updateCalendarTheme() {
     if (!calendarApp) return;

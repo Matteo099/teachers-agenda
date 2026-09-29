@@ -13,7 +13,7 @@
             </v-col>
             <v-col cols=12 md="4">
                 <v-select v-model="selectedSchoolsID" :items="schools" :loading="loadingSchools" item-value="id"
-                    label="Scuole" item-title="name" variant="outlined" density="compact" hide-details chips
+                    label="Scuole" :item-title="schoolTitle" variant="outlined" density="compact" hide-details chips
                     multiple></v-select>
             </v-col>
         </v-row>
@@ -83,6 +83,10 @@ const filtersQuery = computed(() => route.query.filters as string);
 const from = computed(() => route.query.from as string);
 const to = computed(() => route.query.to as string);
 const selectedSchools = computed(() => schools.value.filter(s => selectedSchoolsID.value.includes(s.id)));
+
+function schoolTitle(school: School): string {
+    return school.city ? `${school.name} - ${school.city}` : school.name;
+}
 watch(tabQuery, updateTab, { immediate: true });
 watch(filtersQuery, updateFilters, { immediate: true });
 watch(from, updateFilters, { immediate: true });
