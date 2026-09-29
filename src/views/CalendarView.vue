@@ -97,6 +97,7 @@ const calendarApp = createCalendar({
     views: [createViewDay(), createViewWeek(), createViewMonthGrid(), createViewMonthAgenda()],
     defaultView: viewWeek.name,
     events: [],
+    weekOptions: { nDays: 6 },
     plugins: [eventsServicePlugin, eventModal, calendarControls],
     callbacks: {
         beforeRender($app) {
@@ -203,6 +204,13 @@ async function loadLessons(range?: DateRange | null) {
         date: yyyyMMdd.fromScheduleX(range.end),
         time: Time.fromHHMM(range.end.split(" ")[1]!)
     }
+    // Keep Sunday out of the normal week view, but load one extra day so a
+    // Sunday lesson can bring the column back when it actually exists.
+    if (to.date.toDate().getDay() === 6) {
+        const nextDate = to.date.toDate();
+        nextDate.setDate(nextDate.getDate() + 1);
+        to.date = yyyyMMdd.fromDate(nextDate);
+    }
 
     for (const schoolId of selectedSchools.value) {
         const _lessons = await LessonGroupService.instance.getCalendarLessons(schoolId, from, to);
@@ -223,6 +231,11 @@ async function loadLessons(range?: DateRange | null) {
     if (request !== lessonsLoadRequest) return;
     lessons.length = 0;
     lessons.push(...Array.from(new Map(loadedLessons.map(event => [event.id, event])).values()));
+    const options = calendarControls.getWeekOptions();
+    calendarControls.setWeekOptions({ ...options, nDays: lessons.some(event => {
+        const date = event.start.split(' ')[0]!;
+        return yyyyMMdd.fromScheduleX(date).toDate().getDay() === 0;
+    }) ? 7 : 6 });
     updateCalendarEvents();
     loading.value = false;
 }
