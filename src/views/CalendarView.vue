@@ -87,6 +87,7 @@ const deltaHistory = ref(1);
 const selectedSchools: Ref<string[]> = ref([]);
 const start = ref("00:00");
 const end = ref("24:00");
+let lessonsLoadRequest = 0;
 
 const eventsServicePlugin = createEventsServicePlugin();
 const eventModal = createEventModalPlugin();
@@ -166,9 +167,8 @@ async function goto(data: { dailyLessonId?: ID, schoolId?: ID, date?: string }) 
 function updateCalendarEvents() {
     if (!calendarApp) return;
 
-    console.log(lessons);
-
-    lessons.forEach(event => {
+    const uniqueLessons = Array.from(new Map(lessons.map(event => [event.id, event])).values());
+    uniqueLessons.forEach(event => {
         if (!event._options) event._options = {};
 
         if (eventsServicePlugin.get(event.id)) {
@@ -177,7 +177,7 @@ function updateCalendarEvents() {
     });
 
     eventsServicePlugin.getAll().forEach(e => {
-        const toDelete = lessons.findIndex(ie => ie.id == e.id) == -1;
+        const toDelete = uniqueLessons.findIndex(ie => ie.id == e.id) == -1;
         if (toDelete) eventsServicePlugin.remove(e.id);
     });
 }
@@ -191,7 +191,8 @@ async function loadLessons(range?: DateRange | null) {
     range ??= calendarControls.getRange();
     if (!range) return;
 
-    lessons.length = 0;
+    const request = ++lessonsLoadRequest;
+    const loadedLessons: CalendarEventExt[] = [];
     loading.value = true;
 
     const from = {
@@ -203,7 +204,7 @@ async function loadLessons(range?: DateRange | null) {
         time: Time.fromHHMM(range.end.split(" ")[1]!)
     }
 
-    for await (const schoolId of selectedSchools.value) {
+    for (const schoolId of selectedSchools.value) {
         const _lessons = await LessonGroupService.instance.getCalendarLessons(schoolId, from, to);
         //@ts-ignore
         const studentIds: string[] = Array.from(new Set(_lessons.map(l => l.title).filter(Boolean)));
@@ -214,9 +215,14 @@ async function loadLessons(range?: DateRange | null) {
                 l.title = st.name + " " + st.surname;
             }
         });
-        lessons.push(..._lessons);
+        loadedLessons.push(..._lessons);
     }
 
+    // A range/filter change can start another load while this one is waiting
+    // on Firestore. Only the newest response may update the shared event list.
+    if (request !== lessonsLoadRequest) return;
+    lessons.length = 0;
+    lessons.push(...Array.from(new Map(loadedLessons.map(event => [event.id, event])).values()));
     updateCalendarEvents();
     loading.value = false;
 }
