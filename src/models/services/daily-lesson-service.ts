@@ -290,8 +290,8 @@ export class DailyLessonService {
                 lesson = studentLesson;
             } else if (opts?.studentLessons) {
                 const studentLesson = opts.studentLessons.find(sl => sl.lesson.lessonId == l.lessonId);
-                // Hidden lessons are intentionally absent from the UI list;
-                // preserve them instead of dropping them from Firestore.
+                // Hidden or orphaned lessons are absent from the UI list;
+                // preserve them instead of dropping historical data.
                 if (studentLesson) {
                     lesson = studentLesson.lesson;
                     student = studentLesson.student;

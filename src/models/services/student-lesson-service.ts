@@ -20,7 +20,7 @@ export class StudentLessonService {
         return dailyLesson.lessons.filter(l => !l.hiddenForDate).map(l => {
             const s = data.find(st => st.id == l.studentId)!;
             return { lesson: l, student: s };
-        });
+        }).filter(sl => !!sl.student);
     }
 
     public async updateStudentLesson(dailyLesson: DailyLesson, studentLessons: StudentLesson[], loading?: Ref<boolean>): Promise<StudentLesson[]> {
@@ -38,8 +38,8 @@ export class StudentLessonService {
 
         studentLessons.length = 0;
         dailyLesson.lessons.map(lesson => {
-            const student = students.find(st => st.id == lesson.studentId)!;
-            studentLessons.push({ lesson, student });
+            const student = students.find(st => st.id == lesson.studentId);
+            if (student) studentLessons.push({ lesson, student });
         });
         return studentLessons;
     }
