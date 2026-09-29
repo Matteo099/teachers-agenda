@@ -16,7 +16,7 @@
                     </div>
                 </v-list-item>
 
-                <v-list-item v-for="(recovery, index) in value"
+                <v-list-item v-if="key != RecoveryStatus.DONE" v-for="(recovery, index) in value"
                     :key="`${recovery.lesson.lessonId}_${recovery.recoveryReference.originalDailyLesson.id}`">
                     <template v-slot:title>
                         {{ recovery.student.name }} {{ recovery.student.surname }}
@@ -54,6 +54,31 @@
                         </v-icon>
                     </template>
                 </v-list-item>
+
+                <v-expansion-panels v-if="key == RecoveryStatus.DONE && value.length > 0" variant="accordion" class="mb-2">
+                    <v-expansion-panel>
+                        <v-expansion-panel-title>
+                            Visualizza recuperi effettuati ({{ value.length }})
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <v-list-item v-for="recovery in value"
+                                :key="`${recovery.lesson.lessonId}_${recovery.recoveryReference.originalDailyLesson.id}`">
+                                <template v-slot:title>
+                                    {{ recovery.student.name }} {{ recovery.student.surname }}
+                                </template>
+                                <template v-slot:subtitle>
+                                    Recupero della lezione del {{
+                                        yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format() }} effettuato
+                                    <span v-if="recovery.recoveryReference.recoveryDailyLesson"> il {{
+                                        yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.recoveryDailyLesson.date).format() }}</span>
+                                </template>
+                                <template v-slot:append>
+                                    <v-icon color="success">mdi-check-all</v-icon>
+                                </template>
+                            </v-list-item>
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
+                </v-expansion-panels>
 
                 <v-divider v-if="key != RecoveryStatus.DONE"></v-divider>
             </template>
