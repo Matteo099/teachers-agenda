@@ -64,6 +64,7 @@
 <script setup lang="ts">
 import { days, Time, yyyyMMdd, type ScheduledLesson, type School, type Student, type WeeklyLesson } from '@/models/model';
 import { WeeklyLessonRepository } from '@/models/repositories/weekly-lesson-repository';
+import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { dateFormat } from '@/models/utils';
 import type { EventSubscription } from '@/models/utils/event';
@@ -293,13 +294,17 @@ async function save(values: GenericObject) {
     };
 
     try {
+        let savedWeeklyLesson: WeeklyLesson;
         if (props.edit && props.initialWeekLesson?.id != undefined) {
             await WeeklyLessonRepository.instance.save(weekLesson, props.initialWeekLesson.id);
+            savedWeeklyLesson = { ...weekLesson, id: props.initialWeekLesson.id } as WeeklyLesson;
             toast.success("Lezione Settimanale Aggiornata")
         } else {
-            await WeeklyLessonRepository.instance.save(weekLesson);
+            const id = await WeeklyLessonRepository.instance.save(weekLesson);
+            savedWeeklyLesson = { ...weekLesson, id } as WeeklyLesson;
             toast.success("Lezione Settimanale Creata")
         }
+        await DailyLessonService.instance.syncTodayWithWeeklyLesson(savedWeeklyLesson);
         emit('save', weekLesson);
     } catch (e) {
         emit('save');

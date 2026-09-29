@@ -1,14 +1,18 @@
 <template>
     <v-card title="Stipendio" elevation="3" :loading="loadingSalary">
         <v-card-text>
-            <DateSelect v-model="selectedRange" />
+            <DateSelect class="mb-2" v-model="selectedRange" />
             <v-row v-if="report" density="comfortable" class="mb-3">
-                <v-col cols="6" md="3"><v-card variant="tonal" title="Lezioni regolari" :text="currency(report.regularLessonsTotal)"></v-card></v-col>
+                <v-col cols="6" md="3"><v-card variant="tonal" title="Lezioni regolari"
+                        :text="currency(report.regularLessonsTotal)"></v-card></v-col>
                 <v-col v-if="school.salaryStrategy === SalaryStrategy.ONLY_PRESENT" cols="6" md="3">
                     <v-card variant="tonal" title="Recuperi extra" :text="currency(report.recoveryTotal)"></v-card>
                 </v-col>
-                <v-col cols="6" md="3"><v-card variant="tonal" :title="`Rimborsi (${report.officialCalendarDays} gg ufficiali)`" :text="currency(report.reimbursementTotal)"></v-card></v-col>
-                <v-col cols="6" md="3"><v-card color="primary" title="Totale netto" :text="currency(report.netTotal)"></v-card></v-col>
+                <v-col cols="6" md="3"><v-card variant="tonal"
+                        :title="`Rimborsi (${report.officialCalendarDays} gg ufficiali)`"
+                        :text="currency(report.reimbursementTotal)"></v-card></v-col>
+                <v-col cols="6" md="3"><v-card color="primary" title="Totale"
+                        :text="currency(report.netTotal)"></v-card></v-col>
             </v-row>
             <v-data-table :headers="salaryHeaders" :items="salaries" item-value="id">
                 <template v-slot:item.salary="{ item }">
@@ -25,11 +29,6 @@
                         <v-btn icon="mdi-refresh" variant="text" @click="computeSalaryOfDailyLesson(item, index)"
                             :loading="computingSalary[item.dailyLessonId]"></v-btn>
                     </div>
-                </template>
-                <template v-slot:body.append>
-                    <tr>
-                        <td colspan="6" class="text-center font-weight-bold">Totale {{ total }} €</td>
-                    </tr>
                 </template>
             </v-data-table>
         </v-card-text>

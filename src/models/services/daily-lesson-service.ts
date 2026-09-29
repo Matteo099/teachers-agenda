@@ -1,6 +1,6 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { DeleteMode, LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type RecoverySchedule, type School, type Student, type StudentLesson } from "../model";
+import { DeleteMode, LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type RecoverySchedule, type School, type Student, type StudentLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
@@ -295,6 +295,22 @@ export class DailyLessonService {
         if (weeklyLessons.length === 0) return;
         dailyLesson.isOfficialCalendarDate = true;
         await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
+    }
+
+    public async syncTodayWithWeeklyLesson(weeklyLesson: WeeklyLesson): Promise<void> {
+        const today = new Date(new Date().toDateString());
+        const date = yyyyMMdd.fromDate(today).toIyyyyMMdd();
+        if (weeklyLesson.dayOfWeek !== today.getDay() || weeklyLesson.from > date || weeklyLesson.to < date || weeklyLesson.exclude.includes(date)) return;
+        const id = await this.getOrCreateDailyLessonId(weeklyLesson.schoolId, today);
+        const dailyLesson = await DailyLessonRepository.instance.get(id);
+        if (!dailyLesson) return;
+        const existing = new Set(dailyLesson.lessons.map(l => l.studentId));
+        weeklyLesson.schedule.filter(l => !existing.has(l.studentId)).forEach(l => dailyLesson.lessons.push({
+            lessonId: uuidv4(), status: LessonStatus.NONE, studentId: l.studentId,
+            startTime: l.startTime, endTime: l.endTime, createdAt: Timestamp.now(), updatedAt: Timestamp.now()
+        }));
+        dailyLesson.lessons.sort((a, b) => a.startTime - b.startTime);
+        await this.save(dailyLesson);
     }
 
     private async extractDailyLesson(dailyLesson: DailyLesson, opts?: SaveOptions): Promise<DailyLesson> {
