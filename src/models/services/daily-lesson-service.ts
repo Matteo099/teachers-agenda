@@ -111,6 +111,17 @@ export class DailyLessonService {
         const existingData = await DailyLessonService.instance.getDailyLessonOfSchoolByDate(schoolId, parseDate);
 
         if (existingData) {
+            // Older daily lessons may predate the official-calendar flag.
+            // Infer it from the school's recurring calendar when it was not
+            // explicitly set (an explicit false remains a manual exclusion).
+            if (existingData.isOfficialCalendarDate === undefined) {
+                const weeklyLessons = await WeeklyLessonService.instance
+                    .getWeeklyLessonOfSchoolByDayBetweenDate(schoolId, lessonDate.getDay(), parseDate);
+                if (weeklyLessons.length > 0) {
+                    existingData.isOfficialCalendarDate = true;
+                    await DailyLessonRepository.instance.save(existingData, existingData.id);
+                }
+            }
             return existingData.id; // If found, return the existing ID
         }
 
