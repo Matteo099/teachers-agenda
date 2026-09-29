@@ -86,6 +86,9 @@ export class DailyLessonService {
         return {
             date: lessonGroup.date.toIyyyyMMdd(),
             schoolId,
+            // A daily lesson created from a scheduled school-calendar
+            // projection is an official calendar date by definition.
+            isOfficialCalendarDate: true,
             lessons: lessonGroup.lessons.map(l => ({
                 lessonId: uuidv4(),
                 status: LessonStatus.NONE,
