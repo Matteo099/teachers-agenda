@@ -51,7 +51,7 @@
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-number-input v-model="dailyExpenseReimbursement" v-bind="dailyExpenseReimbursementProps" :min="0" :precision="2"
+                    <v-number-input v-model="dailyExpenseReimbursement" v-bind="dailyExpenseReimbursementProps" :min="0" :precision="3"
                         label="Rimborso spese giornaliero" prefix="€"></v-number-input>
                 </v-col>
 
