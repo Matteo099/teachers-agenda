@@ -79,11 +79,22 @@
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-number-input id="std_minutesLessonDuration" :disabled="isDisabled('minutesLessonDuration')"
-                        :focused="isFocussed('minutesLessonDuration')" v-model="minutesLessonDuration"
-                        v-bind="minutesLessonDurationProps" :reverse="false" controlVariant="default"
-                        label="Durata della Lezione" suffix="min" :hideInput="false" :inset="false" :min="1">
-                    </v-number-input>
+                    <v-select id="std_minutesLessonDuration" :disabled="isDisabled('minutesLessonDuration')"
+                        :focused="isFocussed('minutesLessonDuration')" v-model="durationOption"
+                        :items="durationOptions" label="Durata della Lezione" v-bind="minutesLessonDurationProps">
+                    </v-select>
+                    <v-dialog v-model="customDurationDialog" max-width="420">
+                        <v-card title="Durata personalizzata">
+                            <v-card-text>
+                                <v-number-input v-model="minutesLessonDuration" label="Minuti"
+                                    suffix="min" :min="1" autofocus></v-number-input>
+                            </v-card-text>
+                            <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn text="Conferma" color="primary" @click="customDurationDialog = false"></v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-dialog>
                 </v-col>
 
                 <v-col cols="12" md="6">
@@ -144,6 +155,9 @@ const _school: Ref<School | undefined> = ref();
 const _levels: Ref<string[]> = ref([]);
 const saving = ref(false);
 const levelHistoryVisible = ref(false);
+const customDurationDialog = ref(false);
+const durationOptions = ['30', '40', '60', 'altro'];
+const durationOption = ref('40');
 let initializing = false;
 
 watch(() => props.initialStudent, () => updateStudent());
@@ -194,6 +208,14 @@ const [isSubstitution, isSubstitutionProps] = defineField('isSubstitution', vuet
 const [note, noteProps] = defineField('note', vuetifyConfig);
 const [from, fromProps] = defineField('from', vuetifyConfig);
 const [to, toProps] = defineField('to', vuetifyConfig);
+
+watch(durationOption, (option) => {
+    if (option === 'altro') {
+        if (!initializing) customDurationDialog.value = true;
+        return;
+    }
+    minutesLessonDuration.value = Number(option);
+});
 
 const trialLabel = computed(() => {
     return trial.value ? (props.initialStudent?.trial?.dailyLessonDate ?
@@ -250,16 +272,18 @@ function updateLevelDateRange() {
 function updateStudent() {
     if (props.initialStudent) {
         const studentClone = JSON.parse(JSON.stringify(props.initialStudent)) as Student;
+        initializing = true;
         name.value = studentClone.name;
         surname.value = studentClone.surname;
         level.value = studentClone.level;
         minutesLessonDuration.value = studentClone.minutesLessonDuration;
+        durationOption.value = [30, 40, 60].includes(studentClone.minutesLessonDuration)
+            ? String(studentClone.minutesLessonDuration) : 'altro';
         contact.value = studentClone.contact ?? "";
         note.value = studentClone.note?.text ?? "";
         trial.value = studentClone.trial?.done ?? false;
         isSubstitution.value = studentClone.isSubstitution ?? false;
         if (studentClone.lessonDay) lessonDay.value = days[studentClone.lessonDay];
-        initializing = true;
     }
 }
 
@@ -362,6 +386,7 @@ function scrollToFocus() {
 onMounted(() => {
     scrollToFocus();
     updateStudent();
+    if (!props.initialStudent) minutesLessonDuration.value = 40;
     updateSchool();
 })
 </script>
