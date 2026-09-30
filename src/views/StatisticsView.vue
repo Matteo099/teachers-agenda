@@ -22,6 +22,7 @@
             <v-tabs-window-item value="salary">
                 <v-card flat>
                     <v-card-text>
+                        <MonthlySalaryList :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                         <SalaryDistribution :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                         <SalaryTrend :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                     </v-card-text>
@@ -46,6 +47,7 @@
             <v-tabs-window-item value="students">
                 <v-card flat>
                     <v-card-text>
+                        <StudentAbsenceList :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                         <StudentTrend :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                     </v-card-text>
                 </v-card>
@@ -62,6 +64,8 @@ import SalaryTrend from '@/components/statistics/SalaryTrend.vue';
 import SchoolDistribution from '@/components/statistics/SchoolDistribution.vue';
 import SchoolStudentDistribution from '@/components/statistics/SchoolStudentDistribution.vue';
 import StudentTrend from '@/components/statistics/StudentTrend.vue';
+import MonthlySalaryList from '@/components/statistics/MonthlySalaryList.vue';
+import StudentAbsenceList from '@/components/statistics/StudentAbsenceList.vue';
 import type { DateSelectModel, School } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';

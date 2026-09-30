@@ -4,6 +4,19 @@ import { SchoolRepository } from "../repositories/school-repository";
 import { StudentRepository } from "../repositories/student-repository";
 import { DailyLessonService } from "./daily-lesson-service";
 
+export interface MonthlySalarySummary {
+    month: string;
+    salary: number;
+}
+
+export interface StudentAbsenceSummary {
+    student: string;
+    total: number;
+    unjustified: number;
+    recoverable: number;
+    recovered: number;
+}
+
 class StatisticsCache {
     private schools: School[] = [];
     private students: Student[] = [];
@@ -68,6 +81,64 @@ export class StatisticsService {
         }
 
         return data;
+    }
+
+    public async getMonthlySalarySummary(from: string, to: string, ...schools: School[]): Promise<MonthlySalarySummary[]> {
+        if (!schools || schools.length === 0) schools = await this.cache.getSchools();
+        const totals = new Map<string, number>();
+
+        for (const school of schools) {
+            const lessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
+            for (const lesson of lessons) {
+                const month = lesson.date.substring(0, 6);
+                const salary = Number.isNaN(lesson.salary) ? 0 : lesson.salary;
+                totals.set(month, (totals.get(month) ?? 0) + salary);
+            }
+        }
+
+        return [...totals.entries()]
+            .sort(([first], [second]) => first.localeCompare(second))
+            .map(([month, salary]) => ({
+                month: `${month.substring(4, 6)}/${month.substring(0, 4)}`,
+                salary,
+            }));
+    }
+
+    public async getStudentAbsenceSummary(from: string, to: string, ...schools: School[]): Promise<StudentAbsenceSummary[]> {
+        if (!schools || schools.length === 0) schools = await this.cache.getSchools();
+
+        const schoolIds = new Set(schools.map(school => school.id));
+        const students = (await this.cache.getStudents()).filter(student => schoolIds.has(student.schoolId));
+        const result = new Map<string, StudentAbsenceSummary>();
+
+        for (const student of students) {
+            result.set(student.id, {
+                student: `${student.name} ${student.surname}`,
+                total: 0,
+                unjustified: 0,
+                recoverable: 0,
+                recovered: 0,
+            });
+        }
+
+        for (const school of schools) {
+            const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
+            for (const dailyLesson of dailyLessons) {
+                for (const lesson of dailyLesson.lessons) {
+                    const summary = result.get(lesson.studentId);
+                    if (!summary || ![LessonStatus.ABSENT, LessonStatus.UNJUSTIFIED_ABSENCE].includes(lesson.status)) continue;
+
+                    summary.total++;
+                    if (lesson.status === LessonStatus.UNJUSTIFIED_ABSENCE) summary.unjustified++;
+                    else if (lesson.recovery?.ref === 'original') summary.recovered++;
+                    else summary.recoverable++;
+                }
+            }
+        }
+
+        return [...result.values()]
+            .filter(summary => summary.total > 0)
+            .sort((first, second) => second.total - first.total || first.student.localeCompare(second.student));
     }
 
     public async getSchoolDistribution(...schools: School[]): Promise<TAPieData[]> {
