@@ -132,6 +132,7 @@
 import { days, yyyyMMdd, type LevelHistory, type School, type Student } from '@/models/model';
 import { development, Random } from '@/models/random-utils';
 import { StudentRepository } from '@/models/repositories/student-repository';
+import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { dateFormat, toDate } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -334,6 +335,13 @@ async function save(values: GenericObject) {
     try {
         if (props.edit && props.initialStudent?.id != undefined) {
             await StudentRepository.instance.save(student, props.initialStudent.id);
+            if (props.initialStudent.minutesLessonDuration !== values.minutesLessonDuration) {
+                await DailyLessonService.instance.rescheduleStudentDuration(
+                    _school.value!.id,
+                    props.initialStudent.id,
+                    Number(values.minutesLessonDuration)
+                );
+            }
             toast.success("Studente Aggiornato")
         } else {
             await StudentRepository.instance.save(student);

@@ -325,6 +325,55 @@ export class DailyLessonService {
         await this.save(dailyLesson);
     }
 
+    /** Applies a student's new duration from the next scheduled lesson onward. */
+    public async rescheduleStudentDuration(schoolId: ID, studentId: ID, minutes: number): Promise<void> {
+        const today = yyyyMMdd.fromDate(new Date(new Date().toDateString())).toIyyyyMMdd();
+        const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(schoolId);
+        for (const weekly of weeklyLessons) {
+            let changed = false;
+            const schedule = [...weekly.schedule].sort((a, b) => a.startTime - b.startTime);
+            let cursor: number | undefined;
+            for (const lesson of schedule) {
+                if (lesson.studentId === studentId) {
+                    lesson.endTime = lesson.startTime + minutes * 60;
+                    cursor = lesson.endTime;
+                    changed = true;
+                } else if (cursor !== undefined && lesson.startTime < cursor) {
+                    const duration = lesson.endTime - lesson.startTime;
+                    lesson.startTime = cursor;
+                    lesson.endTime = cursor + duration;
+                    cursor = lesson.endTime;
+                    changed = true;
+                } else if (cursor !== undefined) {
+                    cursor = undefined;
+                }
+            }
+            if (changed) {
+                weekly.schedule = schedule;
+                await WeeklyLessonRepository.instance.save(weekly, weekly.id);
+            }
+        }
+
+        const dailyLessons = await this.getDailyLessonOfSchoolFromDate(schoolId, today, 'asc');
+        for (const daily of dailyLessons) {
+            const schedule = [...daily.lessons].sort((a, b) => a.startTime - b.startTime);
+            const targetIndex = schedule.findIndex(lesson => lesson.studentId === studentId);
+            const target = targetIndex >= 0 ? schedule[targetIndex] : undefined;
+            if (!target) continue;
+            let cursor = target.startTime + minutes * 60;
+            target.endTime = cursor;
+            for (const lesson of schedule.slice(targetIndex + 1)) {
+                if (lesson.startTime >= cursor) break;
+                const duration = lesson.endTime - lesson.startTime;
+                lesson.startTime = cursor;
+                lesson.endTime = cursor + duration;
+                cursor = lesson.endTime;
+            }
+            daily.lessons = schedule;
+            await this.save(daily);
+        }
+    }
+
     private async extractDailyLesson(dailyLesson: DailyLesson, opts?: SaveOptions): Promise<DailyLesson> {
         const lessons: Lesson[] = [];
         // Status-only updates do not always have the school available. Preserve the
