@@ -27,8 +27,7 @@
                         </template>
                     </DeleteDialog>
 
-                    <v-list-item title="Clona" prepend-icon="mdi-content-copy" :disabled="cloning"
-                        @click="cloneSchool"></v-list-item>
+                    <v-list-item title="Clona" :disabled="cloning" @click="cloneSchool"></v-list-item>
                 </v-list>
             </v-menu>
         </template>

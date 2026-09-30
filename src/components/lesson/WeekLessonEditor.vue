@@ -44,7 +44,10 @@
                         </v-text-field>
                     </v-col>
                     <v-col class="px-2" cols="12" md="6">
-                        <SelectStudents v-model="selectedStudents" :all-students="allStudents" />
+                        <SelectStudents v-model="selectedStudents" :all-students="studentsForSelectedDay" />
+                        <v-btn class="mt-2" variant="text" size="small" @click="showOtherStudents = !showOtherStudents">
+                            {{ showOtherStudents ? 'Mostra solo gli allievi del giorno' : 'Visualizza altri allievi' }}
+                        </v-btn>
                     </v-col>
                 </v-row>
 
@@ -72,7 +75,7 @@ import { type CalendarEvent } from '@schedule-x/calendar';
 import { Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { useForm, type GenericObject } from 'vee-validate';
-import { onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import DailyLessonCalendar from '../calendar/DailyLessonCalendar.vue';
@@ -99,6 +102,7 @@ const scheduledLessons: Ref<ScheduledLesson[]> = ref([]);
 const allDates: Ref<{ name: string, value: Date }[]> = ref([]);
 const allStudents: Ref<Student[]> = ref([]);
 const selectedStudents: Ref<Student[]> = ref([]);
+const showOtherStudents = ref(false);
 const modalTimePicker = ref(false);
 const saving = ref(false);
 const loadingStudents = ref(false);
@@ -130,6 +134,14 @@ let initializingStartingTime: boolean = false;
 
 const events: Ref<CalendarEvent[]> = ref([]);
 
+const studentsForSelectedDay = computed(() => {
+    if (showOtherStudents.value || dayOfWeek.value === undefined) return allStudents.value;
+
+    const dayIndex = days.indexOf(dayOfWeek.value);
+    const selectedIds = new Set(selectedStudents.value.map(student => student.id));
+    return allStudents.value.filter(student => student.lessonDay === dayIndex || selectedIds.has(student.id));
+});
+
 const onSave = handleSubmit(
     async (values: GenericObject) => {
         save(values);
@@ -147,6 +159,7 @@ watch(to, () => updateExcludeDates())
 watch(selectedStudents, () => updateScheduledLessons())
 watch(startingTime, () => { updateScheduledLessonsTime(); initializingStartingTime = false; })
 watch(dayOfWeek, async () => await loadStudents())
+watch(dayOfWeek, () => { showOtherStudents.value = false; })
 watch(events, () => updateScheduledLessonsByEvents(), { deep: true })
 
 function updateScheduledLessons() {
