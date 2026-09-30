@@ -311,9 +311,13 @@ export class LessonGroupService {
     }
 
     private createLessonProjection(dailyLesson: DailyLesson, next: boolean): LessonProjection {
-        const pending = dailyLesson.date <= this.today.asString && dailyLesson.lessons.some(l => l.status == LessonStatus.NONE);
-        const recovery = dailyLesson.lessons.some(l => l.recovery?.ref == 'original');
-        const moved = dailyLesson.lessons.some(l => l.moved?.ref == 'original');
+        const visibleLessons = dailyLesson.lessons.filter(lesson => !lesson.hiddenForDate);
+        const pending = dailyLesson.date <= this.today.asString && (
+            visibleLessons.some(lesson => lesson.status == LessonStatus.NONE) ||
+            this.hasInvalidDuplicateStudentLessons(visibleLessons)
+        );
+        const recovery = visibleLessons.some(l => l.recovery?.ref == 'original');
+        const moved = visibleLessons.some(l => l.moved?.ref == 'original');
 
         return {
             dailyLessonId: dailyLesson.id,
@@ -324,5 +328,23 @@ export class LessonGroupService {
             next,
             lessons: dailyLesson.lessons
         };
+    }
+
+    private hasInvalidDuplicateStudentLessons(lessons: DailyLesson['lessons']): boolean {
+        const lessonsByStudent = new Map<string, DailyLesson['lessons']>();
+
+        for (const lesson of lessons) {
+            const studentLessons = lessonsByStudent.get(lesson.studentId) ?? [];
+            studentLessons.push(lesson);
+            lessonsByStudent.set(lesson.studentId, studentLessons);
+        }
+
+        return [...lessonsByStudent.values()].some(studentLessons => {
+            if (studentLessons.length < 2) return false;
+
+            const hasOfficialLesson = studentLessons.some(lesson => !lesson.recovery);
+            const hasRecoveryLesson = studentLessons.some(lesson => !!lesson.recovery);
+            return !(hasOfficialLesson && hasRecoveryLesson);
+        });
     }
 }
