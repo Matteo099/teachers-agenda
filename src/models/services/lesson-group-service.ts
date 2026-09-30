@@ -342,9 +342,10 @@ export class LessonGroupService {
         return [...lessonsByStudent.values()].some(studentLessons => {
             if (studentLessons.length < 2) return false;
 
-            const hasOfficialLesson = studentLessons.some(lesson => !lesson.recovery);
             const hasRecoveryLesson = studentLessons.some(lesson => !!lesson.recovery);
-            return !(hasOfficialLesson && hasRecoveryLesson);
+            // Multiple recovery lessons are valid and must not trigger the
+            // warning. The warning is reserved for duplicate official lessons.
+            return !hasRecoveryLesson;
         });
     }
 }
