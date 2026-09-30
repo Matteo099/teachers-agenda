@@ -299,12 +299,21 @@ export class DailyLessonService {
 
     public async syncTodayWithWeeklyLesson(weeklyLesson: WeeklyLesson): Promise<void> {
         const today = new Date(new Date().toDateString());
-        const date = yyyyMMdd.fromDate(today).toIyyyyMMdd();
-        // When a student is added to an existing calendar, the new student
-        // must be available from today. The calendar's original start date
-        // may refer to the older students and must not block this sync.
-        if (weeklyLesson.dayOfWeek !== today.getDay() || weeklyLesson.exclude.includes(date)) return;
-        const id = await this.getOrCreateDailyLessonId(weeklyLesson.schoolId, today);
+        const daysUntilLesson = (weeklyLesson.dayOfWeek - today.getDay() + 7) % 7;
+        const firstAvailableDate = new Date(today);
+        firstAvailableDate.setDate(today.getDate() + daysUntilLesson);
+        const date = yyyyMMdd.fromDate(firstAvailableDate).toIyyyyMMdd();
+
+        // A calendar may have been created for a future date (for example the
+        // next Monday). When a student is added, the first available lesson is
+        // the next occurrence from today, not the calendar's old start date.
+        if (weeklyLesson.exclude.includes(date)) return;
+        if (weeklyLesson.from > date) {
+            weeklyLesson.from = date;
+            await WeeklyLessonRepository.instance.save(weeklyLesson, weeklyLesson.id);
+        }
+
+        const id = await this.getOrCreateDailyLessonId(weeklyLesson.schoolId, firstAvailableDate);
         const dailyLesson = await DailyLessonRepository.instance.get(id);
         if (!dailyLesson) return;
         const existing = new Set(dailyLesson.lessons.map(l => l.studentId));
