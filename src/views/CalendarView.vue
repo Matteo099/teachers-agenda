@@ -7,7 +7,8 @@
             <v-row class="mt-1 mb-3 justify-center align-center">
                 <v-col cols="12" md="8">
                     <v-select variant="outlined" chips label="Scuole" v-model="selectedSchools" :items="schools"
-                        multiple :item-title="schoolTitle" item-value="id" :loading="loadingSchools" hide-details></v-select>
+                        multiple :item-title="schoolTitle" item-value="id" :loading="loadingSchools"
+                        hide-details></v-select>
                 </v-col>
                 <v-col cols="auto">
                     <v-btn @click="toggleTrim" hide-details>
@@ -17,17 +18,20 @@
                         </v-fab-transition>
                     </v-btn>
                 </v-col>
-                <v-col cols="auto" class="d-flex ga-1">
-                    <v-btn icon="mdi-chevron-left" variant="text" aria-label="Mese precedente"
-                        @click="changeMonth(-1)"></v-btn>
-                    <v-btn icon="mdi-chevron-right" variant="text" aria-label="Mese successivo"
-                        @click="changeMonth(1)"></v-btn>
+                <v-col cols="auto" class="calendar-mobile-navigation d-flex ga-1">
+                    <v-btn icon="mdi-chevron-left" variant="text" aria-label="Periodo precedente"
+                        @click="changePeriod(-1)"></v-btn>
+                    <v-btn icon="mdi-calendar-today" variant="text" aria-label="Torna a oggi"
+                        @click="goToToday"></v-btn>
+                    <v-btn icon="mdi-chevron-right" variant="text" aria-label="Periodo successivo"
+                        @click="changePeriod(1)"></v-btn>
                 </v-col>
             </v-row>
             <v-progress-linear :active="loading" color="primary" indeterminate></v-progress-linear>
             <ScheduleXCalendar :calendar-app="calendarApp">
                 <template #eventModal="{ calendarEvent }">
-                    <v-card class="lesson-event-modal" elevation="3" :title="calendarEvent.title" :text="calendarEvent.description">
+                    <v-card class="lesson-event-modal" elevation="3" :title="calendarEvent.title"
+                        :text="calendarEvent.description">
                         <template v-slot:subtitle>
                             <v-icon>mdi-clock-outline</v-icon>
                             {{ dateFormat(calendarEvent.start.split(' ')[0]) + ' ⋅ ' + calendarEvent.start.split(' ')[1]
@@ -145,10 +149,21 @@ function toggleTrim() {
     calendarControls.setWeekOptions({ ...opt, gridHeight: Math.max(1000 * range / 24, 400) });
 }
 
-function changeMonth(delta: number) {
+function changePeriod(delta: number) {
     const currentDate = new Date(calendarControls.getDate() + "T12:00:00");
-    currentDate.setMonth(currentDate.getMonth() + delta);
+    const view = calendarControls.getView();
+
+    if (view === 'day') {
+        currentDate.setDate(currentDate.getDate() + delta);
+    } else {
+        currentDate.setMonth(currentDate.getMonth() + delta);
+    }
+
     calendarControls.setDate(currentDate.toISOString().slice(0, 10));
+}
+
+function goToToday() {
+    calendarControls.setDate(new Date().toISOString().slice(0, 10));
 }
 
 function updateQueryRoute() {
@@ -239,10 +254,12 @@ async function loadLessons(range?: DateRange | null) {
     lessons.length = 0;
     lessons.push(...Array.from(new Map(loadedLessons.map(event => [event.id, event])).values()));
     const options = calendarControls.getWeekOptions();
-    calendarControls.setWeekOptions({ ...options, nDays: lessons.some(event => {
-        const date = event.start.split(' ')[0]!;
-        return yyyyMMdd.fromScheduleX(date).toDate().getDay() === 0;
-    }) ? 7 : 6 });
+    calendarControls.setWeekOptions({
+        ...options, nDays: lessons.some(event => {
+            const date = event.start.split(' ')[0]!;
+            return yyyyMMdd.fromScheduleX(date).toDate().getDay() === 0;
+        }) ? 7 : 6
+    });
     updateCalendarEvents();
     loading.value = false;
 }
@@ -265,6 +282,17 @@ onMounted(async () => {
 .lesson-event-modal .v-card-actions {
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.calendar-mobile-navigation {
+    display: none !important;
+}
+
+/* Schedule-X hides its date navigation when the calendar area becomes narrow. */
+@media (max-width: 900px) {
+    .calendar-mobile-navigation {
+        display: flex !important;
+    }
 }
 
 @media (max-width: 600px) {
