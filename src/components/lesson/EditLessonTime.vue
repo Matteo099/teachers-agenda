@@ -15,6 +15,10 @@
                         </v-dialog>
                     </v-text-field>
                 </v-col>
+                <v-col cols="11">
+                    <v-checkbox v-model="applyFromDate"
+                        label="Applica alle lezioni future dello studente e al calendario"></v-checkbox>
+                </v-col>
 
                 <v-col cols="11" sm="5">
                     <v-text-field v-model="_endTime" :active="endModal" :focused="endModal" label="Data di fine"
@@ -58,6 +62,7 @@ const emit = defineEmits(['close', 'save'])
 const startModal = ref(false);
 const endModal = ref(false);
 const alignEndTime = ref(true);
+const applyFromDate = ref(false);
 
 const schema = yup.object({
     startTime: yup.string().required(`L'Orario di inizio Lezione è obbligatorio`).label('Orario di inizio Lezione'),
@@ -84,7 +89,7 @@ const onSave = handleSubmit(
             return;
         }
 
-        emit('save', { ...values })
+        emit('save', { ...values, applyFromDate: applyFromDate.value })
     },
     (err) => {
         toast.warn('Ci sono alcuni errori! Inserisci correttamente i dati')

@@ -1,6 +1,6 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { DeleteMode, LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type RecoverySchedule, type School, type Student, type StudentLesson, type WeeklyLesson } from "../model";
+import { DeleteMode, LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type RecoverySchedule, type ScheduledLesson, type School, type Student, type StudentLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
@@ -242,7 +242,7 @@ export class DailyLessonService {
         } else throw new Error("Unable to move the lesson because the new daily lesson is undefined!");
     }
 
-    public async updateLessonTime(dailyLesson: DailyLesson, newDataEvent: EventTime, lesson: Lesson) {
+    public async updateLessonTime(dailyLesson: DailyLesson, newDataEvent: EventTime, lesson: Lesson, applyFromDate = false) {
         const startTime = Time.fromHHMM(newDataEvent.startTime)?.toITime();
         const endTime = Time.fromHHMM(newDataEvent.endTime)?.toITime();
         if (startTime == undefined || endTime == undefined) {
@@ -253,7 +253,48 @@ export class DailyLessonService {
         lesson.endTime = endTime;
 
         await this.save(dailyLesson);
+        if (applyFromDate) await this.propagateLessonTime(dailyLesson, lesson, startTime, endTime);
         return true;
+    }
+
+    private async propagateLessonTime(dailyLesson: DailyLesson, lesson: Lesson, startTime: number, endTime: number): Promise<void> {
+        const duration = endTime - startTime;
+        const lessonDay = yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).toDate().getDay();
+        const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(dailyLesson.schoolId);
+        for (const weekly of weeklyLessons) {
+            if (weekly.dayOfWeek !== lessonDay) continue;
+            const target = weekly.schedule.find(item => item.studentId === lesson.studentId);
+            if (!target) continue;
+            target.startTime = startTime;
+            target.endTime = endTime;
+            this.shiftOverlappingLessons(weekly.schedule, target);
+            await WeeklyLessonRepository.instance.save(weekly, weekly.id);
+        }
+
+        const futureLessons = await this.getDailyLessonOfSchoolFromDate(dailyLesson.schoolId, dailyLesson.date, 'asc');
+        for (const future of futureLessons) {
+            if (yyyyMMdd.fromIyyyyMMdd(future.date).toDate().getDay() !== lessonDay) continue;
+            const target = future.lessons.find(item => item.studentId === lesson.studentId);
+            if (!target) continue;
+            target.startTime = startTime;
+            target.endTime = startTime + duration;
+            this.shiftOverlappingLessons(future.lessons, target);
+            await this.save(future);
+        }
+    }
+
+    private shiftOverlappingLessons(lessons: ScheduledLesson[], target: ScheduledLesson): void {
+        const ordered = [...lessons].sort((first, second) => first.startTime - second.startTime);
+        const targetIndex = ordered.indexOf(target);
+        if (targetIndex < 0) return;
+        let cursor = target.endTime;
+        for (const lesson of ordered.slice(targetIndex + 1)) {
+            if (lesson.startTime >= cursor) break;
+            const duration = lesson.endTime - lesson.startTime;
+            lesson.startTime = cursor;
+            lesson.endTime = cursor + duration;
+            cursor = lesson.endTime;
+        }
     }
 
     public async addStudents(dailyLesson: DailyLesson, students: Student[]) {

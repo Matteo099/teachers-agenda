@@ -44,6 +44,7 @@ export type HHMM = string;
 export interface EventTime {
     startTime: HHMM;
     endTime: HHMM;
+    applyFromDate?: boolean;
 }
 
 /**

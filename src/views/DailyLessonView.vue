@@ -270,7 +270,7 @@ const moveLesson = withCache(async (event: StudentLesson, lessonDate: Date) => {
 
 const updateLessonTime = withCache(async (event: StudentLesson, newDataEvent: EventTime) => {
     updateOperationStatus(event, true);
-    await DailyLessonService.instance.updateLessonTime(dailyLesson.value!, newDataEvent, event.lesson);
+    await DailyLessonService.instance.updateLessonTime(dailyLesson.value!, newDataEvent, event.lesson, newDataEvent.applyFromDate);
     studentLessons.value.sort((a, b) => a.lesson.startTime - b.lesson.startTime);
     return true;
 }, (error) => {
