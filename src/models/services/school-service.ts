@@ -1,6 +1,6 @@
-import { DocumentReference, where, writeBatch } from "firebase/firestore";
+import { DocumentReference, Timestamp, where, writeBatch } from "firebase/firestore";
 import { useFirestore } from "vuefire";
-import { yyyyMMdd, type DailyLesson, type IyyyyMMdd, type SchoolRecoveryLesson, type Student, type TodayLesson, type WeeklyLesson } from "../model";
+import { yyyyMMdd, type DailyLesson, type IyyyyMMdd, type School, type SchoolRecoveryLesson, type Student, type TodayLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { SchoolRecoveryLessonRepository } from "../repositories/recovery-lesson-repository";
@@ -11,6 +11,7 @@ import { nameof } from "../utils";
 import { type SchoolLessons } from "./lesson-group-service";
 import { WeeklyLessonService } from "./weely-lesson-service";
 import { DailyLessonService } from "./daily-lesson-service";
+import { v4 as uuidv4 } from "uuid";
 
 export class SchoolService {
 
@@ -45,6 +46,100 @@ export class SchoolService {
         (await this.getSchoolRelations(id)).forEach(ref => batches.delete(ref));
 
         await batches.commit();
+    }
+
+    /** Creates a fully independent copy of a school and all its related data. */
+    public async clone(school: School): Promise<ID> {
+        const oldSchoolId = school.id;
+        const now = Timestamp.now();
+        const newSchoolId = await SchoolRepository.instance.save({
+            ...school,
+            name: `${school.name} (copia)`,
+            createdAt: now,
+            updatedAt: now,
+        } as Partial<School>);
+
+        const students = await StudentRepository.instance.getAll(where(nameof<Student>('schoolId'), '==', oldSchoolId));
+        const studentIds = new Map<string, string>();
+        const studentCopies: Student[] = [];
+        for (const student of students) {
+            const newId = uuidv4();
+            studentIds.set(student.id, newId);
+            const copy = structuredClone(student) as Student;
+            copy.id = newId;
+            copy.schoolId = newSchoolId;
+            studentCopies.push(copy);
+            await StudentRepository.instance.save(copy, newId);
+        }
+
+        const weeklyLessons = await WeeklyLessonRepository.instance.getAll(where(nameof<WeeklyLesson>('schoolId'), '==', oldSchoolId));
+        for (const weekly of weeklyLessons) {
+            const newId = uuidv4();
+            const copy = structuredClone(weekly) as WeeklyLesson;
+            copy.id = newId;
+            copy.schoolId = newSchoolId;
+            copy.schedule = copy.schedule.map(lesson => ({
+                ...lesson,
+                lessonId: uuidv4(),
+                studentId: studentIds.get(lesson.studentId) ?? lesson.studentId,
+            }));
+            await WeeklyLessonRepository.instance.save(copy, newId);
+        }
+
+        const dailyLessons = await DailyLessonRepository.instance.getAll(where(nameof<DailyLesson>('schoolId'), '==', oldSchoolId));
+        const dailyIds = new Map<string, string>();
+        const lessonIds = new Map<string, string>();
+        const dailyCopies: DailyLesson[] = [];
+        for (const daily of dailyLessons) {
+            const newId = DailyLessonRepository.generateId({ date: daily.date, schoolId: newSchoolId });
+            dailyIds.set(daily.id, newId);
+            const copy = structuredClone(daily) as DailyLesson;
+            copy.id = newId;
+            copy.schoolId = newSchoolId;
+            copy.lessons = copy.lessons.map(lesson => {
+                const newLessonId = uuidv4();
+                lessonIds.set(`${daily.id}:${lesson.lessonId}`, newLessonId);
+                return {
+                    ...lesson,
+                    lessonId: newLessonId,
+                    studentId: studentIds.get(lesson.studentId) ?? lesson.studentId,
+                };
+            });
+            dailyCopies.push(copy);
+        }
+        const remapRef = (ref: { dailyLessonId: string; lessonId: string }) => ({
+            dailyLessonId: dailyIds.get(ref.dailyLessonId) ?? ref.dailyLessonId,
+            lessonId: lessonIds.get(`${ref.dailyLessonId}:${ref.lessonId}`) ?? ref.lessonId,
+        });
+        for (const copy of dailyCopies) {
+            copy.lessons = copy.lessons.map(lesson => ({
+                ...lesson,
+                recovery: lesson.recovery ? { ...lesson.recovery, lessonRef: remapRef(lesson.recovery.lessonRef) } : undefined,
+                moved: lesson.moved ? { ...lesson.moved, lessonRef: remapRef(lesson.moved.lessonRef) } : undefined,
+            }));
+            await DailyLessonRepository.instance.save(copy, copy.id);
+        }
+        for (const copy of studentCopies) {
+            if (copy.trial?.dailyLessonId) {
+                copy.trial.dailyLessonId = dailyIds.get(copy.trial.dailyLessonId) ?? copy.trial.dailyLessonId;
+                await StudentRepository.instance.save(copy, copy.id);
+            }
+        }
+
+        const recovery = await SchoolRecoveryLessonRepository.instance.get(oldSchoolId);
+        if (recovery) {
+            const copy = structuredClone(recovery) as SchoolRecoveryLesson;
+            copy.schoolId = newSchoolId;
+            copy.recoveries = copy.recoveries.map(item => ({
+                ...item,
+                originalLesson: remapRef(item.originalLesson),
+                recoveryLesson: item.recoveryLesson ? remapRef(item.recoveryLesson) : undefined,
+                recoveryLessons: item.recoveryLessons?.map(remapRef),
+            }));
+            await SchoolRecoveryLessonRepository.instance.save(copy, newSchoolId);
+        }
+
+        return newSchoolId;
     }
 
     private async getSchoolRelations(id: ID): Promise<DocumentReference[]> {

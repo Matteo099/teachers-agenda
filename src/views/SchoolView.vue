@@ -26,6 +26,9 @@
                             <v-list-item title="Elimina" v-bind="activatorProps"></v-list-item>
                         </template>
                     </DeleteDialog>
+
+                    <v-list-item title="Clona" prepend-icon="mdi-content-copy" :disabled="cloning"
+                        @click="cloneSchool"></v-list-item>
                 </v-list>
             </v-menu>
         </template>
@@ -71,6 +74,8 @@ import { SchoolRepository } from '@/models/repositories/school-repository';
 import { SchoolService } from '@/models/services/school-service';
 import { type Unsubscribe } from 'firebase/firestore';
 import { computed, onUnmounted } from 'vue';
+import { ref } from 'vue';
+import { toast } from 'vue3-toastify';
 import { useRoute, useRouter } from 'vue-router';
 import { useDocument } from 'vuefire';
 import LessonView from './LessonView.vue';
@@ -85,6 +90,7 @@ const router = useRouter()
 const id = computed(() => route.params.id as string);
 const schoolSource = SchoolRepository.instance.observe(id);
 const school = useDocument(schoolSource)
+const cloning = ref(false);
 
 const subscriptions: Unsubscribe[] = [];
 
@@ -97,6 +103,21 @@ async function deleteSchool(): Promise<boolean> {
         return true;
     } catch (error) {
         return false;
+    }
+}
+
+async function cloneSchool(): Promise<void> {
+    if (!school.value || cloning.value) return;
+    cloning.value = true;
+    try {
+        const clonedId = await SchoolService.instance.clone(school.value);
+        toast.success('Scuola clonata');
+        await router.push(`/school/${clonedId}`);
+    } catch (error) {
+        toast.error('Errore durante la clonazione della scuola');
+        console.error('Error cloning school:', error);
+    } finally {
+        cloning.value = false;
     }
 }
 
