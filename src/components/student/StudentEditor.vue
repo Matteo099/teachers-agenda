@@ -111,6 +111,18 @@
                     <v-textarea id="std_note" :disabled="isDisabled('note')" :focused="isFocussed('note')"
                         v-model="note" v-bind="noteProps" label="Note" counter></v-textarea>
                 </v-col>
+                <v-col cols="12">
+                    <v-divider class="mb-4"></v-divider>
+                    <div class="text-subtitle-1 mb-2">Saggio</div>
+                    <v-row>
+                        <v-col cols="12" md="6">
+                            <v-text-field v-model="recitalPiece" label="Brano" />
+                        </v-col>
+                        <v-col cols="12" md="6">
+                            <v-text-field v-model="recitalAuthor" label="Autore" />
+                        </v-col>
+                    </v-row>
+                </v-col>
             </v-row>
 
         </v-card-text>
@@ -207,6 +219,8 @@ const [minutesLessonDuration, minutesLessonDurationProps] = defineField('minutes
 const [trial, trialProps] = defineField('trial', vuetifyConfig);
 const [isSubstitution, isSubstitutionProps] = defineField('isSubstitution', vuetifyConfig);
 const [note, noteProps] = defineField('note', vuetifyConfig);
+const [recitalPiece] = defineField('recitalPiece', vuetifyConfig);
+const [recitalAuthor] = defineField('recitalAuthor', vuetifyConfig);
 const [from, fromProps] = defineField('from', vuetifyConfig);
 const [to, toProps] = defineField('to', vuetifyConfig);
 
@@ -282,6 +296,8 @@ function updateStudent() {
             ? String(studentClone.minutesLessonDuration) : 'altro';
         contact.value = studentClone.contact ?? "";
         note.value = studentClone.note?.text ?? "";
+        recitalPiece.value = studentClone.recitalPiece ?? "";
+        recitalAuthor.value = studentClone.recitalAuthor ?? "";
         trial.value = studentClone.trial?.done ?? false;
         isSubstitution.value = studentClone.isSubstitution ?? false;
         if (studentClone.lessonDay) lessonDay.value = days[studentClone.lessonDay];
@@ -326,6 +342,8 @@ async function save(values: GenericObject) {
     if (lessonDay.value) student.lessonDay = days.indexOf(lessonDay.value);
     if (note.value && note.value.trim().length != 0) student.note = { text: note.value.trim(), updatedAt: Timestamp.now() };
     else delete student.note;
+    if (recitalPiece.value?.trim()) student.recitalPiece = recitalPiece.value.trim();
+    if (recitalAuthor.value?.trim()) student.recitalAuthor = recitalAuthor.value.trim();
     if (trial.value) {
         student.trial = { done: true }
         if (props.initialStudent?.trial?.dailyLessonDate) student.trial.dailyLessonDate = props.initialStudent?.trial?.dailyLessonDate;

@@ -209,6 +209,8 @@ export interface Student {
     removed?: boolean;
     trial?: Trial;
     isSubstitution?: boolean;
+    recitalPiece?: string;
+    recitalAuthor?: string;
 
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
     updatedAt: Timestamp;

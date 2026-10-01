@@ -17,6 +17,13 @@ export interface StudentAbsenceSummary {
     recovered: number;
 }
 
+export interface RecitalStudent {
+    student: string;
+    school: string;
+    piece: string;
+    author: string;
+}
+
 class StatisticsCache {
     private schools: School[] = [];
     private students: Student[] = [];
@@ -139,6 +146,20 @@ export class StatisticsService {
         return [...result.values()]
             .filter(summary => summary.total > 0)
             .sort((first, second) => second.total - first.total || first.student.localeCompare(second.student));
+    }
+
+    public async getRecitalStudents(...schools: School[]): Promise<RecitalStudent[]> {
+        if (!schools || schools.length === 0) schools = await this.cache.getSchools();
+        const schoolNames = new Map(schools.map(school => [school.id, school.name]));
+        return (await this.cache.getStudents())
+            .filter(student => schoolNames.has(student.schoolId) && (student.recitalPiece || student.recitalAuthor))
+            .map(student => ({
+                student: `${student.name} ${student.surname}`,
+                school: schoolNames.get(student.schoolId)!,
+                piece: student.recitalPiece ?? '',
+                author: student.recitalAuthor ?? '',
+            }))
+            .sort((first, second) => first.student.localeCompare(second.student));
     }
 
     public async getSchoolDistribution(...schools: School[]): Promise<TAPieData[]> {

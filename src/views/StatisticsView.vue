@@ -48,6 +48,7 @@
                 <v-card flat>
                     <v-card-text>
                         <StudentAbsenceList :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
+                        <StudentRecitalList :schools="selectedSchools" />
                         <StudentTrend :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                     </v-card-text>
                 </v-card>
@@ -66,6 +67,7 @@ import SchoolStudentDistribution from '@/components/statistics/SchoolStudentDist
 import StudentTrend from '@/components/statistics/StudentTrend.vue';
 import MonthlySalaryList from '@/components/statistics/MonthlySalaryList.vue';
 import StudentAbsenceList from '@/components/statistics/StudentAbsenceList.vue';
+import StudentRecitalList from '@/components/statistics/StudentRecitalList.vue';
 import type { DateSelectModel, School } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
