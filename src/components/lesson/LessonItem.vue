@@ -1,15 +1,22 @@
 <template>
     <v-card elevation=3 :loading="loading" v-if="item.student" :class="{ 'hidden-lesson': item.lesson.hiddenForDate }">
         <v-card-title>
-            <v-checkbox v-model="select" :value="item.student.id" multiple>
+            <v-checkbox v-if="!item.lesson.hiddenForDate" v-model="select" :value="item.student.id" multiple>
                 <template v-slot:label>
                     <span><b>{{ Time.fromITime(item.lesson.startTime).format() }} - {{
                         Time.fromITime(item.lesson.endTime).format() }}</b> &nbsp; <i>{{
                                 item.student.name }} {{ item.student.surname }}</i></span>
                 </template>
             </v-checkbox>
+            <span v-else class="text-body-1 font-italic">
+                {{ item.student.name }} {{ item.student.surname }}
+            </span>
         </v-card-title>
-        <v-card-text>
+        <v-card-text v-if="item.lesson.hiddenForDate" class="d-flex align-center ga-2">
+            <v-btn :disabled="loading" variant="text" color="primary" prepend-icon="mdi-eye"
+                @click="emit('showForDate')">rendi visibile</v-btn>
+        </v-card-text>
+        <v-card-text v-else>
             <v-chip v-if="item.lesson.hiddenForDate" class="ma-1" color="grey" size="small" prepend-icon="mdi-eye-off">
                 Nascosto oggi
             </v-chip>
@@ -137,8 +144,6 @@
                     </v-card>
                 </template>
             </v-dialog>
-            <v-btn v-else :disabled="loading" class="ma-1" variant="text" color="primary"
-                prepend-icon="mdi-eye" @click="emit('showForDate')">rendi visibile</v-btn>
         </v-card-text>
     </v-card>
 </template>
