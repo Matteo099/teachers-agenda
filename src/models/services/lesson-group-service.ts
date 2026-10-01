@@ -312,9 +312,12 @@ export class LessonGroupService {
 
     private createLessonProjection(dailyLesson: DailyLesson, next: boolean): LessonProjection {
         const visibleLessons = dailyLesson.lessons.filter(lesson => !lesson.hiddenForDate);
+        // A moved lesson is intentionally left with status NONE: its state is
+        // represented by the move relation, not by presence/absence/trial.
+        const actionableLessons = visibleLessons.filter(lesson => !lesson.moved);
         const pending = dailyLesson.date <= this.today.asString && (
-            visibleLessons.some(lesson => lesson.status == LessonStatus.NONE) ||
-            this.hasInvalidDuplicateStudentLessons(visibleLessons)
+            actionableLessons.some(lesson => lesson.status == LessonStatus.NONE) ||
+            this.hasInvalidDuplicateStudentLessons(actionableLessons)
         );
         const recovery = visibleLessons.some(l => l.recovery?.ref == 'original');
         const moved = visibleLessons.some(l => l.moved?.ref == 'original');
