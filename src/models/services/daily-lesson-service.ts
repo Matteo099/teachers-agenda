@@ -192,6 +192,15 @@ export class DailyLessonService {
                 }
                 await this.lessonService.resetLesson(dailyLesson, lesson, mode);
                 const index = dailyLesson.lessons.findIndex(l => l.lessonId == lesson.lessonId);
+                if (index < 0) continue;
+
+                // The salary total is stored on the daily lesson. Removing a
+                // lesson must remove its already calculated compensation too;
+                // otherwise the lesson disappears but its pay remains in the
+                // daily/monthly salary summaries.
+                if (lesson.compensation) {
+                    dailyLesson.salary = Math.max(0, (dailyLesson.salary ?? 0) - lesson.compensation.amount);
+                }
                 dailyLesson.lessons.splice(index, 1);
             }
 
