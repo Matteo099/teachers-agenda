@@ -370,9 +370,26 @@ export class DailyLessonService {
     public async rescheduleStudentDuration(schoolId: ID, studentId: ID, minutes: number): Promise<void> {
         const today = yyyyMMdd.fromDate(new Date(new Date().toDateString())).toIyyyyMMdd();
         const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(schoolId);
+        const firstUsefulDateByDay = new Map<number, IyyyyMMdd>();
         for (const weekly of weeklyLessons) {
+            if (!weekly.schedule.some(lesson => lesson.studentId === studentId)) continue;
+            const todayDate = yyyyMMdd.fromIyyyyMMdd(today).toDate();
+            const daysUntil = (weekly.dayOfWeek - todayDate.getDay() + 7) % 7;
+            const firstDate = new Date(todayDate);
+            firstDate.setDate(firstDate.getDate() + daysUntil);
+            let firstDateValue = yyyyMMdd.fromDate(firstDate).toIyyyyMMdd();
+            if (firstDateValue < weekly.from) {
+                firstDate.setDate(firstDate.getDate() + 7);
+                firstDateValue = yyyyMMdd.fromDate(firstDate).toIyyyyMMdd();
+            }
+            if (firstDateValue > weekly.to) continue;
+            const currentFirstDate = firstUsefulDateByDay.get(weekly.dayOfWeek);
+            if (!currentFirstDate || firstDateValue < currentFirstDate) {
+                firstUsefulDateByDay.set(weekly.dayOfWeek, firstDateValue);
+            }
+
             let changed = false;
-            const schedule = [...weekly.schedule].sort((a, b) => a.startTime - b.startTime);
+            const schedule = weekly.schedule.map(lesson => ({ ...lesson })).sort((a, b) => a.startTime - b.startTime);
             let cursor: number | undefined;
             for (const lesson of schedule) {
                 if (lesson.studentId === studentId) {
@@ -397,6 +414,8 @@ export class DailyLessonService {
 
         const dailyLessons = await this.getDailyLessonOfSchoolFromDate(schoolId, today, 'asc');
         for (const daily of dailyLessons) {
+            const firstUsefulDate = firstUsefulDateByDay.get(yyyyMMdd.fromIyyyyMMdd(daily.date).toDate().getDay());
+            if (!firstUsefulDate || daily.date < firstUsefulDate) continue;
             const schedule = [...daily.lessons].sort((a, b) => a.startTime - b.startTime);
             const targetIndex = schedule.findIndex(lesson => lesson.studentId === studentId);
             const target = targetIndex >= 0 ? schedule[targetIndex] : undefined;

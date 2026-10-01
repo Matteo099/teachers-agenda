@@ -17,7 +17,7 @@
                 </v-col>
                 <v-col cols="11">
                     <v-checkbox v-model="applyFromDate"
-                        label="Applica alle lezioni future dello studente e al calendario"></v-checkbox>
+                        label="Cambia per tutte le lezioni successive e per il calendario"></v-checkbox>
                 </v-col>
 
                 <v-col cols="11" sm="5">

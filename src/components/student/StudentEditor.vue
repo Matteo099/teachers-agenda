@@ -353,7 +353,7 @@ async function save(values: GenericObject) {
     try {
         if (props.edit && props.initialStudent?.id != undefined) {
             await StudentRepository.instance.save(student, props.initialStudent.id);
-            if (props.initialStudent.minutesLessonDuration !== values.minutesLessonDuration) {
+            if (Number(props.initialStudent.minutesLessonDuration) !== Number(values.minutesLessonDuration)) {
                 await DailyLessonService.instance.rescheduleStudentDuration(
                     _school.value!.id,
                     props.initialStudent.id,
