@@ -91,7 +91,7 @@ function updateLabel() {
     label = am5.Label.new(root, {
         centerX: am5.percent(50),
         centerY: am5.percent(50),
-        text: "Totale: {valueSum}€",
+        text: "Totale: {valueSum.formatNumber('0.00')}€",
         populateText: true,
         fontSize: "1.5em"
     })
