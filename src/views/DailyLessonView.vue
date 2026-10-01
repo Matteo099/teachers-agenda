@@ -271,6 +271,11 @@ const moveLesson = withCache(async (event: StudentLesson, lessonDate: Date) => {
 const updateLessonTime = withCache(async (event: StudentLesson, newDataEvent: EventTime) => {
     updateOperationStatus(event, true);
     await DailyLessonService.instance.updateLessonTime(dailyLesson.value!, newDataEvent, event.lesson, newDataEvent.applyFromDate);
+    // Rebuild the displayed list from the persisted daily lesson. The
+    // propagation also writes the current date again, and the Firestore
+    // snapshot can otherwise replace the locally edited lesson with its old
+    // object reference.
+    await updateStudentLesson();
     studentLessons.value.sort((a, b) => a.lesson.startTime - b.lesson.startTime);
     return true;
 }, (error) => {
