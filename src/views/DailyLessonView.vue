@@ -30,11 +30,6 @@
                 <v-btn @click="absent" :disabled="!areLessonSelected">assenti</v-btn>
             </v-col>
             <v-col>
-                <v-btn prepend-icon="mdi-account-school-outline" variant="tonal" @click="goToStudentRegistry">
-                    anagrafica
-                </v-btn>
-            </v-col>
-            <v-col>
                 <v-dialog v-model="studentsDialog" transition="dialog-bottom-transition" max-width="500" persistent>
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn @click="loadSchoolStudents" v-bind="activatorProps">Aggiungi studente</v-btn>
@@ -181,10 +176,6 @@ const visualization = ref(0);
 const total = computed(() => isNaN(dailyLesson.value?.salary ?? 0) ? 0 : dailyLesson.value?.salary)
 const areLessonSelected = computed(() => selectedLessons.value.length != 0)
 const loading = computed(() => loadingStudents.value || loadingSchool.value || !school.value || !dailyLesson.value || routeChanged.value);
-
-function goToStudentRegistry() {
-    if (school.value) router.push(`/school/${school.value.id}`);
-}
 
 watch(dailyLesson, dailyLessonUpdate)
 watch(dailyLessonSource, () => routeChanged.value = true)

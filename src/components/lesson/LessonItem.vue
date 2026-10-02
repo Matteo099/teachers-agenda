@@ -11,6 +11,18 @@
             <span v-else class="text-body-1 font-italic">
                 {{ item.student.name }} {{ item.student.surname }}
             </span>
+            <v-dialog fullscreen>
+                <template #activator="{ props: activatorProps }">
+                    <v-btn v-bind="activatorProps" class="ml-2" size="small" variant="text"
+                        prepend-icon="mdi-card-account-details-outline">
+                        anagrafica
+                    </v-btn>
+                </template>
+                <template #default="{ isActive }">
+                    <StudentEditor edit :school="school" :initialStudent="item.student"
+                        @close="isActive.value = false" @save="isActive.value = false" />
+                </template>
+            </v-dialog>
         </v-card-title>
         <v-card-text v-if="item.lesson.hiddenForDate" class="d-flex align-center ga-2">
             <v-btn :disabled="loading" variant="text" color="primary" prepend-icon="mdi-eye"
