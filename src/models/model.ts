@@ -366,6 +366,7 @@ export enum DeleteMode {
 export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
     hiddenForDate?: boolean;
+      dailyNote?: string;
     /** Frozen economic data for this lesson. Never overwrite once set. */
     compensation?: LessonCompensation;
     recovery?: RecoveryLessonInfo;

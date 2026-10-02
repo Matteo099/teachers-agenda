@@ -124,6 +124,25 @@
                 </template>
             </v-dialog>
 
+            <v-dialog v-model="dailyNoteDialog" max-width="600">
+                <template #activator="{ props: activatorProps }">
+                    <v-btn :disabled="loading" class="ma-1" v-bind="activatorProps" prepend-icon="mdi-note-edit-outline">
+                        {{ item.lesson.dailyNote ? 'modifica nota' : 'nota' }}
+                    </v-btn>
+                </template>
+                <v-card title="Nota della giornata">
+                    <v-card-text>
+                        <v-textarea v-model="dailyNote" label="Nota" counter="500" autofocus />
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer />
+                        <v-btn @click="dailyNoteDialog = false">Annulla</v-btn>
+                        <v-btn color="primary" @click="saveDailyNote">Salva</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+            <v-chip v-if="item.lesson.dailyNote" class="ma-1" size="small" prepend-icon="mdi-note-text-outline">Nota presente</v-chip>
+
             <DeleteDialog :name="`${item.student.name} ${item.student.surname}`" objName="Studente"
                 :onDelete="onDeleteLessonItem">
                 <template v-slot:activator="{ props: activatorProps }">
@@ -151,7 +170,7 @@
 <script setup lang="ts">
 import EditLessonTime from '@/components/lesson/EditLessonTime.vue';
 import { LessonStatus, Time, type EventTime, type School, type StudentLesson } from '@/models/model';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import DeleteDialog from '../DeleteDialog.vue';
 import StudentEditor from '../student/StudentEditor.vue';
@@ -165,11 +184,16 @@ const props = defineProps<{
 }>()
 const item = defineModel<StudentLesson>('item', { required: true });
 const select = defineModel<string[]>('select');
-const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent', 'hideForDate', 'showForDate'])
+const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent', 'hideForDate', 'showForDate', 'saveDailyNote'])
 const timeDialog = ref(false)
 const dateDialog = ref(false)
 const newLessonDate = ref();
 const movingLesson = ref(false);
+const dailyNoteDialog = ref(false);
+const dailyNote = ref('');
+watch(dailyNoteDialog, (open) => {
+    if (open) dailyNote.value = item.value.lesson.dailyNote ?? '';
+});
 
 const isUnset = computed(() => item.value.lesson.status == LessonStatus.NONE);
 const isPresent = computed(() => item.value.lesson.status == LessonStatus.PRESENT);
@@ -189,6 +213,12 @@ const unjustifiedAbsentVisible = computed(() => (originalLessonHasRecovery.value
 const trialVisible = computed(() => (originalLessonHasRecovery.value || isRecoveryLesson.value) && (isUnset.value && !isTrialDone.value && !isOriginalMovedLesson.value));
 const resetVisible = computed(() => (originalLessonHasRecovery.value || isRecoveryLesson.value) && (!isUnset.value || isOriginalMovedLesson.value));
 const moveVisible = computed(() => originalLessonHasMoved.value && originalLessonHasRecovery.value && isUnset.value)
+
+function saveDailyNote() {
+    item.value.lesson.dailyNote = dailyNote.value.trim() || undefined;
+    emit('saveDailyNote');
+    dailyNoteDialog.value = false;
+}
 
 
 async function _updateLessonTime(newTime: EventTime) {

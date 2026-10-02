@@ -89,6 +89,14 @@
 
 
         <v-container fluid>
+            <v-card v-if="studentLessons.some(item => item.lesson.dailyNote)" class="mb-4" variant="outlined" title="Note della giornata">
+                <v-list density="compact">
+                    <v-list-item v-for="item in studentLessons.filter(item => item.lesson.dailyNote)"
+                        :key="`note-${item.lesson.lessonId}`" :title="`${item.student.name} ${item.student.surname}`"
+                        :subtitle="`${yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()} — ${item.lesson.dailyNote}`"
+                        prepend-icon="mdi-note-text-outline" />
+                </v-list>
+            </v-card>
             <v-slide-x-transition leave-absolute>
                 <DailyLessonCalendar v-if="visualization == 1" :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)"
                     :school="school" v-model="studentLessons" editable sort @edit="save">
@@ -105,6 +113,7 @@
                             @reset="reset(item)"
                             @hideForDate="async () => await hideStudentForDate(item)"
                             @showForDate="async () => await showStudentForDate(item)"
+                            @saveDailyNote="save"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
                             :onDeleteLessonItem="async () => await deleteStudentLesson(item)">
                         </LessonItem>
