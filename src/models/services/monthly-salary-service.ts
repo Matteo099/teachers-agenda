@@ -16,7 +16,7 @@ export class MonthlySalaryService {
         const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
         const regularLessonsTotal = await this.computeRegularLessons(school, dailyLessons);
         const recoveryTotal = await this.computeRecoveries(school, dailyLessons);
-        const activityDays = await this.countOfficialCalendarDays(school.id, from, to, dailyLessons);
+        const activityDays = (await this.getOfficialCalendarDates(school.id, from, to, dailyLessons)).size;
         const reimbursementTotal = activityDays * (school.dailyExpenseReimbursement ?? 0);
 
         return { schoolId: school.id, from, to, regularLessonsTotal, recoveryTotal, reimbursementTotal, activityDays,
@@ -57,7 +57,8 @@ export class MonthlySalaryService {
         return total;
     }
 
-    private async countOfficialCalendarDays(schoolId: string, from: IyyyyMMdd, to: IyyyyMMdd, dailyLessons: DailyLesson[]): Promise<number> {
+    public async getOfficialCalendarDates(schoolId: string, from: IyyyyMMdd, to: IyyyyMMdd, dailyLessons?: DailyLesson[]): Promise<Set<IyyyyMMdd>> {
+        dailyLessons ??= await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(schoolId, from, to);
         const officialDates = new Set(dailyLessons.filter(d => d.isOfficialCalendarDate === true).map(d => d.date));
         const explicitlyExcludedDates = new Set(dailyLessons.filter(d => d.isOfficialCalendarDate === false).map(d => d.date));
         const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(schoolId);
@@ -68,6 +69,6 @@ export class MonthlySalaryService {
             if (!explicitlyExcludedDates.has(dateString) && weeklyLessons.some(wl => WeeklyLessonService.instance.isValid(wl, dateString))) officialDates.add(dateString);
             date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
         }
-        return officialDates.size;
+        return officialDates;
     }
 }
