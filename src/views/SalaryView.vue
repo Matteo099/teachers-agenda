@@ -1,7 +1,7 @@
 <template>
     <v-card title="Stipendio" elevation="3" :loading="loadingSalary">
         <v-card-text>
-            <DateSelect class="mb-2" v-model="selectedRange" />
+            <DateSelect class="mb-2" v-model="selectedRange" :show-advanced="false" />
             <v-row v-if="report" density="comfortable" class="mb-3">
                 <v-col cols="6" md="3"><v-card variant="tonal" title="Lezioni regolari"
                         :text="currency(report.regularLessonsTotal)"></v-card></v-col>

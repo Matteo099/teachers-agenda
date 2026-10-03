@@ -14,7 +14,7 @@
                 </span>
             </v-col>
             <v-col cols="12" md="6">
-                <DateSelect v-model="dateRange" class="mt-2"></DateSelect>
+                <DateSelect v-model="dateRange" class="mt-2" :show-advanced="true"></DateSelect>
             </v-col>
             <v-col cols="12" md="2" class="statistics-period-navigation d-flex ga-1">
                 <v-btn icon="mdi-chevron-left" variant="text" aria-label="Periodo precedente"

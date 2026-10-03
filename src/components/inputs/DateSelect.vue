@@ -6,13 +6,13 @@
                 <v-btn value="month">Mese corrente</v-btn>
                 <v-btn value="week">Settimana corrente</v-btn>
             </v-btn-toggle>
-            <v-btn variant="text" size="small" @click="advanced = !advanced">
+            <v-btn v-if="showAdvanced" variant="text" size="small" @click="advanced = !advanced">
                 {{ advanced ? 'Nascondi filtro avanzato' : 'Filtro avanzato' }}
             </v-btn>
         </v-col>
     </v-row>
     <v-expand-transition>
-    <v-row v-if="advanced">
+    <v-row v-if="showAdvanced && advanced">
         <v-col cols="12" md="6">
             <v-select variant="outlined" density="compact" v-model="selectedType" :items="selectTypes" label="Tempo"
                 hide-details></v-select>
@@ -38,6 +38,8 @@
 import { yyyyMMdd, type DateSelectModel } from '@/models/model';
 import { capitalize, ref, watch } from 'vue';
 import { useDate } from 'vuetify';
+
+withDefaults(defineProps<{ showAdvanced?: boolean }>(), { showAdvanced: true });
 
 const date = useDate();
 const selectTypes = ["Per mese", "Relativo", "Assoluto"];
