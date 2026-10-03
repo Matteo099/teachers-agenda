@@ -54,10 +54,28 @@ async function load() {
       for (const scheduled of wl.schedule) ids.add(scheduled.studentId);
     }
     const days = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, props.from, props.to);
+    const dailyById = new Map(days.map(day => [day.id, day]));
     for (const day of days) {
       if (yyyyMMdd.fromIyyyyMMdd(day.date).toDate().getDay() !== selectedDay.value) continue;
       const row = map.get(day.date) ?? { date: day.date, lessons: {} };
       for (const lesson of day.lessons) {
+        const originalDailyLessonId = lesson.recovery?.ref === 'original'
+          ? lesson.recovery.lessonRef.dailyLessonId
+          : lesson.moved?.ref === 'original' ? lesson.moved.lessonRef.dailyLessonId : undefined;
+        if (originalDailyLessonId) {
+          const originalDay = dailyById.get(originalDailyLessonId);
+          if (originalDay && yyyyMMdd.fromIyyyyMMdd(originalDay.date).toDate().getDay() === selectedDay.value) {
+            const originalRow = map.get(originalDay.date) ?? { date: originalDay.date, lessons: {} };
+            originalRow.lessons[lesson.studentId] = {
+              ...lesson,
+              status: LessonStatus.PRESENT,
+              recovery: lesson.recovery?.ref === 'original' ? { ref: 'original' } : undefined,
+              moved: lesson.moved?.ref === 'original' ? { ref: 'original' } : undefined,
+            };
+            map.set(originalDay.date, originalRow);
+          }
+          continue;
+        }
         ids.add(lesson.studentId);
         row.lessons[lesson.studentId] = lesson;
       }
