@@ -67,7 +67,7 @@ function createChart(_root: am5.Root) {
         textType: "circular"
     });
 
-    createEmptyPieChartModal(root, series);    
+    createEmptyPieChartModal(root, series);
 }
 
 function afterChartCreated() {

@@ -42,6 +42,7 @@
                 <v-card flat>
                     <v-card-text>
                         <LessonDistribution :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
+                        <WeeklyLessonAttendance :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                     </v-card-text>
                 </v-card>
             </v-tabs-window-item>
@@ -61,6 +62,7 @@
 <script setup lang="ts">
 import DateSelect from '@/components/inputs/DateSelect.vue';
 import LessonDistribution from '@/components/statistics/LessonDistribution.vue';
+import WeeklyLessonAttendance from '@/components/statistics/WeeklyLessonAttendance.vue';
 import SalaryDistribution from '@/components/statistics/SalaryDistribution.vue';
 import SalaryTrend from '@/components/statistics/SalaryTrend.vue';
 import SchoolDistribution from '@/components/statistics/SchoolDistribution.vue';

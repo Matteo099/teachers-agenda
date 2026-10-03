@@ -1,7 +1,8 @@
 <template>
-    <BaseChart :schools="schools" :from="from" :to="to" :create-chart="createChart" :after-chart-created="afterChartCreated"
-        :are-update-condition-satistied="areUpdateConditionSatistied" :update-chart-data="updateChartData"
-        title="Distribuzione delle Lezioni" subtitle="Numero di lezioni in una scuola" />
+    <BaseChart class="mb-6" :schools="schools" :from="from" :to="to" :create-chart="createChart"
+        :after-chart-created="afterChartCreated" :are-update-condition-satistied="areUpdateConditionSatistied"
+        :update-chart-data="updateChartData" title="Distribuzione delle Lezioni"
+        subtitle="Numero di lezioni in una scuola" />
 </template>
 
 <script setup lang="ts">
@@ -66,7 +67,7 @@ function createChart(_root: am5.Root) {
         textType: "circular"
     });
 
-    createEmptyPieChartModal(root, series);    
+    createEmptyPieChartModal(root, series);
 }
 
 function afterChartCreated() {
