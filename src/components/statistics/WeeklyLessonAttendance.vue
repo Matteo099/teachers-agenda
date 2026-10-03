@@ -1,7 +1,10 @@
 <template>
   <v-card class="mb-6" variant="outlined" title="Presenze per giorno della settimana" :loading="loading">
     <v-card-text>
-      <v-select v-model="selectedDay" :items="weekDays" label="Giorno della settimana" />
+      <div class="d-flex align-center ga-3 mb-3">
+        <v-select v-model="selectedDay" :items="weekDays" label="Giorno della settimana" hide-details />
+        <v-btn prepend-icon="mdi-file-pdf-box" color="primary" @click="exportPdf">Esporta PDF</v-btn>
+      </div>
       <div v-if="rows.length" class="attendance-table"><v-table>
           <thead>
             <tr>
@@ -12,7 +15,7 @@
           <tbody>
             <tr v-for="r in rows" :key="r.date">
               <td>{{ yyyyMMdd.fromIyyyyMMdd(r.date).format() }}</td>
-              <td v-for="s in students" :key="s.id" class="text-center">{{ r.lessons[s.id] ?
+              <td v-for="s in students" :key="s.id" class="text-center" :class="r.lessons[s.id] ? statusClass(r.lessons[s.id]) : ''">{{ r.lessons[s.id] ?
                 statusLabel(r.lessons[s.id]) : '—' }}</td>
             </tr>
           </tbody>
@@ -26,6 +29,7 @@
 import { LessonStatus, yyyyMMdd, type IyyyyMMdd, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { StudentService } from '@/models/services/student-service';
+import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
 import { ref, watch } from 'vue';
 
 const props = defineProps<{ from?: IyyyyMMdd; to?: IyyyyMMdd; schools?: School[] }>();
@@ -43,6 +47,11 @@ async function load() {
   const ids = new Set<string>();
 
   for (const school of props.schools ?? []) {
+    const weekly = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(school.id);
+    for (const wl of weekly) {
+      if (wl.dayOfWeek !== selectedDay.value) continue;
+      for (const scheduled of wl.schedule) ids.add(scheduled.studentId);
+    }
     const days = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, props.from, props.to);
     for (const day of days) {
       if (yyyyMMdd.fromIyyyyMMdd(day.date).toDate().getDay() !== selectedDay.value) continue;
@@ -52,6 +61,11 @@ async function load() {
         row.lessons[lesson.studentId] = lesson;
       }
       map.set(day.date, row);
+    }
+    for (let date = yyyyMMdd.fromIyyyyMMdd(props.from).toDate(); date <= yyyyMMdd.fromIyyyyMMdd(props.to).toDate(); date.setDate(date.getDate() + 1)) {
+      const dateValue = yyyyMMdd.fromDate(date).toIyyyyMMdd();
+      if (date.getDay() !== selectedDay.value || !weekly.some(wl => WeeklyLessonService.instance.isValid(wl, dateValue))) continue;
+      if (!map.has(dateValue)) map.set(dateValue, { date: dateValue, lessons: {} });
     }
   }
   const names = new Map<string, string>();
@@ -68,10 +82,47 @@ async function load() {
 }
 
 function statusLabel(l: any) {
+  if (l.moved) return 'S';
   if (l.recovery?.ref === 'original') return 'R';
   if (l.status === LessonStatus.PRESENT) return 'P';
-  if (l.status === LessonStatus.UNJUSTIFIED_ABSENCE) return 'I';
-  if (l.status === LessonStatus.ABSENT) return 'A'; return '·';
+  if (l.status === LessonStatus.UNJUSTIFIED_ABSENCE) return 'A';
+  if (l.status === LessonStatus.ABSENT) return 'D'; return '·';
+}
+
+function exportPdf() {
+  const printWindow = window.open('', '_blank', 'width=1200,height=800');
+  if (!printWindow) return;
+  const escapeHtml = (value: string) => value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]!));
+  const day = weekDays.find(item => item.value === selectedDay.value)?.title ?? '';
+  const header = students.value.map(student => `<th>${escapeHtml(student.name)}</th>`).join('');
+  const body = rows.value.map(row => {
+    const cells = students.value.map(student => {
+      const lesson = row.lessons[student.id];
+      const label = lesson ? statusLabel(lesson) : '—';
+      return `<td class="${lesson ? statusClass(lesson) : ''}">${label}</td>`;
+    }).join('');
+    return `<tr><td>${escapeHtml(yyyyMMdd.fromIyyyyMMdd(row.date).format())}</td>${cells}</tr>`;
+  }).join('');
+  printWindow.document.write(`<!doctype html><html><head><title>Presenze - ${escapeHtml(day)}</title><style>
+    @page { size: A4 landscape; margin: 12mm; }
+    * { box-sizing: border-box; } body { font-family: Arial, sans-serif; color: #222; font-size: 10px; }
+    h1 { font-size: 18px; margin: 0 0 4px; } p { margin: 0 0 12px; color: #555; }
+    table { border-collapse: collapse; width: 100%; table-layout: auto; } th, td { border: 1px solid #999; padding: 5px 6px; text-align: center; white-space: nowrap; }
+    th { background: #eeeeee; font-weight: bold; } th:first-child, td:first-child { text-align: left; font-weight: bold; width: 90px; }
+    thead { display: table-header-group; } tr { break-inside: avoid; } .status-red { color: #d32f2f; font-weight: bold; } .status-orange { color: #ef6c00; font-weight: bold; } .status-blue { color: #1976d2; font-weight: bold; } .status-green { color: #2e7d32; font-weight: bold; }
+    .legend { margin-top: 10px; color: #555; }
+  </style></head><body><h1>Presenze - ${escapeHtml(day)}</h1><p>Periodo: ${props.from ? yyyyMMdd.fromIyyyyMMdd(props.from).format() : ''} - ${props.to ? yyyyMMdd.fromIyyyyMMdd(props.to).format() : ''}</p><table><thead><tr><th>Data</th>${header}</tr></thead><tbody>${body}</tbody></table><div class="legend">P presente · A ingiustificata · D da recuperare · R recuperata · S spostata</div></body></html>`);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.onafterprint = () => printWindow.close();
+  setTimeout(() => printWindow.print(), 250);
+}
+
+function statusClass(l: any) {
+  if (l.moved || l.status === LessonStatus.ABSENT) return 'status-orange';
+  if (l.status === LessonStatus.UNJUSTIFIED_ABSENCE) return 'status-red';
+  if (l.recovery?.ref === 'original') return 'status-blue';
+  return 'status-green';
 }
 
 watch(() => [props.from, props.to, props.schools, selectedDay.value], load, { immediate: true, deep: true });
@@ -81,4 +132,10 @@ watch(() => [props.from, props.to, props.schools, selectedDay.value], load, { im
 .attendance-table {
   overflow-x: auto;
 }
+.status-red, .status-orange, .status-blue, .status-green { font-weight: 700; }
+.status-red { color: #d32f2f; }
+.status-orange { color: #ef6c00; }
+.status-blue { color: #1976d2; }
+.status-green { color: #2e7d32; }
+@media print { .v-btn, .v-select { display: none !important; } .attendance-table { overflow: visible; } }
 </style>
