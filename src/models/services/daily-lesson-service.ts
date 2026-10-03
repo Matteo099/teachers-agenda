@@ -34,6 +34,10 @@ export class DailyLessonService {
         return DailyLessonRepository.instance.get(id);
     }
 
+    public async getDailyLessonsOfSchool(schoolId: ID): Promise<DailyLesson[]> {
+        return DailyLessonRepository.instance.getAll(where(nameof<DailyLesson>('schoolId'), '==', schoolId));
+    }
+
     public async getDailyLessonOfSchoolFromDate(schoolId: ID, from: IyyyyMMdd, orderByDirection?: OrderByDirection): Promise<DailyLesson[]> {
         const queries = [];
         const _query1 = where(nameof<DailyLesson>('schoolId'), '==', schoolId);

@@ -144,6 +144,14 @@
                 </template>
                 <v-card title="Nota della giornata">
                     <v-card-text>
+                        <div class="text-subtitle-2 mb-2">Note precedenti</div>
+                        <v-progress-linear v-if="loadingDailyNotes" indeterminate color="primary" class="mb-2" />
+                        <v-list v-else-if="dailyNotes.length" density="compact" class="mb-4" max-height="220">
+                            <v-list-item v-for="note in dailyNotes" :key="note.date"
+                                :title="yyyyMMdd.fromIyyyyMMdd(note.date).format()" :subtitle="note.text"
+                                prepend-icon="mdi-note-text-outline" />
+                        </v-list>
+                        <div v-else class="text-body-2 text-medium-emphasis mb-4">Nessuna nota precedente per questo allievo.</div>
                         <v-textarea v-model="dailyNote" label="Nota" counter="500" autofocus />
                     </v-card-text>
                     <v-card-actions>
@@ -181,7 +189,8 @@
 
 <script setup lang="ts">
 import EditLessonTime from '@/components/lesson/EditLessonTime.vue';
-import { LessonStatus, Time, type EventTime, type School, type StudentLesson } from '@/models/model';
+import { LessonStatus, Time, yyyyMMdd, type EventTime, type IyyyyMMdd, type School, type StudentLesson } from '@/models/model';
+import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import DeleteDialog from '../DeleteDialog.vue';
@@ -189,6 +198,7 @@ import StudentEditor from '../student/StudentEditor.vue';
 
 const props = defineProps<{
     school: School;
+    date: IyyyyMMdd;
     loading?: boolean;
     onDeleteLessonItem: () => Promise<boolean>;
     updateLessonTime: (newTime: EventTime) => Promise<boolean>;
@@ -203,8 +213,26 @@ const newLessonDate = ref();
 const movingLesson = ref(false);
 const dailyNoteDialog = ref(false);
 const dailyNote = ref('');
-watch(dailyNoteDialog, (open) => {
-    if (open) dailyNote.value = item.value.lesson.dailyNote ?? '';
+const dailyNotes = ref<{ date: IyyyyMMdd; text: string }[]>([]);
+const loadingDailyNotes = ref(false);
+watch(dailyNoteDialog, async (open) => {
+    if (!open) return;
+    dailyNote.value = item.value.lesson.dailyNote ?? '';
+    loadingDailyNotes.value = true;
+    try {
+        const lessons = await DailyLessonService.instance.getDailyLessonsOfSchool(props.school.id);
+        dailyNotes.value = lessons
+            .flatMap(day => {
+                const note = day.lessons.find(lesson => lesson.studentId === item.value.student.id && !!lesson.dailyNote)?.dailyNote;
+                return note ? [{ date: day.date, text: note }] : [];
+            })
+            .sort((a, b) => b.date.localeCompare(a.date));
+    } catch (error) {
+        console.error('Impossibile caricare le note dello studente', error);
+        toast.error('Impossibile caricare le note precedenti');
+    } finally {
+        loadingDailyNotes.value = false;
+    }
 });
 
 const isUnset = computed(() => item.value.lesson.status == LessonStatus.NONE);

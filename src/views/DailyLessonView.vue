@@ -100,7 +100,7 @@
                 <v-timeline v-else side="end" truncate-line="both">
                     <v-timeline-item v-for="(item, index) in studentLessons"
                         :key="dailyLesson.id + item.lesson.lessonId" :dot-color="getColor(item.lesson)" size="small">
-                        <LessonItem :school="school" :key="dailyLesson.id + item.lesson.lessonId"
+                        <LessonItem :school="school" :date="dailyLesson.date" :key="dailyLesson.id + item.lesson.lessonId"
                             :loading="performingOperation[item.lesson.lessonId]?.value"
                             v-model:item="studentLessons[index]!" v-model:select="selectedLessons"
                             @present="present(item)" @absent="absent(item, $event)"
