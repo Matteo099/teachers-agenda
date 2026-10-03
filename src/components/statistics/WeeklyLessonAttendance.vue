@@ -65,10 +65,18 @@ async function load() {
       if (yyyyMMdd.fromIyyyyMMdd(day.date).toDate().getDay() !== selectedDay.value) continue;
       const row = map.get(day.date) ?? { date: day.date, lessons: {} };
       for (const lesson of day.lessons) {
+        const linkedRecovery = lesson.recovery?.ref === 'recovery'
+          ? dailyById.get(lesson.recovery.lessonRef.dailyLessonId)?.lessons.find(recoveryLesson => recoveryLesson.lessonId === lesson.recovery?.lessonRef.lessonId)
+          : undefined;
+        if (linkedRecovery?.status === LessonStatus.PRESENT) {
+          row.lessons[lesson.studentId] = { ...lesson, reportStatus: 'R' };
+          continue;
+        }
         const originalDailyLessonId = lesson.recovery?.ref === 'original'
           ? lesson.recovery.lessonRef.dailyLessonId
           : lesson.moved?.ref === 'original' ? lesson.moved.lessonRef.dailyLessonId : undefined;
         if (originalDailyLessonId) {
+          if (lesson.status !== LessonStatus.PRESENT) continue;
           const originalDay = dailyById.get(originalDailyLessonId);
           if (originalDay && yyyyMMdd.fromIyyyyMMdd(originalDay.date).toDate().getDay() === selectedDay.value) {
             const originalRow = map.get(originalDay.date) ?? { date: originalDay.date, lessons: {} };
