@@ -4,6 +4,7 @@
       <div class="d-flex align-center ga-3 mb-3">
         <v-select v-model="selectedDay" :items="weekDays" label="Giorno della settimana" hide-details />
         <v-btn prepend-icon="mdi-file-pdf-box" color="primary" @click="exportPdf">Esporta PDF</v-btn>
+        <v-btn prepend-icon="mdi-file-delimited" variant="outlined" @click="exportCsv">Esporta CSV</v-btn>
       </div>
       <div v-if="rows.length" class="attendance-table"><v-table>
           <thead>
@@ -73,9 +74,15 @@ async function load() {
     for (const student of await StudentService.instance.getStudentsOfSchool(school.id))
       names.set(student.id, `${student.name} ${student.surname}`);
 
-  students.value = [...ids]
+  const uniqueStudents = new Map<string, string>();
+  [...ids]
     .map(id => ({ id, name: names.get(id) ?? id }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .forEach(student => {
+      const key = student.name.trim().toLocaleLowerCase();
+      if (!uniqueStudents.has(key)) uniqueStudents.set(key, student.id);
+    });
+  students.value = [...uniqueStudents.values()].map(id => ({ id, name: names.get(id) ?? id }));
 
   rows.value = [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
   loading.value = false;
@@ -104,7 +111,7 @@ function exportPdf() {
     return `<tr><td>${escapeHtml(yyyyMMdd.fromIyyyyMMdd(row.date).format())}</td>${cells}</tr>`;
   }).join('');
   printWindow.document.write(`<!doctype html><html><head><title>Presenze - ${escapeHtml(day)}</title><style>
-    @page { size: A4 landscape; margin: 12mm; }
+    @page { size: A3 landscape; margin: 8mm; }
     * { box-sizing: border-box; } body { font-family: Arial, sans-serif; color: #222; font-size: 10px; }
     h1 { font-size: 18px; margin: 0 0 4px; } p { margin: 0 0 12px; color: #555; }
     table { border-collapse: collapse; width: 100%; table-layout: auto; } th, td { border: 1px solid #999; padding: 5px 6px; text-align: center; white-space: nowrap; }
@@ -116,6 +123,21 @@ function exportPdf() {
   printWindow.focus();
   printWindow.onafterprint = () => printWindow.close();
   setTimeout(() => printWindow.print(), 250);
+}
+
+function exportCsv() {
+  const header = ['Data', ...students.value.map(student => student.name)];
+  const lines = [header, ...rows.value.map(row => [
+    yyyyMMdd.fromIyyyyMMdd(row.date).format(),
+    ...students.value.map(student => row.lessons[student.id] ? statusLabel(row.lessons[student.id]) : ''),
+  ])].map(line => line.map(value => `"${String(value).replace(/"/g, '""')}"`).join(';'));
+  const blob = new Blob([`\uFEFF${lines.join('\r\n')}`], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `presenze-${weekDays.find(day => day.value === selectedDay.value)?.title ?? 'giorno'}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function statusClass(l: any) {

@@ -60,7 +60,8 @@ export class LessonGroupService {
         const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(schoolId, from.date.toIyyyyMMdd(), to.date.toIyyyyMMdd());
         lessons.push(...dailyLessons.flatMap(dl => {
             const date = yyyyMMdd.fromIyyyyMMdd(dl.date).toScheduleX();
-            return dl.lessons.map(l => {
+            const uniqueLessons = [...new Map(dl.lessons.map(l => [l.studentId, l])).values()];
+            return uniqueLessons.map(l => {
                 return {
                     id: dl.id + "_" + l.lessonId,
                     title: l.studentId,
@@ -87,7 +88,8 @@ export class LessonGroupService {
                     const date = yyyyMMdd.fromDate(next).toScheduleX();
                 if (lessons.find(l => l.data?.date == date)) return;
 
-                lessons.push(...w.schedule.map(s => {
+                const uniqueSchedule = [...new Map(w.schedule.map(s => [s.studentId, s])).values()];
+                lessons.push(...uniqueSchedule.map(s => {
                     return {
                         id: uuidv4(),
                         title: s.studentId,
