@@ -53,6 +53,11 @@
                 <StudentNoteView :school="school"></StudentNoteView>
             </v-col>
         </v-row>
+        <v-row v-if="school.managed">
+            <v-col class="pa-2" cols="12">
+                <SchoolManagementCard :school="school" />
+            </v-col>
+        </v-row>
     </v-card>
 
     <v-container fluid v-else>
@@ -82,6 +87,7 @@ import RecoveryLessonView from './RecoveryLessonView.vue';
 import SalaryView from './SalaryView.vue';
 import StudentNoteView from './StudentNoteView.vue';
 import StudentView from './StudentView.vue';
+import SchoolManagementCard from '@/components/school/SchoolManagementCard.vue';
 
 const route = useRoute()
 const router = useRouter()

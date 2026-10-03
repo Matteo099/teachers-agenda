@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { SalaryStrategy, TrialLessonPaymentStrategy, type LevelRange, type ManagerOptions, type School } from '@/models/model';
+import { SalaryStrategy, TrialLessonPaymentStrategy, yyyyMMdd, type LevelRange, type ManagerOptions, type School } from '@/models/model';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -227,8 +227,19 @@ function updateSchool() {
 }
 
 function saveManagerOptions(mo: ManagerOptions) {
-    console.log(mo, JSON.stringify(mo));
-    managerOptions.value = mo;
+    const month = yyyyMMdd.today().toIyyyyMMdd().slice(0, 6);
+    const monthlyHistory = [...(managerOptions.value?.monthlyHistory ?? [])]
+        .filter(item => item.month !== month);
+    monthlyHistory.push({ month, totalStudents: mo.totalStudents, quotePerStudent: mo.quotePerStudent });
+    managerOptions.value = {
+        ...managerOptions.value,
+        ...mo,
+        baseline: managerOptions.value?.baseline ?? {
+            totalStudents: managerOptions.value?.totalStudents ?? mo.totalStudents,
+            quotePerStudent: managerOptions.value?.quotePerStudent ?? mo.quotePerStudent,
+        },
+        monthlyHistory: monthlyHistory.sort((a, b) => a.month.localeCompare(b.month)),
+    };
     dialogManager.value = false
 }
 

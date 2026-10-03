@@ -244,6 +244,7 @@ export interface School {
     managed: boolean;
     levelRanges: LevelRange[];
     managerOptions?: ManagerOptions;
+    cashMovements?: CashMovement[];
     salaryStrategy: SalaryStrategy;
     trialLessonPaymentStrategy: TrialLessonPaymentStrategy;
     /** Hourly rate for completed recoveries in pay-per-performance schools. */
@@ -287,6 +288,7 @@ export interface MonthlySalaryReport {
     regularLessonsTotal: number;
     recoveryTotal: number;
     reimbursementTotal: number;
+    managementTotal: number;
     activityDays: number;
     officialCalendarDays: number;
     netTotal: number;
@@ -296,6 +298,22 @@ export interface ManagerOptions {
     totalStudents: number;
     quotePerStudent: number;
     cashFund: number;
+    baseline?: { totalStudents: number; quotePerStudent: number };
+    monthlyHistory?: ManagerMonthlySnapshot[];
+}
+
+export interface ManagerMonthlySnapshot {
+    month: string; // YYYYMM
+    totalStudents: number;
+    quotePerStudent: number;
+}
+
+export interface CashMovement {
+    id: string;
+    date: IyyyyMMdd;
+    type: 'INCOME' | 'EXPENSE';
+    description: string;
+    amount: number;
 }
 
 export interface LevelRange {

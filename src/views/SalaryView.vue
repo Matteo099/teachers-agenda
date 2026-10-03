@@ -11,6 +11,8 @@
                 <v-col cols="6" md="3"><v-card variant="tonal"
                         :title="`Rimborsi (${report.officialCalendarDays} gg ufficiali)`"
                         :text="currency(report.reimbursementTotal)"></v-card></v-col>
+                <v-col v-if="school.managed" cols="6" md="3"><v-card variant="tonal" title="Quota gestione"
+                        :text="currency(report.managementTotal)"></v-card></v-col>
                 <v-col cols="6" md="3"><v-card color="primary" title="Totale"
                         :text="currency(report.netTotal)"></v-card></v-col>
             </v-row>

@@ -18,10 +18,32 @@ export class MonthlySalaryService {
         const recoveryTotal = await this.computeRecoveries(school, dailyLessons);
         const activityDays = (await this.getOfficialCalendarDates(school.id, from, to, dailyLessons)).size;
         const reimbursementTotal = activityDays * (school.dailyExpenseReimbursement ?? 0);
+        const managementTotal = this.computeManagementTotal(school, from, to);
 
         return { schoolId: school.id, from, to, regularLessonsTotal, recoveryTotal, reimbursementTotal, activityDays,
             officialCalendarDays: activityDays,
-            netTotal: regularLessonsTotal + recoveryTotal + reimbursementTotal };
+            managementTotal,
+            netTotal: regularLessonsTotal + recoveryTotal + reimbursementTotal + managementTotal };
+    }
+
+    public computeManagementTotal(school: School, from: IyyyyMMdd, to: IyyyyMMdd): number {
+        if (!school.managed || !school.managerOptions) return 0;
+        const start = yyyyMMdd.fromIyyyyMMdd(from).toDate();
+        const end = yyyyMMdd.fromIyyyyMMdd(to).toDate();
+        let month = new Date(start.getFullYear(), start.getMonth(), 1);
+        const lastMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+        let total = 0;
+        while (month <= lastMonth) {
+            const monthKey = `${month.getFullYear()}${String(month.getMonth() + 1).padStart(2, '0')}`;
+            const snapshot = [...(school.managerOptions.monthlyHistory ?? [])]
+                .filter(item => item.month <= monthKey)
+                .sort((a, b) => b.month.localeCompare(a.month))[0];
+            const totalStudents = snapshot?.totalStudents ?? school.managerOptions.baseline?.totalStudents ?? school.managerOptions.totalStudents;
+            const quotePerStudent = snapshot?.quotePerStudent ?? school.managerOptions.baseline?.quotePerStudent ?? school.managerOptions.quotePerStudent;
+            total += totalStudents * quotePerStudent;
+            month = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+        }
+        return total;
     }
 
     private async computeRecoveries(school: School, dailyLessons: DailyLesson[]): Promise<number> {

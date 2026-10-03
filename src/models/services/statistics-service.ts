@@ -3,6 +3,7 @@ import { LessonStatus, yyyyMMdd, type IyyyyMMdd, type School, type Student } fro
 import { SchoolRepository } from "../repositories/school-repository";
 import { StudentRepository } from "../repositories/student-repository";
 import { DailyLessonService } from "./daily-lesson-service";
+import { MonthlySalaryService } from "./monthly-salary-service";
 
 export interface MonthlySalarySummary {
     month: string;
@@ -100,6 +101,18 @@ export class StatisticsService {
                 const month = lesson.date.substring(0, 6);
                 const salary = Number.isNaN(lesson.salary) ? 0 : lesson.salary;
                 totals.set(month, (totals.get(month) ?? 0) + salary);
+            }
+            if (school.managed && school.managerOptions) {
+                const start = yyyyMMdd.fromIyyyyMMdd(from).toDate();
+                const end = yyyyMMdd.fromIyyyyMMdd(to).toDate();
+                let monthDate = new Date(start.getFullYear(), start.getMonth(), 1);
+                while (monthDate <= new Date(end.getFullYear(), end.getMonth(), 1)) {
+                    const month = `${monthDate.getFullYear()}${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+                    const monthFrom = `${month}01`;
+                    const monthTo = yyyyMMdd.fromDate(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0)).toIyyyyMMdd();
+                    totals.set(month, (totals.get(month) ?? 0) + MonthlySalaryService.instance.computeManagementTotal(school, monthFrom, monthTo));
+                    monthDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1);
+                }
             }
         }
 

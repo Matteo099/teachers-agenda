@@ -47,9 +47,9 @@ const props = defineProps<ManagerEditorProps>()
 const emit = defineEmits(['close', 'save'])
 
 const schema = yup.object({
-    totalStudents: yup.number().required('Il Numero Totale degli Studenti è obbligatorio').positive().label('Numero Totale Studenti'),
-    quotePerStudent: yup.number().required('La Quota per Studente è obbligatoria').positive().label('Quota per Studente'),
-    cashFund: yup.number().positive().label('Fondo Cassa').nullable().optional(),
+    totalStudents: yup.number().required('Il Numero Totale degli Studenti è obbligatorio').min(0).label('Numero Totale Studenti'),
+    quotePerStudent: yup.number().required('La Quota per Studente è obbligatoria').min(0).label('Quota per Studente'),
+    cashFund: yup.number().min(0).label('Fondo Cassa').nullable().optional(),
 })
 
 const { defineField, handleSubmit } = useForm({
