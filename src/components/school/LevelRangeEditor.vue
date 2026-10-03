@@ -3,8 +3,9 @@
         <v-card-text>
             <v-row class="my-3 mb-10 justify-center">
                 <v-col class="px-2" cols="12" md="4">
-                    <v-number-input max-width="500" :precision=3 v-model="levelRangePrice" :reverse="false" controlVariant="default"
-                        label="Fascia di Prezzo" prefix="€" :hideInput="false" :inset="false" :min="0">
+                    <v-number-input max-width="500" :precision=3 v-model="levelRangePrice" :reverse="false"
+                        controlVariant="default" label="Compenso Orario" prefix="€" :hideInput="false" :inset="false"
+                        :min="0">
                     </v-number-input>
                 </v-col>
                 <v-col class="px-2" cols="12" md="1">
@@ -15,7 +16,8 @@
 
             <v-card class="mx-5 mt-5 pa-2" v-if="tab" elevation="3">
                 <v-tabs v-model="tab" class="my-2" align-tabs="center" color="primary" show-arrows>
-                        <v-tab v-for="i in levelRanges" :key="i.price" :text="numberFormat(i.price) + ' €'" :value="i"></v-tab>
+                    <v-tab v-for="i in levelRanges" :key="i.price" :text="numberFormat(i.price) + ' €'"
+                        :value="i"></v-tab>
                 </v-tabs>
 
                 <v-tabs-window v-model="tab">

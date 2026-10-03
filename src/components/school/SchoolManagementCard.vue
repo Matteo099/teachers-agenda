@@ -11,14 +11,15 @@
 
       <v-card class="my-4" variant="outlined" title="Storico quota mensile">
         <v-card-text>
-          <v-row align="center">
-            <v-col cols="7" sm="2"><v-select v-model="selectedMonthNumber" :items="monthOptions" label="Mese" /></v-col>
-            <v-col cols="5" sm="2"><v-select v-model="selectedYear" :items="yearOptions" label="Anno" /></v-col>
-            <v-col cols="6" sm="3"><v-number-input v-model="editValues.totalStudents" :min="0"
+          <v-row class="mb-4 justify-center">
+            <v-col cols="12" md="6"><v-select v-model="selectedMonthNumber" :items="monthOptions"
+                label="Mese" /></v-col>
+            <v-col cols="12" md="6"><v-select v-model="selectedYear" :items="yearOptions" label="Anno" /></v-col>
+            <v-col cols="12" md="6"><v-number-input v-model="editValues.totalStudents" :min="0"
                 label="Studenti totali" /></v-col>
-            <v-col cols="6" sm="3"><v-number-input v-model="editValues.quotePerStudent" :min="0" :precision="2"
+            <v-col cols="12" md="6"><v-number-input v-model="editValues.quotePerStudent" :min="0" :precision="2"
                 prefix="€" label="Quota per studente" /></v-col>
-            <v-col cols="12" sm="2"><v-btn color="primary" block :loading="saving" @click="saveSnapshot">Salva
+            <v-col cols="12" md="4"><v-btn color="primary" block :loading="saving" @click="saveSnapshot">Salva
                 mese</v-btn></v-col>
           </v-row>
           <v-data-table v-if="snapshots.length" :headers="snapshotHeaders" :items="snapshots" item-value="month"

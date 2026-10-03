@@ -121,21 +121,6 @@
                     <v-icon>mdi-eye-arrow-right-outline</v-icon>
                 </template>recupero</v-btn>
 
-            <v-dialog fullscreen>
-                <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn :disabled="loading" class="ma-1" v-bind="activatorProps">
-                        note
-                    </v-btn>
-                </template>
-
-                <template v-slot:default="{ isActive }">
-                    <StudentEditor edit :school="school" :initialStudent="item.student" focus="note"
-                        :disableFields="['name', 'surname', 'contact', 'lessonDay', 'level', 'minutesLessonDuration']"
-                        @close="isActive.value = false" @save="item.student.note = $event.note; isActive.value = false">
-                    </StudentEditor>
-                </template>
-            </v-dialog>
-
             <v-dialog v-model="dailyNoteDialog" max-width="600">
                 <template #activator="{ props: activatorProps }">
                     <v-btn :disabled="loading" class="ma-1" v-bind="activatorProps" prepend-icon="mdi-note-edit-outline">

@@ -199,7 +199,6 @@ export interface Student {
     surname: string;
     contact?: string;
     lessonDay?: number;
-    note?: Note;
     level: string;
     minutesLessonDuration: number;
     /** Optional hourly rate. When omitted the rate of the active level is used. */
@@ -228,8 +227,12 @@ export interface Trial {
     dailyLessonId?: ID;
 }
 
-export interface Note {
-    text: string;
+export interface SchoolNote {
+    id: string;
+    schoolId: string;
+    date: IyyyyMMdd;
+    description: string;
+    createdAt: Timestamp;
     updatedAt: Timestamp;
 }
 

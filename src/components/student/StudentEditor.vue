@@ -107,9 +107,8 @@
                         hide-details></v-switch>
                 </v-col>
 
-                <v-col cols="12" md="12">
-                    <v-textarea id="std_note" :disabled="isDisabled('note')" :focused="isFocussed('note')"
-                        v-model="note" v-bind="noteProps" label="Note" counter></v-textarea>
+                <v-col v-if="edit && initialStudent?.id" cols="12">
+                    <StudentDailyNotes :school="school" :student="initialStudent" />
                 </v-col>
                 <v-col cols="12">
                     <v-divider class="mb-4"></v-divider>
@@ -145,6 +144,7 @@ import { days, yyyyMMdd, type LevelHistory, type School, type Student } from '@/
 import { development, Random } from '@/models/random-utils';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
+import StudentDailyNotes from './StudentDailyNotes.vue';
 import { dateFormat, toDate } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -152,7 +152,7 @@ import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 
-type StudentEditorField = "name" | "surname" | "contact" | "lessonDay" | "level" | "minutesLessonDuration" | "note";
+type StudentEditorField = "name" | "surname" | "contact" | "lessonDay" | "level" | "minutesLessonDuration";
 interface StudentEditorProps {
     school: School;
     initialStudent?: Student;
@@ -185,7 +185,6 @@ const schema = yup.object({
     minutesLessonDuration: yup.number().required('La Durata della Lezione è obbligatoria').min(1).label('Durata della Lezione'),
     trial: yup.boolean().label('Lezione di Prova'),
     isSubstitution: yup.boolean().label('Supplenza'),
-    note: yup.string().label('Note'),
     from: yup.date().label('Da').nullable().optional().test({
         test: (value: Date | null | undefined, context: any) => {
             console.log(canUpdateDate.value, value)
@@ -218,7 +217,6 @@ const [level, levelProps] = defineField('level', vuetifyConfig);
 const [minutesLessonDuration, minutesLessonDurationProps] = defineField('minutesLessonDuration', vuetifyConfig);
 const [trial, trialProps] = defineField('trial', vuetifyConfig);
 const [isSubstitution, isSubstitutionProps] = defineField('isSubstitution', vuetifyConfig);
-const [note, noteProps] = defineField('note', vuetifyConfig);
 const [recitalPiece] = defineField('recitalPiece', vuetifyConfig);
 const [recitalAuthor] = defineField('recitalAuthor', vuetifyConfig);
 const [from, fromProps] = defineField('from', vuetifyConfig);
@@ -295,7 +293,6 @@ function updateStudent() {
         durationOption.value = [30, 40, 60].includes(studentClone.minutesLessonDuration)
             ? String(studentClone.minutesLessonDuration) : 'altro';
         contact.value = studentClone.contact ?? "";
-        note.value = studentClone.note?.text ?? "";
         recitalPiece.value = studentClone.recitalPiece ?? "";
         recitalAuthor.value = studentClone.recitalAuthor ?? "";
         trial.value = studentClone.trial?.done ?? false;
@@ -318,7 +315,6 @@ function randomData() {
     trial.value = Random.bool();
     minutesLessonDuration.value = Random.int(30, 150);
     contact.value = Random.word();
-    note.value = Random.text();
 }
 
 async function save(values: GenericObject) {
@@ -340,8 +336,6 @@ async function save(values: GenericObject) {
 
     if (contact.value && contact.value.trim().length != 0) student.contact = contact.value.trim();
     if (lessonDay.value) student.lessonDay = days.indexOf(lessonDay.value);
-    if (note.value && note.value.trim().length != 0) student.note = { text: note.value.trim(), updatedAt: Timestamp.now() };
-    else delete student.note;
     if (recitalPiece.value?.trim()) student.recitalPiece = recitalPiece.value.trim();
     if (recitalAuthor.value?.trim()) student.recitalAuthor = recitalAuthor.value.trim();
     if (trial.value) {

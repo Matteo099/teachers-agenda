@@ -50,7 +50,7 @@
         </v-row>
         <v-row>
             <v-col class="pa-2" cols="12">
-                <StudentNoteView :school="school"></StudentNoteView>
+                <SchoolNotesView :school="school"></SchoolNotesView>
             </v-col>
         </v-row>
         <v-row v-if="school.managed">
@@ -85,7 +85,7 @@ import { useDocument } from 'vuefire';
 import LessonView from './LessonView.vue';
 import RecoveryLessonView from './RecoveryLessonView.vue';
 import SalaryView from './SalaryView.vue';
-import StudentNoteView from './StudentNoteView.vue';
+import SchoolNotesView from './SchoolNotesView.vue';
 import StudentView from './StudentView.vue';
 import SchoolManagementCard from '@/components/school/SchoolManagementCard.vue';
 

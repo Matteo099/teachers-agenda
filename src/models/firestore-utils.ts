@@ -7,6 +7,7 @@ export enum DatabaseRef {
     WEEKLY_LESSONS = "weeklyLessons",
     DAILY_LESSONS = "dailyLessons",
     RECOVERY_LESSONS = "recoveryLessons",
+    SCHOOL_NOTES = "schoolNotes",
 }
 
 const converter = <T>(): FirestoreDataConverter<T> => ({
