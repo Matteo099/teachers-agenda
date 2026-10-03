@@ -21,11 +21,12 @@
     </v-card-text>
   </v-card>
 </template>
+
 <script setup lang="ts">
 import { LessonStatus, yyyyMMdd, type IyyyyMMdd, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { StudentService } from '@/models/services/student-service';
-import { defineProps, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{ from?: IyyyyMMdd; to?: IyyyyMMdd; schools?: School[] }>();
 const selectedDay = ref(5);
