@@ -8,10 +8,21 @@
         </v-tabs>
 
         <v-row class="align-end">
-            <v-col cols="12" md="8">
+            <v-col cols="12" class="d-flex justify-center mt-6">
+                <span class="text-headline-small">
+                    {{ periodLabel }}
+                </span>
+            </v-col>
+            <v-col cols="12" md="6">
                 <DateSelect v-model="dateRange" class="mt-2"></DateSelect>
             </v-col>
-            <v-col cols=12 md="4">
+            <v-col cols="12" md="2" class="statistics-period-navigation d-flex ga-1">
+                <v-btn icon="mdi-chevron-left" variant="text" aria-label="Periodo precedente"
+                    @click="changePeriod(-1)"></v-btn>
+                <v-btn icon="mdi-chevron-right" variant="text" aria-label="Periodo successivo"
+                    @click="changePeriod(1)"></v-btn>
+            </v-col>
+            <v-col cols="12" md="4">
                 <v-select v-model="selectedSchoolsID" :items="schools" :loading="loadingSchools" item-value="id"
                     label="Scuole" :item-title="schoolTitle" variant="outlined" density="compact" hide-details chips
                     multiple></v-select>
@@ -42,7 +53,8 @@
                 <v-card flat>
                     <v-card-text>
                         <LessonDistribution :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
-                        <WeeklyLessonAttendance :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
+                        <WeeklyLessonAttendance :schools="selectedSchools" :from="dateRange?.from"
+                            :to="dateRange?.to" />
                     </v-card-text>
                 </v-card>
             </v-tabs-window-item>
@@ -72,7 +84,7 @@ import MonthlySalaryList from '@/components/statistics/MonthlySalaryList.vue';
 import OfficialSalaryLessons from '@/components/statistics/OfficialSalaryLessons.vue';
 import StudentAbsenceList from '@/components/statistics/StudentAbsenceList.vue';
 import StudentRecitalList from '@/components/statistics/StudentRecitalList.vue';
-import type { DateSelectModel, School } from '@/models/model';
+import { yyyyMMdd, type DateSelectModel, type School } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { StatisticsService } from '@/models/services/statistics-service';
@@ -93,10 +105,48 @@ const filtersQuery = computed(() => route.query.filters as string);
 const from = computed(() => route.query.from as string);
 const to = computed(() => route.query.to as string);
 const selectedSchools = computed(() => schools.value.filter(s => selectedSchoolsID.value.includes(s.id)));
+const periodLabel = computed(() => {
+    if (!dateRange.value?.from) return 'Periodo non selezionato';
+    const fromDate = yyyyMMdd.fromIyyyyMMdd(dateRange.value.from);
+    const toDate = dateRange.value.to ? yyyyMMdd.fromIyyyyMMdd(dateRange.value.to) : fromDate;
+    const formatLongDate = (date: typeof fromDate) => new Intl.DateTimeFormat('it-IT', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    }).format(date.toDate());
+    return dateRange.value.to && dateRange.value.from !== dateRange.value.to
+        ? `${formatLongDate(fromDate)} – ${formatLongDate(toDate)}`
+        : formatLongDate(fromDate);
+});
 
 function schoolTitle(school: School): string {
     return school.city ? `${school.name} - ${school.city}` : school.name;
 }
+
+function shiftDate(value: string, amount: number, byWeek: boolean): string {
+    const date = yyyyMMdd.fromIyyyyMMdd(value).toDate();
+    if (byWeek) date.setDate(date.getDate() + amount * 7);
+    else date.setMonth(date.getMonth() + amount);
+    return yyyyMMdd.fromDate(date).toIyyyyMMdd();
+}
+
+function isWeeklyRange(): boolean {
+    if (!dateRange.value?.from || !dateRange.value?.to) return false;
+    const fromDate = yyyyMMdd.fromIyyyyMMdd(dateRange.value.from).toDate();
+    const toDate = yyyyMMdd.fromIyyyyMMdd(dateRange.value.to).toDate();
+    return Math.round((toDate.getTime() - fromDate.getTime()) / 86400000) + 1 <= 7;
+}
+
+function changePeriod(delta: number) {
+    if (!dateRange.value?.from) return;
+    const byWeek = isWeeklyRange();
+    const to = dateRange.value.to ?? dateRange.value.from;
+    dateRange.value = {
+        from: shiftDate(dateRange.value.from, delta, byWeek),
+        to: shiftDate(to, delta, byWeek),
+    };
+}
+
 watch(tabQuery, updateTab, { immediate: true });
 watch(filtersQuery, updateFilters, { immediate: true });
 watch(from, updateFilters, { immediate: true });
