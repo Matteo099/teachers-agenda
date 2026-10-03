@@ -60,23 +60,10 @@
                         <v-col class="align-self-center">
                             <v-checkbox v-model="managed" v-bind="managedProps" label="Gestione"></v-checkbox>
                         </v-col>
-                        <v-col class="align-self-center">
-                            <v-dialog v-if="managed" v-model="dialogManager" fullscreen>
-                                <template v-slot:activator="{ props: activatorProps }">
-                                    <div class="v-input--center-affix v-input--error">
-                                        <v-btn text="Gestione" v-bind="activatorProps"></v-btn>
-                                        <div class="v-input__details">
-                                            <div class="v-messages__message v-messages" role="alert">
-                                                <span>{{ managerOptionsProps['error-messages']?.[0] }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-
-                                <ManagerEditor :initialManagerOptions="managerOptions" @close="dialogManager = false"
-                                    @save="saveManagerOptions($event)">
-                                </ManagerEditor>
-                            </v-dialog>
+                        <v-col v-if="managed" cols="12">
+                            <v-alert type="info" variant="tonal" density="comfortable">
+                                Puoi configurare quote mensili e movimenti del fondo cassa dalla visualizzazione della scuola.
+                            </v-alert>
                         </v-col>
                     </v-row>
                 </v-col>
@@ -118,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { SalaryStrategy, TrialLessonPaymentStrategy, yyyyMMdd, type LevelRange, type ManagerOptions, type School } from '@/models/model';
+import { SalaryStrategy, TrialLessonPaymentStrategy, type LevelRange, type School } from '@/models/model';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -126,14 +113,12 @@ import { onMounted, ref, watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import LevelRangeEditor from './LevelRangeEditor.vue';
-import ManagerEditor from './ManagerEditor.vue';
 import { DEFAULT_SCHOOL_COLOR } from '@/models/constants';
 
 const props = defineProps<{ initialSchool?: School, edit?: boolean }>()
 const emit = defineEmits(['close', 'save'])
 
 const dialogLevels = ref(false)
-const dialogManager = ref(false)
 const dialogColor = ref(false);
 const saving = ref(false);
 const salaryStrategys = [
@@ -155,16 +140,6 @@ const schema = yup.object({
     salaryStrategy: yup.string().required("L'Opzione di pagamento lezioni è obbligatorio").label('Opzione di Pagamento'),
     trialLessonPaymentStrategy: yup.string().required("L'Opzione di pagamento della lezione di prova è obbligatorio").label('Opzione di pagamento della Lezione di Prova'),
     dailyExpenseReimbursement: yup.number().min(0).nullable().optional(),
-    managerOptions: yup.object().test({
-        test: (v: any | ManagerOptions) => {
-            if (managed.value)
-                return v !== undefined;
-            return true;
-        },
-        message: 'Configurare la Gestione della Scuola correttamente',
-        exclusive: false,
-        name: 'managedProp'
-    }).label('Opzioni Gestione'),
     levelRanges: yup.array().of(yup.object()).test({
         test: (v: any | LevelRange[]) => !!v && v.length != 0,
         message: 'I livelli sono obbligatori; configurare correttamente i Livelli',
@@ -192,7 +167,7 @@ const [color] = defineField('color', vuetifyConfig);
 const [managed, managedProps] = defineField('managed', vuetifyConfig);
 const [salaryStrategy, salaryStrategyProps] = defineField('salaryStrategy', vuetifyConfig);
 const [trialLessonPaymentStrategy, trialLessonPaymentStrategyProps] = defineField('trialLessonPaymentStrategy', vuetifyConfig);
-const [managerOptions, managerOptionsProps] = defineField('managerOptions', vuetifyConfig);
+const [managerOptions] = defineField('managerOptions', vuetifyConfig);
 const [levelRanges, levelRangesProps] = defineField('levelRanges', vuetifyConfig);
 const [dailyExpenseReimbursement, dailyExpenseReimbursementProps] = defineField('dailyExpenseReimbursement', vuetifyConfig);
 
@@ -226,23 +201,6 @@ function updateSchool() {
     }
 }
 
-function saveManagerOptions(mo: ManagerOptions) {
-    const month = yyyyMMdd.today().toIyyyyMMdd().slice(0, 6);
-    const monthlyHistory = [...(managerOptions.value?.monthlyHistory ?? [])]
-        .filter(item => item.month !== month);
-    monthlyHistory.push({ month, totalStudents: mo.totalStudents, quotePerStudent: mo.quotePerStudent });
-    managerOptions.value = {
-        ...managerOptions.value,
-        ...mo,
-        baseline: managerOptions.value?.baseline ?? {
-            totalStudents: managerOptions.value?.totalStudents ?? mo.totalStudents,
-            quotePerStudent: managerOptions.value?.quotePerStudent ?? mo.quotePerStudent,
-        },
-        monthlyHistory: monthlyHistory.sort((a, b) => a.month.localeCompare(b.month)),
-    };
-    dialogManager.value = false
-}
-
 function saveLevelRanges(lr: LevelRange[]) {
     console.log(lr, JSON.stringify(lr));
     levelRanges.value = lr;
@@ -266,7 +224,7 @@ async function save(values: GenericObject) {
     if (values.email) school.email = values.email;
     if (values.phoneNumber) school.phoneNumber = values.phoneNumber;
     if (values.color && values.color.trim().length != 0) school.color = values.color;
-    if (managed.value) school.managerOptions = managerOptions.value;
+    if (managed.value) school.managerOptions = managerOptions.value ?? { totalStudents: 0, quotePerStudent: 0, cashFund: 0 };
 
     try {
         if (props.edit && props.initialSchool?.id != undefined) {
