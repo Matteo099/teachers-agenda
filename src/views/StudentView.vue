@@ -1,5 +1,5 @@
 <template>
-    <v-card title="Studenti" elevation="3" :loading="loadingStudents">
+    <v-card title="Anagrafica studenti" elevation="3" :loading="loadingStudents">
         <v-card-text>
             <v-row class="mr-4 mb-1 align-center">
                 <v-col cols="12" md="8">
@@ -34,8 +34,8 @@
                 <template v-slot:item.lessonDay="{ item }">
                     {{ item.lessonDay ? days[item.lessonDay] : "" }}
                 </template>
-                <template v-slot:item.trial="{ item }">
-                    {{ getTrialLesson(item) }}
+                <template v-slot:item.minutesLessonDuration="{ item }">
+                    {{ item.minutesLessonDuration }} min
                 </template>
                 <template v-slot:item.actions="{ item }">
                     <v-dialog fullscreen>
@@ -70,7 +70,7 @@
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import StudentEditor from '@/components/student/StudentEditor.vue';
 import StudentFilter from '@/components/student/StudentFilter.vue';
-import { days, STUDENT_FILTERS, yyyyMMdd, type School, type Student, type StudentFilterObj } from '@/models/model';
+import { days, STUDENT_FILTERS, type School, type Student, type StudentFilterObj } from '@/models/model';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { StudentService } from '@/models/services/student-service';
 import type { EventSubscription } from '@/models/utils/event';
@@ -90,23 +90,15 @@ const dialog = ref(false);
 const studentHeaders: any = [
     { title: 'Nome', key: 'name', align: 'start' },
     { title: 'Cognome', key: 'surname' },
-    { title: 'Giorno della Lezione', key: 'lessonDay' },
     { title: 'Operazioni', key: 'actions', sortable: false },
-    { title: 'Contatto', key: 'contact' },
-    { title: 'Lezione di prova', key: 'trial' },
+    { title: 'Giorno di lezione', key: 'lessonDay' },
+    { title: 'Livello', key: 'level' },
+    { title: 'Minuti di lezione', key: 'minutesLessonDuration' },
 ];
 const filters: Ref<StudentFilterObj[]> = ref(STUDENT_FILTERS);
 
 watch(filters, filterStudent);
 
-
-function getTrialLesson(student: Student) {
-    if (student.trial?.done) {
-        return student.trial.dailyLessonDate ? yyyyMMdd.fromIyyyyMMdd(student.trial.dailyLessonDate).format() : "Fatta";
-    } else {
-        return "";
-    }
-}
 
 function onSaveStudent(student?: Student) {
     if (student)
@@ -144,7 +136,8 @@ function filterStudent() {
             return !!s.isSubstitution;
         if (filters.value.map(f => f.type).includes("normal"))
             return !s.isSubstitution;
-    });
+    }).sort((a, b) => a.surname.localeCompare(b.surname, 'it', { sensitivity: 'base' })
+        || a.name.localeCompare(b.name, 'it', { sensitivity: 'base' }));
 }
 
 onMounted(async () => {
