@@ -36,7 +36,7 @@
                         <MonthlySalaryList :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                         <OfficialSalaryLessons :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                         <SalaryDistribution :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
-                        <SalaryTrend :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
+                        <!-- <SalaryTrend :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" /> -->
                     </v-card-text>
                 </v-card>
             </v-tabs-window-item>
