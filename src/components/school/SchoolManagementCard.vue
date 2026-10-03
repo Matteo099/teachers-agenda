@@ -3,8 +3,10 @@
     <v-card-text>
       <v-row>
         <v-col cols="12" md="4"><v-card variant="tonal" title="Fondo cassa" :text="currency(cashBalance)" /></v-col>
-        <v-col cols="12" md="4"><v-card variant="tonal" title="Studenti nel mese selezionato" :text="String(editValues.totalStudents)" /></v-col>
-        <v-col cols="12" md="4"><v-card variant="tonal" title="Quota mensile per studente" :text="currency(editValues.quotePerStudent)" /></v-col>
+        <v-col cols="12" md="4"><v-card variant="tonal" title="Studenti nel mese selezionato"
+            :text="String(editValues.totalStudents)" /></v-col>
+        <v-col cols="12" md="4"><v-card variant="tonal" title="Quota mensile per studente"
+            :text="currency(editValues.quotePerStudent)" /></v-col>
       </v-row>
 
       <v-card class="my-4" variant="outlined" title="Storico quota mensile">
@@ -12,9 +14,12 @@
           <v-row align="center">
             <v-col cols="7" sm="2"><v-select v-model="selectedMonthNumber" :items="monthOptions" label="Mese" /></v-col>
             <v-col cols="5" sm="2"><v-select v-model="selectedYear" :items="yearOptions" label="Anno" /></v-col>
-            <v-col cols="6" sm="3"><v-number-input v-model="editValues.totalStudents" :min="0" label="Studenti totali" /></v-col>
-            <v-col cols="6" sm="3"><v-number-input v-model="editValues.quotePerStudent" :min="0" :precision="2" prefix="€" label="Quota per studente" /></v-col>
-            <v-col cols="12" sm="2"><v-btn color="primary" block :loading="saving" @click="saveSnapshot">Salva mese</v-btn></v-col>
+            <v-col cols="6" sm="3"><v-number-input v-model="editValues.totalStudents" :min="0"
+                label="Studenti totali" /></v-col>
+            <v-col cols="6" sm="3"><v-number-input v-model="editValues.quotePerStudent" :min="0" :precision="2"
+                prefix="€" label="Quota per studente" /></v-col>
+            <v-col cols="12" sm="2"><v-btn color="primary" block :loading="saving" @click="saveSnapshot">Salva
+                mese</v-btn></v-col>
           </v-row>
           <v-data-table v-if="snapshots.length" :headers="snapshotHeaders" :items="snapshots" item-value="month"
             density="compact" :items-per-page="5" items-per-page-text="Righe per pagina">
@@ -26,7 +31,9 @@
                 @click="editSnapshot(item.month)" />
             </template>
           </v-data-table>
-          <div v-else class="text-medium-emphasis">Non ci sono ancora snapshot mensili. I valori configurati nella scuola vengono usati come base.</div>
+          <div v-else class="text-medium-emphasis">Non ci sono ancora snapshot mensili. I valori configurati nella
+            scuola vengono
+            usati come base.</div>
         </v-card-text>
       </v-card>
 
@@ -37,10 +44,13 @@
         <v-card-text>
           <v-data-table :headers="headers" :items="movementRows" item-value="id" density="comfortable">
             <template #item.date="{ item }">{{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}</template>
-            <template #item.type="{ item }"><v-chip size="small" :color="item.type === 'INCOME' ? 'green' : 'orange'">{{ item.type === 'INCOME' ? 'Entrata' : 'Uscita' }}</v-chip></template>
-            <template #item.amount="{ item }"><span :class="item.type === 'INCOME' ? 'text-green' : 'text-orange'">{{ item.type === 'INCOME' ? '+' : '−' }} {{ currency(item.amount) }}</span></template>
+            <template #item.type="{ item }"><v-chip size="small" :color="item.type === 'INCOME' ? 'green' : 'orange'">{{
+              item.type === 'INCOME' ? 'Entrata' : 'Uscita' }}</v-chip></template>
+            <template #item.amount="{ item }"><span :class="item.type === 'INCOME' ? 'text-green' : 'text-orange'">{{
+              item.type === 'INCOME' ? '+' : '−' }} {{ currency(item.amount) }}</span></template>
             <template #item.balance="{ item }">{{ currency(item.balance) }}</template>
-            <template #item.actions="{ item }"><v-btn icon="mdi-pencil" size="small" variant="text" aria-label="Modifica movimento" @click="editMovement(item)" /></template>
+            <template #item.actions="{ item }"><v-btn icon="mdi-pencil" size="small" variant="text"
+                aria-label="Modifica movimento" @click="editMovement(item)" /></template>
             <template #no-data>Nessun movimento registrato.</template>
           </v-data-table>
         </v-card-text>
@@ -56,7 +66,9 @@
         <v-text-field v-model="movement.description" label="Motivazione" />
         <v-number-input v-model="movement.amount" :min="0.01" :precision="2" prefix="€" label="Importo" />
       </v-card-text>
-      <v-card-actions><v-spacer /><v-btn @click="closeMovementDialog">Annulla</v-btn><v-btn color="primary" :loading="saving" @click="saveMovement">{{ editingMovementId ? 'Salva modifiche' : 'Salva movimento' }}</v-btn></v-card-actions>
+      <v-card-actions><v-spacer /><v-btn @click="closeMovementDialog">Annulla</v-btn><v-btn color="primary"
+          :loading="saving" @click="saveMovement">{{ editingMovementId ? 'Salva modifiche' : 'Salva movimento'
+          }}</v-btn></v-card-actions>
     </v-card>
   </v-dialog>
 </template>
@@ -149,11 +161,13 @@ async function saveSnapshot() {
   const managerOptions = props.school.managerOptions ?? { totalStudents: 0, quotePerStudent: 0, cashFund: 0 };
   const next: ManagerMonthlySnapshot = { month, totalStudents: Number(editValues.totalStudents), quotePerStudent: Number(editValues.quotePerStudent) };
   const history = [...(managerOptions.monthlyHistory ?? []).filter(item => item.month !== month), next].sort((a, b) => a.month.localeCompare(b.month));
-  await persist({ managerOptions: {
-    ...managerOptions,
-    baseline: managerOptions.baseline ?? { totalStudents: managerOptions.totalStudents, quotePerStudent: managerOptions.quotePerStudent },
-    monthlyHistory: history,
-  } });
+  await persist({
+    managerOptions: {
+      ...managerOptions,
+      baseline: managerOptions.baseline ?? { totalStudents: managerOptions.totalStudents, quotePerStudent: managerOptions.quotePerStudent },
+      monthlyHistory: history,
+    }
+  });
   toast.success(`Valori salvati per ${formatMonth(month)}`);
 }
 function editSnapshot(month: string) {
@@ -163,7 +177,7 @@ function editSnapshot(month: string) {
 async function saveMovement() {
   const amount = Number(movement.amount);
   if (!movement.description.trim() || !Number.isFinite(amount) || amount <= 0 || !movement.date) { toast.warning('Inserisci data, motivazione e un importo valido'); return; }
-  const date = movement.date.replaceAll('-', '');
+  const date = movement.date.replace(/-/g, '');
   const existing = props.school.cashMovements ?? [];
   const entry: CashMovement = { id: editingMovementId.value ?? crypto.randomUUID(), date, type: movement.type, description: movement.description.trim(), amount };
   const cashMovements = editingMovementId.value
