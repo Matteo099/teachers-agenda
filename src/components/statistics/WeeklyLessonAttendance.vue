@@ -21,7 +21,7 @@
             </tr>
           </tbody>
         </v-table></div><span v-else>Nessuna lezione per il giorno selezionato nel periodo.</span>
-      <div class="text-caption mt-2">P presente · A assente · R recupero · I ingiustificata</div>
+      <div class="text-caption mt-2">P = presente · A = assenza ingiustificata · D = assenza da recuperare · R = assenza recuperata · S = lezione spostata</div>
     </v-card-text>
   </v-card>
 </template>
@@ -46,12 +46,18 @@ async function load() {
   loading.value = true;
   const map = new Map<string, any>();
   const ids = new Set<string>();
+  const studentStartTimes = new Map<string, number>();
 
   for (const school of props.schools ?? []) {
     const weekly = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(school.id);
     for (const wl of weekly) {
       if (wl.dayOfWeek !== selectedDay.value) continue;
-      for (const scheduled of wl.schedule) ids.add(scheduled.studentId);
+      for (const scheduled of wl.schedule) {
+        ids.add(scheduled.studentId);
+        const currentStart = studentStartTimes.get(scheduled.studentId);
+        if (currentStart === undefined || scheduled.startTime < currentStart)
+          studentStartTimes.set(scheduled.studentId, scheduled.startTime);
+      }
     }
     const days = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, props.from, props.to);
     const dailyById = new Map(days.map(day => [day.id, day]));
@@ -68,6 +74,7 @@ async function load() {
             const originalRow = map.get(originalDay.date) ?? { date: originalDay.date, lessons: {} };
             originalRow.lessons[lesson.studentId] = {
               ...lesson,
+              reportStatus: lesson.recovery?.ref === 'original' ? 'R' : 'S',
               status: LessonStatus.PRESENT,
               recovery: lesson.recovery?.ref === 'original' ? { ref: 'original' } : undefined,
               moved: lesson.moved?.ref === 'original' ? { ref: 'original' } : undefined,
@@ -77,7 +84,8 @@ async function load() {
           continue;
         }
         ids.add(lesson.studentId);
-        row.lessons[lesson.studentId] = lesson;
+        if (!row.lessons[lesson.studentId]?.reportStatus)
+          row.lessons[lesson.studentId] = lesson;
       }
       map.set(day.date, row);
     }
@@ -95,7 +103,8 @@ async function load() {
   const uniqueStudents = new Map<string, string>();
   [...ids]
     .map(id => ({ id, name: names.get(id) ?? id }))
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .sort((a, b) => (studentStartTimes.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (studentStartTimes.get(b.id) ?? Number.MAX_SAFE_INTEGER)
+      || a.name.localeCompare(b.name))
     .forEach(student => {
       const key = student.name.trim().toLocaleLowerCase();
       if (!uniqueStudents.has(key)) uniqueStudents.set(key, student.id);
@@ -107,6 +116,7 @@ async function load() {
 }
 
 function statusLabel(l: any) {
+  if (l.reportStatus) return l.reportStatus;
   if (l.moved) return 'S';
   if (l.recovery?.ref === 'original') return 'R';
   if (l.status === LessonStatus.PRESENT) return 'P';
@@ -159,6 +169,8 @@ function exportCsv() {
 }
 
 function statusClass(l: any) {
+  if (l.reportStatus === 'R') return 'status-blue';
+  if (l.reportStatus === 'S') return 'status-orange';
   if (l.moved || l.status === LessonStatus.ABSENT) return 'status-orange';
   if (l.status === LessonStatus.UNJUSTIFIED_ABSENCE) return 'status-red';
   if (l.recovery?.ref === 'original') return 'status-blue';
