@@ -127,7 +127,7 @@
       </v-menu>
     </v-app-bar>
 
-    <v-main>
+    <v-main :class="{ 'mobile-main': !loginPage && mobile }">
       <v-container fluid>
         <router-view v-slot="{ Component, route }">
           <!-- <component :is="route.meta?.transition?.toString() || 'v-fade-transition'" leave-absolute>
@@ -140,24 +140,22 @@
       </v-container>
     </v-main>
 
-    <v-layout v-if="!loginPage && mobile" class="overflow-visible position-relative" style="height: 56px;">
-      <v-bottom-navigation class="position-fixed bottom-0" v-model="data" :bg-color="color" mode="shift">
+    <v-bottom-navigation v-if="!loginPage && mobile" class="mobile-bottom-navigation" :bg-color="color" grow>
         <v-btn to="/calendar">
           <v-icon>mdi-calendar</v-icon>
           <span>Calendario</span>
         </v-btn>
 
         <v-btn to="/">
-          <v-icon>mdi-home</v-icon>
-          <span>Home</span>
+          <v-icon>mdi-town-hall</v-icon>
+          <span>Scuola</span>
         </v-btn>
 
         <v-btn to="/statistics">
           <v-icon>mdi-chart-bar</v-icon>
           <span>Statistiche</span>
         </v-btn>
-      </v-bottom-navigation>
-    </v-layout>
+    </v-bottom-navigation>
   </v-app>
 </template>
 
@@ -173,16 +171,7 @@ import { stringToHslColor } from './models/utils';
 import { checkForNewVersion } from './models/utils/version';
 
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
-const data = ref(1);
-const color = computed(() => {
-  switch (data.value) {
-    case 0: return 'blue-grey'
-    case 1: return 'teal'
-    case 2: return 'brown'
-    case 3: return 'indigo'
-    default: return 'blue-grey'
-  }
-})
+const color = computed(() => 'blue-grey');
 
 const notifications: any[] = [];
 
@@ -264,3 +253,17 @@ onMounted(async () => {
   checkForUpdates();
 })
 </script>
+
+<style>
+.mobile-bottom-navigation {
+  position: fixed !important;
+  inset: auto 0 0;
+  z-index: 1006;
+  width: 100%;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mobile-main {
+  padding-bottom: calc(56px + env(safe-area-inset-bottom)) !important;
+}
+</style>
