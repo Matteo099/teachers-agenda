@@ -474,6 +474,7 @@ export class DailyLessonService {
                 updatedAt: Timestamp.now()
             }
             if (l.hiddenForDate) newLesson.hiddenForDate = l.hiddenForDate;
+            if (lesson.dailyNote) newLesson.dailyNote = lesson.dailyNote;
             if (l.compensation) newLesson.compensation = l.compensation;
             if (l.recovery) newLesson.recovery = l.recovery;
             if (l.moved) newLesson.moved = l.moved;
