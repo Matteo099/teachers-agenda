@@ -477,6 +477,7 @@ export class DailyLessonService {
                 status: lesson.status,
                 updatedAt: Timestamp.now()
             }
+            if (l.bandAttendance) newLesson.bandAttendance = l.bandAttendance;
             if (l.hiddenForDate) newLesson.hiddenForDate = l.hiddenForDate;
             if (lesson.dailyNote) newLesson.dailyNote = lesson.dailyNote;
             if (l.compensation) newLesson.compensation = l.compensation;

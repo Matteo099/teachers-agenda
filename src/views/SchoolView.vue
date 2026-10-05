@@ -44,6 +44,9 @@
             <v-col class="pa-2" cols="12" md="6">
                 <StudentView :school="school"></StudentView>
             </v-col>
+            <v-col v-if="school.ensembleMusic" class="pa-2" cols="12" md="6">
+                <BandView :school="school" />
+            </v-col>
             <v-col class="pa-2" cols="12" md="6">
                 <SalaryView :school="school"></SalaryView>
             </v-col>
@@ -87,6 +90,7 @@ import RecoveryLessonView from './RecoveryLessonView.vue';
 import SalaryView from './SalaryView.vue';
 import SchoolNotesView from './SchoolNotesView.vue';
 import StudentView from './StudentView.vue';
+import BandView from '@/components/band/BandView.vue';
 import SchoolManagementCard from '@/components/school/SchoolManagementCard.vue';
 
 const route = useRoute()

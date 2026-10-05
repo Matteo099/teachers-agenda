@@ -139,7 +139,7 @@ const studentsForSelectedDay = computed(() => {
 
     const dayIndex = days.indexOf(dayOfWeek.value);
     const selectedIds = new Set(selectedStudents.value.map(student => student.id));
-    return allStudents.value.filter(student => student.lessonDay === dayIndex || selectedIds.has(student.id));
+    return allStudents.value.filter(student => student.isBand || student.lessonDay === dayIndex || selectedIds.has(student.id));
 });
 
 const onSave = handleSubmit(

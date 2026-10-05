@@ -120,7 +120,7 @@ async function loadStudents() {
     loadingStudents.value = true;
     const studentSubscription = StudentService.instance.observeStudentsOfSchool(props.school.id).subscribe({
         next: data => {
-            students.value = data;
+            students.value = data.filter(student => !student.isBand);
             filterStudent();
             loadingStudents.value = false;
         },

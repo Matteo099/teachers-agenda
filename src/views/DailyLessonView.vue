@@ -108,6 +108,7 @@
                             @reset="reset(item)"
                             @hideForDate="async () => await hideStudentForDate(item)"
                             @showForDate="async () => await showStudentForDate(item)"
+                            @bandAttendanceChanged="save"
                             @saveDailyNote="save"
                             :updateLessonTime="async ($event) => await updateLessonTime(item, $event)"
                             :onDeleteLessonItem="async () => await deleteStudentLesson(item)">

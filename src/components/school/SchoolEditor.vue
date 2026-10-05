@@ -60,6 +60,9 @@
                         <v-col class="align-self-center">
                             <v-checkbox v-model="managed" v-bind="managedProps" label="Gestione"></v-checkbox>
                         </v-col>
+                        <v-col class="align-self-center">
+                            <v-checkbox v-model="ensembleMusic" v-bind="ensembleMusicProps" label="Musica d'insieme"></v-checkbox>
+                        </v-col>
                         <v-col v-if="managed" cols="12">
                             <v-alert type="info" variant="tonal" density="comfortable">
                                 Puoi configurare quote mensili e movimenti del fondo cassa dalla visualizzazione della scuola.
@@ -165,6 +168,7 @@ const [email, emailProps] = defineField('email', vuetifyConfig);
 const [phoneNumber, phoneNumberProps] = defineField('phoneNumber', vuetifyConfig);
 const [color] = defineField('color', vuetifyConfig);
 const [managed, managedProps] = defineField('managed', vuetifyConfig);
+const [ensembleMusic, ensembleMusicProps] = defineField('ensembleMusic', vuetifyConfig);
 const [salaryStrategy, salaryStrategyProps] = defineField('salaryStrategy', vuetifyConfig);
 const [trialLessonPaymentStrategy, trialLessonPaymentStrategyProps] = defineField('trialLessonPaymentStrategy', vuetifyConfig);
 const [managerOptions] = defineField('managerOptions', vuetifyConfig);
@@ -195,6 +199,7 @@ function updateSchool() {
         salaryStrategy.value = schoolClone.salaryStrategy;
         trialLessonPaymentStrategy.value = schoolClone.trialLessonPaymentStrategy;
         managed.value = schoolClone.managed;
+        ensembleMusic.value = schoolClone.ensembleMusic ?? false;
         managerOptions.value = schoolClone.managerOptions;
         levelRanges.value = schoolClone.levelRanges;
         dailyExpenseReimbursement.value = schoolClone.dailyExpenseReimbursement ?? 0;
@@ -215,6 +220,7 @@ async function save(values: GenericObject) {
         salaryStrategy: values.salaryStrategy,
         trialLessonPaymentStrategy: values.trialLessonPaymentStrategy,
         managed: managed.value ?? false,
+        ensembleMusic: ensembleMusic.value ?? false,
         levelRanges: values.levelRanges,
         dailyExpenseReimbursement: Number(values.dailyExpenseReimbursement ?? 0),
         createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),

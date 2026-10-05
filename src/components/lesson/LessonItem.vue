@@ -33,6 +33,28 @@
                 Nascosto oggi
             </v-chip>
             <v-btn :disabled="loading" class="ma-1" v-if="presentVisible && !item.lesson.hiddenForDate" @click="emit('present')">presente</v-btn>
+            <v-dialog v-if="item.student.isBand" fullscreen>
+                <template #activator="{ props: activatorProps }">
+                    <v-btn :disabled="loading" class="ma-1" v-bind="activatorProps">presenze componenti</v-btn>
+                </template>
+                <template #default="{ isActive }">
+                    <v-card title="Presenze componenti della band">
+                        <v-list>
+                            <v-list-item v-for="member in item.student.bandMembers ?? []" :key="member.id"
+                                :title="`${member.name} ${member.surname}`" :subtitle="member.instrument">
+                                <template #append>
+                                    <v-btn-toggle mandatory :model-value="memberAttendance(member.id)"
+                                        @update:model-value="setMemberAttendance(member.id, $event as LessonStatus)">
+                                        <v-btn value="PRESENT" size="small">Presente</v-btn>
+                                        <v-btn value="ABSENT" size="small">Assente</v-btn>
+                                    </v-btn-toggle>
+                                </template>
+                            </v-list-item>
+                        </v-list>
+                        <v-card-actions><v-spacer /><v-btn text="Chiudi" @click="isActive.value = false" /></v-card-actions>
+                    </v-card>
+                </template>
+            </v-dialog>
             <v-btn :disabled="loading" class="ma-1" v-if="absentVisible && !item.lesson.hiddenForDate" @click="emit('absent', false)">assente</v-btn>
             <v-dialog transition="dialog-bottom-transition"
                 v-else-if="!item.lesson.hiddenForDate && (recoverableAbsentVisible || unjustifiedAbsentVisible)">
@@ -191,11 +213,21 @@ const props = defineProps<{
 }>()
 const item = defineModel<StudentLesson>('item', { required: true });
 const select = defineModel<string[]>('select');
-const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent', 'hideForDate', 'showForDate', 'saveDailyNote'])
+const emit = defineEmits(['present', 'absent', 'reset', 'trial', 'updateLessonTime', 'deleteStudent', 'hideForDate', 'showForDate', 'saveDailyNote', 'bandAttendanceChanged'])
 const timeDialog = ref(false)
 const dateDialog = ref(false)
 const newLessonDate = ref();
 const movingLesson = ref(false);
+
+function memberAttendance(memberId: string): string | undefined {
+    return item.value.lesson.bandAttendance?.[memberId];
+}
+
+function setMemberAttendance(memberId: string, status: LessonStatus): void {
+    item.value.lesson.bandAttendance ??= {};
+    item.value.lesson.bandAttendance[memberId] = status;
+    emit('bandAttendanceChanged');
+}
 const dailyNoteDialog = ref(false);
 const dailyNote = ref('');
 const dailyNotes = ref<{ date: IyyyyMMdd; text: string }[]>([]);

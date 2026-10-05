@@ -208,11 +208,21 @@ export interface Student {
     removed?: boolean;
     trial?: Trial;
     isSubstitution?: boolean;
+    isBand?: boolean;
+    bandMembers?: BandMember[];
     recitalPiece?: string;
     recitalAuthor?: string;
 
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
     updatedAt: Timestamp;
+}
+
+export interface BandMember {
+    id: string;
+    studentId?: string;
+    name: string;
+    surname: string;
+    instrument: string;
 }
 
 export interface LevelHistory {
@@ -245,6 +255,7 @@ export interface School {
     color?: string;
 
     managed: boolean;
+    ensembleMusic?: boolean;
     levelRanges: LevelRange[];
     managerOptions?: ManagerOptions;
     cashMovements?: CashMovement[];
@@ -386,6 +397,7 @@ export enum DeleteMode {
 
 export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
+    bandAttendance?: Record<string, LessonStatus>;
     hiddenForDate?: boolean;
       dailyNote?: string;
     /** Frozen economic data for this lesson. Never overwrite once set. */
