@@ -22,7 +22,7 @@
                 <v-card-text class="px-0 pb-0">
                     <v-row>
                         <v-col cols="12">
-                            <v-select :model-value="member.studentId" :items="schoolStudents" item-title="fullName"
+                            <v-select :model-value="member.studentId" :items="availableStudents(member)" item-title="fullName"
                                 item-value="id" label="Studente della scuola" clearable
                                 @update:model-value="selectStudent(member, $event)" />
                         </v-col>
@@ -74,6 +74,16 @@ function selectStudent(member: BandMember, studentId?: string): void {
         member.name = student.name;
         member.surname = student.surname;
     }
+}
+
+function availableStudents(member: BandMember): Array<Student & { fullName: string }> {
+    const assignedToOtherMember = new Set(
+        members.value
+            .filter(otherMember => otherMember.id !== member.id)
+            .map(otherMember => otherMember.studentId)
+            .filter(Boolean),
+    );
+    return schoolStudents.value.filter(student => !assignedToOtherMember.has(student.id));
 }
 
 async function save() {
