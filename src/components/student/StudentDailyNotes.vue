@@ -6,14 +6,18 @@
           :subtitle="note.text" prepend-icon="mdi-note-text-outline" />
       </v-list>
     </v-card-text>
-    <v-card-text v-else class="text-medium-emphasis">{{ student ? 'Nessuna nota registrata nelle lezioni.' : 'Salva prima lo studente per visualizzare le note.' }}</v-card-text>
+    <v-card-text v-else class="text-medium-emphasis">
+      {{ student ?
+        'Nessuna nota registrata nelle lezioni.' :
+        'Salva prima lo studente per visualizzare le note.'
+      }}</v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
 import { yyyyMMdd, type IyyyyMMdd, type School, type Student } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{ school: School; student?: Student }>();
 const loading = ref(false);
@@ -24,6 +28,7 @@ watch(() => [props.school.id, props.student?.id], async ([schoolId, studentId]) 
   if (!studentId) return;
   loading.value = true;
   try {
+    if (!schoolId) return;
     const days = await DailyLessonService.instance.getDailyLessonsOfSchool(schoolId);
     notes.value = days.flatMap(day => {
       const note = day.lessons.find(lesson => lesson.studentId === studentId && !!lesson.dailyNote)?.dailyNote;
