@@ -5,13 +5,14 @@
                 <BackButton></BackButton>
             </v-col>
             <v-col>
-                <v-row>
-                    <v-col>
-                        <p class="text-h5 text-center">Lezione del <b>{{
-                            yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()
-                                }}</b>
-                        </p>
-                    </v-col>
+                <v-row class="align-center justify-center ga-2">
+                    <v-btn icon="mdi-chevron-left" variant="text" aria-label="Lezione della settimana precedente"
+                        :disabled="loading" @click="goToWeekLesson(-1)" />
+                    <p class="text-h5 text-center ma-0">Lezione del <b>{{
+                        yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()
+                    }}</b></p>
+                    <v-btn icon="mdi-chevron-right" variant="text" aria-label="Lezione della settimana successiva"
+                        :disabled="loading" @click="goToWeekLesson(1)" />
                 </v-row>
                 <v-row class="justify-center">
                     <v-col cols="auto">
@@ -173,6 +174,15 @@ const savingSelectedStudents = ref(false);
 const studentsDialog = ref(false);
 const routeChanged = ref(true);
 const visualization = ref(0);
+
+async function goToWeekLesson(delta: number): Promise<void> {
+    if (!dailyLesson.value || !school.value) return;
+
+    const date = yyyyMMdd.fromIyyyyMMdd(dailyLesson.value.date).toDate();
+    date.setDate(date.getDate() + delta * 7);
+    const nextId = await DailyLessonService.instance.getOrCreateDailyLessonId(school.value.id, date);
+    await router.push(`/lesson/${nextId}`);
+}
 
 const total = computed(() => isNaN(dailyLesson.value?.salary ?? 0) ? 0 : dailyLesson.value?.salary)
 const areLessonSelected = computed(() => selectedLessons.value.length != 0)
