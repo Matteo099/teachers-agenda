@@ -1,18 +1,18 @@
 <template>
-    <div>
+    <div class="date-select">
     <v-row>
-        <v-col cols="12" class="d-flex align-center ga-2">
-            <v-btn-toggle v-model="quickSelection" mandatory density="compact" color="primary">
+        <v-col cols="12" class="date-select-actions">
+            <v-btn-toggle v-model="quickSelection" mandatory density="comfortable" color="primary" variant="tonal">
                 <v-btn value="month">Mese corrente</v-btn>
                 <v-btn value="week">Settimana corrente</v-btn>
             </v-btn-toggle>
-            <v-btn v-if="showAdvanced" variant="text" size="small" @click="advanced = !advanced">
+            <v-btn v-if="showAdvanced" variant="text" size="small" append-icon="mdi-chevron-down" @click="advanced = !advanced">
                 {{ advanced ? 'Nascondi filtro avanzato' : 'Filtro avanzato' }}
             </v-btn>
         </v-col>
     </v-row>
     <v-expand-transition>
-    <v-row v-if="showAdvanced && advanced">
+    <v-row v-if="showAdvanced && advanced" class="date-select-advanced">
         <v-col cols="12" md="6">
             <v-select variant="outlined" density="compact" v-model="selectedType" :items="selectTypes" label="Tempo"
                 hide-details></v-select>
@@ -244,3 +244,13 @@ function getDeltaDates(a: Date, b: Date) {
     return { years, months, days };
 }
 </script>
+
+<style scoped>
+.date-select :deep(.v-row) { margin: 0; }
+.date-select :deep(.v-col) { padding: 0; }
+.date-select-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.date-select-actions :deep(.v-btn-toggle) { padding: 3px; border: 1px solid var(--app-border); border-radius: 11px; background: var(--app-background); }
+.date-select-actions :deep(.v-btn) { border-radius: 9px; }
+.date-select-advanced { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px !important; }
+.date-select-advanced :deep(.v-col) { flex: 1 1 180px; max-width: none; }
+</style>

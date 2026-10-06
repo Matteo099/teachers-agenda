@@ -44,6 +44,11 @@
 .school-stat-card .value { display: block; margin-top: 5px; color: var(--app-text); font-size: 1.35rem; font-weight: 700; }
 .school-stat-card.primary { background: var(--app-accent-surface); border-color: var(--app-hover-border); }
 .school-stat-card.primary .value { color: var(--app-primary); }
+.statistics-empty { padding: 24px 12px; color: var(--app-muted); font-size: .85rem; text-align: center; }
+.statistics-list { padding: 0; background: transparent; }
+.statistics-list .v-list-item { margin-bottom: 6px; border: 1px solid var(--app-border); border-radius: 10px; }
+.statistics-panel .v-data-table { border: 1px solid var(--app-border); border-radius: 12px; }
+.statistics-panel .v-data-table th { background: var(--app-background); }
 .management-section { border: 1px solid var(--app-border) !important; box-shadow: none !important; }
 .management-section > .v-card-text { padding: 0 24px 24px; }
 .school-editor, .band-editor, .level-range-editor { min-height: 100%; background: var(--app-background) !important; }

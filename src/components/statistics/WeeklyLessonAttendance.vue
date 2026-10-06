@@ -1,10 +1,9 @@
 <template>
-  <v-card class="mb-6" variant="outlined" title="Presenze per giorno della settimana" :loading="loading">
-    <v-card-text>
-      <div class="d-flex align-center ga-3 mb-3">
-        <v-select v-model="selectedDay" :items="weekDays" label="Giorno della settimana" hide-details />
-        <v-btn prepend-icon="mdi-file-pdf-box" color="primary" @click="exportPdf">Esporta PDF</v-btn>
-        <v-btn prepend-icon="mdi-file-delimited" variant="outlined" @click="exportCsv">Esporta CSV</v-btn>
+  <StatisticsPanel title="Presenze per giorno della settimana" subtitle="Registro delle presenze per allievo" icon="mdi-calendar-check-outline" :loading="loading">
+      <div class="attendance-toolbar">
+        <v-select v-model="selectedDay" :items="weekDays" label="Giorno della settimana" variant="outlined" density="comfortable" hide-details />
+        <div class="attendance-exports"><v-btn prepend-icon="mdi-file-pdf-box" color="primary" variant="tonal" @click="exportPdf">Esporta PDF</v-btn>
+        <v-btn prepend-icon="mdi-file-delimited" variant="outlined" @click="exportCsv">Esporta CSV</v-btn></div>
       </div>
       <div v-if="rows.length" class="attendance-table"><v-table>
           <thead>
@@ -22,8 +21,7 @@
           </tbody>
         </v-table></div><span v-else>Nessuna lezione per il giorno selezionato nel periodo.</span>
       <div class="text-caption mt-2">P = presente · A = assenza ingiustificata · D = assenza da recuperare · R = assenza recuperata · S = lezione spostata</div>
-    </v-card-text>
-  </v-card>
+  </StatisticsPanel>
 </template>
 
 <script setup lang="ts">
@@ -33,6 +31,7 @@ import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
 import { ref, watch } from 'vue';
+import StatisticsPanel from './StatisticsPanel.vue';
 
 const props = defineProps<{ from?: IyyyyMMdd; to?: IyyyyMMdd; schools?: School[] }>();
 const selectedDay = ref(5);
@@ -191,6 +190,9 @@ watch(() => [props.from, props.to, props.schools, selectedDay.value], load, { im
 </script>
 
 <style scoped>
+.attendance-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.attendance-toolbar > .v-input { max-width: 280px; }
+.attendance-exports { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .attendance-table {
   overflow-x: auto;
 }
@@ -200,5 +202,6 @@ watch(() => [props.from, props.to, props.schools, selectedDay.value], load, { im
 .status-recovery { color: var(--status-recovery-fg); background: var(--status-recovery-bg); }
 .status-moved { color: var(--status-moved-fg); background: var(--status-moved-bg); }
 .attendance-table td:not(:first-child) { font-weight: 700; border-radius: 8px; }
+@media (max-width: 700px) { .attendance-toolbar { align-items: stretch; flex-direction: column; } .attendance-toolbar > .v-input { max-width: none; } .attendance-exports { margin-left: 0; } }
 @media print { .v-btn, .v-select { display: none !important; } .attendance-table { overflow: visible; } }
 </style>

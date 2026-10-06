@@ -1,13 +1,7 @@
 <template>
-    <v-row>
-        <v-col>
-            <v-card :title="title" :subtitle="subtitle">
-                <v-card-text>
-                    <div class="chart-container" ref="chartdiv"></div>
-                </v-card-text>
-            </v-card>
-        </v-col>
-    </v-row>
+    <StatisticsPanel :title="title ?? 'Grafico'" :subtitle="subtitle" icon="mdi-chart-donut-variant">
+        <div class="chart-container" ref="chartdiv"></div>
+    </StatisticsPanel>
 </template>
 
 <script setup lang="ts">
@@ -16,6 +10,7 @@ import { yyyyMMdd, type IyyyyMMdd, type School } from "@/models/model";
 import * as am5 from "@amcharts/amcharts5";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import { onMounted, shallowRef, watch } from "vue";
+import StatisticsPanel from './StatisticsPanel.vue';
 
 interface BaseChartProps {
     from?: IyyyyMMdd;
@@ -63,6 +58,6 @@ onMounted(() => _createChart())
 <style>
 .chart-container {
     width: 100% !important;
-    height: 500px;
+    height: 420px;
 }
 </style>

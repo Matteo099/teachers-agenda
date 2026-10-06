@@ -1,5 +1,5 @@
 <template>
-    <v-card class="mb-6" variant="outlined" title="Assenze per studente" :loading="loading">
+    <StatisticsPanel title="Assenze per studente" subtitle="Assenze e recuperi degli allievi" icon="mdi-account-clock-outline" :loading="loading">
         <v-data-table :headers="headers" :items="items" item-value="student">
             <template #item.unjustified="{ item }">
                 {{ item.unjustified }} (A)
@@ -8,13 +8,14 @@
                 {{ item.recoverable }} (D)
             </template>
         </v-data-table>
-    </v-card>
+    </StatisticsPanel>
 </template>
 
 <script setup lang="ts">
 import type { IyyyyMMdd, School } from '@/models/model';
 import { StatisticsService, type StudentAbsenceSummary } from '@/models/services/statistics-service';
 import { ref, watch } from 'vue';
+import StatisticsPanel from './StatisticsPanel.vue';
 
 const props = defineProps<{ from?: IyyyyMMdd; to?: IyyyyMMdd; schools?: School[] }>();
 const items = ref<StudentAbsenceSummary[]>([]);

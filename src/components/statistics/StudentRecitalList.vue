@@ -1,15 +1,16 @@
 <template>
-    <v-card class="mb-6" variant="outlined" title="Saggi" :loading="loading">
+    <StatisticsPanel title="Saggi" subtitle="Brani preparati dagli allievi" icon="mdi-music-note-outline" :loading="loading">
         <v-data-table :headers="headers" :items="items" item-value="student">
             <template #no-data>Nessun saggio registrato.</template>
         </v-data-table>
-    </v-card>
+    </StatisticsPanel>
 </template>
 
 <script setup lang="ts">
 import type { School } from '@/models/model';
 import { StatisticsService, type RecitalStudent } from '@/models/services/statistics-service';
 import { ref, watch } from 'vue';
+import StatisticsPanel from './StatisticsPanel.vue';
 
 const props = defineProps<{ schools?: School[] }>();
 const items = ref<RecitalStudent[]>([]);
