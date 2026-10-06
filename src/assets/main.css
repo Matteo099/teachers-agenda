@@ -72,9 +72,4 @@
 .recovery-item:hover { background: var(--app-hover-surface); border-color: var(--app-hover-border); }
 .recovery-empty { margin: 0 8px 12px; color: var(--app-muted); font-size: .85rem; }
 @media (max-width: 600px) { .school-panel-header { flex-wrap: wrap; padding: 16px; } .school-panel-header > .v-btn { width: 100%; } .school-panel-toolbar { padding: 12px 16px; } .school-panel-content { padding: 8px 16px 16px !important; } }
-.sx-vue-calendar-wrapper { min-height: 620px; }
-.sx__calendar { border: 1px solid var(--app-border) !important; border-radius: 16px; overflow: hidden; font-family: Inter, Roboto, system-ui, sans-serif !important; }
-.sx__calendar-header, .sx__week-header { background: var(--app-surface); }
-.sx__time-grid-event { border-radius: 8px !important; box-shadow: 0 1px 4px rgba(30,50,100,.08); }
-.sx__time-grid-event-title { font-weight: 600; }
 @media (max-width: 600px) { .v-main > .v-container { padding: 16px 12px 24px; } .v-card-title { font-size: 1rem; } }

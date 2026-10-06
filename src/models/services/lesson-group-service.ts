@@ -6,6 +6,7 @@ import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository
 import { nameof, nextDay, pastDay } from "../utils";
 import { WeeklyLessonService } from "./weely-lesson-service";
 import { DailyLessonService } from "./daily-lesson-service";
+import { lessonStatusColor } from '../statusColors';
 
 export interface LessonGroup {
     month: string;
@@ -68,7 +69,7 @@ export class LessonGroupService {
                     start: date + " " + Time.fromITime(l.startTime).format(),
                     end: date + " " + Time.fromITime(l.endTime).format(),
                     calendarId: schoolId.toLowerCase(),
-                    data: { date, dailyLessonId: dl.id, studentId: l.studentId }
+                    data: { date, dailyLessonId: dl.id, studentId: l.studentId, statusColor: lessonStatusColor(l) }
                 }
             });
         }));

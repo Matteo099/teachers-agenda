@@ -1,16 +1,16 @@
 <template>
     <v-container fluid class="daily-calendar-container">
-        <ScheduleXCalendar :calendar-app="calendarApp">
+        <AppCalendar :calendar-app="calendarApp" compact hide-header :hide-day-header="!showDay">
             <template #eventModal="{ calendarEvent }">
-                <v-card variant="flat" :title="calendarEvent.title"
-                    :subtitle="calendarEvent.start.split(' ')[1] + ' - ' + calendarEvent.end.split(' ')[1]"
-                    :text="calendarEvent.description">
+                <v-card class="daily-calendar-event-modal" variant="flat">
+                    <div class="daily-calendar-event-heading"><span class="school-panel-icon"><v-icon icon="mdi-calendar-clock-outline" size="20" /></span><div><h3>{{ calendarEvent.title }}</h3><p>{{ calendarEvent.start.split(' ')[1] }}–{{ calendarEvent.end.split(' ')[1] }}</p></div></div>
+                    <v-card-text v-if="calendarEvent.description">{{ calendarEvent.description }}</v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-dialog v-model="editTimeModal" transition="dialog-bottom-transition">
                             <template v-slot:activator="{ props: activatorProps }">
-                                <v-btn text="Chiudi" @click="eventModal.close()"></v-btn>
-                                <v-btn text="Modifica" color="primary" v-bind="activatorProps" @click.stop></v-btn>
+                                <v-btn text="Chiudi" variant="text" @click="eventModal.close()"></v-btn>
+                                <v-btn text="Modifica orario" color="primary" variant="flat" prepend-icon="mdi-pencil-outline" v-bind="activatorProps" @click.stop></v-btn>
                             </template>
 
                             <template v-slot:default="{ isActive }">
@@ -25,7 +25,7 @@
                     </v-card-actions>
                 </v-card>
             </template>
-        </ScheduleXCalendar>
+        </AppCalendar>
     </v-container>
 </template>
 
@@ -39,7 +39,9 @@ import {
 import { createDragAndDropPlugin } from '@schedule-x/drag-and-drop';
 import { createEventModalPlugin } from '@schedule-x/event-modal';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
-import { ScheduleXCalendar } from '@schedule-x/vue';
+import AppCalendar from './AppCalendar.vue';
+import { calendarEventContent } from './calendarEventContent';
+import { lessonStatusColor } from '@/models/statusColors';
 import { onMounted, ref, watch } from 'vue';
 import EditLessonTime from '../lesson/EditLessonTime.vue';
 import { useTheme } from 'vuetify';
@@ -160,6 +162,11 @@ function transformModel(): CalendarEventExt[] {
                 end: date + " " + Time.fromITime(sl.lesson.endTime).format(),
                 title: `${sl.student.name} ${sl.student.surname} - ${days[sl.student.lessonDay ?? 0]}`,
                 calendarId: (props.school?.id ?? sl.student.schoolId).toLowerCase(),
+                _customContent: calendarEventContent(
+                    `${sl.student.name} ${sl.student.surname}`,
+                    days[sl.student.lessonDay ?? 0] ?? '',
+                    lessonStatusColor(sl.lesson)
+                ),
                 data: { ...sl }
             };
         } else {
@@ -209,27 +216,14 @@ function updateModelEvent(calendarEvent: CalendarEvent) {
     emit('edit');
 }
 
-function toggleCalendarHeader() {
-    const calendarHeader = document.getElementsByClassName("sx__calendar-header")[0] as HTMLDivElement;
-    calendarHeader.style.display = calendarHeader.style.display == "none" ? "" : "none";
-    toggleInnerHeader();
-}
-
-function toggleInnerHeader(attempt: number = 0) {
-    const innerHeader = document.getElementsByClassName("sx__week-header")[0] as HTMLDivElement;
-    if (innerHeader) innerHeader.style.display = props.showDay ? "" : "none";
-    else {
-        if (attempt >= 10) console.error("Unable to hide day header");
-        else setTimeout(() => toggleInnerHeader(attempt + 1), 10);
-    }
-}
-
 onMounted(() => {
-    toggleCalendarHeader();
     updateInternalEvents();
 })
 </script>
 <style scoped>
 .daily-calendar-container { padding: 0; }
-.daily-calendar-container :deep(.sx-vue-calendar-wrapper) { min-height: 520px; }
+.daily-calendar-event-heading { display: flex; align-items: center; gap: 12px; padding: 18px 20px 8px; }
+.daily-calendar-event-heading h3 { margin: 0; color: var(--app-text); font-size: 1rem; font-weight: 700; }
+.daily-calendar-event-heading p { margin: 4px 0 0; color: var(--app-muted); font-size: .82rem; }
+.daily-calendar-event-modal :deep(.v-card-actions) { padding: 12px 20px 18px; }
 </style>
