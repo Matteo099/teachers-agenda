@@ -4,37 +4,24 @@
     <v-card-text class="school-panel-content">
       <v-row>
         <v-col cols="12" md="4"><div class="school-stat-card primary"><span class="label">Fondo cassa</span><strong class="value">{{ currency(cashBalance) }}</strong></div></v-col>
-        <v-col cols="6" md="4"><div class="school-stat-card"><span class="label">Studenti nel mese</span><strong class="value">{{ editValues.totalStudents }}</strong></div></v-col>
+        <v-col cols="6" md="4"><div class="school-stat-card"><span class="label">Studenti · {{ formatMonth(selectedMonth.replace('-', '')) }}</span><strong class="value">{{ editValues.totalStudents }}</strong></div></v-col>
         <v-col cols="6" md="4"><div class="school-stat-card"><span class="label">Quota per studente</span><strong class="value">{{ currency(editValues.quotePerStudent) }}</strong></div></v-col>
       </v-row>
 
       <v-card class="management-section my-4" variant="flat">
-        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-month-outline" size="22" /></span><div><h2>Storico quota mensile</h2><p>Valori del mese selezionato</p></div></div>
+        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-month-outline" size="22" /></span><div><h2>Storico quota mensile</h2><p>Studenti e quota per ciascun mese</p></div><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" @click="openSnapshotDialog">Configura mese</v-btn></div>
         <v-card-text>
-          <v-row class="mb-4 justify-center">
-            <v-col cols="12" md="6"><v-select v-model="selectedMonthNumber" :items="monthOptions"
-                label="Mese" /></v-col>
-            <v-col cols="12" md="6"><v-select v-model="selectedYear" :items="yearOptions" label="Anno" /></v-col>
-            <v-col cols="12" md="6"><v-number-input v-model="editValues.totalStudents" :min="0"
-                label="Studenti totali" /></v-col>
-            <v-col cols="12" md="6"><v-number-input v-model="editValues.quotePerStudent" :min="0" :precision="2"
-                prefix="€" label="Quota per studente" /></v-col>
-            <v-col cols="12" md="4"><v-btn color="primary" variant="flat" block :loading="saving" @click="saveSnapshot">Salva
-                mese</v-btn></v-col>
-          </v-row>
           <v-data-table v-if="snapshots.length" :headers="snapshotHeaders" :items="snapshots" item-value="month"
             density="compact" :items-per-page="5" items-per-page-text="Righe per pagina">
             <template #item.month="{ item }">{{ formatMonth(item.month) }}</template>
             <template #item.quotePerStudent="{ item }">{{ currency(item.quotePerStudent) }}</template>
             <template #item.monthlyTotal="{ item }">{{ currency(item.totalStudents * item.quotePerStudent) }}</template>
             <template #item.actions="{ item }">
-              <v-btn icon="mdi-pencil" size="small" variant="text" aria-label="Modifica quota mensile"
+              <v-btn icon="mdi-pencil-outline" size="small" variant="text" aria-label="Modifica quota mensile"
                 @click="editSnapshot(item.month)" />
             </template>
           </v-data-table>
-          <div v-else class="text-medium-emphasis">Non ci sono ancora snapshot mensili. I valori configurati nella
-            scuola vengono
-            usati come base.</div>
+          <div v-else class="school-panel-empty">Nessuna quota mensile configurata. I valori della scuola vengono usati come base.</div>
         </v-card-text>
       </v-card>
 
@@ -56,6 +43,23 @@
       </v-card>
     </v-card-text>
   </v-card>
+
+  <v-dialog v-model="snapshotDialog" max-width="600" persistent>
+    <v-card class="snapshot-dialog" variant="flat">
+      <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-edit" size="22" /></span><div><h2>Quota mensile</h2><p>Imposta studenti e quota per il mese scelto</p></div></div>
+      <v-card-text class="snapshot-dialog-content">
+        <div class="snapshot-period">
+          <v-select v-model="selectedMonthNumber" :items="monthOptions" label="Mese" variant="outlined" />
+          <v-select v-model="selectedYear" :items="yearOptions" label="Anno" variant="outlined" />
+        </div>
+        <v-number-input v-model="editValues.totalStudents" :min="0" label="Studenti totali" variant="outlined" />
+        <v-number-input v-model="editValues.quotePerStudent" :min="0" :precision="2"
+          prefix="€" label="Quota per studente" variant="outlined" />
+        <div class="snapshot-total"><span>Totale mensile</span><strong>{{ currency(Number(editValues.totalStudents || 0) * Number(editValues.quotePerStudent || 0)) }}</strong></div>
+      </v-card-text>
+      <v-card-actions class="snapshot-dialog-actions"><v-spacer /><v-btn variant="text" :disabled="saving" @click="cancelSnapshotDialog">Annulla</v-btn><v-btn color="primary" variant="flat" :loading="saving" @click="saveSnapshot">Salva mese</v-btn></v-card-actions>
+    </v-card>
+  </v-dialog>
 
   <v-dialog v-model="movementDialog" max-width="560">
     <v-card variant="flat">
@@ -82,6 +86,7 @@ import { toast } from 'vue3-toastify';
 
 const props = defineProps<{ school: School }>();
 const saving = ref(false);
+const snapshotDialog = ref(false);
 const movementDialog = ref(false);
 const editingMovementId = ref<string>();
 const now = new Date();
@@ -89,6 +94,7 @@ const selectedYear = ref(now.getFullYear());
 const selectedMonthNumber = ref(now.getMonth() + 1);
 const selectedMonth = computed(() => `${selectedYear.value}-${String(selectedMonthNumber.value).padStart(2, '0')}`);
 const editValues = reactive({ totalStudents: props.school.managerOptions?.totalStudents ?? 0, quotePerStudent: props.school.managerOptions?.quotePerStudent ?? 0 });
+let snapshotBeforeEdit = { year: selectedYear.value, month: selectedMonthNumber.value, totalStudents: editValues.totalStudents, quotePerStudent: editValues.quotePerStudent };
 const todayKey = yyyyMMdd.today().toIyyyyMMdd();
 const movement = reactive<{ type: 'INCOME' | 'EXPENSE'; date: string; description: string; amount: number }>({ type: 'INCOME', date: `${todayKey.slice(0, 4)}-${todayKey.slice(4, 6)}-${todayKey.slice(6, 8)}`, description: '', amount: 0 });
 const movementTypes = [{ title: 'Entrata', value: 'INCOME' }, { title: 'Uscita', value: 'EXPENSE' }];
@@ -130,6 +136,17 @@ watch(() => [props.school.managerOptions?.totalStudents, props.school.managerOpt
 
 function currency(value: number) { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value); }
 function formatMonth(month: string) { return new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric' }).format(new Date(Number(month.slice(0, 4)), Number(month.slice(4, 6)) - 1, 1)); }
+function openSnapshotDialog() {
+  snapshotBeforeEdit = { year: selectedYear.value, month: selectedMonthNumber.value, totalStudents: editValues.totalStudents, quotePerStudent: editValues.quotePerStudent };
+  snapshotDialog.value = true;
+}
+function cancelSnapshotDialog() {
+  snapshotDialog.value = false;
+  selectedYear.value = snapshotBeforeEdit.year;
+  selectedMonthNumber.value = snapshotBeforeEdit.month;
+  editValues.totalStudents = snapshotBeforeEdit.totalStudents;
+  editValues.quotePerStudent = snapshotBeforeEdit.quotePerStudent;
+}
 function openNewMovement() {
   editingMovementId.value = undefined;
   movement.type = 'INCOME';
@@ -169,8 +186,10 @@ async function saveSnapshot() {
     }
   });
   toast.success(`Valori salvati per ${formatMonth(month)}`);
+  snapshotDialog.value = false;
 }
 function editSnapshot(month: string) {
+  openSnapshotDialog();
   selectedYear.value = Number(month.slice(0, 4));
   selectedMonthNumber.value = Number(month.slice(4, 6));
 }
@@ -189,3 +208,13 @@ async function saveMovement() {
   toast.success(wasEditing ? 'Movimento aggiornato' : 'Movimento registrato');
 }
 </script>
+
+<style scoped>
+.snapshot-dialog-content { padding: 8px 24px 4px !important; }
+.snapshot-period { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.snapshot-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin-bottom: 16px; border: 1px solid var(--app-hover-border); border-radius: 12px; background: var(--app-accent-surface); }
+.snapshot-total span { color: var(--app-muted); font-size: .82rem; }
+.snapshot-total strong { color: var(--app-primary); font-size: 1.1rem; font-weight: 700; }
+.snapshot-dialog-actions { gap: 8px; padding: 14px 24px 20px; border-top: 1px solid var(--app-border); }
+@media (max-width: 600px) { .snapshot-period { grid-template-columns: 1fr; gap: 0; } .snapshot-dialog-content { padding: 8px 16px 4px !important; } }
+</style>
