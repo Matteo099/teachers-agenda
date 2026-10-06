@@ -1,20 +1,21 @@
 <template>
-  <v-card class="student-directory" variant="flat" :loading="loadingStudents">
-    <div class="directory-header">
-      <div><div class="eyebrow">{{ school.name }}</div><h2>Anagrafica studenti</h2><p>Gestisci gli allievi e consulta i dettagli delle lezioni.</p></div>
+  <v-card class="school-panel student-directory" variant="flat" :loading="loadingStudents">
+    <div class="school-panel-header">
+      <span class="school-panel-icon"><v-icon icon="mdi-account-group-outline" size="22" /></span>
+      <div><h2>Anagrafica studenti</h2><p>Allievi e dettagli delle lezioni</p></div>
       <v-dialog v-model="dialog" fullscreen>
-        <template #activator="{ props: activatorProps }"><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" v-bind="activatorProps">Nuovo studente</v-btn></template>
+        <template #activator="{ props: activatorProps }"><v-btn class="student-add-button" color="primary" prepend-icon="mdi-plus" variant="flat" v-bind="activatorProps">Nuovo studente</v-btn></template>
         <StudentEditor :school="school" @close="dialog = false" @save="onSaveStudent($event)" />
       </v-dialog>
     </div>
-    <div class="directory-toolbar">
+    <div class="school-panel-toolbar directory-toolbar">
       <v-text-field v-model="search" class="directory-search" label="Cerca studente" prepend-inner-icon="mdi-magnify" variant="outlined" density="comfortable" hide-details clearable />
       <v-dialog max-width="420" transition="dialog-bottom-transition">
         <template #activator="{ props: activatorProps }"><v-btn prepend-icon="mdi-filter-variant" variant="outlined" v-bind="activatorProps">Filtri</v-btn></template>
         <template #default="{ isActive }"><StudentFilter v-model="filters" @close="isActive.value = false" /></template>
       </v-dialog>
     </div>
-    <v-data-table class="student-table" :headers="studentHeaders" :items="filteredStudents" item-value="id" :items-per-page="10" no-data-text="Nessuno studente trovato">
+    <v-card-text class="school-panel-content"><v-data-table class="student-table" :headers="studentHeaders" :items="filteredStudents" item-value="id" :items-per-page="10" no-data-text="Nessuno studente trovato">
       <template #item.name="{ item }"><div class="student-identity"><span class="student-avatar"><v-icon icon="mdi-account-outline" size="18" /></span><span class="student-name">{{ item.name }} {{ item.surname }}</span></div></template>
       <template #item.lessonDay="{ item }">{{ item.lessonDay !== undefined && item.lessonDay !== null ? days[item.lessonDay] : '—' }}</template>
       <template #item.level="{ item }"><v-chip v-if="item.level" size="small" color="primary" variant="tonal">{{ item.level }}</v-chip><span v-else>—</span></template>
@@ -30,7 +31,7 @@
           </DeleteDialog>
         </div>
       </template>
-    </v-data-table>
+    </v-data-table></v-card-text>
   </v-card>
 </template>
 
@@ -94,20 +95,16 @@ onUnmounted(() => { subscriptions.forEach(u => u.unsubscribe()); });
 
 <style scoped>
 .student-directory { overflow: hidden; }
-.directory-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 24px 16px; }
-.directory-header h2 { color: var(--app-text); font-size: 1.25rem; line-height: 1.3; font-weight: 700; margin: 2px 0 4px; }
-.directory-header p { color: var(--app-muted); font-size: .875rem; margin: 0; }
-.eyebrow { color: var(--app-primary); font-size: .75rem; font-weight: 650; }
-.directory-toolbar { display: flex; align-items: center; gap: 12px; padding: 8px 24px 20px; }
+.directory-toolbar { justify-content: flex-start; }
 .directory-search { max-width: 440px; }
-.student-table { border-top: 1px solid var(--app-border); }
+.student-table { border: 1px solid var(--app-border); border-radius: 12px; }
 .student-identity { display: flex; align-items: center; gap: 10px; min-height: 44px; }
 .student-avatar { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: none; border-radius: 10px; background: var(--app-accent-surface); color: var(--app-primary); }
 .student-name { color: var(--app-text); font-weight: 600; white-space: nowrap; }
 .student-actions { display: flex; justify-content: flex-end; gap: 2px; }
 @media (max-width: 600px) {
-  .directory-header { align-items: stretch; flex-direction: column; padding: 20px 16px 12px; }
-  .directory-toolbar { padding: 8px 16px 16px; }
+  .student-add-button { width: 100%; }
+  .directory-toolbar { flex-wrap: nowrap; }
   .directory-search { min-width: 0; }
   .student-table :deep(th:nth-child(2)), .student-table :deep(td:nth-child(2)),
   .student-table :deep(th:nth-child(3)), .student-table :deep(td:nth-child(3)),

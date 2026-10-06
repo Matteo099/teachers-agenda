@@ -1,42 +1,47 @@
 <template>
-    <v-card title="Band">
-        <v-card-text>
-            <v-text-field v-model="name" label="Nome della band" required />
+    <v-card class="band-editor" variant="flat">
+        <div class="editor-page-header"><span class="school-panel-icon"><v-icon icon="mdi-account-music-outline" size="24" /></span><div><span>{{ school.name }}</span><h2>{{ initialBand ? 'Modifica band' : 'Nuova band' }}</h2></div><v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" /></div>
+        <v-card-text class="editor-page-content">
+            <section class="editor-page-section">
+            <div class="editor-section-title"><v-icon icon="mdi-information-outline" size="20" /><h3>Informazioni della band</h3></div>
+            <v-text-field v-model="name" label="Nome della band" variant="outlined" required />
             <v-row>
                 <v-col cols="12" md="6">
-                    <v-select v-model="level" :items="levels" label="Livello" />
+                    <v-select v-model="level" :items="levels" label="Livello" variant="outlined" />
                 </v-col>
                 <v-col cols="12" md="6">
-                    <v-number-input v-model="minutes" label="Minuti di prova" :min="1" suffix="min" />
+                    <v-number-input v-model="minutes" label="Minuti di prova" variant="outlined" :min="1" suffix="min" />
                 </v-col>
             </v-row>
-            <v-divider class="my-4" />
-            <div class="text-subtitle-1 mb-2">Componenti</div>
-            <v-card v-for="(member, index) in members" :key="member.id" class="mb-4 pa-3" variant="outlined">
+            </section>
+            <section class="editor-page-section">
+            <div class="editor-section-title"><v-icon icon="mdi-account-group-outline" size="20" /><h3>Componenti</h3></div>
+            <v-card v-for="(member, index) in members" :key="member.id" class="member-card mb-4 pa-3" variant="flat">
                 <v-card-title class="px-0 d-flex align-center">
                     Componente {{ index + 1 }}
                     <v-spacer />
                     <v-btn icon="mdi-delete" variant="text" color="error" size="small"
-                        @click="members.splice(index, 1)" />
+                                    aria-label="Rimuovi componente" @click="members.splice(index, 1)" />
                 </v-card-title>
                 <v-card-text class="px-0 pb-0">
                     <v-row>
                         <v-col cols="12">
                             <v-select :model-value="member.studentId" :items="availableStudents(member)" item-title="fullName"
-                                item-value="id" label="Studente della scuola" clearable
+                                item-value="id" label="Studente della scuola" variant="outlined" clearable
                                 @update:model-value="selectStudent(member, $event)" />
                         </v-col>
-                        <v-col cols="12" sm="4"><v-text-field v-model="member.name" label="Nome" /></v-col>
-                        <v-col cols="12" sm="4"><v-text-field v-model="member.surname" label="Cognome" /></v-col>
-                        <v-col cols="12" sm="4"><v-text-field v-model="member.instrument" label="Strumento" /></v-col>
+                        <v-col cols="12" sm="4"><v-text-field v-model="member.name" label="Nome" variant="outlined" /></v-col>
+                        <v-col cols="12" sm="4"><v-text-field v-model="member.surname" label="Cognome" variant="outlined" /></v-col>
+                        <v-col cols="12" sm="4"><v-text-field v-model="member.instrument" label="Strumento" variant="outlined" /></v-col>
                     </v-row>
                 </v-card-text>
             </v-card>
-            <v-btn prepend-icon="mdi-account-plus" variant="tonal" @click="addMember">Aggiungi componente</v-btn>
+            <v-btn prepend-icon="mdi-account-plus" color="primary" variant="tonal" @click="addMember">Aggiungi componente</v-btn>
+            </section>
         </v-card-text>
-        <v-card-actions>
-            <v-spacer /><v-btn text="Chiudi" variant="plain" @click="emit('close')" />
-            <v-btn color="primary" text="Salva" :loading="saving" @click="save" />
+        <v-card-actions class="editor-page-actions">
+            <v-spacer /><v-btn text="Chiudi" variant="text" @click="emit('close')" />
+            <v-btn color="primary" text="Salva" variant="flat" :loading="saving" @click="save" />
         </v-card-actions>
     </v-card>
 </template>

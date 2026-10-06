@@ -1,8 +1,9 @@
 <template>
-    <v-card :title="edit ? 'Modifica orario settimanale' : 'Nuovo orario settimanale'" class="week-lesson-editor" variant="flat">
-        <v-card-text>
+    <v-card class="week-lesson-editor" variant="flat">
+        <div class="editor-page-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-edit" size="24" /></span><div><span>{{ school.name }}</span><h2>{{ edit ? 'Modifica orario settimanale' : 'Nuovo orario settimanale' }}</h2></div><v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" /></div>
+        <v-card-text class="editor-page-content">
             <v-form class="weekly-form">
-                <h2>Quando si svolge</h2>
+                <section class="editor-page-section"><div class="editor-section-title"><v-icon icon="mdi-calendar-range" size="20" /><h3>Quando si svolge</h3></div>
                 <v-row class="my-1 justify-center">
                     <v-col class="px-2">
                         <v-select v-model="dayOfWeek" v-bind="dayOfWeekProps" :items="days" label="Giorno"
@@ -33,7 +34,8 @@
                         </v-select>
                     </v-col>
                 </v-row>
-                <h2 class="mt-5">Orario e allievi</h2>
+                </section>
+                <section class="editor-page-section"><div class="editor-section-title"><v-icon icon="mdi-account-clock-outline" size="20" /><h3>Orario e allievi</h3></div>
                 <v-row class="my-1 justify-center">
                     <v-col class="px-2" cols="12" md="6">
                         <v-text-field v-model="startingTime" v-bind="startingTimeProps" :active="modalTimePicker"
@@ -51,17 +53,17 @@
                             {{ showOtherStudents ? 'Mostra solo gli allievi del giorno' : 'Visualizza altri allievi' }}
                         </v-btn>
                     </v-col>
-                </v-row>
+                </v-row></section>
 
             </v-form>
 
-            <div class="weekly-preview"><h2>Anteprima lezioni</h2><DailyLessonCalendar v-model="events" editable :school="school" /></div>
+            <div class="weekly-preview editor-page-section"><div class="editor-section-title"><v-icon icon="mdi-eye-outline" size="20" /><h3>Anteprima lezioni</h3></div><DailyLessonCalendar v-model="events" editable :school="school" /></div>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions class="editor-page-actions">
             <v-spacer></v-spacer>
 
-            <v-btn text="Chiudi" @click="emit('close')"></v-btn>
-            <v-btn text="Salva" color="primary" @click="onSave" :loading="saving"></v-btn>
+            <v-btn text="Chiudi" variant="text" @click="emit('close')"></v-btn>
+            <v-btn text="Salva" color="primary" variant="flat" @click="onSave" :loading="saving"></v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -389,10 +391,10 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-.week-lesson-editor { max-width: 1100px; margin: 0 auto; }
-.weekly-form { padding: 12px; }
+.week-lesson-editor { min-height: 100%; background: var(--app-background); }
+.weekly-form { padding: 0; }
 .weekly-form h2, .weekly-preview h2 { margin: 0 0 12px; font-size: 1rem; font-weight: 700; color: var(--app-text); }
-.weekly-preview { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--app-border); }
+.weekly-preview { margin-top: 16px; }
 .week-lesson-editor :deep(.v-card-actions) { padding: 16px 24px; border-top: 1px solid var(--app-border); }
 @media (max-width: 600px) { .weekly-form { padding: 4px; } }
 </style>

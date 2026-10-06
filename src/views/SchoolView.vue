@@ -1,18 +1,17 @@
 <template>
-    <v-card v-if="school" class="pa-3 mb-3" :title="school.name" elevation="0">
-        <template v-slot:prepend>
-            <BackButton></BackButton>
-        </template>
-        <!-- <p class="text-h5 text-center mb-6">{{ school.name }}</p> -->
-        <template v-slot:append>
+    <div v-if="school" class="school-page">
+        <header class="school-page-header">
+            <BackButton />
+            <span class="school-page-icon"><v-icon icon="mdi-school-outline" size="27" /></span>
+            <div class="school-page-title"><span>Scuola</span><h1>{{ school.name }}</h1><p v-if="school.city"><v-icon icon="mdi-map-marker-outline" size="16" /> {{ school.city }}</p></div>
             <v-menu transition="slide-y-transition">
                 <template v-slot:activator="{ props }">
-                    <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
+                    <v-btn icon="mdi-dots-vertical" variant="text" aria-label="Azioni scuola" v-bind="props"></v-btn>
                 </template>
                 <v-list>
                     <v-dialog fullscreen>
                         <template v-slot:activator="{ props: activatorProps }">
-                            <v-list-item title="Modifica" v-bind="activatorProps"></v-list-item>
+                            <v-list-item title="Modifica scuola" prepend-icon="mdi-pencil-outline" v-bind="activatorProps"></v-list-item>
                         </template>
                         <template v-slot:default="{ isActive }">
                             <SchoolEditor edit :initialSchool="school" @close="isActive.value = false"
@@ -23,16 +22,16 @@
 
                     <DeleteDialog :name="school.name" objName="Scuola" :onDelete="deleteSchool">
                         <template v-slot:activator="{ props: activatorProps }">
-                            <v-list-item title="Elimina" v-bind="activatorProps"></v-list-item>
+                            <v-list-item title="Elimina scuola" prepend-icon="mdi-delete-outline" v-bind="activatorProps"></v-list-item>
                         </template>
                     </DeleteDialog>
 
-                    <v-list-item title="Clona" :disabled="cloning" @click="cloneSchool"></v-list-item>
+                    <v-list-item title="Clona scuola" prepend-icon="mdi-content-copy" :disabled="cloning" @click="cloneSchool"></v-list-item>
                 </v-list>
             </v-menu>
-        </template>
-
-        <v-row class="mt-5">
+        </header>
+        <main class="school-page-content">
+        <v-row>
             <v-col class="pa-2" cols="12" md="6">
                 <LessonView :school="school"></LessonView>
             </v-col>
@@ -61,7 +60,8 @@
                 <SchoolManagementCard :school="school" />
             </v-col>
         </v-row>
-    </v-card>
+        </main>
+    </div>
 
     <v-container fluid v-else>
         <v-skeleton-loader class="mx-auto" type="heading"></v-skeleton-loader>
@@ -134,3 +134,15 @@ onUnmounted(() => {
     subscriptions.forEach(u => u());
 })
 </script>
+
+<style scoped>
+.school-page { padding-bottom: 24px; }
+.school-page-header { display: flex; align-items: center; gap: 14px; padding: 20px 24px; margin-bottom: 14px; border: 1px solid var(--app-border); border-radius: 16px; background: var(--app-surface); box-shadow: var(--app-shadow); }
+.school-page-icon { display: grid; place-items: center; width: 52px; height: 52px; flex: none; border-radius: 14px; color: var(--app-primary); background: var(--app-accent-surface); }
+.school-page-title { min-width: 0; flex: 1; }
+.school-page-title > span { color: var(--app-primary); font-size: .75rem; font-weight: 650; }
+.school-page-title h1 { overflow: hidden; margin: 1px 0; color: var(--app-text); font-size: 1.45rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.school-page-title p { margin: 0; color: var(--app-muted); font-size: .83rem; }
+.school-page-content :deep(.v-row) { margin-top: 0; }
+@media (max-width: 600px) { .school-page-header { gap: 9px; padding: 14px; } .school-page-icon { width: 40px; height: 40px; } .school-page-title h1 { font-size: 1.1rem; } }
+</style>

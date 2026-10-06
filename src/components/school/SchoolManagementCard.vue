@@ -1,15 +1,15 @@
 <template>
-  <v-card class="mb-3" elevation="3" title="Gestione economica" :loading="saving">
-    <v-card-text>
+  <v-card class="school-panel mb-3" variant="flat" :loading="saving">
+    <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-chart-box-outline" size="22" /></span><div><h2>Gestione economica</h2><p>Quote mensili e fondo cassa</p></div></div>
+    <v-card-text class="school-panel-content">
       <v-row>
-        <v-col cols="12" md="4"><v-card variant="tonal" title="Fondo cassa" :text="currency(cashBalance)" /></v-col>
-        <v-col cols="12" md="4"><v-card variant="tonal" title="Studenti nel mese selezionato"
-            :text="String(editValues.totalStudents)" /></v-col>
-        <v-col cols="12" md="4"><v-card variant="tonal" title="Quota mensile per studente"
-            :text="currency(editValues.quotePerStudent)" /></v-col>
+        <v-col cols="12" md="4"><div class="school-stat-card primary"><span class="label">Fondo cassa</span><strong class="value">{{ currency(cashBalance) }}</strong></div></v-col>
+        <v-col cols="6" md="4"><div class="school-stat-card"><span class="label">Studenti nel mese</span><strong class="value">{{ editValues.totalStudents }}</strong></div></v-col>
+        <v-col cols="6" md="4"><div class="school-stat-card"><span class="label">Quota per studente</span><strong class="value">{{ currency(editValues.quotePerStudent) }}</strong></div></v-col>
       </v-row>
 
-      <v-card class="my-4" variant="outlined" title="Storico quota mensile">
+      <v-card class="management-section my-4" variant="flat">
+        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-month-outline" size="22" /></span><div><h2>Storico quota mensile</h2><p>Valori del mese selezionato</p></div></div>
         <v-card-text>
           <v-row class="mb-4 justify-center">
             <v-col cols="12" md="6"><v-select v-model="selectedMonthNumber" :items="monthOptions"
@@ -19,7 +19,7 @@
                 label="Studenti totali" /></v-col>
             <v-col cols="12" md="6"><v-number-input v-model="editValues.quotePerStudent" :min="0" :precision="2"
                 prefix="€" label="Quota per studente" /></v-col>
-            <v-col cols="12" md="4"><v-btn color="primary" block :loading="saving" @click="saveSnapshot">Salva
+            <v-col cols="12" md="4"><v-btn color="primary" variant="flat" block :loading="saving" @click="saveSnapshot">Salva
                 mese</v-btn></v-col>
           </v-row>
           <v-data-table v-if="snapshots.length" :headers="snapshotHeaders" :items="snapshots" item-value="month"
@@ -38,16 +38,14 @@
         </v-card-text>
       </v-card>
 
-      <v-card class="my-4" variant="outlined" title="Movimenti del fondo cassa">
-        <template #append>
-          <v-btn color="primary" prepend-icon="mdi-plus" @click="openNewMovement">Registra movimento</v-btn>
-        </template>
+      <v-card class="management-section my-4" variant="flat">
+        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-swap-horizontal" size="22" /></span><div><h2>Movimenti del fondo cassa</h2><p>Entrate e uscite registrate</p></div><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" @click="openNewMovement">Registra movimento</v-btn></div>
         <v-card-text>
           <v-data-table :headers="headers" :items="movementRows" item-value="id" density="comfortable">
             <template #item.date="{ item }">{{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}</template>
-            <template #item.type="{ item }"><v-chip size="small" :color="item.type === 'INCOME' ? 'green' : 'orange'">{{
+            <template #item.type="{ item }"><v-chip size="small" variant="tonal" :color="item.type === 'INCOME' ? 'success' : 'warning'">{{
               item.type === 'INCOME' ? 'Entrata' : 'Uscita' }}</v-chip></template>
-            <template #item.amount="{ item }"><span :class="item.type === 'INCOME' ? 'text-green' : 'text-orange'">{{
+            <template #item.amount="{ item }"><span :class="item.type === 'INCOME' ? 'text-success' : 'text-warning'">{{
               item.type === 'INCOME' ? '+' : '−' }} {{ currency(item.amount) }}</span></template>
             <template #item.balance="{ item }">{{ currency(item.balance) }}</template>
             <template #item.actions="{ item }"><v-btn icon="mdi-pencil" size="small" variant="text"
@@ -60,14 +58,15 @@
   </v-card>
 
   <v-dialog v-model="movementDialog" max-width="560">
-    <v-card :title="editingMovementId ? 'Modifica movimento cassa' : 'Registra movimento cassa'">
+    <v-card variant="flat">
+      <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-cash-edit" size="22" /></span><div><h2>{{ editingMovementId ? 'Modifica movimento' : 'Registra movimento' }}</h2><p>Fondo cassa della scuola</p></div></div>
       <v-card-text>
         <v-select v-model="movement.type" :items="movementTypes" label="Tipo movimento" />
         <v-text-field v-model="movement.date" type="date" label="Data" />
         <v-text-field v-model="movement.description" label="Motivazione" />
         <v-number-input v-model="movement.amount" :min="0.01" :precision="2" prefix="€" label="Importo" />
       </v-card-text>
-      <v-card-actions><v-spacer /><v-btn @click="closeMovementDialog">Annulla</v-btn><v-btn color="primary"
+      <v-card-actions><v-spacer /><v-btn variant="text" @click="closeMovementDialog">Annulla</v-btn><v-btn color="primary" variant="flat"
           :loading="saving" @click="saveMovement">{{ editingMovementId ? 'Salva modifiche' : 'Salva movimento'
           }}</v-btn></v-card-actions>
     </v-card>

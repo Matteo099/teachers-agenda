@@ -1,13 +1,12 @@
 <template>
     <v-dialog v-model="scheduleRecoveryDialog" width="auto" scrollable persistent>
         <template v-slot:activator="{ props: activatorProps }">
-            <v-btn v-bind="activatorProps">programma</v-btn>
+            <v-btn color="primary" variant="tonal" size="small" prepend-icon="mdi-calendar-plus" v-bind="activatorProps">Programma</v-btn>
         </template>
 
         <template v-slot:default>
-            <v-card title="Programma Lezione di Recupero"
-                :subtitle="recovery.student.name + ' ' + recovery.student.surname + ' - ' + yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format()"
-                :loading="loadingSchedulingRecovery">
+            <v-card class="recovery-dialog" variant="flat" :loading="loadingSchedulingRecovery">
+                <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-refresh-outline" size="22" /></span><div><h2>Programma recupero</h2><p>{{ recovery.student.name }} {{ recovery.student.surname }} · Lezione del {{ yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format() }}</p></div></div>
                 <v-card-text class="pa-6">
                     <v-row>
                         <v-col cols="12" md="12">
@@ -31,8 +30,8 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn text="Annulla" @click="close"></v-btn>
-                    <v-btn color="primary" text="Salva" @click="save($event)"></v-btn>
+                    <v-btn text="Annulla" variant="text" @click="close"></v-btn>
+                    <v-btn color="primary" text="Salva" variant="flat" @click="save($event)"></v-btn>
                 </v-card-actions>
             </v-card>
         </template>

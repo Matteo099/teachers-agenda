@@ -1,10 +1,11 @@
 <template>
-    <v-card title="Recuperi" elevation="3" :loading="loadingExtendedRecoveries">
-        <v-list lines="three">
+    <v-card class="school-panel recovery-panel" variant="flat" :loading="loadingExtendedRecoveries">
+        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-refresh-outline" size="22" /></span><div><h2>Recuperi</h2><p>Lezioni da recuperare, programmate e svolte</p></div></div>
+        <v-list class="recovery-list" lines="three">
             <template v-for="[key, value] in extendedRecoveries?.recoveryMap" :key="key">
-                <v-list-subheader inset><b>{{ recoveryTypes[key] }}</b></v-list-subheader>
+                <v-list-subheader class="recovery-group-title"><b>{{ recoveryTypes[key] }}</b><v-chip size="x-small" variant="tonal" color="primary">{{ value.length }}</v-chip></v-list-subheader>
 
-                <v-list-item v-if="value.length == 0">
+                <v-list-item v-if="value.length == 0" class="recovery-empty">
                     <div v-if="key == RecoveryStatus.UNSET">
                         Nessuna lezione da recuperare
                     </div>
@@ -16,7 +17,7 @@
                     </div>
                 </v-list-item>
 
-                <v-list-item v-if="key != RecoveryStatus.DONE" v-for="(recovery, index) in value"
+                <v-list-item class="recovery-item" v-if="key != RecoveryStatus.DONE" v-for="(recovery, index) in value"
                     :key="`${recovery.lesson.lessonId}_${recovery.recoveryReference.originalDailyLesson.id}`">
                     <template v-slot:title>
                         {{ recovery.student.name }} {{ recovery.student.surname }}
@@ -47,8 +48,8 @@
                     <template v-slot:append>
                         <ScheduleRecoveryLessonButton v-if="key == RecoveryStatus.UNSET" v-model="value[index]!"
                             :school="school"></ScheduleRecoveryLessonButton>
-                        <v-btn v-else-if="key == RecoveryStatus.PENDING" @click="cancelScheduleRecovery(recovery)"
-                            :loading="cancellingScheduleRecovery" :disabled="cancellingScheduleRecovery">annulla</v-btn>
+                        <v-btn v-else-if="key == RecoveryStatus.PENDING" color="error" variant="tonal" size="small" @click="cancelScheduleRecovery(recovery)"
+                            :loading="cancellingScheduleRecovery" :disabled="cancellingScheduleRecovery">Annulla</v-btn>
                         <v-icon v-else color="success">
                             mdi-check-all
                         </v-icon>
@@ -80,7 +81,6 @@
                     </v-expansion-panel>
                 </v-expansion-panels>
 
-                <v-divider v-if="key != RecoveryStatus.DONE"></v-divider>
             </template>
         </v-list>
         <v-card-text v-if="!extendedRecoveries">

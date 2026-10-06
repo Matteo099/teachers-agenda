@@ -1,9 +1,7 @@
 <template>
-  <v-card title="Note della scuola" elevation="3" :loading="loading">
-    <template #append>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="startNewNote">Aggiungi nota</v-btn>
-    </template>
-    <v-card-text>
+  <v-card class="school-panel" variant="flat" :loading="loading">
+    <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-note-text-outline" size="22" /></span><div><h2>Note della scuola</h2><p>Annotazioni e promemoria</p></div><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" @click="startNewNote">Aggiungi nota</v-btn></div>
+    <v-card-text class="school-panel-content">
       <v-data-table :headers="headers" :items="notes" item-value="id" :items-per-page="5" items-per-page-text="Righe per pagina">
         <template #item.date="{ item }">{{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}</template>
         <template #item.actions="{ item }">
@@ -21,15 +19,16 @@
   </v-card>
 
   <v-dialog v-model="dialog" max-width="640">
-    <v-card :title="editingId ? 'Modifica nota della scuola' : 'Aggiungi nota della scuola'">
+    <v-card class="school-note-dialog" variant="flat">
+      <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-note-edit-outline" size="22" /></span><div><h2>{{ editingId ? 'Modifica nota' : 'Aggiungi nota' }}</h2><p>Annotazione per {{ school.name }}</p></div></div>
       <v-card-text>
-        <v-date-input v-model="noteDate" label="Data" inputmode="none" />
-        <v-textarea v-model="description" label="Nota" rows="4" counter="1000" autofocus />
+        <v-date-input v-model="noteDate" label="Data" variant="outlined" inputmode="none" />
+        <v-textarea v-model="description" label="Nota" variant="outlined" rows="4" counter="1000" autofocus />
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn @click="dialog = false">Annulla</v-btn>
-        <v-btn color="primary" :loading="saving" @click="saveNote">Salva</v-btn>
+        <v-btn variant="text" @click="dialog = false">Annulla</v-btn>
+        <v-btn color="primary" variant="flat" :loading="saving" @click="saveNote">Salva</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

@@ -1,15 +1,15 @@
 <template>
-    <v-card title="Orario settimanale" class="weekly-calendar-editor" variant="flat" :loading="loadingCalendar || loadingStudents">
-        <template v-slot:append>
+    <v-card class="weekly-calendar-editor" variant="flat" :loading="loadingCalendar || loadingStudents">
+        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-week-outline" size="22" /></span><div><h2>Orario settimanale</h2><p>Le lezioni programmate della scuola</p></div>
             <v-dialog v-model="dialog" transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn prepend-icon="mdi-plus" color="primary" variant="tonal" v-bind="activatorProps">Nuovo orario</v-btn>
+                    <v-btn prepend-icon="mdi-plus" color="primary" variant="flat" v-bind="activatorProps">Nuovo orario</v-btn>
                 </template>
             
                 <WeekLessonEditor :school="school" @close="dialog = false" @save="$event ? dialog = false : null">
                 </WeekLessonEditor>
             </v-dialog>
-        </template>
+        </div>
 
         <v-card-text>
             <v-expansion-panels class="weekly-schedules">
@@ -64,7 +64,7 @@
         <v-card-actions>
             <v-spacer></v-spacer>
 
-            <v-btn text="Chiudi" @click="emit('close')"></v-btn>
+            <v-btn text="Chiudi" variant="text" @click="emit('close')"></v-btn>
         </v-card-actions>
     </v-card>
 </template>

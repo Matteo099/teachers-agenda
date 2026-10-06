@@ -1,6 +1,9 @@
 <template>
-    <v-card prepend-icon="mdi-format-list-numbered" title="Livelli">
-        <v-card-text>
+    <v-card class="level-range-editor" variant="flat">
+        <div class="editor-page-header"><span class="school-panel-icon"><v-icon icon="mdi-format-list-numbered" size="24" /></span><div><span>Configurazione scuola</span><h2>Livelli e compensi</h2></div><v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" /></div>
+        <v-card-text class="editor-page-content">
+            <section class="editor-page-section">
+            <div class="editor-section-title"><v-icon icon="mdi-cash-multiple" size="20" /><h3>Fasce di compenso</h3></div>
             <v-row class="my-3 mb-10 justify-center">
                 <v-col class="px-2" cols="12" md="4">
                     <v-number-input max-width="500" :precision=3 v-model="levelRangePrice" :reverse="false"
@@ -9,12 +12,12 @@
                     </v-number-input>
                 </v-col>
                 <v-col class="px-2" cols="12" md="1">
-                    <v-btn @click="addLevelRange" icon="mdi-plus" color="success"></v-btn>
-                    <v-btn @click="deleteLevelRange" icon="mdi-minus" color="error"></v-btn>
+                    <v-btn @click="addLevelRange" icon="mdi-plus" color="primary" variant="tonal" aria-label="Aggiungi fascia"></v-btn>
+                    <v-btn @click="deleteLevelRange" icon="mdi-minus" color="error" variant="text" aria-label="Rimuovi fascia"></v-btn>
                 </v-col>
             </v-row>
 
-            <v-card class="mx-5 mt-5 pa-2" v-if="tab" elevation="3">
+            <v-card class="level-range-list pa-2" v-if="tab" variant="flat">
                 <v-tabs v-model="tab" class="my-2" align-tabs="center" color="primary" show-arrows>
                     <v-tab v-for="i in levelRanges" :key="i.price" :text="numberFormat(i.price) + ' €'"
                         :value="i"></v-tab>
@@ -35,15 +38,16 @@
                     </v-tabs-window-item>
                 </v-tabs-window>
             </v-card>
+            </section>
         </v-card-text>
         <v-divider></v-divider>
 
-        <v-card-actions>
+        <v-card-actions class="editor-page-actions">
             <v-spacer></v-spacer>
 
-            <v-btn text="Annulla" variant="plain" @click="emit('close')"></v-btn>
+            <v-btn text="Annulla" variant="text" @click="emit('close')"></v-btn>
 
-            <v-btn color="primary" text="Salva Livelli" variant="tonal" @click="emit('save', levelRanges)"></v-btn>
+            <v-btn color="primary" text="Salva livelli" variant="flat" @click="emit('save', levelRanges)"></v-btn>
         </v-card-actions>
     </v-card>
 </template>

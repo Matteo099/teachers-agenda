@@ -1,6 +1,9 @@
 <template>
-    <v-card prepend-icon="mdi-school" title="Scuola">
-        <v-card-text>
+    <v-card class="school-editor" variant="flat">
+        <div class="editor-page-header"><span class="school-panel-icon"><v-icon icon="mdi-school-outline" size="24" /></span><div><span>Impostazioni scuola</span><h2>{{ edit ? 'Modifica scuola' : 'Nuova scuola' }}</h2></div><v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" /></div>
+        <v-card-text class="editor-page-content">
+            <section class="editor-page-section">
+            <div class="editor-section-title"><v-icon icon="mdi-card-account-details-outline" size="20" /><h3>Informazioni e contatti</h3></div>
             <v-row density="comfortable">
                 <v-col cols="12" md="6">
                     <v-text-field v-model="name" v-bind="nameProps" label="Nome" required></v-text-field>
@@ -39,6 +42,11 @@
                     </v-dialog>
                 </v-col>
 
+            </v-row>
+            </section>
+            <section class="editor-page-section">
+            <div class="editor-section-title"><v-icon icon="mdi-cash-multiple" size="20" /><h3>Compensi e rimborsi</h3></div>
+            <v-row density="comfortable">
                 <v-col cols="12" md="6">
                     <v-select v-model="salaryStrategy" v-bind="salaryStrategyProps" :items="salaryStrategys"
                         item-title="value" item-value="key" label="Opzione di Pagamento" required></v-select>
@@ -55,6 +63,11 @@
                         label="Rimborso spese giornaliero" prefix="€"></v-number-input>
                 </v-col>
 
+            </v-row>
+            </section>
+            <section class="editor-page-section">
+            <div class="editor-section-title"><v-icon icon="mdi-tune-variant" size="20" /><h3>Configurazione</h3></div>
+            <v-row density="comfortable">
                 <v-col cols="12" md="12">
                     <v-row justify-center>
                         <v-col class="align-self-center">
@@ -76,13 +89,9 @@
                 <v-col cols="12" md="6">
                     <v-dialog v-model="dialogLevels" fullscreen>
                         <template v-slot:activator="{ props: activatorProps }">
-                            <div class="v-input--center-affix v-input--error">
-                                <v-btn text="Gestisci Livelli" v-bind="activatorProps"></v-btn>
-                                <div class="v-input__details">
-                                    <div class="v-messages__message v-messages" role="alert">
-                                        <span>{{ levelRangesProps['error-messages']?.[0] }}</span>
-                                    </div>
-                                </div>
+                            <div class="level-editor-trigger">
+                                <v-btn text="Gestisci livelli" prepend-icon="mdi-format-list-numbered" color="primary" variant="tonal" v-bind="activatorProps"></v-btn>
+                                <span v-if="levelRangesProps['error-messages']?.[0]" class="level-editor-error" role="alert">{{ levelRangesProps['error-messages']?.[0] }}</span>
                             </div>
                         </template>
 
@@ -92,17 +101,18 @@
                     </v-dialog>
                 </v-col>
             </v-row>
+            </section>
         </v-card-text>
 
         <v-divider></v-divider>
 
-        <v-card-actions>
+        <v-card-actions class="editor-page-actions">
             <v-spacer></v-spacer>
 
-            <v-btn text="Chiudi" variant="plain" @click="emit('close')"></v-btn>
+            <v-btn text="Chiudi" variant="text" @click="emit('close')"></v-btn>
 
             <v-btn color="primary" :loading="saving" :disabled="saving" :text="edit ? 'Salva Modifiche' : 'Crea'"
-                variant="tonal" @click="onSave"></v-btn>
+                variant="flat" @click="onSave"></v-btn>
         </v-card-actions>
     </v-card>
 </template>
