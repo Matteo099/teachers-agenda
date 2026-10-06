@@ -1,70 +1,38 @@
 <template>
-    <v-card title="Anagrafica studenti" elevation="3" :loading="loadingStudents">
-        <v-card-text>
-            <v-row class="mr-4 mb-1 align-center">
-                <v-col cols="12" md="8">
-                    <v-text-field class="ma-2" density="compact" label="Ricerca" variant="outlined" hide-details>
-                        <template v-slot:append>
-                            <v-dialog transition="dialog-bottom-transition">
-                                <template v-slot:activator="{ props: activatorProps }">
-                                    <v-btn icon="mdi-filter" variant="text" v-bind="activatorProps"></v-btn>
-                                </template>
-
-                                <template v-slot:default="{ isActive }">
-                                    <StudentFilter v-model="filters" @close="isActive.value = false"></StudentFilter>
-                                </template>
-                            </v-dialog>
-                        </template>
-                    </v-text-field>
-                </v-col>
-                <v-col cols="12" md="4">
-                    <v-dialog v-model="dialog" fullscreen>
-                        <template v-slot:activator="{ props: activatorProps }">
-                            <v-btn prepend-icon="mdi-plus" color="success" v-bind="activatorProps">
-                                studente
-                            </v-btn>
-                        </template>
-
-                        <StudentEditor :school="school" @close="dialog = false" @save="onSaveStudent($event)">
-                        </StudentEditor>
-                    </v-dialog>
-                </v-col>
-            </v-row>
-            <v-data-table :headers="studentHeaders" :items="filteredStudents" item-value="id">
-                <template v-slot:item.lessonDay="{ item }">
-                    {{ item.lessonDay ? days[item.lessonDay] : "" }}
-                </template>
-                <template v-slot:item.minutesLessonDuration="{ item }">
-                    {{ item.minutesLessonDuration }} min
-                </template>
-                <template v-slot:item.actions="{ item }">
-                    <v-dialog fullscreen>
-                        <template v-slot:activator="{ props: activatorProps }">
-                            <v-icon class="me-2" size="small" v-bind="activatorProps">
-                                mdi-pencil
-                            </v-icon>
-                        </template>
-
-                        <template v-slot:default="{ isActive }">
-                            <StudentEditor edit :school="school" :initialStudent="item" @close="isActive.value = false"
-                                @save="isActive.value = false">
-                            </StudentEditor>
-                        </template>
-                    </v-dialog>
-                    <DeleteDialog :name="item.name + ' ' + item.surname" objName="Studente"
-                        :onDelete="async () => await deleteStudent(item)">
-                        <template v-slot:activator="{ props: activatorProps }">
-                            <v-icon size="small" v-bind="activatorProps">
-                                mdi-delete
-                            </v-icon>
-                        </template>
-                    </DeleteDialog>
-                </template>
-            </v-data-table>
-        </v-card-text>
-    </v-card>
+  <v-card class="student-directory" variant="flat" :loading="loadingStudents">
+    <div class="directory-header">
+      <div><div class="eyebrow">{{ school.name }}</div><h2>Anagrafica studenti</h2><p>Gestisci gli allievi e consulta i dettagli delle lezioni.</p></div>
+      <v-dialog v-model="dialog" fullscreen>
+        <template #activator="{ props: activatorProps }"><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" v-bind="activatorProps">Nuovo studente</v-btn></template>
+        <StudentEditor :school="school" @close="dialog = false" @save="onSaveStudent($event)" />
+      </v-dialog>
+    </div>
+    <div class="directory-toolbar">
+      <v-text-field v-model="search" class="directory-search" label="Cerca studente" prepend-inner-icon="mdi-magnify" variant="outlined" density="comfortable" hide-details clearable />
+      <v-dialog max-width="420" transition="dialog-bottom-transition">
+        <template #activator="{ props: activatorProps }"><v-btn prepend-icon="mdi-filter-variant" variant="outlined" v-bind="activatorProps">Filtri</v-btn></template>
+        <template #default="{ isActive }"><StudentFilter v-model="filters" @close="isActive.value = false" /></template>
+      </v-dialog>
+    </div>
+    <v-data-table class="student-table" :headers="studentHeaders" :items="filteredStudents" item-value="id" :items-per-page="10" no-data-text="Nessuno studente trovato">
+      <template #item.name="{ item }"><div class="student-identity"><span class="student-avatar"><v-icon icon="mdi-account-outline" size="18" /></span><span class="student-name">{{ item.name }} {{ item.surname }}</span></div></template>
+      <template #item.lessonDay="{ item }">{{ item.lessonDay !== undefined && item.lessonDay !== null ? days[item.lessonDay] : '—' }}</template>
+      <template #item.level="{ item }"><v-chip v-if="item.level" size="small" color="primary" variant="tonal">{{ item.level }}</v-chip><span v-else>—</span></template>
+      <template #item.minutesLessonDuration="{ item }">{{ item.minutesLessonDuration }} min</template>
+      <template #item.actions="{ item }">
+        <div class="student-actions">
+          <v-dialog fullscreen>
+            <template #activator="{ props: activatorProps }"><v-btn icon="mdi-pencil-outline" aria-label="Modifica studente" title="Modifica studente" size="small" variant="text" v-bind="activatorProps" /></template>
+            <template #default="{ isActive }"><StudentEditor edit :school="school" :initialStudent="item" @close="isActive.value = false" @save="isActive.value = false" /></template>
+          </v-dialog>
+          <DeleteDialog :name="item.name + ' ' + item.surname" objName="Studente" :onDelete="async () => await deleteStudent(item)">
+            <template #activator="{ props: activatorProps }"><v-btn icon="mdi-delete-outline" aria-label="Elimina studente" title="Elimina studente" size="small" variant="text" color="error" v-bind="activatorProps" /></template>
+          </DeleteDialog>
+        </div>
+      </template>
+    </v-data-table>
+  </v-card>
 </template>
-
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
@@ -76,81 +44,73 @@ import { StudentService } from '@/models/services/student-service';
 import type { EventSubscription } from '@/models/utils/event';
 import { onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 
-interface StudentViewProps {
-    school: School
-}
-
-const props = defineProps<StudentViewProps>();
+const props = defineProps<{ school: School }>();
 const subscriptions: EventSubscription[] = [];
-
 const students: Ref<Student[]> = ref([]);
 const filteredStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
 const dialog = ref(false);
+const search = ref('');
 const studentHeaders: any = [
-    { title: 'Nome', key: 'name', align: 'start' },
-    { title: 'Cognome', key: 'surname' },
-    { title: 'Operazioni', key: 'actions', sortable: false },
-    { title: 'Giorno di lezione', key: 'lessonDay' },
-    { title: 'Livello', key: 'level' },
-    { title: 'Minuti di lezione', key: 'minutesLessonDuration' },
+  { title: 'Studente', key: 'name', align: 'start' },
+  { title: 'Giorno di lezione', key: 'lessonDay' },
+  { title: 'Livello', key: 'level' },
+  { title: 'Durata', key: 'minutesLessonDuration' },
+  { title: 'Azioni', key: 'actions', sortable: false, align: 'end' },
 ];
 const filters: Ref<StudentFilterObj[]> = ref(STUDENT_FILTERS);
-
 watch(filters, filterStudent);
-
-
-function onSaveStudent(student?: Student) {
-    if (student)
-        dialog.value = false;
-}
-
+watch(search, filterStudent);
+function onSaveStudent(student?: Student) { if (student) dialog.value = false; }
 async function deleteStudent(student?: Student): Promise<boolean> {
-    if (!student) return false;
-
-    try {
-        await StudentRepository.instance.delete(student.id)
-        return true;
-    } catch (error) {
-        return false;
-    }
+  if (!student) return false;
+  try { await StudentRepository.instance.delete(student.id); return true; }
+  catch { return false; }
 }
-
 async function loadStudents() {
-    loadingStudents.value = true;
-    const studentSubscription = StudentService.instance.observeStudentsOfSchool(props.school.id).subscribe({
-        next: data => {
-            students.value = data.filter(student => !student.isBand);
-            filterStudent();
-            loadingStudents.value = false;
-        },
-        error: _err => loadingStudents.value = false
-    })
-    subscriptions.push(studentSubscription);
+  loadingStudents.value = true;
+  const studentSubscription = StudentService.instance.observeStudentsOfSchool(props.school.id).subscribe({
+    next: data => {
+      students.value = data.filter(student => !student.isBand);
+      filterStudent();
+      loadingStudents.value = false;
+    },
+    error: _err => loadingStudents.value = false
+  });
+  subscriptions.push(studentSubscription);
 }
-
 function filterStudent() {
-    filteredStudents.value = students.value.filter(s => {
-        if(filters.value.length == 2) return true;
-        if (filters.value.map(f => f.type).includes("substistution"))
-            return !!s.isSubstitution;
-        if (filters.value.map(f => f.type).includes("normal"))
-            return !s.isSubstitution;
-    }).sort((a, b) => a.surname.localeCompare(b.surname, 'it', { sensitivity: 'base' })
-        || a.name.localeCompare(b.name, 'it', { sensitivity: 'base' }));
+  filteredStudents.value = students.value.filter(s => {
+    if (filters.value.length == 2) return true;
+    if (filters.value.map(f => f.type).includes('substistution')) return !!s.isSubstitution;
+    if (filters.value.map(f => f.type).includes('normal')) return !s.isSubstitution;
+  }).filter(s => `${s.name} ${s.surname}`.toLocaleLowerCase('it').includes((search.value ?? '').trim().toLocaleLowerCase('it')))
+    .sort((a, b) => a.surname.localeCompare(b.surname, 'it', { sensitivity: 'base' })
+    || a.name.localeCompare(b.name, 'it', { sensitivity: 'base' }));
 }
-
-onMounted(async () => {
-    await loadStudents();
-})
-
-onUnmounted(() => {
-    subscriptions.forEach(u => u.unsubscribe());
-}) 
+onMounted(async () => { await loadStudents(); });
+onUnmounted(() => { subscriptions.forEach(u => u.unsubscribe()); });
 </script>
 
-<style>
-div.v-table__wrapper>table>thead>tr {
-    font-weight: bold !important;
+<style scoped>
+.student-directory { overflow: hidden; }
+.directory-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 24px 16px; }
+.directory-header h2 { color: var(--app-text); font-size: 1.25rem; line-height: 1.3; font-weight: 700; margin: 2px 0 4px; }
+.directory-header p { color: var(--app-muted); font-size: .875rem; margin: 0; }
+.eyebrow { color: var(--app-primary); font-size: .75rem; font-weight: 650; }
+.directory-toolbar { display: flex; align-items: center; gap: 12px; padding: 8px 24px 20px; }
+.directory-search { max-width: 440px; }
+.student-table { border-top: 1px solid var(--app-border); }
+.student-identity { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.student-avatar { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: none; border-radius: 10px; background: var(--app-accent-surface); color: var(--app-primary); }
+.student-name { color: var(--app-text); font-weight: 600; white-space: nowrap; }
+.student-actions { display: flex; justify-content: flex-end; gap: 2px; }
+@media (max-width: 600px) {
+  .directory-header { align-items: stretch; flex-direction: column; padding: 20px 16px 12px; }
+  .directory-toolbar { padding: 8px 16px 16px; }
+  .directory-search { min-width: 0; }
+  .student-table :deep(th:nth-child(2)), .student-table :deep(td:nth-child(2)),
+  .student-table :deep(th:nth-child(3)), .student-table :deep(td:nth-child(3)),
+  .student-table :deep(th:nth-child(4)), .student-table :deep(td:nth-child(4)) { display: none; }
 }
 </style>

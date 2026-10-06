@@ -1,7 +1,14 @@
 <template>
-    <v-card prepend-icon="mdi-school" :title="`Studente (${school.name})`">
-        <v-card-text>
-            <v-row density="comfortable">
+    <v-card class="student-editor" variant="flat">
+        <div class="editor-header">
+            <div class="editor-header-icon"><v-icon icon="mdi-account-school-outline" size="26" /></div>
+            <div class="editor-heading"><div class="editor-eyebrow">{{ school.name }}</div><h2>{{ edit ? 'Modifica studente' : 'Nuovo studente' }}</h2><p>Informazioni e organizzazione delle lezioni</p></div>
+            <v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" />
+        </div>
+        <v-card-text class="editor-content">
+            <section class="editor-section">
+                <div class="section-heading"><div class="section-icon"><v-icon icon="mdi-account-outline" size="20" /></div><div><h3>Dati personali</h3><p>Nome e recapito dello studente</p></div></div>
+                <v-row density="comfortable">
                 <v-col cols="12" md="6">
                     <v-text-field id="std_name" :disabled="isDisabled('name')" :focused="isFocussed('name')"
                         v-model="name" v-bind="nameProps" label="Nome"></v-text-field>
@@ -16,6 +23,11 @@
                         v-model="contact" v-bind="contactProps" label="Contatto"></v-text-field>
                 </v-col>
 
+                </v-row>
+            </section>
+            <section class="editor-section">
+                <div class="section-heading"><div class="section-icon"><v-icon icon="mdi-calendar-clock-outline" size="20" /></div><div><h3>Lezioni</h3><p>Livello, orario e tipologia</p></div></div>
+                <v-row density="comfortable">
                 <v-col cols="12" md="6">
                     <v-select id="std_level" :disabled="isDisabled('level')" :focused="isFocussed('level')"
                         v-model="level" v-bind="levelProps" :items="_levels" label="Livello">
@@ -107,12 +119,12 @@
                         hide-details></v-switch>
                 </v-col>
 
-                <v-col v-if="edit && initialStudent?.id" cols="12">
-                    <StudentDailyNotes :school="school" :student="initialStudent" />
-                </v-col>
+                </v-row>
+            </section>
+            <section class="editor-section">
+                <div class="section-heading"><div class="section-icon"><v-icon icon="mdi-music-note-outline" size="20" /></div><div><h3>Saggio</h3><p>Brano e autore</p></div></div>
+                <v-row density="comfortable">
                 <v-col cols="12">
-                    <v-divider class="mb-4"></v-divider>
-                    <div class="text-subtitle-1 mb-2">Saggio</div>
                     <v-row>
                         <v-col cols="12" md="6">
                             <v-text-field v-model="recitalPiece" label="Brano" />
@@ -122,19 +134,22 @@
                         </v-col>
                     </v-row>
                 </v-col>
-            </v-row>
-
+                </v-row>
+            </section>
+            <section v-if="edit && initialStudent?.id" class="editor-section">
+                <StudentDailyNotes :school="school" :student="initialStudent" />
+            </section>
         </v-card-text>
 
         <v-divider></v-divider>
 
-        <v-card-actions>
+        <v-card-actions class="editor-actions">
             <v-spacer></v-spacer>
 
             <v-btn text="Random" variant="plain" @click="randomData" v-if="development"></v-btn>
-            <v-btn text="Chiudi" variant="plain" @click="emit('close')"></v-btn>
+            <v-btn text="Chiudi" variant="text" @click="emit('close')"></v-btn>
             <v-btn color="primary" :loading="saving" :disabled="saving" :text="edit ? 'Salva Modifiche' : 'Crea'"
-                variant="tonal" @click="onSave"></v-btn>
+                variant="flat" @click="onSave"></v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -410,3 +425,29 @@ onMounted(() => {
     updateSchool();
 })
 </script>
+
+<style scoped>
+.student-editor { min-height: 100%; background: var(--app-background); }
+.editor-header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 16px; padding: 18px 32px; background: var(--app-surface); border-bottom: 1px solid var(--app-border); }
+.editor-header-icon, .section-icon { display: inline-flex; align-items: center; justify-content: center; flex: none; color: var(--app-primary); background: var(--app-accent-surface); border-radius: 12px; }
+.editor-header-icon { width: 48px; height: 48px; }
+.editor-heading { flex: 1; min-width: 0; }
+.editor-eyebrow { color: var(--app-primary); font-size: .75rem; font-weight: 650; }
+.editor-heading h2 { margin: 1px 0; color: var(--app-text); font-size: 1.35rem; font-weight: 700; }
+.editor-heading p, .section-heading p { margin: 0; color: var(--app-muted); font-size: .85rem; }
+.editor-content { width: min(100%, 960px); margin: 0 auto; padding: 24px !important; }
+.editor-section { padding: 24px; margin-bottom: 16px; border: 1px solid var(--app-border); border-radius: 16px; background: var(--app-surface); }
+.section-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.section-icon { width: 40px; height: 40px; }
+.section-heading h3 { margin: 0; color: var(--app-text); font-size: 1rem; font-weight: 650; }
+.editor-actions { position: sticky; bottom: 0; z-index: 3; gap: 8px; padding: 16px 32px; border-top: 1px solid var(--app-border); background: var(--app-surface); }
+@media (max-width: 600px) {
+    .editor-header { gap: 10px; padding: 14px 16px; }
+    .editor-header-icon { width: 40px; height: 40px; }
+    .editor-heading h2 { font-size: 1.1rem; }
+    .editor-heading p { display: none; }
+    .editor-content { padding: 16px !important; }
+    .editor-section { padding: 18px 16px; }
+    .editor-actions { padding: 12px 16px; }
+}
+</style>

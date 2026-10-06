@@ -41,7 +41,7 @@
             </v-col>
         </v-row>
         <v-row>
-            <v-col class="pa-2" cols="12" md="6">
+            <v-col class="pa-2" cols="12" md="12">
                 <StudentView :school="school"></StudentView>
             </v-col>
             <v-col v-if="school.ensembleMusic" class="pa-2" cols="12" md="6">
