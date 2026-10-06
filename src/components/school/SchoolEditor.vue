@@ -29,7 +29,7 @@
                         <template v-slot:activator="{ props: activatorProps }">
                             <v-btn class="school-color-trigger" variant="outlined" v-bind="activatorProps">
                                 <span class="school-color-swatch" :style="{ backgroundColor: color || DEFAULT_SCHOOL_COLOR }"></span>
-                                <span><strong>Colore scuola</strong><small>{{ color || DEFAULT_SCHOOL_COLOR }}</small></span>
+                                <span class="school-color-copy"><strong>Colore scuola</strong><small>{{ color || DEFAULT_SCHOOL_COLOR }}</small></span>
                                 <v-icon icon="mdi-chevron-right" size="18" />
                             </v-btn>
                         </template>
@@ -289,12 +289,14 @@ onMounted(() => updateSchool())
 .form-step { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 10px; background: var(--app-accent-surface); color: var(--app-primary); font-size: .85rem; font-weight: 700; }
 .form-section-heading h3 { margin: 0; color: var(--app-text); font-size: 1rem; font-weight: 700; }
 .form-section-heading p { margin: 3px 0 0; color: var(--app-muted); font-size: .8rem; }
-.school-color-trigger { display: flex; align-items: center; gap: 12px; min-height: 55px; padding: 8px 12px; border: 1px solid var(--app-border); border-radius: 12px; background: var(--app-surface); cursor: pointer; }
+.school-color-trigger { width: 100%; min-height: 64px; padding: 10px 14px; border-color: var(--app-border); border-radius: 12px; background: var(--app-surface); }
+.school-color-trigger :deep(.v-btn__content) { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; }
 .school-color-trigger:hover { border-color: var(--app-hover-border); background: var(--app-hover-surface); }
-.school-color-swatch { width: 32px; height: 32px; flex: none; border: 1px solid var(--app-border); border-radius: 9px; }
-.school-color-trigger > span:nth-child(2) { display: grid; flex: 1; }
+.school-color-swatch { display: block; width: 36px; height: 36px; flex: none; border: 1px solid var(--app-border); border-radius: 10px; }
+.school-color-copy { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
 .school-color-trigger strong { color: var(--app-text); font-size: .82rem; }
 .school-color-trigger small { color: var(--app-muted); font-size: .73rem; }
+.school-color-trigger :deep(.v-icon) { flex: none; color: var(--app-muted); }
 .levels-summary-list { display: grid; gap: 8px; max-height: 330px; overflow-y: auto; margin-bottom: 16px; }
 .levels-summary-row { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 12px; border: 1px solid var(--app-border); border-radius: 11px; background: var(--app-hover-surface); }
 .levels-summary-price { color: var(--app-text); font-size: .85rem; font-weight: 700; }
