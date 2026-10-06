@@ -55,7 +55,7 @@ const name = ref(props.initialBand?.name ?? '');
 const levels = props.school.levelRanges.flatMap(range => range.levels).filter((level, index, all) => all.indexOf(level) === index);
 const level = ref(props.initialBand?.level ?? levels[0] ?? '');
 const minutes = ref(props.initialBand?.minutesLessonDuration ?? 60);
-const members = ref<BandMember[]>(structuredClone(props.initialBand?.bandMembers ?? []));
+const members = ref<BandMember[]>(copyMembers(props.initialBand));
 const schoolStudents = ref<Array<Student & { fullName: string }>>([]);
 const saving = ref(false);
 
@@ -63,7 +63,11 @@ function loadBand(band?: Student): void {
     name.value = band?.name ?? '';
     level.value = band?.level ?? levels[0] ?? '';
     minutes.value = band?.minutesLessonDuration ?? 60;
-    members.value = structuredClone(band?.bandMembers ?? []);
+    members.value = copyMembers(band);
+}
+
+function copyMembers(band?: Student): BandMember[] {
+    return (band?.bandMembers ?? []).map(member => ({ ...member }));
 }
 
 watch(() => props.initialBand, loadBand, { deep: true });
