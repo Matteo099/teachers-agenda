@@ -1,63 +1,57 @@
 <template>
     <v-card class="week-lesson-editor" variant="flat">
         <div class="editor-page-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-edit" size="24" /></span><div><span>{{ school.name }}</span><h2>{{ edit ? 'Modifica orario settimanale' : 'Nuovo orario settimanale' }}</h2></div><v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" /></div>
-        <v-card-text class="editor-page-content">
-            <v-form class="weekly-form">
-                <section class="editor-page-section"><div class="editor-section-title"><v-icon icon="mdi-calendar-range" size="20" /><h3>Quando si svolge</h3></div>
-                <v-row class="my-1 justify-center">
-                    <v-col class="px-2">
-                        <v-select v-model="dayOfWeek" v-bind="dayOfWeekProps" :items="days" label="Giorno"
-                            required></v-select>
-                    </v-col>
-                </v-row>
-                <v-row class="my-1 justify-center">
-                    <v-col class="px-2" cols="12" md="4">
-                        <v-date-input :max="to" v-model="from" v-bind="fromProps" label="Dal"
-                            inputmode="none"></v-date-input>
-                    </v-col>
-                    <v-col class="px-2" cols="12" md="4">
-                        <v-date-input :min="from" v-model="to" v-bind="toProps" label="Al"
-                            inputmode="none"></v-date-input>
-                    </v-col>
-                    <v-col class="px-2" cols="12" md="4">
+        <v-card-text class="weekly-editor-content">
+            <div class="weekly-editor-intro"><h3>Componi la giornata</h3><p>Definisci la ricorrenza, scegli gli allievi e verifica gli orari nell'anteprima.</p></div>
+            <div class="weekly-editor-layout">
+                <v-form class="weekly-editor-form">
+                    <section class="editor-page-section">
+                        <div class="weekly-section-heading"><span class="weekly-step">1</span><div><h3>Ricorrenza</h3><p>Giorno e periodo di validità</p></div></div>
+                        <v-select v-model="dayOfWeek" v-bind="dayOfWeekProps" :items="days" label="Giorno della settimana"
+                            variant="outlined" required />
+                        <div class="weekly-date-grid">
+                            <v-date-input :max="to" v-model="from" v-bind="fromProps" label="Dal" variant="outlined" inputmode="none" />
+                            <v-date-input :min="from" v-model="to" v-bind="toProps" label="Al" variant="outlined" inputmode="none" />
+                        </div>
                         <v-select v-model="excludeDates" v-bind="excludeDatesProps" :items="allDates"
-                            label="Giorni da Escludere" multiple item-title="name" item-value="value"
-                            no-data-text="Nessuna Data Disponibile" clearable>
-                            <template v-slot:selection="{ item, index }">
-                                <v-chip v-if="index < 2">
-                                    <span>{{ item.name }}</span>
-                                </v-chip>
-                                <span v-if="index === 2" class="text-grey text-caption align-self-center">
-                                    (+{{ excludeDates.length - 2 }} altri)
-                                </span>
+                            label="Date da escludere" variant="outlined" multiple item-title="name" item-value="value"
+                            no-data-text="Nessuna data disponibile" clearable>
+                            <template #selection="{ item, index }">
+                                <v-chip v-if="index < 2" size="small" color="primary" variant="tonal">{{ item.name }}</v-chip>
+                                <span v-if="index === 2" class="weekly-more-dates">+{{ excludeDates.length - 2 }} altre</span>
                             </template>
                         </v-select>
-                    </v-col>
-                </v-row>
-                </section>
-                <section class="editor-page-section"><div class="editor-section-title"><v-icon icon="mdi-account-clock-outline" size="20" /><h3>Orario e allievi</h3></div>
-                <v-row class="my-1 justify-center">
-                    <v-col class="px-2" cols="12" md="6">
+                    </section>
+
+                    <section class="editor-page-section">
+                        <div class="weekly-section-heading"><span class="weekly-step">2</span><div><h3>Inizio delle lezioni</h3><p>L'orario delle altre lezioni si compone in base agli allievi scelti</p></div></div>
                         <v-text-field v-model="startingTime" v-bind="startingTimeProps" :active="modalTimePicker"
-                            :focused="modalTimePicker" inputmode="none" label="Orario della prima Lezione"
-                            prepend-icon="mdi-clock-time-four-outline" readonly>
+                            :focused="modalTimePicker" inputmode="none" label="Orario della prima lezione"
+                            variant="outlined" prepend-inner-icon="mdi-clock-time-four-outline" readonly>
                             <v-dialog v-model="modalTimePicker" activator="parent" width="auto">
-                                <v-time-picker v-if="modalTimePicker" v-model="startingTime"
-                                    format="24hr"></v-time-picker>
+                                <v-time-picker v-if="modalTimePicker" v-model="startingTime" format="24hr" />
                             </v-dialog>
                         </v-text-field>
-                    </v-col>
-                    <v-col class="px-2" cols="12" md="6">
-                        <SelectStudents v-model="selectedStudents" :all-students="studentsForSelectedDay" />
-                        <v-btn class="mt-2" variant="text" size="small" @click="showOtherStudents = !showOtherStudents">
+                    </section>
+
+                    <section class="editor-page-section">
+                        <div class="weekly-section-heading"><span class="weekly-step">3</span><div><h3>Allievi e band</h3><p>Seleziona chi partecipa alla giornata</p></div></div>
+                        <SelectStudents v-model="selectedStudents" :all-students="studentsForSelectedDay" mode="list" />
+                        <v-btn class="weekly-other-students" color="primary" variant="text" size="small"
+                            :prepend-icon="showOtherStudents ? 'mdi-filter-check-outline' : 'mdi-account-search-outline'"
+                            @click="showOtherStudents = !showOtherStudents">
                             {{ showOtherStudents ? 'Mostra solo gli allievi del giorno' : 'Visualizza altri allievi' }}
                         </v-btn>
-                    </v-col>
-                </v-row></section>
+                    </section>
+                </v-form>
 
-            </v-form>
-
-            <div class="weekly-preview editor-page-section"><div class="editor-section-title"><v-icon icon="mdi-eye-outline" size="20" /><h3>Anteprima lezioni</h3></div><DailyLessonCalendar v-model="events" editable :school="school" /></div>
+                <aside class="weekly-preview editor-page-section">
+                    <div class="weekly-preview-heading"><div><span class="weekly-preview-kicker">Anteprima</span><h3>Giornata delle lezioni</h3><p>Trascina le lezioni per regolare gli orari.</p></div>
+                        <v-chip size="small" color="primary" variant="tonal">{{ selectedStudents.length }} allievi</v-chip>
+                    </div>
+                    <div class="weekly-calendar"><DailyLessonCalendar v-model="events" editable :school="school" /></div>
+                </aside>
+            </div>
         </v-card-text>
         <v-card-actions class="editor-page-actions">
             <v-spacer></v-spacer>
@@ -392,9 +386,25 @@ onMounted(async () => {
 </script>
 <style scoped>
 .week-lesson-editor { min-height: 100%; background: var(--app-background); }
-.weekly-form { padding: 0; }
-.weekly-form h2, .weekly-preview h2 { margin: 0 0 12px; font-size: 1rem; font-weight: 700; color: var(--app-text); }
-.weekly-preview { margin-top: 16px; }
+.weekly-editor-content { width: min(100%, 1440px); margin: 0 auto; padding: 24px !important; }
+.weekly-editor-intro { margin: 2px 0 22px; }
+.weekly-editor-intro h3 { margin: 0 0 4px; color: var(--app-text); font-size: 1.2rem; font-weight: 700; }
+.weekly-editor-intro p { margin: 0; color: var(--app-muted); font-size: .86rem; }
+.weekly-editor-layout { display: grid; grid-template-columns: minmax(340px, .9fr) minmax(0, 1.1fr); gap: 16px; align-items: start; }
+.weekly-editor-form, .weekly-preview { min-width: 0; }
+.weekly-section-heading { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+.weekly-step { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 10px; background: var(--app-accent-surface); color: var(--app-primary); font-size: .85rem; font-weight: 700; }
+.weekly-section-heading h3, .weekly-preview-heading h3 { margin: 0; color: var(--app-text); font-size: 1rem; font-weight: 700; }
+.weekly-section-heading p, .weekly-preview-heading p { margin: 3px 0 0; color: var(--app-muted); font-size: .8rem; }
+.weekly-date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.weekly-more-dates { margin-left: 4px; color: var(--app-muted); font-size: .75rem; }
+.weekly-other-students { margin-top: 12px; }
+.weekly-preview { position: sticky; top: 104px; padding: 20px; }
+.weekly-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.weekly-preview-kicker { color: var(--app-primary); font-size: .75rem; font-weight: 650; }
+.weekly-calendar { overflow: hidden; border: 1px solid var(--app-border); border-radius: 12px; }
+.weekly-calendar :deep(.daily-calendar-container) { padding: 0; }
 .week-lesson-editor :deep(.v-card-actions) { padding: 16px 24px; border-top: 1px solid var(--app-border); }
-@media (max-width: 600px) { .weekly-form { padding: 4px; } }
+@media (max-width: 1050px) { .weekly-editor-layout { grid-template-columns: 1fr; } .weekly-preview { position: static; } }
+@media (max-width: 600px) { .weekly-editor-content { padding: 16px !important; } .weekly-date-grid { grid-template-columns: 1fr; gap: 0; } .weekly-preview { padding: 16px; } }
 </style>
