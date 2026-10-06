@@ -46,7 +46,7 @@ import type { BandMember, School, Student } from '@/models/model';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { StudentService } from '@/models/services/student-service';
 import { Timestamp } from 'firebase/firestore';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 
 const props = defineProps<{ school: School; initialBand?: Student }>();
@@ -58,6 +58,15 @@ const minutes = ref(props.initialBand?.minutesLessonDuration ?? 60);
 const members = ref<BandMember[]>(structuredClone(props.initialBand?.bandMembers ?? []));
 const schoolStudents = ref<Array<Student & { fullName: string }>>([]);
 const saving = ref(false);
+
+function loadBand(band?: Student): void {
+    name.value = band?.name ?? '';
+    level.value = band?.level ?? levels[0] ?? '';
+    minutes.value = band?.minutesLessonDuration ?? 60;
+    members.value = structuredClone(band?.bandMembers ?? []);
+}
+
+watch(() => props.initialBand, loadBand, { deep: true });
 
 StudentService.instance.getStudentsOfSchool(props.school.id).then(students => {
     schoolStudents.value = students
