@@ -1,53 +1,64 @@
 <template>
     <v-card class="level-range-editor" variant="flat">
-        <div class="editor-page-header"><span class="school-panel-icon"><v-icon icon="mdi-format-list-numbered" size="24" /></span><div><span>Configurazione scuola</span><h2>Livelli e compensi</h2></div><v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" /></div>
-        <v-card-text class="editor-page-content">
-            <section class="editor-page-section">
-            <div class="editor-section-title"><v-icon icon="mdi-cash-multiple" size="20" /><h3>Fasce di compenso</h3></div>
-            <v-row class="my-3 mb-10 justify-center">
-                <v-col class="px-2" cols="12" md="4">
-                    <v-number-input max-width="500" :precision=3 v-model="levelRangePrice" :reverse="false"
-                        controlVariant="default" label="Compenso Orario" prefix="€" :hideInput="false" :inset="false"
-                        :min="0">
-                    </v-number-input>
-                </v-col>
-                <v-col class="px-2" cols="12" md="1">
-                    <v-btn @click="addLevelRange" icon="mdi-plus" color="primary" variant="tonal" aria-label="Aggiungi fascia"></v-btn>
-                    <v-btn @click="deleteLevelRange" icon="mdi-minus" color="error" variant="text" aria-label="Rimuovi fascia"></v-btn>
-                </v-col>
-            </v-row>
+        <div class="level-editor-header">
+            <span class="school-panel-icon"><v-icon icon="mdi-format-list-numbered" size="24" /></span>
+            <div><span>Configurazione scuola</span><h2>Livelli e compensi</h2><p>Crea una fascia oraria, poi aggiungi i livelli associati.</p></div>
+            <v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" />
+        </div>
 
-            <v-card class="level-range-list pa-2" v-if="tab" variant="flat">
-                <v-tabs v-model="tab" class="my-2" align-tabs="center" color="primary" show-arrows>
-                    <v-tab v-for="i in levelRanges" :key="i.price" :text="numberFormat(i.price) + ' €'"
-                        :value="i"></v-tab>
-                </v-tabs>
+        <v-card-text class="level-editor-body">
+            <div class="level-workspace">
+                <section class="level-ranges">
+                    <div class="level-section-heading"><h3>Fasce orarie</h3><span>{{ levelRanges.length }}</span></div>
+                    <p class="level-help">Ogni fascia definisce il compenso orario dei suoi livelli.</p>
+                    <div class="level-add-row">
+                        <v-number-input v-model="levelRangePrice" label="Compenso orario" prefix="€" :precision="3"
+                            :min="0" control-variant="default" variant="outlined" hide-details />
+                        <v-btn color="primary" icon="mdi-plus" variant="flat" aria-label="Aggiungi fascia" title="Aggiungi fascia"
+                            @click="addLevelRange" />
+                    </div>
+                    <div v-if="levelRanges.length" class="range-list">
+                        <button v-for="range in levelRanges" :key="range.price" type="button" class="range-item"
+                            :class="{ 'range-item-active': tab?.price === range.price }" @click="tab = range">
+                            <span class="range-icon"><v-icon icon="mdi-cash" size="19" /></span>
+                            <span class="range-details"><strong>{{ numberFormat(range.price) }} € / ora</strong><small>{{ range.levels.length }} livelli</small></span>
+                            <v-icon icon="mdi-chevron-right" size="18" />
+                        </button>
+                    </div>
+                    <div v-else class="level-empty">Aggiungi la prima fascia per configurare i livelli.</div>
+                </section>
 
-                <v-tabs-window v-model="tab">
-                    <v-tabs-window-item class="mx-5 my-5" v-for="levelRange in levelRanges" :key="levelRange.price"
-                        :value="levelRange">
-                        <v-text-field v-model="levelName" label="Nome Livello" append-icon="mdi-plus" type="text"
-                            @click:append="addLevelName(levelRange)"></v-text-field>
-                        <v-list :items="levelRange.levels">
-                            <template v-slot:append="{ item }">
-                                <v-icon size="small" @click="deleteItem(levelRange, item)">
-                                    mdi-delete
-                                </v-icon>
-                            </template>
-                        </v-list>
-                    </v-tabs-window-item>
-                </v-tabs-window>
-            </v-card>
-            </section>
+                <section class="level-details">
+                    <template v-if="tab">
+                        <div class="level-details-header">
+                            <div><span class="level-kicker">Fascia selezionata</span><h3>{{ numberFormat(tab.price) }} € / ora</h3></div>
+                            <v-btn color="error" variant="text" size="small" prepend-icon="mdi-delete-outline"
+                                @click="deleteLevelRange">Elimina fascia</v-btn>
+                        </div>
+                        <p class="level-help">Aggiungi i livelli che utilizzano questo compenso.</p>
+                        <div class="level-add-row">
+                            <v-text-field v-model="levelName" label="Nome del livello" variant="outlined" hide-details
+                                @keyup.enter="addLevelName(tab)" />
+                            <v-btn color="primary" variant="tonal" prepend-icon="mdi-plus" @click="addLevelName(tab)">Aggiungi</v-btn>
+                        </div>
+                        <div v-if="tab.levels.length" class="level-chip-list">
+                            <div v-for="item in tab.levels" :key="item" class="level-chip">
+                                <span>{{ item }}</span>
+                                <v-btn icon="mdi-close" size="x-small" variant="text" :aria-label="'Rimuovi livello ' + item"
+                                    @click="deleteItem(tab, item)" />
+                            </div>
+                        </div>
+                        <div v-else class="level-empty">Questa fascia non ha ancora livelli.</div>
+                    </template>
+                    <div v-else class="level-placeholder"><v-icon icon="mdi-format-list-bulleted" size="32" /><h3>Seleziona una fascia</h3><p>I livelli della fascia scelta compariranno qui.</p></div>
+                </section>
+            </div>
         </v-card-text>
-        <v-divider></v-divider>
 
-        <v-card-actions class="editor-page-actions">
-            <v-spacer></v-spacer>
-
-            <v-btn text="Annulla" variant="text" @click="emit('close')"></v-btn>
-
-            <v-btn color="primary" text="Salva livelli" variant="flat" @click="emit('save', levelRanges)"></v-btn>
+        <v-card-actions class="level-editor-actions">
+            <v-spacer />
+            <v-btn text="Annulla" variant="text" @click="emit('close')" />
+            <v-btn color="primary" text="Salva livelli" variant="flat" @click="emit('save', levelRanges)" />
         </v-card-actions>
     </v-card>
 </template>
@@ -109,3 +120,38 @@ function addLevelName(levelRange: LevelRange) {
 
 onMounted(() => updateLevelRanges())
 </script>
+
+<style scoped>
+.level-range-editor { display: flex; flex-direction: column; max-height: min(850px, 94vh); overflow: hidden; }
+.level-editor-header { display: flex; align-items: center; gap: 14px; padding: 20px 24px; border-bottom: 1px solid var(--app-border); }
+.level-editor-header > div { flex: 1; min-width: 0; }
+.level-editor-header span:not(.school-panel-icon), .level-kicker { color: var(--app-primary); font-size: .75rem; font-weight: 650; }
+.level-editor-header h2 { margin: 2px 0; color: var(--app-text); font-size: 1.25rem; font-weight: 700; }
+.level-editor-header p, .level-help { margin: 0; color: var(--app-muted); font-size: .84rem; }
+.level-editor-body { overflow-y: auto; padding: 24px !important; }
+.level-workspace { display: grid; grid-template-columns: minmax(245px, .8fr) minmax(0, 1.2fr); gap: 16px; }
+.level-ranges, .level-details { min-height: 340px; padding: 20px; border: 1px solid var(--app-border); border-radius: 14px; background: var(--app-surface); }
+.level-section-heading, .level-details-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.level-section-heading h3, .level-details-header h3 { margin: 0; color: var(--app-text); font-size: 1rem; font-weight: 700; }
+.level-section-heading > span { padding: 2px 9px; border-radius: 8px; background: var(--app-accent-surface); color: var(--app-primary); font-size: .8rem; font-weight: 700; }
+.level-help { margin: 6px 0 16px; }
+.level-add-row { display: flex; align-items: center; gap: 8px; }
+.level-add-row > .v-input { min-width: 0; flex: 1; }
+.range-list { display: grid; gap: 8px; margin-top: 20px; }
+.range-item { width: 100%; display: flex; align-items: center; gap: 10px; padding: 11px; border: 1px solid var(--app-border); border-radius: 11px; background: var(--app-surface); color: var(--app-muted); text-align: left; cursor: pointer; }
+.range-item:hover, .range-item-active { border-color: var(--app-hover-border); background: var(--app-accent-surface); }
+.range-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--app-accent-surface); color: var(--app-primary); }
+.range-details { flex: 1; display: grid; gap: 2px; }
+.range-details strong { color: var(--app-text); font-size: .88rem; }
+.range-details small { color: var(--app-muted); font-size: .75rem; }
+.level-details-header { margin-bottom: 16px; }
+.level-details-header h3 { margin-top: 4px; font-size: 1.2rem; }
+.level-chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.level-chip { display: flex; align-items: center; gap: 6px; padding: 4px 5px 4px 12px; border: 1px solid var(--app-hover-border); border-radius: 10px; background: var(--app-accent-surface); color: var(--app-text); font-size: .85rem; font-weight: 600; }
+.level-empty { margin-top: 20px; padding: 20px; border: 1px dashed var(--app-border); border-radius: 10px; color: var(--app-muted); font-size: .83rem; text-align: center; }
+.level-placeholder { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--app-muted); text-align: center; }
+.level-placeholder h3 { margin: 12px 0 4px; color: var(--app-text); font-size: 1rem; }
+.level-placeholder p { margin: 0; font-size: .83rem; }
+.level-editor-actions { padding: 16px 24px; border-top: 1px solid var(--app-border); background: var(--app-surface); }
+@media (max-width: 700px) { .level-workspace { grid-template-columns: 1fr; } .level-ranges, .level-details { min-height: auto; } .level-editor-body { padding: 16px !important; } .level-editor-header { padding: 16px; } .level-editor-header p { display: none; } }
+</style>
