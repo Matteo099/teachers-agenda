@@ -3,17 +3,17 @@
         <v-card-text>
             <DateSelect class="mb-2" v-model="selectedRange" :show-advanced="false" />
             <v-row v-if="report" density="comfortable" class="mb-3">
-                <v-col cols="6" md="3"><v-card variant="tonal" title="Lezioni regolari"
+                <v-col cols="6" md="4"><v-card variant="tonal" title="Lezioni regolari"
                         :text="currency(report.regularLessonsTotal)"></v-card></v-col>
                 <v-col v-if="school.salaryStrategy === SalaryStrategy.ONLY_PRESENT" cols="6" md="3">
                     <v-card variant="tonal" title="Recuperi extra" :text="currency(report.recoveryTotal)"></v-card>
                 </v-col>
-                <v-col cols="6" md="3"><v-card variant="tonal"
+                <v-col cols="6" md="4"><v-card variant="tonal"
                         :title="`Rimborsi (${report.officialCalendarDays} gg ufficiali)`"
                         :text="currency(report.reimbursementTotal)"></v-card></v-col>
-                <v-col v-if="school.managed" cols="6" md="3"><v-card variant="tonal" title="Quota gestione"
+                <v-col v-if="school.managed" cols="6" md="4"><v-card variant="tonal" title="Quota gestione"
                         :text="currency(report.managementTotal)"></v-card></v-col>
-                <v-col cols="6" md="3"><v-card color="primary" title="Totale"
+                <v-col cols="6" md="4"><v-card color="primary" title="Totale"
                         :text="currency(report.netTotal)"></v-card></v-col>
             </v-row>
             <v-data-table :headers="salaryHeaders" :items="salaries" item-value="id">
