@@ -1,5 +1,6 @@
 <template>
-    <div>
+    <div class="statistics-view">
+        <div class="statistics-heading mb-5"><v-icon color="primary" icon="mdi-chart-bar" size="28" /><h1>Statistiche</h1></div>
         <v-tabs v-model="tab" color="primary" align-tabs="center">
             <v-tab prepend-icon="mdi-cash" text="Stipendio" value="salary"></v-tab>
             <v-tab prepend-icon="mdi-town-hall" text="Scuole" value="schools"></v-tab>
@@ -193,3 +194,10 @@ onMounted(() => {
     loadSchools();
 })
 </script>
+<style scoped>
+.statistics-heading { display: flex; align-items: center; gap: 12px; }
+.statistics-heading h1 { font-size: 1.45rem; font-weight: 700; letter-spacing: -.025em; }
+.statistics-view :deep(.v-tabs) { padding: 4px; border: 1px solid #E8ECF4; }
+.statistics-view :deep(.v-tab--selected) { background: #EAF1FF; }
+.statistics-view :deep(.v-tabs-window) { margin-top: 16px; }
+</style>

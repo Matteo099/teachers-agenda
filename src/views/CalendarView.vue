@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-3" title="Calendario delle lezioni" elevation="0">
+    <v-card class="pa-3 calendar-view-card" title="Calendario delle lezioni" variant="flat">
         <template v-slot:prepend>
             <BackButton :delta="deltaHistory"></BackButton>
         </template>
@@ -30,7 +30,7 @@
             <v-progress-linear :active="loading" color="primary" indeterminate></v-progress-linear>
             <ScheduleXCalendar :calendar-app="calendarApp">
                 <template #eventModal="{ calendarEvent }">
-                    <v-card class="lesson-event-modal" elevation="3" :title="calendarEvent.title"
+                    <v-card class="lesson-event-modal" variant="flat" :title="calendarEvent.title"
                         :text="calendarEvent.description">
                         <template v-slot:subtitle>
                             <v-icon>mdi-clock-outline</v-icon>
@@ -185,8 +185,6 @@ async function goto(data: { dailyLessonId?: ID, schoolId?: ID, date?: string }) 
 }
 
 function updateCalendarEvents() {
-    if (!calendarApp) return;
-
     const uniqueLessons = Array.from(new Map(lessons.map(event => [event.id, event])).values());
     uniqueLessons.forEach(event => {
         if (!event._options) event._options = {};
@@ -279,6 +277,8 @@ onMounted(async () => {
 </script>
 
 <style>
+.calendar-view-card { padding: 18px !important; }
+.calendar-view-card .v-card-text { padding: 12px 4px 4px; }
 .lesson-event-modal .v-card-actions {
     flex-wrap: wrap;
     gap: 8px;

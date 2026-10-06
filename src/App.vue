@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-if="!loginPage && !mobile" permanent v-model="drawer">
+    <v-navigation-drawer v-if="!loginPage && !mobile" permanent v-model="drawer" width="252">
       <v-list-item height="64">
         <template v-slot:prepend>
           <v-img contain :src="appLogo" height="45" width="45"></v-img>
@@ -12,21 +12,21 @@
       <v-divider></v-divider>
 
       <v-list dense nav>
-        <v-list-item to="/" color="lime-darken-4">
+        <v-list-item to="/" color="primary">
           <template v-slot:prepend>
             <v-icon icon="mdi-home"></v-icon>
           </template>
           <v-list-item-title>Home</v-list-item-title>
         </v-list-item>
 
-        <v-list-item to="/calendar" color="lime-darken-4">
+        <v-list-item to="/calendar" color="primary">
           <template v-slot:prepend>
             <v-icon icon="mdi-calendar"></v-icon>
           </template>
           <v-list-item-title>Calendario</v-list-item-title>
         </v-list-item>
 
-        <v-list-item to="/statistics" color="lime-darken-4">
+        <v-list-item to="/statistics" color="primary">
           <template v-slot:prepend>
             <v-icon icon="mdi-chart-bar"></v-icon>
           </template>
@@ -44,9 +44,10 @@
       </template>
     </v-navigation-drawer>
 
-    <v-app-bar color="grey-darken-4">
+    <v-app-bar color="surface" elevation="0" class="app-top-bar">
       <v-app-bar-nav-icon v-if="!loginPage && !mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-app-bar-title style="margin-left: -10px">
+      <v-app-bar-title class="app-top-title">
+        {{ route.name === 'calendar' ? 'Calendario' : route.name === 'statistics' ? 'Statistiche' : route.name === 'home' ? 'Home' : 'Agenda del Maestro' }}
         <!-- <router-link to="/">
           <v-img contain :src="companyLogo" height="90" width="150"></v-img>
         </router-link> -->
@@ -140,15 +141,15 @@
       </v-container>
     </v-main>
 
-    <v-bottom-navigation v-if="!loginPage && mobile" class="mobile-bottom-navigation" :bg-color="color" grow>
-        <v-btn to="/calendar">
-          <v-icon>mdi-calendar</v-icon>
-          <span>Calendario</span>
+    <v-bottom-navigation v-if="!loginPage && mobile" class="mobile-bottom-navigation" bg-color="surface" grow>
+        <v-btn to="/">
+          <v-icon>mdi-home-outline</v-icon>
+          <span>Home</span>
         </v-btn>
 
-        <v-btn to="/">
-          <v-icon>mdi-town-hall</v-icon>
-          <span>Scuola</span>
+        <v-btn to="/calendar">
+          <v-icon>mdi-calendar-month-outline</v-icon>
+          <span>Calendario</span>
         </v-btn>
 
         <v-btn to="/statistics">
@@ -170,8 +171,7 @@ import { LocalStorageHandler } from './models/storage/local-storage-handler';
 import { stringToHslColor } from './models/utils';
 import { checkForNewVersion } from './models/utils/version';
 
-const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
-const color = computed(() => 'blue-grey');
+const { mobile } = useDisplay({ mobileBreakpoint: 'lg' })
 
 const notifications: any[] = [];
 
@@ -255,13 +255,18 @@ onMounted(async () => {
 </script>
 
 <style>
+.app-top-bar { border-bottom: 1px solid var(--app-border); }
+.app-top-title { font-size: 1.18rem; font-weight: 700; color: var(--app-text); }
 .mobile-bottom-navigation {
   position: fixed !important;
   inset: auto 0 0;
   z-index: 1006;
   width: 100%;
   padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--app-border);
+  box-shadow: 0 -2px 14px rgba(30, 50, 100, .05) !important;
 }
+.mobile-bottom-navigation .v-btn--active { color: var(--app-primary); }
 
 .mobile-main {
   padding-bottom: calc(56px + env(safe-area-inset-bottom)) !important;

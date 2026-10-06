@@ -1,7 +1,8 @@
 <template>
-    <v-card title="Lezione Settimanale">
+    <v-card :title="edit ? 'Modifica orario settimanale' : 'Nuovo orario settimanale'" class="week-lesson-editor" variant="flat">
         <v-card-text>
-            <v-form class="ma-2">
+            <v-form class="weekly-form">
+                <h2>Quando si svolge</h2>
                 <v-row class="my-1 justify-center">
                     <v-col class="px-2">
                         <v-select v-model="dayOfWeek" v-bind="dayOfWeekProps" :items="days" label="Giorno"
@@ -26,12 +27,13 @@
                                     <span>{{ item.name }}</span>
                                 </v-chip>
                                 <span v-if="index === 2" class="text-grey text-caption align-self-center">
-                                    (+{{ excludeDates.length - 2 }} others)
+                                    (+{{ excludeDates.length - 2 }} altri)
                                 </span>
                             </template>
                         </v-select>
                     </v-col>
                 </v-row>
+                <h2 class="mt-5">Orario e allievi</h2>
                 <v-row class="my-1 justify-center">
                     <v-col class="px-2" cols="12" md="6">
                         <v-text-field v-model="startingTime" v-bind="startingTimeProps" :active="modalTimePicker"
@@ -53,7 +55,7 @@
 
             </v-form>
 
-            <DailyLessonCalendar v-model="events" editable :school="school"></DailyLessonCalendar>
+            <div class="weekly-preview"><h2>Anteprima lezioni</h2><DailyLessonCalendar v-model="events" editable :school="school" /></div>
         </v-card-text>
         <v-card-actions>
             <v-spacer></v-spacer>
@@ -386,3 +388,11 @@ onMounted(async () => {
     updateWeekLesson();
 })
 </script>
+<style scoped>
+.week-lesson-editor { max-width: 1100px; margin: 0 auto; }
+.weekly-form { padding: 12px; }
+.weekly-form h2, .weekly-preview h2 { margin: 0 0 12px; font-size: 1rem; font-weight: 700; color: var(--app-text); }
+.weekly-preview { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--app-border); }
+.week-lesson-editor :deep(.v-card-actions) { padding: 16px 24px; border-top: 1px solid var(--app-border); }
+@media (max-width: 600px) { .weekly-form { padding: 4px; } }
+</style>

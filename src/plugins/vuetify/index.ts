@@ -10,16 +10,18 @@ import { en, it } from 'vuetify/locale'
 const myCustomLightTheme = {
     dark: false,
     colors: {
-        background: '#FFFFFF',
+        background: '#F7F9FC',
         surface: '#FFFFFF',
-        primary: '#6200EE',
-        'primary-darken-1': '#3700B3',
-        secondary: '#03DAC6',
-        'secondary-darken-1': '#018786',
-        error: '#B00020',
-        info: '#2196F3',
-        success: '#4CAF50',
-        warning: '#FB8C00',
+        primary: '#2563EB',
+        'primary-darken-1': '#1D4ED8',
+        secondary: '#64748B',
+        'secondary-darken-1': '#475569',
+        'on-background': '#172033',
+        'on-surface': '#172033',
+        error: '#EF5B5B',
+        info: '#4DA3FF',
+        success: '#34C27A',
+        warning: '#F5B83D',
         'blue-grey-lighten': '#37474F'
     }
 }

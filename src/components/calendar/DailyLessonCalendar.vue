@@ -1,8 +1,8 @@
 <template>
-    <v-container>
+    <v-container fluid class="daily-calendar-container">
         <ScheduleXCalendar :calendar-app="calendarApp">
             <template #eventModal="{ calendarEvent }">
-                <v-card elevation="3" :title="calendarEvent.title"
+                <v-card variant="flat" :title="calendarEvent.title"
                     :subtitle="calendarEvent.start.split(' ')[1] + ' - ' + calendarEvent.end.split(' ')[1]"
                     :text="calendarEvent.description">
                     <v-card-actions>
@@ -159,7 +159,7 @@ function transformModel(): CalendarEventExt[] {
                 start: date + " " + Time.fromITime(sl.lesson.startTime).format(),
                 end: date + " " + Time.fromITime(sl.lesson.endTime).format(),
                 title: `${sl.student.name} ${sl.student.surname} - ${days[sl.student.lessonDay ?? 0]}`,
-                calendarId: sl.lesson.schoolId.toLowerCase(),
+                calendarId: (props.school?.id ?? sl.student.schoolId).toLowerCase(),
                 data: { ...sl }
             };
         } else {
@@ -229,3 +229,7 @@ onMounted(() => {
     updateInternalEvents();
 })
 </script>
+<style scoped>
+.daily-calendar-container { padding: 0; }
+.daily-calendar-container :deep(.sx-vue-calendar-wrapper) { min-height: 520px; }
+</style>

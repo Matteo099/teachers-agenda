@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import { LessonStatus, yyyyMMdd, type IyyyyMMdd, type School } from '@/models/model';
+import { statusColors } from '@/models/statusColors';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
@@ -152,7 +153,7 @@ function exportPdf() {
     h1 { font-size: 18px; margin: 0 0 4px; } p { margin: 0 0 12px; color: #555; }
     table { border-collapse: collapse; width: 100%; table-layout: auto; } th, td { border: 1px solid #999; padding: 5px 6px; text-align: center; white-space: nowrap; }
     th { background: #eeeeee; font-weight: bold; } th:first-child, td:first-child { text-align: left; font-weight: bold; width: 90px; }
-    thead { display: table-header-group; } tr { break-inside: avoid; } .status-red { color: #d32f2f; font-weight: bold; } .status-orange { color: #ef6c00; font-weight: bold; } .status-blue { color: #1976d2; font-weight: bold; } .status-green { color: #2e7d32; font-weight: bold; }
+    thead { display: table-header-group; } tr { break-inside: avoid; } .status-absent { color: ${statusColors.absent.foreground}; background: ${statusColors.absent.background}; font-weight: bold; } .status-moved { color: ${statusColors.moved.foreground}; background: ${statusColors.moved.background}; font-weight: bold; } .status-recovery { color: ${statusColors.recovery.foreground}; background: ${statusColors.recovery.background}; font-weight: bold; } .status-present { color: ${statusColors.present.foreground}; background: ${statusColors.present.background}; font-weight: bold; } .status-due { color: ${statusColors.due.foreground}; background: ${statusColors.due.background}; font-weight: bold; }
     .legend { margin-top: 10px; color: #555; }
   </style></head><body><h1>Presenze - ${escapeHtml(day)}</h1><p>Periodo: ${props.from ? yyyyMMdd.fromIyyyyMMdd(props.from).format() : ''} - ${props.to ? yyyyMMdd.fromIyyyyMMdd(props.to).format() : ''}</p><table><thead><tr><th>Data</th>${header}</tr></thead><tbody>${body}</tbody></table><div class="legend">P presente · A ingiustificata · D da recuperare · R recuperata · S spostata</div></body></html>`);
   printWindow.document.close();
@@ -177,12 +178,13 @@ function exportCsv() {
 }
 
 function statusClass(l: any) {
-  if (l.reportStatus === 'R') return 'status-blue';
-  if (l.reportStatus === 'S') return 'status-orange';
-  if (l.moved || l.status === LessonStatus.ABSENT) return 'status-orange';
-  if (l.status === LessonStatus.UNJUSTIFIED_ABSENCE) return 'status-red';
-  if (l.recovery?.ref === 'original') return 'status-blue';
-  return 'status-green';
+  if (l.reportStatus === 'R') return 'status-recovery';
+  if (l.reportStatus === 'S') return 'status-moved';
+  if (l.moved) return 'status-moved';
+  if (l.status === LessonStatus.ABSENT) return 'status-due';
+  if (l.status === LessonStatus.UNJUSTIFIED_ABSENCE) return 'status-absent';
+  if (l.recovery?.ref === 'original') return 'status-recovery';
+  return 'status-present';
 }
 
 watch(() => [props.from, props.to, props.schools, selectedDay.value], load, { immediate: true, deep: true });
@@ -192,10 +194,11 @@ watch(() => [props.from, props.to, props.schools, selectedDay.value], load, { im
 .attendance-table {
   overflow-x: auto;
 }
-.status-red, .status-orange, .status-blue, .status-green { font-weight: 700; }
-.status-red { color: #d32f2f; }
-.status-orange { color: #ef6c00; }
-.status-blue { color: #1976d2; }
-.status-green { color: #2e7d32; }
+.status-present { color: var(--status-present-fg); background: var(--status-present-bg); }
+.status-due { color: var(--status-due-fg); background: var(--status-due-bg); }
+.status-absent { color: var(--status-absent-fg); background: var(--status-absent-bg); }
+.status-recovery { color: var(--status-recovery-fg); background: var(--status-recovery-bg); }
+.status-moved { color: var(--status-moved-fg); background: var(--status-moved-bg); }
+.attendance-table td:not(:first-child) { font-weight: 700; border-radius: 8px; }
 @media print { .v-btn, .v-select { display: none !important; } .attendance-table { overflow: visible; } }
 </style>

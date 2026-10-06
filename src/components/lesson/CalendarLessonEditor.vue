@@ -1,9 +1,9 @@
 <template>
-    <v-card title="Calendario" :loading="loadingCalendar || loadingStudents">
+    <v-card title="Orario settimanale" class="weekly-calendar-editor" variant="flat" :loading="loadingCalendar || loadingStudents">
         <template v-slot:append>
             <v-dialog v-model="dialog" transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn icon="mdi-plus" v-bind="activatorProps" variant="text"></v-btn>
+                    <v-btn prepend-icon="mdi-plus" color="primary" variant="tonal" v-bind="activatorProps">Nuovo orario</v-btn>
                 </template>
             
                 <WeekLessonEditor :school="school" @close="dialog = false" @save="$event ? dialog = false : null">
@@ -12,23 +12,18 @@
         </template>
 
         <v-card-text>
-            <v-expansion-panels>
-                <v-expansion-panel v-for="pl in programmedLessons" :key="pl.id">
+            <v-expansion-panels class="weekly-schedules">
+                <v-expansion-panel v-for="pl in programmedLessons" :key="pl.id" variant="flat">
                     <v-expansion-panel-title>
                         <template v-slot:default>
-                            <!-- v-slot:default="{ expanded }" -->
-                            <v-row no-gutters>
-                                <v-col class="d-flex justify-start" cols="5">
-                                    <span>Tutti i <b>{{ days[pl.dayOfWeek] }}</b></span>
-                                </v-col>
-                                <v-col class="text-grey" cols="5">
-                                    Dal {{ yyyyMMdd.fromIyyyyMMdd(pl.from).format() }}
-                                    al {{ yyyyMMdd.fromIyyyyMMdd(pl.to).format() }}
-                                </v-col>
-                                <v-col cols="1">
+                            <div class="weekly-schedule-heading">
+                                <span class="weekly-schedule-day">{{ days[pl.dayOfWeek] }}</span>
+                                <span class="weekly-schedule-dates">{{ yyyyMMdd.fromIyyyyMMdd(pl.from).format() }} – {{ yyyyMMdd.fromIyyyyMMdd(pl.to).format() }}</span>
+                                <span class="weekly-schedule-count">{{ pl.schedule.length }} allievi</span>
+                                <span class="weekly-schedule-actions">
                                     <v-dialog transition="dialog-bottom-transition" fullscreen>
                                         <template v-slot:activator="{ props: activatorProps }">
-                                            <v-btn icon="mdi-pencil" variant="text" @click.stop="console.log('edit')"
+                                            <v-btn icon="mdi-pencil-outline" size="small" variant="text" aria-label="Modifica orario" @click.stop="console.log('edit')"
                                                 v-bind="activatorProps"></v-btn>
                                         </template>
 
@@ -38,33 +33,22 @@
                                                 @save="$event ? isActive.value = false : null"></WeekLessonEditor>
                                         </template>
                                     </v-dialog>
-                                </v-col>
-                                <v-col cols="1">
                                     <DeleteDialog :name="'Tutti i ' + days[pl.dayOfWeek]" objName="Lezione Programmata"
                                         :onDelete="async () => await deleteWeeklyLesson(pl)">
                                         <template v-slot:activator="{ props: activatorProps }">
-                                            <v-btn icon="mdi-delete" variant="text" v-bind="activatorProps"></v-btn>
+                                            <v-btn icon="mdi-delete-outline" size="small" color="error" variant="text" aria-label="Elimina orario" v-bind="activatorProps"></v-btn>
                                         </template>
                                     </DeleteDialog>
-                                </v-col>
-                            </v-row>
+                                </span>
+                            </div>
                         </template>
                     </v-expansion-panel-title>
                     <v-expansion-panel-text>
-                        <v-list v-if="pl.schedule.length > 0">
+                        <v-list v-if="pl.schedule.length > 0" class="weekly-schedule-list">
                             <v-list-item v-for="element of pl.schedule" :key="element.studentId" :value="element"
-                                color="primary">
-                                <template v-slot:prepend>
-                                    <p>
-                                        <b>
-                                            {{ Time.fromITime(element.startTime).format() }} -
-                                            {{ Time.fromITime(element.endTime).format() }}
-                                        </b>
-                                        <span> - </span>
-                                        <i>{{ getCompleteStudentName(element.studentId) }}</i>
-                                    </p>
-                                </template>
-                            </v-list-item>
+                                :title="getCompleteStudentName(element.studentId)"
+                                :subtitle="`${Time.fromITime(element.startTime).format()} – ${Time.fromITime(element.endTime).format()}`"
+                                prepend-icon="mdi-account-outline" color="primary" />
                         </v-list>
                         <!-- <v-list :items="pl.schedule" item-props v-if="pl.schedule.length > 0">
                             <template v-slot:title="{ item }">
@@ -162,3 +146,15 @@ onUnmounted(() => {
     subscriptions.forEach(s => s.unsubscribe());
 }) 
 </script>
+<style scoped>
+.weekly-calendar-editor { max-width: 1000px; margin: auto; }
+.weekly-schedules { display: flex; flex-direction: column; gap: 10px; }
+.weekly-schedules :deep(.v-expansion-panel) { border: 1px solid var(--app-border) !important; border-radius: 12px !important; box-shadow: none !important; }
+.weekly-schedule-heading { width: 100%; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.weekly-schedule-day { min-width: 100px; color: var(--app-text); font-weight: 700; }
+.weekly-schedule-dates, .weekly-schedule-count { color: var(--app-muted); font-size: .85rem; }
+.weekly-schedule-actions { display: flex; align-items: center; margin-left: auto; }
+.weekly-schedule-list { padding: 0; }
+.weekly-schedule-list :deep(.v-list-item) { border-top: 1px solid var(--app-border); }
+@media (max-width: 650px) { .weekly-schedule-day { width: 100%; } .weekly-schedule-actions { margin-left: 0; } }
+</style>

@@ -1,6 +1,7 @@
 <template>
-    <v-card class="mx-auto" min-width="300px">
+    <v-card class="mx-auto lesson-filter-card" min-width="min(360px, 95vw)" title="Filtra lezioni" variant="flat">
         <v-card-text>
+            <p class="filter-description">Scegli quali tipi di lezione mostrare nell'elenco.</p>
             <v-row>
                 <v-col>
                     <v-select v-model="selectedFilters" :items="LESSON_FILTERS" return-object :item-props="itemProps"
@@ -13,7 +14,7 @@
                         <template v-slot:prepend-item>
                             <v-list-item title="Seleziona Tutti" @click="toggle">
                                 <template v-slot:prepend>
-                                    <v-checkbox-btn :color="someLesson ? 'indigo-darken-4' : undefined"
+                                    <v-checkbox-btn color="primary"
                                         :indeterminate="someLesson && !allLesson"
                                         :model-value="allLesson"></v-checkbox-btn>
                                 </template>
@@ -73,3 +74,7 @@ function apply() {
 
 onMounted(() => reset());
 </script>
+<style scoped>
+.lesson-filter-card { padding: 8px; }
+.filter-description { margin: 0 0 12px; color: var(--app-muted); font-size: .88rem; }
+</style>

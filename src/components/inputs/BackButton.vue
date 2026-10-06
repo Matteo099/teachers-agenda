@@ -1,5 +1,5 @@
 <template>
-    <v-btn icon="mdi-arrow-left" @click="back" variant="text"></v-btn>
+    <v-btn icon="mdi-arrow-left" @click="back" variant="text" aria-label="Torna indietro"></v-btn>
 </template>
 
 <script setup lang="ts">

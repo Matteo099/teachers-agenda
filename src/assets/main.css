@@ -1,35 +1,38 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import './base.css';
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
-}
-
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
-}
+#app { min-height: 100vh; }
+.v-application { font-family: Inter, Roboto, system-ui, sans-serif; color: var(--app-text); }
+.v-main, .mobile-main { background: var(--app-background); }
+.v-main > .v-container { max-width: 1440px; padding: 24px; }
+.v-card { border: 1px solid var(--app-border) !important; border-radius: 16px !important; box-shadow: var(--app-shadow) !important; }
+.v-card-title { color: var(--app-text); font-size: 1.1rem; font-weight: 650; letter-spacing: -.02em; }
+.v-card-subtitle, .text-medium-emphasis { color: var(--app-muted) !important; }
+.v-btn { border-radius: 11px; text-transform: none; letter-spacing: 0; font-weight: 600; }
+.v-chip { border-radius: 10px; font-weight: 600; }
+.v-field { border-radius: 12px !important; }
+.v-tabs { background: var(--app-surface); border-radius: 12px; }
+.v-tab { text-transform: none; letter-spacing: 0; border-radius: 10px; }
+.v-navigation-drawer { border-right: 1px solid var(--app-border) !important; background: var(--app-surface); }
+.v-navigation-drawer .v-list-item { margin: 4px 10px; border-radius: 12px; }
+.v-navigation-drawer .v-list-item--active { background: var(--app-accent-surface); color: var(--app-primary) !important; }
+.v-data-table { border-radius: 16px; overflow: hidden; }
+.v-data-table th { color: var(--app-muted); font-weight: 600 !important; background: var(--app-background); }
+/* Keep table pagination fixed to the configured page size. */
+.v-data-table-footer__items-per-page,
+.v-data-table-footer__info,
+.v-data-table-footer .v-pagination__first,
+.v-data-table-footer .v-pagination__last,
+.v-data-table-footer .v-pagination__item { display: none !important; }
+.v-data-table-footer { padding: 8px 12px; }
+.status-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 30px; padding: 0 8px; border-radius: 9px; font-weight: 700; background: var(--status-bg); color: var(--status-fg); }
+.status-present { --status-bg: var(--status-present-bg); --status-fg: var(--status-present-fg); }
+.status-due { --status-bg: var(--status-due-bg); --status-fg: var(--status-due-fg); }
+.status-absent { --status-bg: var(--status-absent-bg); --status-fg: var(--status-absent-fg); }
+.status-recovery { --status-bg: var(--status-recovery-bg); --status-fg: var(--status-recovery-fg); }
+.status-moved { --status-bg: var(--status-moved-bg); --status-fg: var(--status-moved-fg); }
+.sx-vue-calendar-wrapper { min-height: 620px; }
+.sx__calendar { border: 1px solid var(--app-border) !important; border-radius: 16px; overflow: hidden; font-family: Inter, Roboto, system-ui, sans-serif !important; }
+.sx__calendar-header, .sx__week-header { background: var(--app-surface); }
+.sx__time-grid-event { border-radius: 8px !important; box-shadow: 0 1px 4px rgba(30,50,100,.08); }
+.sx__time-grid-event-title { font-weight: 600; }
+@media (max-width: 600px) { .v-main > .v-container { padding: 16px 12px 24px; } .v-card-title { font-size: 1rem; } }
