@@ -93,7 +93,8 @@
                 <v-col cols="12" md="6">
                     <v-select id="std_minutesLessonDuration" :disabled="isDisabled('minutesLessonDuration')"
                         :focused="isFocussed('minutesLessonDuration')" v-model="durationOption"
-                        :items="durationOptions" label="Durata della Lezione" v-bind="minutesLessonDurationProps">
+                        :items="durationOptions" label="Durata della Lezione" v-bind="minutesLessonDurationProps"
+                        @update:model-value="onDurationOptionChange">
                     </v-select>
                     <v-dialog v-model="customDurationDialog" max-width="420">
                         <v-card title="Durata personalizzata">
@@ -237,13 +238,13 @@ const [recitalAuthor] = defineField('recitalAuthor', vuetifyConfig);
 const [from, fromProps] = defineField('from', vuetifyConfig);
 const [to, toProps] = defineField('to', vuetifyConfig);
 
-watch(durationOption, (option) => {
+function onDurationOptionChange(option: string) {
     if (option === 'altro') {
-        if (!initializing) customDurationDialog.value = true;
+        customDurationDialog.value = true;
         return;
     }
     minutesLessonDuration.value = Number(option);
-});
+}
 
 const trialLabel = computed(() => {
     return trial.value ? (props.initialStudent?.trial?.dailyLessonDate ?
