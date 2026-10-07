@@ -28,7 +28,10 @@
                         </template>
                     </v-dialog>
                     <v-expansion-panels variant="accordion" class="day-options">
-                        <v-expansion-panel title="Gestione giornata">
+                        <v-expansion-panel>
+                            <v-expansion-panel-title>
+                                <span class="day-options-title"><v-icon icon="mdi-dots-horizontal-circle-outline" size="20" /><span>Gestione giornata<small>Data ufficiale e altre azioni</small></span></span>
+                            </v-expansion-panel-title>
                             <v-expansion-panel-text>
                                 <div class="day-options-actions">
                                     <v-btn variant="text" prepend-icon="mdi-calendar-check-outline"
@@ -624,6 +627,9 @@ onMounted(async () => {
     font-size: .8rem;
 }
 
+.day-options-title { display: inline-flex; align-items: center; gap: 10px; text-align: left; }
+.day-options-title > .v-icon, .day-options-title small { display: none; }
+
 .day-options :deep(.v-expansion-panel-text__wrapper) {
     padding: 6px 0;
 }
@@ -1001,19 +1007,75 @@ onMounted(async () => {
     }
 
     .school-sidebar-actions {
-        display: flex;
-        align-items: center;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
         width: 100%;
-        padding: 7px 0 0;
+        padding: 12px 0 0;
     }
 
-    .school-sidebar-actions>.v-btn {
-        width: auto;
+    .school-sidebar-actions > .v-btn {
+        width: 100%;
+        min-height: 44px;
+        justify-content: flex-start;
     }
 
     .day-options {
-        max-width: 190px;
-        margin-left: auto;
+        width: 100%;
+        max-width: none;
+        border: 1px solid var(--app-border);
+        border-radius: 12px;
+        background: var(--app-background);
+        overflow: hidden;
+    }
+
+    .day-options :deep(.v-expansion-panel) {
+        background: transparent;
+    }
+
+    .day-options :deep(.v-expansion-panel-title) {
+        min-height: 54px;
+        padding: 9px 12px;
+        color: var(--app-text);
+        font-size: .85rem;
+        font-weight: 650;
+    }
+
+    .day-options-title > .v-icon {
+        display: inline-flex;
+        color: var(--app-primary);
+    }
+
+    .day-options-title small {
+        display: block;
+        margin-top: 2px;
+        color: var(--app-muted);
+        font-size: .72rem;
+        font-weight: 400;
+    }
+
+    .day-options :deep(.v-expansion-panel-text__wrapper) {
+        padding: 0 12px 12px;
+    }
+
+    .day-options-actions {
+        gap: 6px;
+        padding-top: 10px;
+        border-top: 1px solid var(--app-border);
+    }
+
+    .day-options-actions .v-btn {
+        min-height: 44px;
+        justify-content: flex-start;
+        padding-inline: 12px;
+        border: 1px solid var(--app-border);
+        border-radius: 10px;
+        background: var(--app-surface);
+        font-size: .82rem;
+    }
+
+    .day-options-actions .v-btn.text-error {
+        border-color: rgba(var(--v-theme-error), .18);
     }
 
     .school-sidebar-summary {
