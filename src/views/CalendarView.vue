@@ -33,9 +33,6 @@
                         <v-card class="calendar-school-menu" variant="flat"><v-card-text><v-select variant="outlined" chips label="Scuole visualizzate" v-model="selectedSchools" :items="schools"
                             multiple :item-title="schoolTitle" item-value="id" :loading="loadingSchools" hide-details density="comfortable" /></v-card-text></v-card>
                     </v-menu>
-                    <v-btn :icon="trimmed ? 'mdi-arrow-expand-vertical' : 'mdi-content-cut'" variant="text"
-                        :aria-label="trimmed ? 'Mostra tutte le ore' : 'Mostra solo le ore di lezione'"
-                        :title="trimmed ? 'Tutte le ore' : 'Ore di lezione'" @click="toggleTrim" />
                 </div>
             </div>
             <v-progress-linear :active="loading" color="primary" indeterminate />
@@ -107,14 +104,13 @@ const eventDetailsOpen = ref(false);
 const selectedEvent = ref<CalendarEventExt | null>(null);
 const deltaHistory = ref(1);
 const selectedSchools: Ref<string[]> = ref([]);
-const start = ref("00:00");
-const end = ref("24:00");
+let displayedDayBoundaries = { start: '08:00', end: '22:00' };
 const activeView = ref(viewWeek.name);
 const currentDate = ref(yyyyMMdd.today().toScheduleX());
 const pickerDate = ref(new Date());
 const stateLegend = Object.values(statusColors);
 let lessonsLoadRequest = 0;
-let weekDaysUpdate: ReturnType<typeof setTimeout> | undefined;
+let calendarLayoutUpdate: ReturnType<typeof setTimeout> | undefined;
 
 const eventsServicePlugin = createEventsServicePlugin();
 const calendarControls = createCalendarControlsPlugin()
@@ -123,6 +119,7 @@ const calendarApp = createCalendar({
     views: [createViewDay(), createViewWeek(), createViewMonthGrid(), createViewMonthAgenda()],
     defaultView: viewWeek.name,
     events: [],
+    dayBoundaries: displayedDayBoundaries,
     weekOptions: { nDays: 6 },
     plugins: [eventsServicePlugin, calendarControls],
     callbacks: {
@@ -146,7 +143,6 @@ watch(selectedSchools, () => updateQueryRoute());
 watch(filters, () => updateFilters(), { immediate: true });
 watch(schools, () => updateFilters());
 watch(theme.global.name, updateCalendarTheme);
-const trimmed = computed(() => start.value == "08:00");
 const calendarPeriodLabel = computed(() => {
     const date = new Date(currentDate.value + 'T12:00:00');
     if (activeView.value === viewMonthGrid.name || activeView.value === viewMonthAgenda.name) {
@@ -186,20 +182,6 @@ function updateCalendarTheme() {
     } else {
         calendarApp.setTheme("light");
     }
-}
-
-function toggleTrim() {
-    if (!trimmed.value) {
-        start.value = "08:00";
-        end.value = "22:00";
-    } else {
-        start.value = "00:00";
-        end.value = "24:00";
-    }
-    calendarControls.setDayBoundaries({ start: start.value, end: end.value });
-    const opt = calendarControls.getWeekOptions();
-    const range = parseInt(end.value.split(":")[0]!) - parseInt(start.value.split(":")[0]!);
-    calendarControls.setWeekOptions({ ...opt, gridHeight: Math.max(1000 * range / 24, 400) });
 }
 
 function changePeriod(delta: number) {
@@ -267,9 +249,9 @@ async function loadLessons(range?: DateRange | null) {
     range ??= calendarControls.getRange();
     if (!range) return;
 
-    if (weekDaysUpdate) {
-        clearTimeout(weekDaysUpdate);
-        weekDaysUpdate = undefined;
+    if (calendarLayoutUpdate) {
+        clearTimeout(calendarLayoutUpdate);
+        calendarLayoutUpdate = undefined;
     }
     const request = ++lessonsLoadRequest;
     const loadedLessons: CalendarEventExt[] = [];
@@ -319,22 +301,33 @@ async function loadLessons(range?: DateRange | null) {
     lessons.length = 0;
     lessons.push(...Array.from(new Map(loadedLessons.map(event => [event.id, event])).values()));
     updateCalendarEvents();
-    // Schedule-X invokes onRangeUpdate from its own reactive range update.
-    // Changing weekOptions inside that callback creates a signal cycle.
-    if (weekDaysUpdate) clearTimeout(weekDaysUpdate);
-    if (calendarControls.getView() === viewWeek.name) {
+    // Schedule-X invokes onRangeUpdate during its reactive update. Apply layout
+    // changes after that update to avoid a signal cycle.
+    const visibleView = calendarControls.getView();
+    if (visibleView === viewWeek.name || visibleView === 'day') {
+        const showAllHours = lessons.some(event => {
+            const eventStart = event.start.split(' ')[1];
+            const eventEnd = event.end.split(' ')[1];
+            return !!eventStart && !!eventEnd && (eventStart < '08:00' || eventEnd > '22:00');
+        });
+        const boundaries = showAllHours ? { start: '00:00', end: '24:00' } : { start: '08:00', end: '22:00' };
+        const gridHeight = showAllHours ? 1000 : Math.max(1000 * 14 / 24, 400);
         const nDays = lessons.some(event => {
             const date = event.start.split(' ')[0]!;
             return yyyyMMdd.fromScheduleX(date).toDate().getDay() === 0;
         }) ? 7 : 6;
-        if (calendarControls.getWeekOptions().nDays !== nDays) {
-            weekDaysUpdate = setTimeout(() => {
-                weekDaysUpdate = undefined;
-                if (calendarControls.getView() !== viewWeek.name) return;
+        calendarLayoutUpdate = setTimeout(() => {
+            calendarLayoutUpdate = undefined;
+            if (calendarControls.getView() !== visibleView) return;
+            if (displayedDayBoundaries.start !== boundaries.start) {
+                calendarControls.setDayBoundaries(boundaries);
+                displayedDayBoundaries = boundaries;
+            }
+            if (visibleView === viewWeek.name) {
                 const options = calendarControls.getWeekOptions();
-                if (options.nDays !== nDays) calendarControls.setWeekOptions({ ...options, nDays });
-            }, 0);
-        }
+                if (options.nDays !== nDays || options.gridHeight !== gridHeight) calendarControls.setWeekOptions({ ...options, nDays, gridHeight });
+            }
+        }, 0);
     }
     loading.value = false;
 }
@@ -348,12 +341,11 @@ async function loadSchools() {
 }
 
 onMounted(async () => {
-    toggleTrim();
     await loadSchools();
 })
 onUnmounted(() => {
     lessonsLoadRequest++;
-    if (weekDaysUpdate) clearTimeout(weekDaysUpdate);
+    if (calendarLayoutUpdate) clearTimeout(calendarLayoutUpdate);
 });
 </script>
 
