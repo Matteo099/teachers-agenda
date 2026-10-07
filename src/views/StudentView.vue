@@ -68,7 +68,7 @@ import { days, STUDENT_FILTERS, yyyyMMdd, type School, type Student, type Studen
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { StudentService } from '@/models/services/student-service';
 import type { EventSubscription } from '@/models/utils/event';
-import { defineProps, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 
 const props = defineProps<{ school: School }>();
 const subscriptions: EventSubscription[] = [];

@@ -49,7 +49,7 @@ import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
 import { createDragAndDropPlugin } from '@schedule-x/drag-and-drop';
 import { createEventModalPlugin } from '@schedule-x/event-modal';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
-import { defineEmits, defineModel, defineProps, onMounted, ref, watch, withDefaults } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
 import EditLessonTime from '../lesson/EditLessonTime.vue';
 import AppCalendar from './AppCalendar.vue';

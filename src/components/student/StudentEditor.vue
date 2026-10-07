@@ -230,7 +230,7 @@ import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
 import { dateFormat, toDate } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
-import { computed, defineEmits, defineProps, onMounted, ref, watch, type Ref } from 'vue';
+import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import StudentDailyNotes from './StudentDailyNotes.vue';

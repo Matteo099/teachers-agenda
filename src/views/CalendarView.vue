@@ -85,7 +85,7 @@ import {
 } from '@schedule-x/calendar';
 import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
-import { computed, onMounted, ref, watch, type Ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTheme } from 'vuetify';
 
@@ -114,6 +114,7 @@ const currentDate = ref(yyyyMMdd.today().toScheduleX());
 const pickerDate = ref(new Date());
 const stateLegend = Object.values(statusColors);
 let lessonsLoadRequest = 0;
+let weekDaysUpdate: ReturnType<typeof setTimeout> | undefined;
 
 const eventsServicePlugin = createEventsServicePlugin();
 const calendarControls = createCalendarControlsPlugin()
@@ -266,6 +267,10 @@ async function loadLessons(range?: DateRange | null) {
     range ??= calendarControls.getRange();
     if (!range) return;
 
+    if (weekDaysUpdate) {
+        clearTimeout(weekDaysUpdate);
+        weekDaysUpdate = undefined;
+    }
     const request = ++lessonsLoadRequest;
     const loadedLessons: CalendarEventExt[] = [];
     loading.value = true;
@@ -313,14 +318,24 @@ async function loadLessons(range?: DateRange | null) {
     if (request !== lessonsLoadRequest) return;
     lessons.length = 0;
     lessons.push(...Array.from(new Map(loadedLessons.map(event => [event.id, event])).values()));
-    const options = calendarControls.getWeekOptions();
-    calendarControls.setWeekOptions({
-        ...options, nDays: lessons.some(event => {
+    updateCalendarEvents();
+    // Schedule-X invokes onRangeUpdate from its own reactive range update.
+    // Changing weekOptions inside that callback creates a signal cycle.
+    if (weekDaysUpdate) clearTimeout(weekDaysUpdate);
+    if (calendarControls.getView() === viewWeek.name) {
+        const nDays = lessons.some(event => {
             const date = event.start.split(' ')[0]!;
             return yyyyMMdd.fromScheduleX(date).toDate().getDay() === 0;
-        }) ? 7 : 6
-    });
-    updateCalendarEvents();
+        }) ? 7 : 6;
+        if (calendarControls.getWeekOptions().nDays !== nDays) {
+            weekDaysUpdate = setTimeout(() => {
+                weekDaysUpdate = undefined;
+                if (calendarControls.getView() !== viewWeek.name) return;
+                const options = calendarControls.getWeekOptions();
+                if (options.nDays !== nDays) calendarControls.setWeekOptions({ ...options, nDays });
+            }, 0);
+        }
+    }
     loading.value = false;
 }
 
@@ -336,6 +351,10 @@ onMounted(async () => {
     toggleTrim();
     await loadSchools();
 })
+onUnmounted(() => {
+    lessonsLoadRequest++;
+    if (weekDaysUpdate) clearTimeout(weekDaysUpdate);
+});
 </script>
 
 <style scoped>
