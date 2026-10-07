@@ -48,6 +48,8 @@ export class StudentLessonService {
         const lesson = dailyLesson.lessons.find(l => l.studentId === studentId);
         if (!lesson) return;
         lesson.hiddenForDate = true;
+        delete lesson.biweeklyAutoHidden;
+        delete lesson.biweeklyVisibilityOverride;
         if (school) await DailyLessonService.instance.save(dailyLesson, { school });
         else await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
     }
@@ -56,6 +58,10 @@ export class StudentLessonService {
         const lesson = dailyLesson.lessons.find(l => l.studentId === studentId);
         if (!lesson) return;
         lesson.hiddenForDate = false;
+        if (lesson.biweeklyAutoHidden) {
+            delete lesson.biweeklyAutoHidden;
+            lesson.biweeklyVisibilityOverride = true;
+        }
         await DailyLessonService.instance.save(dailyLesson, school ? { school } : undefined);
     }
 }

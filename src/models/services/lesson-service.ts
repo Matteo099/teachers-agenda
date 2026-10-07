@@ -2,10 +2,10 @@ import { Timestamp } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
 import { DeleteMode, LessonStatus, type DailyLesson, type Lesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
-import { SchoolRecoveryLessonService } from "./school-recovery-lesson-service";
-import { StudentService } from "./student-service";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { DailyLessonService } from "./daily-lesson-service";
+import { SchoolRecoveryLessonService } from "./school-recovery-lesson-service";
+import { StudentService } from "./student-service";
 
 export class LessonService {
 
@@ -53,6 +53,8 @@ export class LessonService {
         };
         if (lesson.compensation) newLesson.compensation = lesson.compensation;
         if (lesson.hiddenForDate) newLesson.hiddenForDate = lesson.hiddenForDate;
+        if (lesson.biweeklyAutoHidden) newLesson.biweeklyAutoHidden = true;
+        if (lesson.biweeklyVisibilityOverride) newLesson.biweeklyVisibilityOverride = true;
 
         if (lesson.moved) newLesson.moved = lesson.moved;
         if (lesson.compensation) newLesson.compensation = lesson.compensation;

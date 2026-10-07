@@ -1,5 +1,6 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
+import { applyBiweeklyVisibility, isBiweeklyHidden } from "../biweekly-lessons";
 import { DeleteMode, LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type RecoverySchedule, type ScheduledLesson, type School, type Student, type StudentLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
@@ -9,8 +10,9 @@ import type { LessonProjection } from "./lesson-group-service";
 import { LessonService } from "./lesson-service";
 import { SalaryService } from "./salary-service";
 import type { ExpandedLesson, StudentLessonWithRecovery } from "./school-recovery-lesson-service";
-import { WeeklyLessonService } from "./weely-lesson-service";
 import { StudentLessonService } from "./student-lesson-service";
+import { StudentService } from "./student-service";
+import { WeeklyLessonService } from "./weely-lesson-service";
 
 export interface SaveOptions {
     school: School;
@@ -75,7 +77,7 @@ export class DailyLessonService {
     ): Promise<ID> {
         if (!lessonGroup.dailyLessonId) {
             // If lessonId is undefined, create a new daily lesson
-            const newDailyLesson = this.buildDailyLessonFromProjection(schoolId, lessonGroup);
+            const newDailyLesson = await this.buildDailyLessonFromProjection(schoolId, lessonGroup);
             return DailyLessonRepository.instance.save(newDailyLesson);
         }
 
@@ -83,12 +85,15 @@ export class DailyLessonService {
         return lessonGroup.dailyLessonId;
     }
 
-    public buildDailyLessonFromProjection(
+    public async buildDailyLessonFromProjection(
         schoolId: string,
         lessonGroup: LessonProjection
-    ): Partial<DailyLesson> {
+    ): Promise<Partial<DailyLesson>> {
+        const students = await StudentService.instance.getStudentsOfSchool(schoolId);
+        const byId = new Map(students.map(student => [student.id, student]));
+        const date = lessonGroup.date.toIyyyyMMdd();
         return {
-            date: lessonGroup.date.toIyyyyMMdd(),
+            date,
             schoolId,
             // A daily lesson created from a scheduled school-calendar
             // projection is an official calendar date by definition.
@@ -99,6 +104,8 @@ export class DailyLessonService {
                 studentId: l.studentId,
                 startTime: l.startTime,
                 endTime: l.endTime,
+                ...(byId.get(l.studentId) && isBiweeklyHidden(byId.get(l.studentId)!, date)
+                    ? { hiddenForDate: true, biweeklyAutoHidden: true } : {}),
                 createdAt: Timestamp.now(),
                 updatedAt: Timestamp.now(),
             })),
@@ -144,6 +151,8 @@ export class DailyLessonService {
         // const weeklyLesson = schoolLessons.weeklyLessons.find(l => l.dayOfWeek === lessonDate.getDay());
 
         if (weeklyLesson) {
+            const students = await StudentService.instance.getStudentsOfSchool(schoolId);
+            const byId = new Map(students.map(student => [student.id, student]));
             // Create daily lesson from weekly lesson schedule
             return {
                 date: formattedDate,
@@ -155,6 +164,8 @@ export class DailyLessonService {
                     studentId: l.studentId,
                     startTime: l.startTime,
                     endTime: l.endTime,
+                    ...(byId.get(l.studentId) && isBiweeklyHidden(byId.get(l.studentId)!, formattedDate)
+                        ? { hiddenForDate: true, biweeklyAutoHidden: true } : {}),
                     createdAt: Timestamp.now(),
                     updatedAt: Timestamp.now(),
                 })),
@@ -371,12 +382,28 @@ export class DailyLessonService {
         const dailyLesson = await DailyLessonRepository.instance.get(id);
         if (!dailyLesson) return;
         const existing = new Set(dailyLesson.lessons.map(l => l.studentId));
+        const students = await StudentService.instance.getStudentsOfSchool(weeklyLesson.schoolId);
+        const byId = new Map(students.map(student => [student.id, student]));
         weeklyLesson.schedule.filter(l => !existing.has(l.studentId)).forEach(l => dailyLesson.lessons.push({
             lessonId: uuidv4(), status: LessonStatus.NONE, studentId: l.studentId,
-            startTime: l.startTime, endTime: l.endTime, createdAt: Timestamp.now(), updatedAt: Timestamp.now()
+            startTime: l.startTime, endTime: l.endTime,
+            ...(byId.get(l.studentId) && isBiweeklyHidden(byId.get(l.studentId)!, date)
+                ? { hiddenForDate: true, biweeklyAutoHidden: true } : {}),
+            createdAt: Timestamp.now(), updatedAt: Timestamp.now()
         }));
         dailyLesson.lessons.sort((a, b) => a.startTime - b.startTime);
         await this.save(dailyLesson);
+    }
+
+    /** Apply a changed alternating-week schedule to already-created future dates. */
+    public async syncStudentBiweeklyLessons(student: Student): Promise<void> {
+        const today = yyyyMMdd.today().toIyyyyMMdd();
+        const dailyLessons = await this.getDailyLessonOfSchoolFromDate(student.schoolId, today, 'asc');
+        for (const daily of dailyLessons) {
+            const lesson = daily.lessons.find(item => item.studentId === student.id);
+            if (!lesson || !applyBiweeklyVisibility(lesson, student, daily.date)) continue;
+            await DailyLessonRepository.instance.save(daily, daily.id);
+        }
     }
 
     /** Applies a student's new duration from the next scheduled lesson onward. */
@@ -479,6 +506,8 @@ export class DailyLessonService {
             }
             if (l.bandAttendance) newLesson.bandAttendance = l.bandAttendance;
             if (l.hiddenForDate) newLesson.hiddenForDate = l.hiddenForDate;
+            if (l.biweeklyAutoHidden) newLesson.biweeklyAutoHidden = true;
+            if (l.biweeklyVisibilityOverride) newLesson.biweeklyVisibilityOverride = true;
             if (lesson.dailyNote) newLesson.dailyNote = lesson.dailyNote;
             if (l.compensation) newLesson.compensation = l.compensation;
             if (l.recovery) newLesson.recovery = l.recovery;

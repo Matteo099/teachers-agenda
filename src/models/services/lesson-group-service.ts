@@ -1,12 +1,14 @@
 import { where } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
+import { isBiweeklyHidden } from '../biweekly-lessons';
 import { LessonStatus, months, Time, yyyyMMdd, type CalendarEventExt, type DailyLesson, type IyyyyMMdd, type LessonFilterObj, type ScheduledLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
-import { nameof, nextDay, pastDay } from "../utils";
-import { WeeklyLessonService } from "./weely-lesson-service";
-import { DailyLessonService } from "./daily-lesson-service";
 import { lessonStatusColor } from '../statusColors';
+import { nameof, nextDay } from "../utils";
+import { DailyLessonService } from "./daily-lesson-service";
+import { StudentService } from './student-service';
+import { WeeklyLessonService } from "./weely-lesson-service";
 
 export interface LessonGroup {
     month: string;
@@ -57,11 +59,14 @@ export class LessonGroupService {
 
     public async getCalendarLessons(schoolId: ID, from: { date: yyyyMMdd, time?: Time }, to: { date: yyyyMMdd, time?: Time }): Promise<CalendarEventExt[]> {
         const lessons: CalendarEventExt[] = [];
+        const students = await StudentService.instance.getStudentsOfSchool(schoolId);
+        const byId = new Map(students.map(student => [student.id, student]));
 
         const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(schoolId, from.date.toIyyyyMMdd(), to.date.toIyyyyMMdd());
+        const materializedDates = new Set(dailyLessons.map(daily => daily.date));
         lessons.push(...dailyLessons.flatMap(dl => {
             const date = yyyyMMdd.fromIyyyyMMdd(dl.date).toScheduleX();
-            const uniqueLessons = [...new Map(dl.lessons.map(l => [l.studentId, l])).values()];
+            const uniqueLessons = [...new Map(dl.lessons.filter(l => !l.hiddenForDate).map(l => [l.studentId, l])).values()];
             return uniqueLessons.map(l => {
                 return {
                     id: dl.id + "_" + l.lessonId,
@@ -86,10 +91,12 @@ export class LessonGroupService {
                 const next = nextDay(startingDate, w.dayOfWeek);
                 if (next > toDate) return;
                 if (next > yyyyMMdd.fromIyyyyMMdd(w.to).toDate() || next < yyyyMMdd.fromIyyyyMMdd(w.from).toDate()) return;
-                    const date = yyyyMMdd.fromDate(next).toScheduleX();
-                if (lessons.find(l => l.data?.date == date)) return;
+                const date = yyyyMMdd.fromDate(next).toScheduleX();
+                if (materializedDates.has(yyyyMMdd.fromDate(next).toIyyyyMMdd())) return;
 
-                const uniqueSchedule = [...new Map(w.schedule.map(s => [s.studentId, s])).values()];
+                const uniqueSchedule = [...new Map(w.schedule
+                    .filter(s => !byId.get(s.studentId) || !isBiweeklyHidden(byId.get(s.studentId)!, yyyyMMdd.fromDate(next).toIyyyyMMdd()))
+                    .map(s => [s.studentId, s])).values()];
                 lessons.push(...uniqueSchedule.map(s => {
                     return {
                         id: uuidv4(),

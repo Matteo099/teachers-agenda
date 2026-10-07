@@ -199,6 +199,8 @@ export interface Student {
     surname: string;
     contact?: string;
     lessonDay?: number;
+    /** First school-calendar occurrence of an every-other-week lesson. */
+    biweeklyStartDate?: IyyyyMMdd;
     level: string;
     minutesLessonDuration: number;
     /** Optional hourly rate. When omitted the rate of the active level is used. */
@@ -399,6 +401,10 @@ export interface Lesson extends ScheduledLesson {
     status: LessonStatus;
     bandAttendance?: Record<string, LessonStatus>;
     hiddenForDate?: boolean;
+    /** Hidden by the alternating-week schedule rather than manually. */
+    biweeklyAutoHidden?: boolean;
+    /** This date was explicitly made visible despite the alternating schedule. */
+    biweeklyVisibilityOverride?: boolean;
       dailyNote?: string;
     /** Frozen economic data for this lesson. Never overwrite once set. */
     compensation?: LessonCompensation;

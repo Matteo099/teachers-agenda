@@ -3,14 +3,21 @@
         <AppCalendar :calendar-app="calendarApp" compact hide-header :hide-day-header="!showDay">
             <template #eventModal="{ calendarEvent }">
                 <v-card class="daily-calendar-event-modal" variant="flat">
-                    <div class="daily-calendar-event-heading"><span class="school-panel-icon"><v-icon icon="mdi-calendar-clock-outline" size="20" /></span><div><h3>{{ calendarEvent.title }}</h3><p>{{ calendarEvent.start.split(' ')[1] }}–{{ calendarEvent.end.split(' ')[1] }}</p></div></div>
+                    <div class="daily-calendar-event-heading"><span class="school-panel-icon"><v-icon
+                                icon="mdi-calendar-clock-outline" size="20" /></span>
+                        <div>
+                            <h3>{{ calendarEvent.title }}</h3>
+                            <p>{{ calendarEvent.start.split(' ')[1] }}–{{ calendarEvent.end.split(' ')[1] }}</p>
+                        </div>
+                    </div>
                     <v-card-text v-if="calendarEvent.description">{{ calendarEvent.description }}</v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-dialog v-model="editTimeModal" transition="dialog-bottom-transition">
                             <template v-slot:activator="{ props: activatorProps }">
                                 <v-btn text="Chiudi" variant="text" @click="eventModal.close()"></v-btn>
-                                <v-btn text="Modifica orario" color="primary" variant="flat" prepend-icon="mdi-pencil-outline" v-bind="activatorProps" @click.stop></v-btn>
+                                <v-btn text="Modifica orario" color="primary" variant="flat"
+                                    prepend-icon="mdi-pencil-outline" v-bind="activatorProps" @click.stop></v-btn>
                             </template>
 
                             <template v-slot:default="{ isActive }">
@@ -31,22 +38,22 @@
 
 <script setup lang="ts">
 import { days, Time, yyyyMMdd, type CalendarEventExt, type EventTime, type School, type StudentLesson } from '@/models/model';
+import { lessonStatusColor } from '@/models/statusColors';
+import { getCalendarsColor } from '@/models/utils';
 import {
     createCalendar,
     createViewDay,
     type CalendarEvent
 } from '@schedule-x/calendar';
+import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
 import { createDragAndDropPlugin } from '@schedule-x/drag-and-drop';
 import { createEventModalPlugin } from '@schedule-x/event-modal';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
+import { defineEmits, defineModel, defineProps, onMounted, ref, watch, withDefaults } from 'vue';
+import { useTheme } from 'vuetify';
+import EditLessonTime from '../lesson/EditLessonTime.vue';
 import AppCalendar from './AppCalendar.vue';
 import { calendarEventContent } from './calendarEventContent';
-import { lessonStatusColor } from '@/models/statusColors';
-import { onMounted, ref, watch } from 'vue';
-import EditLessonTime from '../lesson/EditLessonTime.vue';
-import { useTheme } from 'vuetify';
-import { getCalendarsColor } from '@/models/utils';
-import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
 
 interface CalendarProps {
     date?: yyyyMMdd;
@@ -85,7 +92,7 @@ const calendarControls = createCalendarControlsPlugin()
 // For updating events, use the events service plugin
 const calendarApp = createCalendar({
     locale: 'it-IT',
-                selectedDate: props.date.toScheduleX(),
+    selectedDate: props.date.toScheduleX(),
     views: [createViewDay()],
     events: [],
     plugins: props.editable ? [dndPlugin, eventsServicePlugin, eventModal, calendarControls] : [dndPlugin, eventsServicePlugin, calendarControls],
@@ -154,7 +161,7 @@ function updateCalendarBoundaries() {
 
 function transformModel(): CalendarEventExt[] {
     const date = props.date.toScheduleX();
-    return model.value.map(sl => {
+    return model.value.filter(sl => !('lesson' in sl) || !sl.lesson.hiddenForDate).map(sl => {
         if ("lesson" in sl) {
             return {
                 id: sl.lesson.lessonId,
@@ -221,9 +228,31 @@ onMounted(() => {
 })
 </script>
 <style scoped>
-.daily-calendar-container { padding: 0; }
-.daily-calendar-event-heading { display: flex; align-items: center; gap: 12px; padding: 18px 20px 8px; }
-.daily-calendar-event-heading h3 { margin: 0; color: var(--app-text); font-size: 1rem; font-weight: 700; }
-.daily-calendar-event-heading p { margin: 4px 0 0; color: var(--app-muted); font-size: .82rem; }
-.daily-calendar-event-modal :deep(.v-card-actions) { padding: 12px 20px 18px; }
+.daily-calendar-container {
+    padding: 0;
+}
+
+.daily-calendar-event-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px 8px;
+}
+
+.daily-calendar-event-heading h3 {
+    margin: 0;
+    color: var(--app-text);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.daily-calendar-event-heading p {
+    margin: 4px 0 0;
+    color: var(--app-muted);
+    font-size: .82rem;
+}
+
+.daily-calendar-event-modal :deep(.v-card-actions) {
+    padding: 12px 20px 18px;
+}
 </style>
