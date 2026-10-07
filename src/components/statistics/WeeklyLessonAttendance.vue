@@ -20,7 +20,12 @@
             </tr>
           </tbody>
         </v-table></div><span v-else>Nessuna lezione per il giorno selezionato nel periodo.</span>
-      <div class="text-caption mt-2">P = presente · A = assenza ingiustificata · D = assenza da recuperare · R = assenza recuperata · S = lezione spostata</div>
+      <div class="attendance-legend" aria-label="Legenda presenze">
+        <span v-for="(status, key) in statusColors" :key="key" class="attendance-legend-item">
+          <span class="status-badge" :class="`status-${key}`">{{ status.short }}</span>
+          <span>{{ status.label }}</span>
+        </span>
+      </div>
   </StatisticsPanel>
 </template>
 
@@ -188,6 +193,12 @@ function statusClass(l: any) {
 
 watch(() => [props.from, props.to, props.schools, selectedDay.value], load, { immediate: true, deep: true });
 </script>
+
+<style scoped>
+.attendance-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 16px 0 0; margin-top: 14px; border-top: 1px solid var(--app-border); }
+.attendance-legend-item { display: inline-flex; align-items: center; gap: 7px; color: var(--app-muted); font-size: .78rem; white-space: nowrap; }
+.attendance-legend .status-badge { min-width: 25px; height: 25px; padding: 0 6px; border-radius: 7px; font-size: .76rem; }
+</style>
 
 <style scoped>
 .attendance-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
