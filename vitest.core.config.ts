@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/models/services/__tests__/scheduling-and-salary.spec.ts', 'src/models/__tests__/biweekly-lessons.spec.ts', 'src/models/__tests__/recital-pieces.spec.ts'],
+    include: ['src/models/services/__tests__/scheduling-and-salary.spec.ts', 'src/models/__tests__/biweekly-lessons.spec.ts', 'src/models/__tests__/recital-pieces.spec.ts', 'src/models/__tests__/month-period.spec.ts'],
     setupFiles: ['./src/plugins/firebase/vitest.core.setup.ts'],
   },
 })
