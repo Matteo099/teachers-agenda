@@ -1,5 +1,6 @@
 import type { TAPieData, TAStudentTrendData, TAXYData } from "../charts/chart-helper";
 import { LessonStatus, yyyyMMdd, type IyyyyMMdd, type School, type Student } from "../model";
+import { getStudentRecitalPieces } from "../recital-pieces";
 import { SchoolRepository } from "../repositories/school-repository";
 import { StudentRepository } from "../repositories/student-repository";
 import { DailyLessonService } from "./daily-lesson-service";
@@ -19,6 +20,7 @@ export interface StudentAbsenceSummary {
 }
 
 export interface RecitalStudent {
+    id: string;
     student: string;
     school: string;
     piece: string;
@@ -165,13 +167,14 @@ export class StatisticsService {
         if (!schools || schools.length === 0) schools = await this.cache.getSchools();
         const schoolNames = new Map(schools.map(school => [school.id, school.name]));
         return (await this.cache.getStudents())
-            .filter(student => schoolNames.has(student.schoolId) && (student.recitalPiece || student.recitalAuthor))
-            .map(student => ({
+            .filter(student => schoolNames.has(student.schoolId))
+            .flatMap(student => getStudentRecitalPieces(student).map((recital, index) => ({
+                id: `${student.id}-${index}`,
                 student: `${student.name} ${student.surname}`,
                 school: schoolNames.get(student.schoolId)!,
-                piece: student.recitalPiece ?? '',
-                author: student.recitalAuthor ?? '',
-            }))
+                piece: recital.piece,
+                author: recital.author,
+            })))
             .sort((first, second) => first.student.localeCompare(second.student));
     }
 

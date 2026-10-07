@@ -183,25 +183,22 @@
                 </v-row>
             </section>
             <section class="editor-section">
-                <div class="section-heading">
+                <div class="section-heading recital-heading">
                     <div class="section-icon"><v-icon icon="mdi-music-note-outline" size="20" /></div>
-                    <div>
-                        <h3>Saggio</h3>
-                        <p>Brano e autore</p>
+                    <div><h3>Saggi</h3><p>Brani preparati dallo studente e relativi autori</p></div>
+                    <v-chip v-if="recitalPieces.length" color="primary" variant="tonal" size="small">{{ recitalPieces.length }} {{ recitalPieces.length === 1 ? 'brano' : 'brani' }}</v-chip>
+                </div>
+                <div v-if="recitalPieces.length" class="recital-list">
+                    <div v-for="(recital, index) in recitalPieces" :key="recital.key" class="recital-row">
+                        <div class="recital-row-heading"><span class="recital-number">{{ index + 1 }}</span><strong>Brano {{ index + 1 }}</strong><v-btn icon="mdi-delete-outline" color="error" variant="text" size="small" :aria-label="`Rimuovi brano ${index + 1}`" @click="removeRecitalPiece(recital.key)" /></div>
+                        <div class="recital-fields">
+                            <v-text-field v-model="recital.piece" label="Titolo del brano" variant="outlined" density="comfortable" hide-details="auto" :error-messages="recitalValidationAttempted && !recital.piece.trim() ? ['Inserisci il titolo'] : []" />
+                            <v-text-field v-model="recital.author" label="Autore" variant="outlined" density="comfortable" hide-details="auto" :error-messages="recitalValidationAttempted && !recital.author.trim() ? ['Inserisci l’autore'] : []" />
+                        </div>
                     </div>
                 </div>
-                <v-row density="comfortable">
-                    <v-col cols="12">
-                        <v-row>
-                            <v-col cols="12" md="6">
-                                <v-text-field v-model="recitalPiece" label="Brano" />
-                            </v-col>
-                            <v-col cols="12" md="6">
-                                <v-text-field v-model="recitalAuthor" label="Autore" />
-                            </v-col>
-                        </v-row>
-                    </v-col>
-                </v-row>
+                <div v-else class="recital-empty"><v-icon icon="mdi-music-note-plus-outline" size="22" /><span>Nessun brano inserito. Aggiungi il primo per preparare il saggio.</span></div>
+                <v-btn class="recital-add-button" color="primary" variant="tonal" prepend-icon="mdi-plus" @click="addRecitalPiece">Aggiungi brano</v-btn>
             </section>
             <section v-if="edit && initialStudent?.id" class="editor-section">
                 <StudentDailyNotes :school="school" :student="initialStudent" />
@@ -223,10 +220,12 @@
 
 <script setup lang="ts">
 import { days, yyyyMMdd, type LevelHistory, type School, type Student, type WeeklyLesson } from '@/models/model';
+import { getStudentRecitalPieces } from '@/models/recital-pieces';
 import { development, Random } from '@/models/random-utils';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
+import { StatisticsService } from '@/models/services/statistics-service';
 import { dateFormat, toDate } from '@/models/utils';
 import { Timestamp } from 'firebase/firestore';
 import { useForm, type GenericObject } from 'vee-validate';
@@ -256,6 +255,9 @@ const biweekly = ref(false);
 const biweeklyDate = ref<Date | null>(null);
 const biweeklyDateDialog = ref(false);
 const weeklyCalendars = ref<WeeklyLesson[]>([]);
+const recitalPieces = ref<{ key: number; piece: string; author: string }[]>([]);
+const recitalValidationAttempted = ref(false);
+let nextRecitalKey = 0;
 const durationOptions = ['30', '40', '60', 'altro'];
 const durationOption = ref('40');
 let initializing = false;
@@ -304,8 +306,6 @@ const [level, levelProps] = defineField('level', vuetifyConfig);
 const [minutesLessonDuration, minutesLessonDurationProps] = defineField('minutesLessonDuration', vuetifyConfig);
 const [trial, trialProps] = defineField('trial', vuetifyConfig);
 const [isSubstitution, isSubstitutionProps] = defineField('isSubstitution', vuetifyConfig);
-const [recitalPiece] = defineField('recitalPiece', vuetifyConfig);
-const [recitalAuthor] = defineField('recitalAuthor', vuetifyConfig);
 const [from, fromProps] = defineField('from', vuetifyConfig);
 const [to, toProps] = defineField('to', vuetifyConfig);
 
@@ -315,6 +315,14 @@ function onDurationOptionChange(option: string) {
         return;
     }
     minutesLessonDuration.value = Number(option);
+}
+
+function addRecitalPiece() {
+    recitalPieces.value.push({ key: ++nextRecitalKey, piece: '', author: '' });
+}
+
+function removeRecitalPiece(key: number) {
+    recitalPieces.value = recitalPieces.value.filter(recital => recital.key !== key);
 }
 
 const trialLabel = computed(() => {
@@ -395,8 +403,12 @@ function updateStudent() {
         durationOption.value = [30, 40, 60].includes(studentClone.minutesLessonDuration)
             ? String(studentClone.minutesLessonDuration) : 'altro';
         contact.value = studentClone.contact ?? "";
-        recitalPiece.value = studentClone.recitalPiece ?? "";
-        recitalAuthor.value = studentClone.recitalAuthor ?? "";
+        recitalPieces.value = getStudentRecitalPieces(studentClone).map(recital => ({
+            key: ++nextRecitalKey,
+            piece: recital.piece,
+            author: recital.author
+        }));
+        recitalValidationAttempted.value = false;
         trial.value = studentClone.trial?.done ?? false;
         isSubstitution.value = studentClone.isSubstitution ?? false;
         if (studentClone.lessonDay !== undefined) lessonDay.value = days[studentClone.lessonDay];
@@ -423,6 +435,11 @@ function randomData() {
 }
 
 async function save(values: GenericObject) {
+    recitalValidationAttempted.value = true;
+    if (recitalPieces.value.some(recital => !recital.piece.trim() || !recital.author.trim())) {
+        toast.warn('Completa titolo e autore di ogni brano, oppure rimuovi le righe vuote');
+        return;
+    }
     if (biweekly.value && (!biweeklyDate.value || !isAllowedBiweeklyDate(biweeklyDate.value))) {
         toast.warn('Scegli la prima lezione dal calendario della scuola');
         return;
@@ -440,14 +457,13 @@ async function save(values: GenericObject) {
         minutesLessonDuration: values.minutesLessonDuration,
         isSubstitution: values.isSubstitution ?? false,
         level: values.level,
-        levelHistory
+        levelHistory,
+        recitalPieces: recitalPieces.value.map(({ piece, author }) => ({ piece: piece.trim(), author: author.trim() }))
     }
 
     if (contact.value && contact.value.trim().length != 0) student.contact = contact.value.trim();
     if (lessonDay.value) student.lessonDay = days.indexOf(lessonDay.value);
     if (biweekly.value && biweeklyDate.value) student.biweeklyStartDate = yyyyMMdd.fromDate(biweeklyDate.value).toIyyyyMMdd();
-    if (recitalPiece.value?.trim()) student.recitalPiece = recitalPiece.value.trim();
-    if (recitalAuthor.value?.trim()) student.recitalAuthor = recitalAuthor.value.trim();
     if (trial.value) {
         student.trial = { done: true }
         if (props.initialStudent?.trial?.dailyLessonDate) student.trial.dailyLessonDate = props.initialStudent?.trial?.dailyLessonDate;
@@ -472,6 +488,7 @@ async function save(values: GenericObject) {
             await StudentRepository.instance.save(student);
             toast.success("Studente Creato")
         }
+        StatisticsService.instance.cache.clear();
         emit('save', student);
     } catch (e) {
         toast.error("Errore durante il salvataggio")
@@ -615,6 +632,17 @@ onMounted(() => {
     font-weight: 650;
 }
 
+.recital-heading > div:nth-child(2) { flex: 1; min-width: 0; }
+.recital-list { display: grid; gap: 12px; }
+.recital-row { padding: 16px; border: 1px solid var(--app-border); border-radius: 12px; background: var(--app-hover-surface); }
+.recital-row-heading { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+.recital-row-heading strong { flex: 1; color: var(--app-text); font-size: .86rem; font-weight: 650; }
+.recital-number { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--app-accent-surface); color: var(--app-primary); font-size: .78rem; font-weight: 700; }
+.recital-fields { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; }
+.recital-empty { display: flex; align-items: center; gap: 10px; padding: 18px; border: 1px dashed var(--app-border); border-radius: 12px; color: var(--app-muted); font-size: .85rem; }
+.recital-empty .v-icon { flex: none; color: var(--app-primary); }
+.recital-add-button { margin-top: 16px; }
+
 .biweekly-setting {
     overflow: hidden;
     border: 1px solid var(--app-border);
@@ -711,6 +739,7 @@ onMounted(() => {
 }
 
 @media (max-width: 600px) {
+    .recital-fields { grid-template-columns: 1fr; gap: 4px; }
     .editor-header {
         gap: 10px;
         padding: 14px 16px;

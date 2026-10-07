@@ -214,9 +214,15 @@ export interface Student {
     bandMembers?: BandMember[];
     recitalPiece?: string;
     recitalAuthor?: string;
+    recitalPieces?: RecitalPiece[];
 
     createdAt: Timestamp;  // Timestamp instead of Date for better Firestore querying
     updatedAt: Timestamp;
+}
+
+export interface RecitalPiece {
+    piece: string;
+    author: string;
 }
 
 export interface BandMember {
