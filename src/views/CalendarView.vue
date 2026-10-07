@@ -6,14 +6,10 @@
             <div><span>Agenda</span><h1>Calendario delle lezioni</h1><p>Consulta gli appuntamenti di tutte le scuole.</p></div>
             <div class="calendar-view-choice">
                 <v-btn-toggle :model-value="activeView" mandatory color="primary" @update:model-value="setCalendarView">
-                    <v-btn :value="viewWeek.name">Settimana</v-btn>
                     <v-btn :value="viewMonthGrid.name">Mese</v-btn>
-                    <v-btn :value="viewMonthAgenda.name">Agenda</v-btn>
+                    <v-btn :value="viewWeek.name">Settimana</v-btn>
+                    <v-btn value="day">Giorno</v-btn>
                 </v-btn-toggle>
-                <v-menu>
-                    <template #activator="{ props: activatorProps }"><v-btn icon="mdi-dots-horizontal" variant="text" aria-label="Altre viste" v-bind="activatorProps" /></template>
-                    <v-list><v-list-item title="Giorno" prepend-icon="mdi-calendar-today" @click="setCalendarView('day')" /></v-list>
-                </v-menu>
             </div>
         </header>
         <section class="calendar-workspace">
@@ -73,12 +69,10 @@ import { statusColors, type StatusColorKey } from '@/models/statusColors';
 import {
     createCalendar,
     createViewDay,
-    createViewMonthAgenda,
     createViewMonthGrid,
     createViewWeek,
     viewWeek,
-    viewMonthGrid,
-    viewMonthAgenda
+    viewMonthGrid
 } from '@schedule-x/calendar';
 import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
@@ -105,7 +99,7 @@ const selectedEvent = ref<CalendarEventExt | null>(null);
 const deltaHistory = ref(1);
 const selectedSchools: Ref<string[]> = ref([]);
 let displayedDayBoundaries = { start: '08:00', end: '22:00' };
-const activeView = ref(viewWeek.name);
+const activeView = ref(viewMonthGrid.name);
 const currentDate = ref(yyyyMMdd.today().toScheduleX());
 const pickerDate = ref(new Date());
 const stateLegend = Object.values(statusColors);
@@ -116,8 +110,9 @@ const eventsServicePlugin = createEventsServicePlugin();
 const calendarControls = createCalendarControlsPlugin()
 const calendarApp = createCalendar({
     locale: 'it-IT',
-    views: [createViewDay(), createViewWeek(), createViewMonthGrid(), createViewMonthAgenda()],
-    defaultView: viewWeek.name,
+    views: [createViewMonthGrid(), createViewWeek(), createViewDay()],
+    defaultView: viewMonthGrid.name,
+    isResponsive: false,
     events: [],
     dayBoundaries: displayedDayBoundaries,
     weekOptions: { nDays: 6 },
@@ -133,6 +128,7 @@ const calendarApp = createCalendar({
         },
         onRangeUpdate(range) {
             currentDate.value = calendarControls.getDate();
+            activeView.value = calendarControls.getView();
             loadLessons(range);
         }
     }
@@ -145,7 +141,7 @@ watch(schools, () => updateFilters());
 watch(theme.global.name, updateCalendarTheme);
 const calendarPeriodLabel = computed(() => {
     const date = new Date(currentDate.value + 'T12:00:00');
-    if (activeView.value === viewMonthGrid.name || activeView.value === viewMonthAgenda.name) {
+    if (activeView.value === viewMonthGrid.name) {
         return new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric' }).format(date);
     }
     if (activeView.value === 'day') return new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
