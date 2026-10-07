@@ -15,13 +15,21 @@
                         </template>
                         <template v-slot:default>
                             <v-card class="day-students-dialog" variant="flat" :loading="loadingAllStudents">
-                                <div class="day-dialog-heading"><span class="day-dialog-icon"><v-icon icon="mdi-account-plus-outline" /></span><div><span>Lezione del giorno</span><h2>Aggiungi allievi</h2><p>{{ school.name }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="studentsDialog = false" /></div>
+                                <div class="day-dialog-heading"><span class="day-dialog-icon"><v-icon
+                                            icon="mdi-account-plus-outline" /></span>
+                                    <div><span>Lezione del giorno</span>
+                                        <h2>Aggiungi allievi</h2>
+                                        <p>{{ school.name }}</p>
+                                    </div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi"
+                                        @click="studentsDialog = false" />
+                                </div>
                                 <v-card-text class="day-dialog-content">
                                     <SelectStudents v-model="selectedStudents" :all-students="availableStudents" />
                                 </v-card-text>
                                 <v-card-actions class="day-dialog-actions">
                                     <v-btn text="Annulla" variant="outlined" @click="studentsDialog = false" />
-                                    <v-btn color="primary" variant="flat" prepend-icon="mdi-account-plus-outline" text="Aggiungi" @click="saveSelectedStudents"
+                                    <v-btn color="primary" variant="flat" prepend-icon="mdi-account-plus-outline"
+                                        text="Aggiungi" @click="saveSelectedStudents"
                                         :loading="savingSelectedStudents" />
                                 </v-card-actions>
                             </v-card>
@@ -30,7 +38,9 @@
                     <v-expansion-panels variant="accordion" class="day-options">
                         <v-expansion-panel>
                             <v-expansion-panel-title>
-                                <span class="day-options-title"><v-icon icon="mdi-dots-horizontal-circle-outline" size="20" /><span>Gestione giornata<small>Data ufficiale e altre azioni</small></span></span>
+                                <span class="day-options-title"><v-icon icon="mdi-dots-horizontal-circle-outline"
+                                        size="20" /><span>Gestione
+                                        giornata<small>Data ufficiale e altre azioni</small></span></span>
                             </v-expansion-panel-title>
                             <v-expansion-panel-text>
                                 <div class="day-options-actions">
@@ -95,62 +105,55 @@
                 <v-card variant="flat" class="lesson-schedule-card">
                     <div class="lesson-schedule-heading">
                         <div>
-                            <h2>Orario e presenze</h2><span>{{
-                                studentLessons.length }}
-                                allievi · {{ school.name }}<span class="mobile-open-hint"> · Tocca una riga per i
-                                    dettagli</span></span>
+                            <h2>Orario e presenze</h2>
                         </div>
-                        <v-chip v-if="dailyLesson.isOfficialCalendarDate" color="primary" variant="tonal"
-                            size="small">Data
-                            ufficiale</v-chip>
                     </div>
-                        <div class="lesson-table-wrap">
-                            <table class="lesson-table">
-                                <thead>
-                                    <tr>
-                                        <th class="select-col"><v-checkbox v-model="selectAllLessons" hide-details
-                                                density="compact" aria-label="Seleziona tutti gli allievi"
-                                                :indeterminate="selectedLessons.length != 0 && selectedLessons.length != studentLessons.filter(item => !item.lesson.hiddenForDate).length"
-                                                @click="toggleAll" /></th>
-                                        <th>Orario</th>
-                                        <th>Allievo</th>
-                                        <th class="status-col">Stato</th>
-                                        <th class="arrow-col"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="item in studentLessons" :key="item.lesson.lessonId"
-                                        :class="{ 'is-selected': item.lesson.lessonId === studentLessons[selectedLessonIndex]?.lesson.lessonId }"
-                                        tabindex="0"
-                                        @click="selectedStudentId = item.lesson.lessonId; detailOpen = true"
-                                        @keydown.enter="selectedStudentId = item.lesson.lessonId; detailOpen = true"
-                                        @keydown.space.prevent="selectedStudentId = item.lesson.lessonId; detailOpen = true">
-                                        <td class="select-col" @click.stop><v-checkbox v-model="selectedLessons"
-                                                :value="item.student.id" :disabled="item.lesson.hiddenForDate" multiple
-                                                hide-details density="compact"
-                                                :aria-label="`Seleziona ${item.student.name} ${item.student.surname}`" />
-                                        </td>
-                                        <td class="lesson-table-time">{{ Time.fromITime(item.lesson.startTime).format()
-                                        }}</td>
-                                        <td class="lesson-table-student"><span class="student-mini-avatar"><v-icon
-                                                    icon="mdi-account-outline" size="16" /></span><strong>{{
-                                                        item.student.name }} {{
-                                                    item.student.surname }}</strong><v-icon v-if="item.lesson.dailyNote"
-                                                icon="mdi-note-text-outline" size="16" color="secondary" /></td>
-                                        <td class="status-col"><span v-if="lessonStatusColor(item.lesson)"
-                                                class="status-badge" :class="'status-' + lessonStatusColor(item.lesson)"
-                                                :title="statusColors[lessonStatusColor(item.lesson)!].label">{{
-                                                    statusColors[lessonStatusColor(item.lesson)!].short }}</span><span
-                                                v-else class="unset-status">{{ item.lesson.status === LessonStatus.TRIAL
-                                                    ? 'Prova' :
-                                                    item.lesson.hiddenForDate ? 'Nascosto' : '—' }}</span></td>
-                                        <td class="arrow-col"><v-icon icon="mdi-chevron-right" size="18" /></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div v-if="studentLessons.length === 0" class="empty-lessons">Nessun allievo in questa
-                                lezione.</div>
-                        </div>
+                    <div class="lesson-table-wrap">
+                        <table class="lesson-table">
+                            <thead>
+                                <tr>
+                                    <th class="select-col"><v-checkbox v-model="selectAllLessons" hide-details
+                                            density="compact" aria-label="Seleziona tutti gli allievi"
+                                            :indeterminate="selectedLessons.length != 0 && selectedLessons.length != studentLessons.filter(item => !item.lesson.hiddenForDate).length"
+                                            @click="toggleAll" /></th>
+                                    <th>Orario</th>
+                                    <th>Allievo</th>
+                                    <th class="status-col">Stato</th>
+                                    <th class="arrow-col"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in studentLessons" :key="item.lesson.lessonId"
+                                    :class="{ 'is-selected': item.lesson.lessonId === studentLessons[selectedLessonIndex]?.lesson.lessonId }"
+                                    tabindex="0" @click="selectedStudentId = item.lesson.lessonId; detailOpen = true"
+                                    @keydown.enter="selectedStudentId = item.lesson.lessonId; detailOpen = true"
+                                    @keydown.space.prevent="selectedStudentId = item.lesson.lessonId; detailOpen = true">
+                                    <td class="select-col" @click.stop><v-checkbox v-model="selectedLessons"
+                                            :value="item.student.id" :disabled="item.lesson.hiddenForDate" multiple
+                                            hide-details density="compact"
+                                            :aria-label="`Seleziona ${item.student.name} ${item.student.surname}`" />
+                                    </td>
+                                    <td class="lesson-table-time">{{ Time.fromITime(item.lesson.startTime).format()
+                                    }}</td>
+                                    <td class="lesson-table-student"><span class="student-mini-avatar"><v-icon
+                                                icon="mdi-account-outline" size="16" /></span><strong>{{
+                                                    item.student.name }} {{
+                                                item.student.surname }}</strong><v-icon v-if="item.lesson.dailyNote"
+                                            icon="mdi-note-text-outline" size="16" color="secondary" /></td>
+                                    <td class="status-col"><span v-if="lessonStatusColor(item.lesson)"
+                                            class="status-badge" :class="'status-' + lessonStatusColor(item.lesson)"
+                                            :title="statusColors[lessonStatusColor(item.lesson)!].label">{{
+                                                statusColors[lessonStatusColor(item.lesson)!].short }}</span><span v-else
+                                            class="unset-status">{{ item.lesson.status === LessonStatus.TRIAL
+                                                ? 'Prova' :
+                                                item.lesson.hiddenForDate ? 'Nascosto' : '—' }}</span></td>
+                                    <td class="arrow-col"><v-icon icon="mdi-chevron-right" size="18" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div v-if="studentLessons.length === 0" class="empty-lessons">Nessun allievo in questa
+                            lezione.</div>
+                    </div>
                 </v-card>
 
                 <v-card v-if="studentLessons.some(item => item.lesson.dailyNote)" variant="flat"
@@ -521,16 +524,81 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.day-students-dialog { overflow: hidden; border: 1px solid var(--app-border); border-radius: 16px !important; background: var(--app-surface); }
-.day-dialog-heading { display: flex; align-items: center; gap: 12px; padding: 20px 22px 18px; border-bottom: 1px solid var(--app-border); }
-.day-dialog-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--app-accent-surface); color: var(--app-primary); }
-.day-dialog-heading > div { flex: 1; min-width: 0; }
-.day-dialog-heading > div > span { color: var(--app-primary); font-size: .74rem; font-weight: 650; }
-.day-dialog-heading h2 { margin: 2px 0; color: var(--app-text); font-size: 1.1rem; font-weight: 700; }
-.day-dialog-heading p { margin: 0; color: var(--app-muted); font-size: .82rem; }
-.day-dialog-content { padding: 20px 22px !important; }
-.day-dialog-actions { justify-content: flex-end; gap: 8px; padding: 14px 22px 18px !important; border-top: 1px solid var(--app-border); }
-@media (max-width: 600px) { .day-dialog-heading { padding: 16px; } .day-dialog-content { padding: 16px !important; } .day-dialog-actions { padding: 12px 16px 16px !important; } }
+.day-students-dialog {
+    overflow: hidden;
+    border: 1px solid var(--app-border);
+    border-radius: 16px !important;
+    background: var(--app-surface);
+}
+
+.day-dialog-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 22px 18px;
+    border-bottom: 1px solid var(--app-border);
+}
+
+.day-dialog-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 12px;
+    background: var(--app-accent-surface);
+    color: var(--app-primary);
+}
+
+.day-dialog-heading>div {
+    flex: 1;
+    min-width: 0;
+}
+
+.day-dialog-heading>div>span {
+    color: var(--app-primary);
+    font-size: .74rem;
+    font-weight: 650;
+}
+
+.day-dialog-heading h2 {
+    margin: 2px 0;
+    color: var(--app-text);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.day-dialog-heading p {
+    margin: 0;
+    color: var(--app-muted);
+    font-size: .82rem;
+}
+
+.day-dialog-content {
+    padding: 20px 22px !important;
+}
+
+.day-dialog-actions {
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px 22px 18px !important;
+    border-top: 1px solid var(--app-border);
+}
+
+@media (max-width: 600px) {
+    .day-dialog-heading {
+        padding: 16px;
+    }
+
+    .day-dialog-content {
+        padding: 16px !important;
+    }
+
+    .day-dialog-actions {
+        padding: 12px 16px 16px !important;
+    }
+}
+
 .daily-lesson-view {
     max-width: 1620px;
     margin: 0 auto;
@@ -627,8 +695,17 @@ onMounted(async () => {
     font-size: .8rem;
 }
 
-.day-options-title { display: inline-flex; align-items: center; gap: 10px; text-align: left; }
-.day-options-title > .v-icon, .day-options-title small { display: none; }
+.day-options-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+}
+
+.day-options-title>.v-icon,
+.day-options-title small {
+    display: none;
+}
 
 .day-options :deep(.v-expansion-panel-text__wrapper) {
     padding: 6px 0;
@@ -1014,7 +1091,7 @@ onMounted(async () => {
         padding: 12px 0 0;
     }
 
-    .school-sidebar-actions > .v-btn {
+    .school-sidebar-actions>.v-btn {
         width: 100%;
         min-height: 44px;
         justify-content: flex-start;
@@ -1041,7 +1118,7 @@ onMounted(async () => {
         font-weight: 650;
     }
 
-    .day-options-title > .v-icon {
+    .day-options-title>.v-icon {
         display: inline-flex;
         color: var(--app-primary);
     }
@@ -1105,6 +1182,7 @@ onMounted(async () => {
 }
 
 @media (max-width: 440px) {
+
     .lesson-table th,
     .lesson-table td {
         padding: 7px 5px;
