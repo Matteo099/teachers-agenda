@@ -14,14 +14,14 @@
                                 @click="loadSchoolStudents" v-bind="activatorProps">Aggiungi allievo</v-btn>
                         </template>
                         <template v-slot:default>
-                            <v-card title="Tutti gli studenti della scuola" :loading="loadingAllStudents">
-                                <v-card-text>
+                            <v-card class="day-students-dialog" variant="flat" :loading="loadingAllStudents">
+                                <div class="day-dialog-heading"><span class="day-dialog-icon"><v-icon icon="mdi-account-plus-outline" /></span><div><span>Lezione del giorno</span><h2>Aggiungi allievi</h2><p>{{ school.name }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="studentsDialog = false" /></div>
+                                <v-card-text class="day-dialog-content">
                                     <SelectStudents v-model="selectedStudents" :all-students="availableStudents" />
                                 </v-card-text>
-                                <v-card-actions>
-                                    <v-btn text="Annulla" @click="studentsDialog = false" />
-                                    <v-spacer />
-                                    <v-btn color="primary" text="Salva" @click="saveSelectedStudents"
+                                <v-card-actions class="day-dialog-actions">
+                                    <v-btn text="Annulla" variant="outlined" @click="studentsDialog = false" />
+                                    <v-btn color="primary" variant="flat" prepend-icon="mdi-account-plus-outline" text="Aggiungi" @click="saveSelectedStudents"
                                         :loading="savingSelectedStudents" />
                                 </v-card-actions>
                             </v-card>
@@ -518,6 +518,16 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.day-students-dialog { overflow: hidden; border: 1px solid var(--app-border); border-radius: 16px !important; background: var(--app-surface); }
+.day-dialog-heading { display: flex; align-items: center; gap: 12px; padding: 20px 22px 18px; border-bottom: 1px solid var(--app-border); }
+.day-dialog-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--app-accent-surface); color: var(--app-primary); }
+.day-dialog-heading > div { flex: 1; min-width: 0; }
+.day-dialog-heading > div > span { color: var(--app-primary); font-size: .74rem; font-weight: 650; }
+.day-dialog-heading h2 { margin: 2px 0; color: var(--app-text); font-size: 1.1rem; font-weight: 700; }
+.day-dialog-heading p { margin: 0; color: var(--app-muted); font-size: .82rem; }
+.day-dialog-content { padding: 20px 22px !important; }
+.day-dialog-actions { justify-content: flex-end; gap: 8px; padding: 14px 22px 18px !important; border-top: 1px solid var(--app-border); }
+@media (max-width: 600px) { .day-dialog-heading { padding: 16px; } .day-dialog-content { padding: 16px !important; } .day-dialog-actions { padding: 12px 16px 16px !important; } }
 .daily-lesson-view {
     max-width: 1620px;
     margin: 0 auto;

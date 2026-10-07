@@ -60,14 +60,15 @@
       <div class="student-card-quick-actions">
         <v-btn :disabled="loading" color="success" variant="tonal" prepend-icon="mdi-check"
           v-if="presentVisible && !item.lesson.hiddenForDate" @click="emit('present')">Presente</v-btn>
-        <v-dialog v-if="item.student.isBand" fullscreen>
+        <v-dialog v-if="item.student.isBand" max-width="600" scrollable>
           <template #activator="{ props: activatorProps }">
             <v-btn :disabled="loading" variant="tonal" prepend-icon="mdi-account-group-outline"
               v-bind="activatorProps">Presenze band</v-btn>
           </template>
           <template #default="{ isActive }">
-            <v-card title="Presenze componenti della band">
-              <v-list>
+            <v-card class="lesson-action-dialog" variant="flat">
+              <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-account-group-outline" /></span><div><span>Lezione del giorno</span><h2>Presenze della band</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
+              <v-list class="lesson-dialog-content" lines="two">
                 <v-list-item v-for="member in item.student.bandMembers ?? []" :key="member.id"
                   :title="`${member.name} ${member.surname}`" :subtitle="member.instrument">
                   <template #append>
@@ -79,13 +80,13 @@
                   </template>
                 </v-list-item>
               </v-list>
-              <v-card-actions><v-spacer /><v-btn text="Chiudi" @click="isActive.value = false" /></v-card-actions>
+              <v-card-actions class="lesson-dialog-actions"><v-btn text="Chiudi" variant="outlined" @click="isActive.value = false" /></v-card-actions>
             </v-card>
           </template>
         </v-dialog>
         <v-btn :disabled="loading" color="warning" variant="tonal" prepend-icon="mdi-account-off-outline"
           v-if="absentVisible && !item.lesson.hiddenForDate" @click="emit('absent', false)">Assente</v-btn>
-        <v-dialog transition="dialog-bottom-transition"
+        <v-dialog transition="dialog-bottom-transition" max-width="480"
           v-else-if="!item.lesson.hiddenForDate && (recoverableAbsentVisible || unjustifiedAbsentVisible)">
           <template v-slot:activator="{ props: activatorProps }">
             <v-btn :disabled="loading" color="warning" variant="tonal" prepend-icon="mdi-account-off-outline"
@@ -93,19 +94,9 @@
           </template>
 
           <template v-slot:default="{ isActive }">
-            <v-card title="Assenza"
-              text="Lo studente avrà modo di recuperare la lezione oppure è un'assenza ingiustificata?">
-              <v-card-actions>
-                <v-row class="justify-end">
-                  <v-col cols="auto">
-                    <v-btn text="Assenza Recuperabile" @click="isActive.value = false; emit('absent', true)"></v-btn>
-                  </v-col>
-                  <v-col cols="auto">
-                    <v-btn text="Assenza Ingiustificata" color="primary"
-                      @click="isActive.value = false; emit('absent', false)"></v-btn>
-                  </v-col>
-                </v-row>
-              </v-card-actions>
+            <v-card class="lesson-action-dialog" variant="flat">
+              <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-account-off-outline" /></span><div><span>Presenze</span><h2>Segna assenza</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
+              <v-card-text class="lesson-dialog-content"><p class="lesson-dialog-description">Scegli se la lezione può essere recuperata.</p><div class="absence-options"><v-btn variant="tonal" color="warning" prepend-icon="mdi-calendar-refresh" @click="isActive.value = false; emit('absent', true)">Da recuperare</v-btn><v-btn variant="tonal" color="error" prepend-icon="mdi-account-remove-outline" @click="isActive.value = false; emit('absent', false)">Ingiustificata</v-btn></div></v-card-text>
             </v-card>
           </template>
         </v-dialog>
@@ -123,7 +114,7 @@
                   prepend-icon="mdi-restore" v-if="resetVisible && !item.lesson.hiddenForDate"
                   @click="emit('reset')">Ripristina stato</v-btn>
 
-                <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" fullscreen
+                <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" max-width="500" scrollable
                   v-if="!item.lesson.moved">
                   <template v-slot:activator="{ props: activatorProps }">
                     <v-btn :disabled="loading" class="student-action-button" color="secondary" variant="tonal"
@@ -132,15 +123,15 @@
                   </template>
 
                   <template v-slot:default="{ isActive }">
-                    <v-card>
-                      <v-card-text>
-                        <v-date-picker class="w-100" v-model="newLessonDate"></v-date-picker>
+                    <v-card class="lesson-action-dialog" variant="flat">
+                      <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-calendar-arrow-right" /></span><div><span>Lezione del giorno</span><h2>Sposta lezione</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false; newLessonDate = undefined" /></div>
+                      <v-card-text class="lesson-dialog-content">
+                        <p class="lesson-dialog-description">Seleziona la nuova data della lezione.</p>
+                        <v-date-picker class="lesson-date-picker" v-model="newLessonDate" width="100%"></v-date-picker>
                       </v-card-text>
-                      <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn text="Annulla" @click="isActive.value = false; newLessonDate = undefined
-                          "></v-btn>
-                        <v-btn color="primary" text="Sposta" @click="_moveLesson" :loading="movingLesson"
+                      <v-card-actions class="lesson-dialog-actions">
+                        <v-btn text="Annulla" variant="outlined" @click="isActive.value = false; newLessonDate = undefined"></v-btn>
+                        <v-btn color="primary" variant="flat" prepend-icon="mdi-calendar-arrow-right" text="Sposta lezione" @click="_moveLesson" :loading="movingLesson"
                           :disabled="!newLessonDate"></v-btn>
                       </v-card-actions>
                     </v-card>
@@ -161,7 +152,7 @@
                     Vai alla lezione originale</v-btn>
                 </template>
 
-                <v-dialog v-model="timeDialog" transition="dialog-bottom-transition" fullscreen>
+                <v-dialog v-model="timeDialog" transition="dialog-bottom-transition" max-width="560" scrollable>
                   <template v-slot:activator="{ props: activatorProps }">
                     <v-btn :disabled="loading" class="student-action-button" color="secondary" variant="tonal"
                       prepend-icon="mdi-clock-edit-outline" v-bind="activatorProps">Modifica orario</v-btn>
@@ -200,9 +191,10 @@
                       {{ item.lesson.dailyNote ? 'Modifica nota' : 'Aggiungi nota' }}
                     </v-btn>
                   </template>
-                  <v-card title="Nota della giornata">
-                    <v-card-text>
-                      <div class="text-subtitle-2 mb-2">Note precedenti</div>
+                  <v-card class="lesson-action-dialog" variant="flat">
+                    <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-note-edit-outline" /></span><div><span>Lezione del giorno</span><h2>Nota della giornata</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="dailyNoteDialog = false" /></div>
+                    <v-card-text class="lesson-dialog-content">
+                      <div class="lesson-dialog-section-title">Note precedenti</div>
                       <v-progress-linear v-if="loadingDailyNotes" indeterminate color="primary" class="mb-2" />
                       <v-list v-else-if="dailyNotes.length" density="compact" class="mb-4" max-height="220">
                         <v-list-item v-for="note in dailyNotes" :key="note.date"
@@ -212,26 +204,26 @@
                       <div v-else class="text-body-2 text-medium-emphasis mb-4">Nessuna nota precedente per questo
                         allievo.
                       </div>
-                      <v-textarea v-model="dailyNote" label="Nota" counter="500" autofocus />
+                      <v-textarea v-model="dailyNote" label="Nota" variant="outlined" rows="4" counter="500" autofocus />
                     </v-card-text>
-                    <v-card-actions>
-                      <v-spacer />
-                      <v-btn @click="dailyNoteDialog = false">Annulla</v-btn>
-                      <v-btn color="primary" @click="saveDailyNote">Salva</v-btn>
+                    <v-card-actions class="lesson-dialog-actions">
+                      <v-btn variant="outlined" @click="dailyNoteDialog = false">Annulla</v-btn>
+                      <v-btn color="primary" variant="flat" prepend-icon="mdi-content-save-outline" @click="saveDailyNote">Salva nota</v-btn>
                     </v-card-actions>
                   </v-card>
                 </v-dialog>
-                <v-dialog v-if="!item.lesson.hiddenForDate">
+                <v-dialog v-if="!item.lesson.hiddenForDate" max-width="460">
                   <template v-slot:activator="{ props: activatorProps }">
                     <v-btn :disabled="loading" class="student-action-button" color="secondary" variant="tonal"
                       prepend-icon="mdi-eye-off-outline" v-bind="activatorProps">Nascondi oggi</v-btn>
                   </template>
                   <template v-slot:default="{ isActive }">
-                    <v-card title="Nascondi studente" text="Lo studente sarà nascosto solo da questa data.">
-                      <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn text="Annulla" @click="isActive.value = false" />
-                        <v-btn color="primary" text="Nascondi" @click="isActive.value = false; emit('hideForDate')" />
+                    <v-card class="lesson-action-dialog" variant="flat">
+                      <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-eye-off-outline" /></span><div><span>Visibilità</span><h2>Nascondi oggi</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
+                      <v-card-text class="lesson-dialog-content"><p class="lesson-dialog-description">La lezione sarà nascosta solo per questa giornata. Potrai renderla di nuovo visibile in seguito.</p></v-card-text>
+                      <v-card-actions class="lesson-dialog-actions">
+                        <v-btn text="Annulla" variant="outlined" @click="isActive.value = false" />
+                        <v-btn color="primary" variant="flat" prepend-icon="mdi-eye-off-outline" text="Nascondi oggi" @click="isActive.value = false; emit('hideForDate')" />
                       </v-card-actions>
                     </v-card>
                   </template>
@@ -361,6 +353,22 @@ async function _moveLesson() {
 </script>
 
 <style scoped>
+.lesson-action-dialog { overflow: hidden; border: 1px solid var(--app-border); border-radius: 16px !important; background: var(--app-surface); box-shadow: var(--app-hover-shadow); }
+.lesson-dialog-heading { display: flex; align-items: center; gap: 12px; padding: 20px 22px 18px; border-bottom: 1px solid var(--app-border); }
+.lesson-dialog-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--app-accent-surface); color: var(--app-primary); }
+.lesson-dialog-heading > div { flex: 1; min-width: 0; }
+.lesson-dialog-heading span:not(.lesson-dialog-icon) { color: var(--app-primary); font-size: .74rem; font-weight: 650; }
+.lesson-dialog-heading h2 { margin: 2px 0; color: var(--app-text); font-size: 1.1rem; font-weight: 700; }
+.lesson-dialog-heading p { overflow: hidden; margin: 0; color: var(--app-muted); font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.lesson-dialog-content { padding: 20px 22px !important; }
+.lesson-dialog-description { margin: 0 0 14px; color: var(--app-muted); font-size: .88rem; line-height: 1.5; }
+.lesson-dialog-section-title { margin-bottom: 10px; color: var(--app-text); font-size: .85rem; font-weight: 700; }
+.lesson-dialog-actions { justify-content: flex-end; gap: 8px; padding: 14px 22px 18px !important; border-top: 1px solid var(--app-border); }
+.lesson-dialog-actions .v-btn[variant="outlined"] { border-color: var(--app-border); }
+.lesson-date-picker { border: 1px solid var(--app-border); border-radius: 12px; }
+.absence-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.absence-options .v-btn { min-width: 0; height: 48px; white-space: normal; }
+@media (max-width: 600px) { .lesson-dialog-heading { padding: 16px; } .lesson-dialog-content { padding: 16px !important; } .lesson-dialog-actions { flex-wrap: wrap; padding: 12px 16px 16px !important; } .absence-options { grid-template-columns: 1fr; } }
 .student-lesson-card {
   min-width: 0;
 }

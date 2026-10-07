@@ -1,41 +1,30 @@
 <template>
-    <v-card title="Modifica orario lezione" elevation="2">
-        <v-card-text>
-            <v-row justify="space-around">
-                <v-col cols="11" md="6">
-                    <v-checkbox v-model="alignEndTime"
-                        label="Allinea la data di fine lezione in base alla durata della lezione definita dallo studente"></v-checkbox>
-                </v-col>
-
-                <v-col cols="11" sm="5">
-                    <v-text-field v-model="_startTime" :active="startModal" :focus="startModal" label="Data di inizio"
-                        v-bind="startTimeProps" prepend-icon="mdi-clock-time-four-outline" readonly>
+    <v-card class="lesson-time-dialog" variant="flat">
+        <div class="lesson-time-heading"><span class="lesson-time-icon"><v-icon icon="mdi-clock-edit-outline" /></span><div><span>Lezione del giorno</span><h2>Modifica orario</h2><p>Imposta l'inizio e la fine della lezione.</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="emit('close')" /></div>
+        <v-card-text class="lesson-time-content">
+            <div class="lesson-time-fields">
+                <v-text-field v-model="_startTime" :active="startModal" :focus="startModal" label="Inizio"
+                        v-bind="startTimeProps" prepend-inner-icon="mdi-clock-time-four-outline" variant="outlined" readonly>
                         <v-dialog v-model="startModal" activator="parent" width="auto">
                             <v-time-picker v-if="startModal" format="24hr" v-model="_startTime"></v-time-picker>
                         </v-dialog>
                     </v-text-field>
-                </v-col>
-                <v-col cols="11">
-                    <v-checkbox v-model="applyFromDate"
-                        label="Cambia per tutte le lezioni successive e per il calendario"></v-checkbox>
-                </v-col>
-
-                <v-col cols="11" sm="5">
-                    <v-text-field v-model="_endTime" :active="endModal" :focused="endModal" label="Data di fine"
-                        v-bind="endTimeProps" prepend-icon="mdi-clock-time-four-outline" :disabled="alignEndTime"
+                <v-text-field v-model="_endTime" :active="endModal" :focused="endModal" label="Fine"
+                        v-bind="endTimeProps" prepend-inner-icon="mdi-clock-time-four-outline" variant="outlined" :disabled="alignEndTime"
                         readonly>
                         <v-dialog v-model="endModal" activator="parent" width="auto">
                             <v-time-picker v-if="endModal" format="24hr" v-model="_endTime"></v-time-picker>
                         </v-dialog>
                     </v-text-field>
-                </v-col>
-            </v-row>
+            </div>
+            <div class="lesson-time-options">
+                <v-checkbox v-model="alignEndTime" label="Calcola la fine in base alla durata della lezione" hide-details density="comfortable" />
+                <v-checkbox v-model="applyFromDate" label="Applica anche alle lezioni successive e al calendario" hide-details density="comfortable" />
+            </div>
         </v-card-text>
-        <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text="Annulla" variant="plain" @click.stop="emit('close')"></v-btn>
-
-            <v-btn color="primary" text="Modifica" variant="tonal" @click.stop="onSave"></v-btn>
+        <v-card-actions class="lesson-time-actions">
+            <v-btn text="Annulla" variant="outlined" @click.stop="emit('close')"></v-btn>
+            <v-btn color="primary" text="Salva orario" prepend-icon="mdi-content-save-outline" variant="flat" @click.stop="onSave"></v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -115,3 +104,19 @@ function updateEndTime() {
     }
 }
 </script>
+
+<style scoped>
+.lesson-time-dialog { overflow: hidden; border: 1px solid var(--app-border); border-radius: 16px !important; background: var(--app-surface); }
+.lesson-time-heading { display: flex; align-items: center; gap: 12px; padding: 20px 22px 18px; border-bottom: 1px solid var(--app-border); }
+.lesson-time-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--app-accent-surface); color: var(--app-primary); }
+.lesson-time-heading > div { flex: 1; min-width: 0; }
+.lesson-time-heading > div > span { color: var(--app-primary); font-size: .74rem; font-weight: 650; }
+.lesson-time-heading h2 { margin: 2px 0; color: var(--app-text); font-size: 1.1rem; font-weight: 700; }
+.lesson-time-heading p { margin: 0; color: var(--app-muted); font-size: .82rem; }
+.lesson-time-content { padding: 22px !important; }
+.lesson-time-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.lesson-time-options { display: grid; gap: 2px; padding: 8px 0 0; }
+.lesson-time-options :deep(.v-label) { opacity: 1; color: var(--app-text); font-size: .86rem; }
+.lesson-time-actions { justify-content: flex-end; gap: 8px; padding: 14px 22px 18px !important; border-top: 1px solid var(--app-border); }
+@media (max-width: 600px) { .lesson-time-heading { padding: 16px; } .lesson-time-content { padding: 16px !important; } .lesson-time-fields { grid-template-columns: 1fr; gap: 2px; } .lesson-time-actions { padding: 12px 16px 16px !important; } }
+</style>
