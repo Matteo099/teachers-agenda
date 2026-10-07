@@ -7,12 +7,6 @@
                             icon="mdi-town-hall" size="25" /></span>
                     <div><strong>{{ school.name }}</strong><small>{{ school.city || 'Scuola di musica' }}</small></div>
                 </div>
-                <nav class="school-sidebar-nav" aria-label="Sezioni lezione">
-                    <v-btn :class="{ 'is-active': visualization === 0 }" variant="text" prepend-icon="mdi-table-large"
-                        @click="visualization = 0">Orario</v-btn>
-                    <v-btn :class="{ 'is-active': visualization === 1 }" variant="text"
-                        prepend-icon="mdi-calendar-week-outline" @click="visualization = 1">Calendario</v-btn>
-                </nav>
                 <div class="school-sidebar-actions">
                     <v-dialog v-model="studentsDialog" transition="dialog-bottom-transition" max-width="500" persistent>
                         <template v-slot:activator="{ props: activatorProps }">
@@ -98,7 +92,7 @@
                 <v-card variant="flat" class="lesson-schedule-card">
                     <div class="lesson-schedule-heading">
                         <div>
-                            <h2>{{ visualization === 0 ? 'Orario e presenze' : 'Calendario' }}</h2><span>{{
+                            <h2>Orario e presenze</h2><span>{{
                                 studentLessons.length }}
                                 allievi · {{ school.name }}<span class="mobile-open-hint"> · Tocca una riga per i
                                     dettagli</span></span>
@@ -107,10 +101,7 @@
                             size="small">Data
                             ufficiale</v-chip>
                     </div>
-                    <v-slide-x-transition leave-absolute>
-                        <DailyLessonCalendar v-if="visualization === 1" :date="yyyyMMdd.fromIyyyyMMdd(dailyLesson.date)"
-                            :school="school" v-model="studentLessons" editable sort @edit="save" />
-                        <div v-else class="lesson-table-wrap">
+                        <div class="lesson-table-wrap">
                             <table class="lesson-table">
                                 <thead>
                                     <tr>
@@ -157,7 +148,6 @@
                             <div v-if="studentLessons.length === 0" class="empty-lessons">Nessun allievo in questa
                                 lezione.</div>
                         </div>
-                    </v-slide-x-transition>
                 </v-card>
 
                 <v-card v-if="studentLessons.some(item => item.lesson.dailyNote)" variant="flat"
@@ -206,7 +196,6 @@
 </template>
 
 <script setup lang="ts">
-import DailyLessonCalendar from '@/components/calendar/DailyLessonCalendar.vue';
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import SelectStudents from '@/components/inputs/SelectStudents.vue';
@@ -246,7 +235,6 @@ const saving = ref(false);
 const savingSelectedStudents = ref(false);
 const studentsDialog = ref(false);
 const routeChanged = ref(true);
-const visualization = ref(0);
 const selectedStudentId = ref<string>();
 const detailOpen = ref(false);
 const selectedLessonIndex = computed(() => Math.max(0, studentLessons.value.findIndex(item => item.lesson.lessonId === selectedStudentId.value)));
@@ -599,24 +587,6 @@ onMounted(async () => {
     display: grid;
     place-items: center;
     border-radius: 12px;
-    background: var(--app-accent-surface);
-}
-
-.school-sidebar-nav {
-    display: grid;
-    gap: 3px;
-    padding: 8px 0;
-    border-top: 1px solid var(--app-border);
-}
-
-.school-sidebar-nav .v-btn {
-    justify-content: flex-start;
-    width: 100%;
-    color: var(--app-muted);
-}
-
-.school-sidebar-nav .v-btn.is-active {
-    color: var(--app-primary);
     background: var(--app-accent-surface);
 }
 
@@ -1020,17 +990,6 @@ onMounted(async () => {
         padding: 0;
     }
 
-    .school-sidebar-nav {
-        display: flex;
-        flex: 0 0 auto;
-        padding: 0;
-        border: 0;
-    }
-
-    .school-sidebar-nav .v-btn {
-        width: auto;
-    }
-
     .school-sidebar-actions {
         display: flex;
         align-items: center;
@@ -1074,14 +1033,6 @@ onMounted(async () => {
 }
 
 @media (max-width: 440px) {
-    .school-sidebar-nav {
-        width: 100%;
-    }
-
-    .school-sidebar-nav .v-btn {
-        flex: 1;
-    }
-
     .lesson-table th,
     .lesson-table td {
         padding: 7px 5px;
