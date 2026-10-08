@@ -1,6 +1,28 @@
 <template>
   <v-container fluid class="home-view">
-    <div class="page-heading mb-5">
+    <div class="d-flex flex-wrap align-center justify-space-between ga-3 mb-3">
+      <h2 class="section-title">Lezioni di oggi</h2>
+      <v-btn variant="tonal" color="primary" @click="loadTodayLessons" :loading="loadingTodayLessons">Aggiorna {{ dateFormat(new Date()) }}</v-btn>
+    </div>
+    <v-slide-y-transition mode="out-in">
+      <v-row v-if="!loadingTodayLessons">
+        <v-col v-if="todayLessons.length == 0 && loadAtLeastOnceTodayLessons" cols="12">
+          <p>Nessuna lezione in programma per oggi!</p>
+        </v-col>
+        <v-col v-for="tl in todayLessons" :key="tl.lesson.id" cols="12" sm="4">
+          <v-card append-icon="mdi-chevron-right" class="pa-4" variant="flat" :to="'/lesson/' + tl.lesson.id"
+            prepend-icon="mdi-music-note" :title="tl.school.name">
+          </v-card>
+        </v-col>
+      </v-row>
+      <v-row v-else>
+        <v-col v-for="fo in 3" :key="fo" cols="12" sm="4">
+          <v-skeleton-loader class="pa-2" type="card"></v-skeleton-loader>
+        </v-col>
+      </v-row>
+    </v-slide-y-transition>
+
+    <div class="page-heading mt-8 mb-5">
       <div>
         <h1>Le mie scuole</h1>
       </div>
@@ -59,27 +81,6 @@
       </v-col>
     </v-row>
 
-    <div class="d-flex flex-wrap align-center justify-space-between ga-3 mt-8 mb-3">
-      <h2 class="section-title">Lezioni di oggi</h2>
-      <v-btn variant="tonal" color="primary" @click="loadTodayLessons" :loading="loadingTodayLessons">Aggiorna {{ dateFormat(new Date()) }}</v-btn>
-    </div>
-    <v-slide-y-transition mode="out-in">
-      <v-row v-if="!loadingTodayLessons">
-        <v-col v-if="todayLessons.length == 0 && loadAtLeastOnceTodayLessons" cols="12">
-          <p>Nessuna lezione in programma per oggi!</p>
-        </v-col>
-        <v-col v-for="tl in todayLessons" :key="tl.lesson.id" cols="12" sm="4">
-          <v-card append-icon="mdi-chevron-right" class="pa-4" variant="flat" :to="'/lesson/' + tl.lesson.id"
-            prepend-icon="mdi-music-note" :title="tl.school.name">
-          </v-card>
-        </v-col>
-      </v-row>
-      <v-row v-else>
-        <v-col v-for="fo in 3" :key="fo" cols="12" sm="4">
-          <v-skeleton-loader class="pa-2" type="card"></v-skeleton-loader>
-        </v-col>
-      </v-row>
-    </v-slide-y-transition>
   </v-container>
 </template>
 
