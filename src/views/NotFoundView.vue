@@ -127,7 +127,8 @@
 main {
   height: 100vh;
   width: 100vw;
-  background: #fff;
+  background: var(--app-background);
+  color: var(--app-text);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -142,15 +143,16 @@ main #errorLink {
   font-size: 20px;
   padding: 12px;
   border: 1px solid;
-  color: #000;
+  color: var(--app-text);
   background-color: transparent;
   text-decoration: none;
   transition: all 0.5s ease-in-out;
 }
 main #errorLink:hover, main #errorLink:active {
-  color: #fff;
-  background: #000;
+  color: var(--app-surface);
+  background: var(--app-text);
 }
+:global(:root[data-app-theme='dark']) main svg { filter: invert(1); }
 main #g6219 {
   transform-origin: 85px 4px;
   -webkit-animation: an1 12s 0.5s infinite ease-out;

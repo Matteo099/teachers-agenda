@@ -81,7 +81,6 @@ let start = "24:00";
 let end = "00:00";
 
 watch(model, () => updateInternalEvents(), { deep: true });
-watch(theme.global.name, updateCalendarTheme);
 watch(() => props.trimTime, updateCalendarBoundaries);
 
 const eventsServicePlugin = createEventsServicePlugin();
@@ -107,6 +106,7 @@ const calendarApp = createCalendar({
     },
     calendars: getCalendarsColor(props.school)
 })
+watch(theme.global.name, updateCalendarTheme, { immediate: true });
 
 function updateCalendarTheme() {
     if (!calendarApp) return;

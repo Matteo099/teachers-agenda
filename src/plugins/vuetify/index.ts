@@ -28,11 +28,19 @@ const myCustomLightTheme = {
 const myCustomDarkTheme = {
     dark: true,
     colors: {
-        success: '#78dc77',
-        secondary: '#000000',
-        primary: '#cfbdff',
-        info: '#9ecaff',
-        'blue-grey-lighten': '#ECEFF1'
+        background: '#101827',
+        surface: '#1B2638',
+        primary: '#8FB6FF',
+        'primary-darken-1': '#6C9BF2',
+        secondary: '#A4B3CA',
+        'secondary-darken-1': '#8799B3',
+        'on-background': '#E9EFF8',
+        'on-surface': '#E9EFF8',
+        error: '#FF8F92',
+        info: '#8BC5FF',
+        success: '#75D6A0',
+        warning: '#F4CC75',
+        'blue-grey-lighten': '#D2DCEB'
     }
 }
 

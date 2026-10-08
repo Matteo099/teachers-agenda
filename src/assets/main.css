@@ -30,6 +30,7 @@
 .status-absent { --status-bg: var(--status-absent-bg); --status-fg: var(--status-absent-fg); }
 .status-recovery { --status-bg: var(--status-recovery-bg); --status-fg: var(--status-recovery-fg); }
 .status-moved { --status-bg: var(--status-moved-bg); --status-fg: var(--status-moved-fg); }
+.calendar-legend i { background: var(--status-bg); border-color: var(--status-fg); }
 .school-panel { overflow: hidden; }
 .school-panel-header { display: flex; align-items: center; gap: 12px; padding: 20px 24px 16px; }
 .school-panel-header > div { flex: 1; min-width: 0; }

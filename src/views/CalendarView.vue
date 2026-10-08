@@ -49,7 +49,7 @@
                     <v-card-actions class="lesson-event-actions"><v-btn variant="text" @click="eventDetailsOpen = false">Chiudi</v-btn><v-btn color="primary" variant="flat" append-icon="mdi-arrow-right" @click="goto(selectedEvent.data)">Apri lezione</v-btn></v-card-actions>
                 </v-card>
             </v-dialog>
-            <div class="calendar-legend"><span v-for="state in stateLegend" :key="state.short"><i :style="{ backgroundColor: state.background, borderColor: state.foreground }"></i>{{ state.label }} ({{ state.short }})</span></div>
+            <div class="calendar-legend"><span v-for="(state, key) in statusColors" :key="key"><i :class="`status-${key}`"></i>{{ state.label }} ({{ state.short }})</span></div>
         </section>
     </div>
 </template>
@@ -102,7 +102,6 @@ let displayedDayBoundaries = { start: '08:00', end: '22:00' };
 const activeView = ref(viewMonthGrid.name);
 const currentDate = ref(yyyyMMdd.today().toScheduleX());
 const pickerDate = ref(new Date());
-const stateLegend = Object.values(statusColors);
 let lessonsLoadRequest = 0;
 let calendarLayoutUpdate: ReturnType<typeof setTimeout> | undefined;
 
@@ -138,7 +137,7 @@ watch(route, () => deltaHistory.value++);
 watch(selectedSchools, () => updateQueryRoute());
 watch(filters, () => updateFilters(), { immediate: true });
 watch(schools, () => updateFilters());
-watch(theme.global.name, updateCalendarTheme);
+watch(theme.global.name, updateCalendarTheme, { immediate: true });
 const calendarPeriodLabel = computed(() => {
     const date = new Date(currentDate.value + 'T12:00:00');
     if (activeView.value === viewMonthGrid.name) {

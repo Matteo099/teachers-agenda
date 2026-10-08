@@ -1,7 +1,7 @@
 ﻿:root {
   font-family: Inter, Roboto, system-ui, -apple-system, sans-serif;
-  color: #172033;
-  background: #F7F9FC;
+  color: var(--app-text);
+  background: var(--app-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -27,5 +27,29 @@
   --app-hover-shadow: 0 4px 14px rgba(30, 50, 100, .06);
   --app-shadow: 0 2px 8px rgba(30, 50, 100, .04);
 }
+:root[data-app-theme='dark'] {
+  color-scheme: dark;
+  --app-primary: #8FB6FF;
+  --app-background: #101827;
+  --app-surface: #1B2638;
+  --app-text: #E9EFF8;
+  --app-muted: #A4B3CA;
+  --app-border: #34445B;
+  --app-accent-surface: #233A5A;
+  --app-hover-surface: #243247;
+  --app-hover-border: #5278AF;
+  --app-hover-shadow: 0 4px 14px rgba(0, 0, 0, .18);
+  --app-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  --status-present-bg: #1E4937;
+  --status-present-fg: #86E2A9;
+  --status-due-bg: #54411D;
+  --status-due-fg: #FFD77B;
+  --status-absent-bg: #542C35;
+  --status-absent-fg: #FF9A9E;
+  --status-recovery-bg: #243F63;
+  --status-recovery-fg: #9BC5FF;
+  --status-moved-bg: #543820;
+  --status-moved-fg: #FFBA83;
+}
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; }
+body { margin: 0; min-width: 320px; background: var(--app-background); color: var(--app-text); }

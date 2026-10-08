@@ -177,6 +177,9 @@ const notifications: any[] = [];
 
 const auth = useFirebaseAuth()!;
 const theme = useTheme()
+watch(theme.global.name, (name) => {
+  document.documentElement.dataset.appTheme = name === 'myCustomDarkTheme' ? 'dark' : 'light';
+}, { immediate: true });
 const appLogo = new URL('@/assets/images/logo.jpeg', import.meta.url).href
 const drawer = ref(false)
 const appVersion = import.meta.env.VITE_APP_VERSION
@@ -238,7 +241,7 @@ watch(user, async (currentUser, previousUser) => {
 })
 
 function toggleTheme() {
-  const currentTheme = LocalStorageHandler.getItem('theme') ?? 'myCustomLightTheme';
+  const currentTheme = theme.global.name.value;
   const nextTheme = currentTheme == 'myCustomDarkTheme' ? 'myCustomLightTheme' : 'myCustomDarkTheme';
   theme.change(nextTheme);
   LocalStorageHandler.setItem('theme', nextTheme);
