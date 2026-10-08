@@ -23,17 +23,16 @@
         </template>
       </v-dialog>
     </div>
-    <v-card-text class="school-panel-content"><v-data-table class="student-table" :headers="studentHeaders"
+    <v-card-text class="school-panel-content"><p class="student-table-hint">Scorri la tabella per vedere tutte le colonne <v-icon icon="mdi-arrow-right" size="16" /></p><v-data-table class="student-table" :headers="studentHeaders"
         :items="filteredStudents" item-value="id" :items-per-page="10" no-data-text="Nessuno studente trovato">
         <template #item.name="{ item }">
           <div class="student-identity"><span class="student-avatar"><v-icon icon="mdi-account-outline"
-                size="18" /></span><span class="student-name">{{ item.name }} {{ item.surname }}</span><v-chip
+                size="18" /></span><span class="student-identity-content"><span class="student-name">{{ item.name }} {{ item.surname }}</span><v-chip
               v-if="item.biweeklyStartDate" size="x-small" color="primary" variant="tonal"
               :title="`Ogni due settimane dal ${yyyyMMdd.fromIyyyyMMdd(item.biweeklyStartDate).format()}`">Ogni 2
-              sett.</v-chip></div>
+              sett.</v-chip></span></div>
         </template>
-        <template #item.lessonDay="{ item }">{{ item.lessonDay !== undefined && item.lessonDay !== null ?
-          days[item.lessonDay] : '—' }}</template>
+        <template #item.lessonDay="{ item }"><span :title="item.lessonDay !== undefined && item.lessonDay !== null ? days[item.lessonDay] : undefined">{{ item.lessonDay !== undefined && item.lessonDay !== null ? abbreviatedDays[item.lessonDay] : '—' }}</span></template>
         <template #item.level="{ item }"><v-chip v-if="item.level" size="small" color="primary" variant="tonal">{{
           item.level }}</v-chip><span v-else>—</span></template>
         <template #item.minutesLessonDuration="{ item }">{{ item.minutesLessonDuration }} min</template>
@@ -77,12 +76,13 @@ const filteredStudents: Ref<Student[]> = ref([]);
 const loadingStudents = ref(false);
 const dialog = ref(false);
 const search = ref('');
+const abbreviatedDays = ['DO', 'LU', 'MA', 'ME', 'GI', 'VE', 'SA'];
 const studentHeaders: any = [
   { title: 'Studente', key: 'name', align: 'start' },
-  { title: 'Giorno di lezione', key: 'lessonDay' },
-  { title: 'Livello', key: 'level' },
-  { title: 'Durata', key: 'minutesLessonDuration' },
-  { title: 'Azioni', key: 'actions', sortable: false, align: 'end' },
+  { title: 'Giorno', key: 'lessonDay', width: 78 },
+  { title: 'Livello', key: 'level', width: 118 },
+  { title: 'Durata', key: 'minutesLessonDuration', width: 76 },
+  { title: 'Azioni', key: 'actions', sortable: false, align: 'end', width: 90 },
 ];
 const filters: Ref<StudentFilterObj[]> = ref(STUDENT_FILTERS);
 watch(filters, filterStudent);
@@ -136,12 +136,25 @@ onUnmounted(() => { subscriptions.forEach(u => u.unsubscribe()); });
   border-radius: 12px;
 }
 
+.student-table :deep(.v-table__wrapper) { overflow-x: auto; }
+.student-table :deep(table) { min-width: 620px; table-layout: fixed; }
+.student-table-hint { display: none; }
+
 .student-identity {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  min-height: 44px;
+}
+
+.student-identity-content {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px 10px;
-  min-height: 44px;
+  min-width: 0;
+  gap: 5px 8px;
+  padding-top: 6px;
 }
 
 .student-avatar {
@@ -157,9 +170,11 @@ onUnmounted(() => { subscriptions.forEach(u => u.unsubscribe()); });
 }
 
 .student-name {
+  min-width: 0;
   color: var(--app-text);
   font-weight: 600;
-  white-space: nowrap;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .student-actions {
@@ -181,13 +196,6 @@ onUnmounted(() => { subscriptions.forEach(u => u.unsubscribe()); });
     min-width: 0;
   }
 
-  .student-table :deep(th:nth-child(2)),
-  .student-table :deep(td:nth-child(2)),
-  .student-table :deep(th:nth-child(3)),
-  .student-table :deep(td:nth-child(3)),
-  .student-table :deep(th:nth-child(4)),
-  .student-table :deep(td:nth-child(4)) {
-    display: none;
-  }
+  .student-table-hint { display: flex; align-items: center; gap: 5px; margin: 2px 0 8px; color: var(--app-muted); font-size: .75rem; }
 }
 </style>
