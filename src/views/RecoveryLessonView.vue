@@ -10,7 +10,7 @@
             <div class="recovery-section-heading"><div><h3>{{ activeTab.title }}</h3><p>{{ activeTab.description }}</p></div><v-chip size="small" variant="tonal" color="primary">{{ activeRecoveries.length }}</v-chip></div>
 
             <div v-if="activeRecoveries.length" class="recovery-entries">
-                <article v-for="recovery in activeRecoveries" :key="`${recovery.lesson.lessonId}_${recovery.recoveryReference.originalDailyLesson.id}`" class="recovery-entry">
+                <article v-for="recovery in visibleRecoveries" :key="`${recovery.lesson.lessonId}_${recovery.recoveryReference.originalDailyLesson.id}`" class="recovery-entry">
                     <div class="recovery-entry-heading">
                         <span class="recovery-student-avatar"><v-icon icon="mdi-account-outline" size="20" /></span>
                         <div class="recovery-student-name"><strong>{{ recovery.student.name }} {{ recovery.student.surname }}</strong><small>Lezione di {{ Math.round((recovery.lesson.endTime - recovery.lesson.startTime) / 60) }} minuti</small></div>
@@ -25,6 +25,11 @@
                         <v-btn v-else color="error" variant="tonal" size="small" prepend-icon="mdi-calendar-remove-outline" :loading="cancellingScheduleRecovery" :disabled="cancellingScheduleRecovery" @click="cancelScheduleRecovery(recovery)">Annulla recupero</v-btn>
                     </div>
                 </article>
+                <v-btn v-if="activeRecoveries.length > previewCount" class="recovery-expand" variant="tonal" color="primary"
+                    :append-icon="expandedStatuses[activeStatus] ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                    :aria-expanded="expandedStatuses[activeStatus]" @click="expandedStatuses[activeStatus] = !expandedStatuses[activeStatus]">
+                    {{ expandedStatuses[activeStatus] ? 'Mostra meno' : `Mostra altre ${activeRecoveries.length - previewCount} lezioni` }}
+                </v-btn>
             </div>
 
             <div v-else-if="!loadingExtendedRecoveries" class="recovery-empty-state"><span class="recovery-empty-icon"><v-icon :icon="activeTab.emptyIcon" size="25" /></span><strong>{{ activeTab.emptyTitle }}</strong><p>{{ activeTab.emptyDescription }}</p></div>
@@ -57,6 +62,12 @@ const extendedRecoveries: Ref<SchoolRecoveryLessonMap | undefined> = ref();
 const loadingExtendedRecoveries = ref(false);
 const cancellingScheduleRecovery = ref(false);
 const activeStatus = ref(RecoveryStatus.UNSET);
+const previewCount = 2;
+const expandedStatuses = ref<Record<RecoveryStatus, boolean>>({
+    [RecoveryStatus.UNSET]: false,
+    [RecoveryStatus.PENDING]: false,
+    [RecoveryStatus.DONE]: false,
+});
 let initialStatusSelected = false;
 
 const recoveryTabs = [
@@ -66,6 +77,8 @@ const recoveryTabs = [
 ] as const;
 const activeTab = computed(() => recoveryTabs.find(tab => tab.value === activeStatus.value) ?? recoveryTabs[0]!);
 const activeRecoveries = computed(() => extendedRecoveries.value?.recoveryMap.get(activeStatus.value) ?? []);
+const visibleRecoveries = computed(() => expandedStatuses.value[activeStatus.value]
+    ? activeRecoveries.value : activeRecoveries.value.slice(0, previewCount));
 function recoveryCount(status: RecoveryStatus): number {
     return extendedRecoveries.value?.recoveryMap.get(status)?.length ?? 0;
 }
@@ -127,6 +140,7 @@ async function computeDailyLessons() {
 .recovery-section-heading h3 { margin: 0; color: var(--app-text); font-size: .98rem; font-weight: 700; }
 .recovery-section-heading p { margin: 2px 0 0; color: var(--app-muted); font-size: .79rem; }
 .recovery-entries { display: grid; gap: 12px; }
+.recovery-expand { width: 100%; min-height: 42px; margin-top: 2px; border-radius: 10px; font-size: .82rem; font-weight: 650; text-transform: none; }
 .recovery-entry { overflow: hidden; padding: 16px; border: 1px solid var(--app-border); border-radius: 13px; background: var(--app-surface); box-shadow: var(--app-shadow); }
 .recovery-entry-heading { display: flex; align-items: center; gap: 10px; }
 .recovery-student-avatar { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border-radius: 10px; background: var(--app-accent-surface); color: var(--app-primary); }
