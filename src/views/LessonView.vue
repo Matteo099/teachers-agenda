@@ -62,7 +62,7 @@
                             class="lesson-overview-item" :class="{ 'lesson-overview-item-next': lesson.next }"
                             @click="routeToDailyLesson(lesson)">
                             <template v-slot:prepend>
-                                <span class="lesson-date-icon"><v-icon icon="mdi-calendar-blank-outline" :color="getColor(lesson)" size="21" /></span>
+                                <span class="lesson-date-icon"><v-icon icon="mdi-calendar-blank-outline" :color="isCompleted(lesson) ? 'success' : 'grey-lighten-1'" size="21" /></span>
                             </template>
                             <template v-slot:title>
                                 <span class="lesson-overview-date"><strong>{{ lesson.date.getDayString(2) }}</strong> {{ lesson.date.format() }}</span>
@@ -72,6 +72,7 @@
                             </template>
                             <template v-slot:append>
                                 <div class="lesson-overview-badges">
+                                    <v-icon v-if="isIncompletePastLesson(lesson)" icon="mdi-alert-outline" color="warning" size="20" title="Lezione passata non completata" aria-label="Lezione passata non completata" />
                                     <v-chip v-if="lesson.next" size="small" color="primary" variant="tonal">Prossima</v-chip>
                                     <v-chip v-if="lesson.pending" size="small" color="warning" variant="tonal">Da svolgere</v-chip>
                                     <v-chip v-if="lesson.recovery" class="lesson-kind-chip status-recovery" size="small" variant="outlined" title="Lezione di recupero" aria-label="Lezione di recupero">R</v-chip>
@@ -93,7 +94,7 @@
 <script setup lang="ts">
 import CalendarLessonEditor from '@/components/lesson/CalendarLessonEditor.vue';
 import LessonFilter from '@/components/lesson/LessonFilter.vue';
-import { LESSON_FILTERS, type School } from '@/models/model';
+import { LESSON_FILTERS, yyyyMMdd, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
 import { LessonGroupService, type LessonGroup, type LessonProjection, type SchoolLessons } from '@/models/services/lesson-group-service';
 import { SchoolService } from '@/models/services/school-service';
@@ -129,12 +130,14 @@ const loading = computed(() => props.school == undefined || loadingLessons.value
 watch(props.school, () => loadLessonGroup())
 watch(filters, () => loadLessonGroup(false));
 
-function getColor(lesson: LessonProjection) {
-    if (lesson.next) return "primary";
-    if (lesson.pending) return "warning";
-    if (lesson.recovery) return "info";
+function isCompleted(lesson: LessonProjection): boolean {
+    return lesson.date.toIyyyyMMdd() <= yyyyMMdd.today().toIyyyyMMdd()
+        && !lesson.pending
+        && lesson.lessons.some(item => !('hiddenForDate' in item && item.hiddenForDate) && !('moved' in item && item.moved));
+}
 
-    return 'grey-lighten-1';
+function isIncompletePastLesson(lesson: LessonProjection): boolean {
+    return lesson.date.toIyyyyMMdd() < yyyyMMdd.today().toIyyyyMMdd() && !isCompleted(lesson);
 }
 
 async function routeToDailyLesson(lessonGroup: LessonProjection | Date) {
