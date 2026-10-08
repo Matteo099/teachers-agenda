@@ -262,7 +262,9 @@ const durationOptions = ['30', '40', '60', 'altro'];
 const durationOption = ref('40');
 let initializing = false;
 
-watch(() => props.initialStudent, () => updateStudent());
+// Live school updates can replace the student object while this editor is open.
+// Keep the unsaved form draft unless a different student is selected.
+watch(() => props.initialStudent?.id, () => updateStudent());
 watch(() => props.school, () => updateSchool());
 
 const schema = yup.object({
@@ -285,7 +287,7 @@ const schema = yup.object({
         skipAbsent: true,
         name: 'conditionalFrom'
     }),
-    to: yup.date().label('A'),
+    to: yup.date().nullable().optional().label('A'),
 })
 
 const { defineField, handleSubmit } = useForm({
@@ -352,7 +354,7 @@ function isAllowedBiweeklyDate(value: unknown): boolean {
 
 const onSave = handleSubmit(
     async (values: GenericObject) => {
-        save(values);
+        await save(values);
     },
     (err) => {
         toast.warn('Ci sono alcuni errori! Inserisci correttamente i dati')
