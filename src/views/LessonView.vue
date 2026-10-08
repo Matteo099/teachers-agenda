@@ -75,8 +75,8 @@
                                 <div class="lesson-overview-badges">
                                     <v-chip v-if="lesson.next" size="small" color="primary" variant="tonal">Prossima</v-chip>
                                     <v-chip v-if="lesson.pending" size="small" color="warning" variant="tonal">Da svolgere</v-chip>
-                                    <v-chip v-if="lesson.recovery" size="small" color="info" variant="tonal">Recupero</v-chip>
-                                    <v-chip v-if="lesson.moved" size="small" color="secondary" variant="tonal">Spostata</v-chip>
+                                    <v-chip v-if="lesson.recovery" class="lesson-kind-chip status-recovery" size="small" variant="outlined" title="Lezione di recupero" aria-label="Lezione di recupero">R</v-chip>
+                                    <v-chip v-if="lesson.moved" class="lesson-kind-chip status-moved" size="small" variant="outlined" title="Lezione spostata" aria-label="Lezione spostata">S</v-chip>
                                     <v-icon icon="mdi-chevron-right" color="secondary" size="20" />
                                 </div>
                             </template>
@@ -201,6 +201,8 @@ onUnmounted(() => {
 .lesson-overview-date { color: var(--app-text); font-size: .92rem; }
 .lesson-overview-date strong { font-weight: 700; }
 .lesson-overview-badges { display: flex; align-items: center; gap: 5px; }
+.lesson-kind-chip { min-width: 27px; height: 27px; padding-inline: 0 !important; border: 1px solid var(--status-fg) !important; border-radius: 8px !important; background: var(--app-surface) !important; color: var(--status-fg) !important; font-weight: 700; }
+.lesson-kind-chip :deep(.v-chip__content) { justify-content: center; width: 100%; }
 .lesson-overview-empty { padding: 24px 0; color: var(--app-muted); text-align: center; }
 @media (max-width: 650px) {
     .lesson-overview-header { flex-direction: column; padding: 16px; }
@@ -208,6 +210,6 @@ onUnmounted(() => {
     .lesson-overview-actions :deep(.v-btn) { flex: 1; }
     .lesson-overview-toolbar { flex-wrap: wrap; }
     .lesson-overview-content { padding: 8px 12px 12px; }
-    .lesson-overview-badges .v-chip:not(:first-child) { display: none; }
+    .lesson-overview-badges .v-chip:not(:first-child):not(.lesson-kind-chip) { display: none; }
 }
 </style>
