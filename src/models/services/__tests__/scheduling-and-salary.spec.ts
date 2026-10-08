@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DayOfWeek, LessonStatus, SalaryStrategy, TrialLessonPaymentStrategy, type DailyLesson, type School, type Student, type WeeklyLesson } from "@/models/model";
+import { DayOfWeek, LessonStatus, SalaryStrategy, TrialLessonPaymentStrategy, yyyyMMdd, type DailyLesson, type School, type Student, type WeeklyLesson } from "@/models/model";
 import { DailyLessonRepository } from "@/models/repositories/daily-lesson-repository";
 import { DailyLessonService } from "../daily-lesson-service";
 import { SalaryService } from "../salary-service";
@@ -8,7 +8,7 @@ import { StudentLessonService } from "../student-lesson-service";
 import { StudentService } from "../student-service";
 import { WeeklyLessonService } from "../weely-lesson-service";
 import { MonthlySalaryService } from "../monthly-salary-service";
-import { filterSchoolLessons, type SchoolLessons } from "../lesson-group-service";
+import { filterSchoolLessons, LessonGroupService, type SchoolLessons } from "../lesson-group-service";
 
 const timestamp = Timestamp.fromMillis(0);
 
@@ -52,6 +52,33 @@ describe("school lesson filters", () => {
 
     it('shows no lessons when every filter is cleared', () => {
         expect(filterSchoolLessons(lessons, [])).toEqual({ schoolId: 'school', dailyLessons: [], weeklyLessons: [] });
+    });
+});
+
+describe("lesson day completion", () => {
+    const lesson = (id: string, status: LessonStatus): DailyLesson['lessons'][number] => ({
+        lessonId: id, studentId: 'student', startTime: 36000, endTime: 39600,
+        status, createdAt: timestamp, updatedAt: timestamp,
+    });
+
+    it("counts a trial alongside a completed lesson without raising a duplicate warning", async () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const daily: DailyLesson = {
+            id: 'day', schoolId: 'school', date: yyyyMMdd.fromDate(yesterday).toIyyyyMMdd(), salary: 0,
+            lessons: [lesson('trial', LessonStatus.TRIAL), lesson('regular', LessonStatus.PRESENT)],
+        };
+
+        const groups = await LessonGroupService.instance.getGroupedLessons({ schoolId: 'school', dailyLessons: [daily], weeklyLessons: [] }, undefined, 1, 0);
+        expect(groups[0]?.lessons[0]?.pending).toBe(false);
+
+        daily.lessons = [daily.lessons[0]!];
+        const trialOnlyGroups = await LessonGroupService.instance.getGroupedLessons({ schoolId: 'school', dailyLessons: [daily], weeklyLessons: [] }, undefined, 1, 0);
+        expect(trialOnlyGroups[0]?.lessons[0]?.pending).toBe(false);
+
+        daily.lessons.push(lesson('regular', LessonStatus.NONE));
+        const incompleteGroups = await LessonGroupService.instance.getGroupedLessons({ schoolId: 'school', dailyLessons: [daily], weeklyLessons: [] }, undefined, 1, 0);
+        expect(incompleteGroups[0]?.lessons[0]?.pending).toBe(true);
     });
 });
 

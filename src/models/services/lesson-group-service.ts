@@ -330,6 +330,8 @@ export class LessonGroupService {
         const lessonsByStudent = new Map<string, DailyLesson['lessons']>();
 
         for (const lesson of lessons) {
+            // A trial is a completed attendance, not a second official lesson.
+            if (lesson.status === LessonStatus.TRIAL) continue;
             const studentLessons = lessonsByStudent.get(lesson.studentId) ?? [];
             studentLessons.push(lesson);
             lessonsByStudent.set(lesson.studentId, studentLessons);
