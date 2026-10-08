@@ -31,6 +31,28 @@ export interface SchoolLessons {
     weeklyLessons: WeeklyLesson[]
 }
 
+export function filterSchoolLessons(schoolLessons: SchoolLessons, filters?: LessonFilterObj[]): SchoolLessons {
+    if (!filters) return schoolLessons;
+    const selected = new Set(filters.map(filter => filter.type));
+    const dailyLessons = schoolLessons.dailyLessons.filter(daily => {
+        const calendars = schoolLessons.weeklyLessons.filter(weekly => WeeklyLessonService.instance.isValid(weekly, daily.date));
+        const hasScheduledLesson = daily.lessons.some(lesson => calendars.some(weekly => weekly.schedule.some(scheduled => scheduled.studentId === lesson.studentId)));
+        const hasRecoveryOrMove = daily.lessons.some(lesson => !lesson.hiddenForDate &&
+            (lesson.recovery?.ref === 'original' || lesson.moved?.ref === 'original'));
+        const hasExtraLesson = daily.lessons.some(lesson => !lesson.hiddenForDate &&
+            !lesson.recovery && !lesson.moved &&
+            !calendars.some(weekly => weekly.schedule.some(scheduled => scheduled.studentId === lesson.studentId)));
+        return (selected.has('weekly') && calendars.length > 0 && (hasScheduledLesson || daily.lessons.length === 0)) ||
+            (selected.has('recoveryMoved') && hasRecoveryOrMove) ||
+            (selected.has('daily') && (hasExtraLesson || (daily.lessons.length === 0 && calendars.length === 0)));
+    });
+    return {
+        schoolId: schoolLessons.schoolId,
+        dailyLessons,
+        weeklyLessons: selected.has('weekly') ? schoolLessons.weeklyLessons : [],
+    };
+}
+
 export class LessonGroupService {
 
     private static _instance: LessonGroupService | null = null;
@@ -118,7 +140,7 @@ export class LessonGroupService {
         const lessonProjections: LessonProjection[] = [];
         this.calculateToday();
 
-        const _schoolLessons = this.applyFilters(schoolLessons, filters);
+        const _schoolLessons = filterSchoolLessons(schoolLessons, filters);
 
         // Step 1: Filter the last 2 lessons from daily lessons or (if no daily lesson present) weekly lesson based on today
         await this.addLastLessons(_schoolLessons, lessonProjections, previousCount);
@@ -128,45 +150,6 @@ export class LessonGroupService {
 
         // Step 3: Group lessons by month
         return this.groupLessonsByMonth(lessonProjections);
-    }
-
-    private applyFilters(schoolLessons: SchoolLessons, filters?: LessonFilterObj[]): SchoolLessons {
-        if (!filters || filters.length == 0) return schoolLessons;
-
-        const dailyLessons = new Map<string, DailyLesson>();
-        const addAll = (lessons: DailyLesson[]) => {
-            lessons.forEach(l => {
-                if (!dailyLessons.has(l.id)) {
-                    dailyLessons.set(l.id, l);
-                }
-            });
-        }
-
-        const _schoolLessons: SchoolLessons = {
-            schoolId: schoolLessons.schoolId,
-            dailyLessons: [],
-            weeklyLessons: []
-        }
-        for (const filter of filters) {
-            if (filter.type == "weekly") {
-                _schoolLessons.weeklyLessons = schoolLessons.weeklyLessons;
-                schoolLessons.weeklyLessons.forEach(wl => {
-                    const lessons = schoolLessons.dailyLessons
-                        .filter(d => WeeklyLessonService.instance.isValid(wl, d.date));
-                    addAll(lessons);
-                });
-            } else if (filter.type == "recovery") {
-                const lessons = schoolLessons.dailyLessons.filter(d => d.lessons.some(l => l.recovery?.ref == "original"));
-                addAll(lessons);
-            } else if (filter.type == "moved") {
-                const lessons = schoolLessons.dailyLessons.filter(d => d.lessons.some(l => l.moved?.ref == "original"));
-                addAll(lessons);
-            } else if (filter.type == "daily") {
-                addAll(schoolLessons.dailyLessons);
-            }
-        }
-        _schoolLessons.dailyLessons = Array.from(dailyLessons.values());
-        return _schoolLessons;
     }
 
     private async addLastLessons(schoolLessons: SchoolLessons, lessonProjections: LessonProjection[], count: number) {

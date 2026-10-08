@@ -11,13 +11,12 @@ export interface AbstractFilter {
     color: string;
 }
 export const LESSON_FILTERS: LessonFilterObj[] = [
-    { name: "Recuperi", icon: "mdi-abacus", color: "blue", type: 'recovery' },
-    { name: "Spostate", icon: "mdi-account-box", color: "green", type: 'moved' },
-    { name: "Settimanali", icon: "mdi-ab-testing", color: "purple", type: 'weekly' },
-    { name: "Giornaliere", icon: "mdi-account", color: "yellow", type: 'daily' },
+    { name: "Lezioni da calendario", icon: "mdi-calendar-week-outline", color: "primary", type: 'weekly' },
+    { name: "Lezioni di recupero/spostate", icon: "mdi-calendar-refresh-outline", color: "primary", type: 'recoveryMoved' },
+    { name: "Lezioni giornaliere", icon: "mdi-calendar-plus-outline", color: "primary", type: 'daily' },
 ];
 export interface LessonFilterObj extends AbstractFilter {
-    type: 'recovery' | 'moved' | 'weekly' | 'daily';
+    type: 'recoveryMoved' | 'weekly' | 'daily';
 }
 export const STUDENT_FILTERS: StudentFilterObj[] = [
     { name: "Normale", icon: "mdi-account", color: "green", type: 'normal' },

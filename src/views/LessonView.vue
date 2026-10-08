@@ -121,8 +121,7 @@ const previousLessonsCount = ref(2);
 const upcomingLessonsCount = ref(3);
 const routingToDailyLesson = ref(false);
 const filters = ref([
-    // weekly lessons only
-    LESSON_FILTERS[2]!
+    LESSON_FILTERS[0]!
 ]);
 
 let schoolLessons: SchoolLessons;

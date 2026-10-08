@@ -8,10 +8,52 @@ import { StudentLessonService } from "../student-lesson-service";
 import { StudentService } from "../student-service";
 import { WeeklyLessonService } from "../weely-lesson-service";
 import { MonthlySalaryService } from "../monthly-salary-service";
+import { filterSchoolLessons, type SchoolLessons } from "../lesson-group-service";
 
 const timestamp = Timestamp.fromMillis(0);
 
 afterEach(() => vi.restoreAllMocks());
+
+describe("school lesson filters", () => {
+    const regular = (studentId: string, extra: Partial<DailyLesson['lessons'][number]> = {}): DailyLesson['lessons'][number] => ({
+        lessonId: studentId, studentId, startTime: 36000, endTime: 39600,
+        status: LessonStatus.NONE, createdAt: timestamp, updatedAt: timestamp, ...extra,
+    });
+    const weekly: WeeklyLesson = {
+        id: 'weekly', schoolId: 'school', dayOfWeek: DayOfWeek.MONDAY,
+        from: '20240101', to: '20240131', exclude: [],
+        schedule: [{ lessonId: 'scheduled', studentId: 'scheduled', startTime: 36000, endTime: 39600 }],
+        createdAt: timestamp, updatedAt: timestamp,
+    };
+    const lessons: SchoolLessons = {
+        schoolId: 'school', weeklyLessons: [weekly], dailyLessons: [
+            { id: 'calendar', schoolId: 'school', date: '20240101', lessons: [regular('scheduled')], salary: 0 },
+            { id: 'extra-on-calendar-day', schoolId: 'school', date: '20240108', lessons: [regular('scheduled'), regular('extra')], salary: 0 },
+            { id: 'private', schoolId: 'school', date: '20240102', lessons: [regular('private')], salary: 0 },
+            { id: 'recovery', schoolId: 'school', date: '20240103', lessons: [regular('recovery', { recovery: { ref: 'original', lessonRef: { dailyLessonId: 'original', lessonId: 'original' } } })], salary: 0 },
+            { id: 'moved', schoolId: 'school', date: '20240104', lessons: [regular('moved', { moved: { ref: 'original', lessonRef: { dailyLessonId: 'original', lessonId: 'original' } } })], salary: 0 },
+        ],
+    };
+    const byType = (type: 'weekly' | 'recoveryMoved' | 'daily') => filterSchoolLessons(lessons, [{ type, name: type, icon: '', color: '' }]);
+
+    it('shows calendar occurrences and their materialized days', () => {
+        expect(byType('weekly').dailyLessons.map(lesson => lesson.id)).toEqual(['calendar', 'extra-on-calendar-day']);
+        expect(byType('weekly').weeklyLessons).toEqual([weekly]);
+    });
+
+    it('groups recovery and moved days together', () => {
+        expect(byType('recoveryMoved').dailyLessons.map(lesson => lesson.id)).toEqual(['recovery', 'moved']);
+    });
+
+    it('shows additional daily lessons, including those added on a calendar day', () => {
+        expect(byType('daily').dailyLessons.map(lesson => lesson.id)).toEqual(['extra-on-calendar-day', 'private']);
+        expect(byType('daily').weeklyLessons).toEqual([]);
+    });
+
+    it('shows no lessons when every filter is cleared', () => {
+        expect(filterSchoolLessons(lessons, [])).toEqual({ schoolId: 'school', dailyLessons: [], weeklyLessons: [] });
+    });
+});
 
 describe("StudentService.getLevelByDate", () => {
     it("uses the level active on the requested date", () => {
