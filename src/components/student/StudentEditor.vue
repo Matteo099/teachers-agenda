@@ -443,6 +443,9 @@ async function save(values: GenericObject) {
     }
     saving.value = true;
 
+    const previousBiweeklyStartDate = props.initialStudent?.biweeklyStartDate;
+    const previousLessonDuration = props.initialStudent?.minutesLessonDuration;
+    const studentId = props.initialStudent?.id;
     const levelHistory = computeLevelHistory();
 
     const student: Partial<Student> = {
@@ -468,21 +471,26 @@ async function save(values: GenericObject) {
     } else delete student.trial;
 
     try {
-        if (props.edit && props.initialStudent?.id != undefined) {
-            await StudentRepository.instance.save(student, props.initialStudent.id);
-            if (props.initialStudent.biweeklyStartDate !== student.biweeklyStartDate) {
-                await DailyLessonService.instance.syncStudentBiweeklyLessons({ ...student, id: props.initialStudent.id } as Student);
+        if (props.edit && studentId != undefined) {
+            await StudentRepository.instance.save(student, studentId);
+            // Reconcile existing dates even when the recurrence was already saved:
+            // older daily lessons may have missed their first hidden week.
+            if (previousBiweeklyStartDate !== student.biweeklyStartDate || student.biweeklyStartDate) {
+                await DailyLessonService.instance.syncStudentBiweeklyLessons({ ...student, id: studentId } as Student);
             }
-            if (Number(props.initialStudent.minutesLessonDuration) !== Number(values.minutesLessonDuration)) {
+            if (Number(previousLessonDuration) !== Number(values.minutesLessonDuration)) {
                 await DailyLessonService.instance.rescheduleStudentDuration(
                     _school.value!.id,
-                    props.initialStudent.id,
+                    studentId,
                     Number(values.minutesLessonDuration)
                 );
             }
             toast.success("Studente Aggiornato")
         } else {
-            await StudentRepository.instance.save(student);
+            const newStudentId = await StudentRepository.instance.save(student);
+            if (student.biweeklyStartDate) {
+                await DailyLessonService.instance.syncStudentBiweeklyLessons({ ...student, id: newStudentId } as Student);
+            }
             toast.success("Studente Creato")
         }
         StatisticsService.instance.cache.clear();

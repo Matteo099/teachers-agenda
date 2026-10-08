@@ -55,6 +55,35 @@ describe("school lesson filters", () => {
     });
 });
 
+describe("DailyLessonService.syncStudentBiweeklyLessons", () => {
+    it("includes today's existing lesson when its week must be hidden", async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date(2026, 9, 8, 12));
+        try {
+            const lesson = {
+                lessonId: 'lesson', studentId: 'student', startTime: 36000, endTime: 39600,
+                status: LessonStatus.NONE, createdAt: timestamp, updatedAt: timestamp,
+            };
+            const daily: DailyLesson = {
+                id: 'today', schoolId: 'school', date: '20261008', lessons: [lesson], salary: 0,
+            };
+            const load = vi.spyOn(DailyLessonService.instance, 'getDailyLessonOfSchoolFromDate').mockResolvedValue([daily]);
+            const save = vi.spyOn(DailyLessonRepository.instance, 'save').mockResolvedValue('today');
+            const student = {
+                id: 'student', schoolId: 'school', biweeklyStartDate: '20261001',
+            } as Student;
+
+            await DailyLessonService.instance.syncStudentBiweeklyLessons(student);
+
+            expect(load).toHaveBeenCalledWith('school', '20261008', 'asc');
+            expect(lesson).toMatchObject({ hiddenForDate: true, biweeklyAutoHidden: true });
+            expect(save).toHaveBeenCalledWith(daily, 'today');
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+});
+
 describe("StudentService.getLevelByDate", () => {
     it("uses the level active on the requested date", () => {
         const student: Student = {

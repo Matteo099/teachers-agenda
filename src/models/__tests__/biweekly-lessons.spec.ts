@@ -12,6 +12,13 @@ describe('lezioni a settimane alterne', () => {
         expect(isBiweeklyHidden(student, '20261028')).toBe(true);
     });
 
+    it('nasconde il giovedì 8 ottobre se la prima lezione è giovedì 1 ottobre', () => {
+        const thursdays = { biweeklyStartDate: '20261001' };
+        expect(isBiweeklyHidden(thursdays, '20261001')).toBe(false);
+        expect(isBiweeklyHidden(thursdays, '20261008')).toBe(true);
+        expect(isBiweeklyHidden(thursdays, '20261015')).toBe(false);
+    });
+
     it('non cambia le date precedenti e mantiene la cadenza attraverso il cambio d’ora', () => {
         expect(isBiweeklyHidden(student, '20260930')).toBe(false);
         expect(isBiweeklyHidden(student, '20261104')).toBe(false);
