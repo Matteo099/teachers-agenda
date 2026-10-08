@@ -22,7 +22,7 @@
 
         <v-tabs-window v-model="tab" class="w-100">
             <v-tabs-window-item value="salary">
-                <MonthlyCompensationSummary :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
+                <SalaryPeriodReport :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
                 <div v-if="selectedSchools.length" class="statistics-content statistics-salary-details">
                     <SalaryDistribution :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
                     <SalaryTrend :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import MonthPeriodControls from '@/components/inputs/MonthPeriodControls.vue';
-import MonthlyCompensationSummary from '@/components/statistics/MonthlyCompensationSummary.vue';
+import SalaryPeriodReport from '@/components/statistics/SalaryPeriodReport.vue';
 import LessonDistribution from '@/components/statistics/LessonDistribution.vue';
 import WeeklyLessonAttendance from '@/components/statistics/WeeklyLessonAttendance.vue';
 import SalaryDistribution from '@/components/statistics/SalaryDistribution.vue';
