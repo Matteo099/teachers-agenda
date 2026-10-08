@@ -29,7 +29,7 @@
                 <v-dialog transition="dialog-bottom-transition" fullscreen>
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn variant="tonal" color="primary" prepend-icon="mdi-calendar-edit" v-bind="activatorProps"
-                            :disabled="!school">Orario</v-btn>
+                            :disabled="!school">Calendario</v-btn>
                     </template>
                     <template v-slot:default="{ isActive }">
                         <CalendarLessonEditor :school="school" @close="isActive.value = false; loadLessonGroup()" />
