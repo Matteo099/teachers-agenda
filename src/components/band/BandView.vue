@@ -1,6 +1,6 @@
 <template>
     <v-card class="school-panel" variant="flat" :loading="loading">
-        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-account-music-outline" size="22" /></span><div><h2>Band di musica d'insieme</h2><p>Gruppi e componenti</p></div><v-btn prepend-icon="mdi-plus" color="primary" variant="flat" @click="editing = undefined; dialog = true">Nuova band</v-btn></div>
+        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-account-music-outline" size="22" /></span><div><h2>Band di musica d'insieme</h2></div><v-btn prepend-icon="mdi-plus" color="primary" variant="flat" @click="editing = undefined; dialog = true">Nuova band</v-btn></div>
         <v-card-text class="school-panel-content">
             <v-list v-if="bands.length" class="band-list">
                 <v-list-item v-for="band in bands" :key="band.id" :title="band.name"

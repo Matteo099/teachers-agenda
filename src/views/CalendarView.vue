@@ -3,7 +3,7 @@
         <header class="calendar-page-heading">
             <BackButton :delta="deltaHistory" />
             <span class="calendar-page-icon"><v-icon icon="mdi-calendar-month-outline" size="27" /></span>
-            <div><span>Agenda</span><h1>Calendario delle lezioni</h1><p>Consulta gli appuntamenti di tutte le scuole.</p></div>
+            <div><h1>Calendario delle lezioni</h1></div>
             <div class="calendar-view-choice">
                 <v-btn-toggle :model-value="activeView" mandatory color="primary" @update:model-value="setCalendarView">
                     <v-btn :value="viewMonthGrid.name">Mese</v-btn>

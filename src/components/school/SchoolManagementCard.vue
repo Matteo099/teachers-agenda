@@ -1,6 +1,6 @@
 <template>
   <v-card class="school-panel mb-3" variant="flat" :loading="saving">
-    <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-chart-box-outline" size="22" /></span><div><h2>Gestione economica</h2><p>Quote mensili e fondo cassa</p></div></div>
+    <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-chart-box-outline" size="22" /></span><div><h2>Gestione economica</h2></div></div>
     <v-card-text class="school-panel-content">
       <v-row>
         <v-col cols="12" md="4"><div class="school-stat-card primary"><span class="label">Fondo cassa</span><strong class="value">{{ currency(cashBalance) }}</strong></div></v-col>
@@ -9,7 +9,7 @@
       </v-row>
 
       <v-card class="management-section my-4" variant="flat">
-        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-month-outline" size="22" /></span><div><h2>Storico quota mensile</h2><p>Studenti e quota per ciascun mese</p></div><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" @click="openSnapshotDialog">Configura mese</v-btn></div>
+        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-month-outline" size="22" /></span><div><h2>Storico quota mensile</h2></div><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" @click="openSnapshotDialog">Configura mese</v-btn></div>
         <v-card-text>
           <v-data-table v-if="snapshots.length" :headers="snapshotHeaders" :items="snapshots" item-value="month"
             density="compact" :items-per-page="5" items-per-page-text="Righe per pagina">
@@ -26,7 +26,7 @@
       </v-card>
 
       <v-card class="management-section my-4" variant="flat">
-        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-swap-horizontal" size="22" /></span><div><h2>Movimenti del fondo cassa</h2><p>Entrate e uscite registrate</p></div><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" @click="openNewMovement">Registra movimento</v-btn></div>
+        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-swap-horizontal" size="22" /></span><div><h2>Movimenti del fondo cassa</h2></div><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" @click="openNewMovement">Registra movimento</v-btn></div>
         <v-card-text>
           <v-data-table :headers="headers" :items="movementRows" item-value="id" density="comfortable">
             <template #item.date="{ item }">{{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}</template>
@@ -46,7 +46,7 @@
 
   <v-dialog v-model="snapshotDialog" max-width="600" persistent>
     <v-card class="snapshot-dialog" variant="flat">
-      <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-edit" size="22" /></span><div><h2>Quota mensile</h2><p>Imposta studenti e quota per il mese scelto</p></div></div>
+      <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-edit" size="22" /></span><div><h2>Quota mensile</h2></div></div>
       <v-card-text class="snapshot-dialog-content">
         <div class="snapshot-period">
           <v-select v-model="selectedMonthNumber" :items="monthOptions" label="Mese" variant="outlined" />
@@ -63,7 +63,7 @@
 
   <v-dialog v-model="movementDialog" max-width="560">
     <v-card variant="flat">
-      <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-cash-edit" size="22" /></span><div><h2>{{ editingMovementId ? 'Modifica movimento' : 'Registra movimento' }}</h2><p>Fondo cassa della scuola</p></div></div>
+      <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-cash-edit" size="22" /></span><div><h2>{{ editingMovementId ? 'Modifica movimento' : 'Registra movimento' }}</h2></div></div>
       <v-card-text>
         <v-select v-model="movement.type" :items="movementTypes" label="Tipo movimento" />
         <v-text-field v-model="movement.date" type="date" label="Data" />

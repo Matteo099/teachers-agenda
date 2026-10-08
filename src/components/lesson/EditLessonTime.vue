@@ -1,6 +1,6 @@
 <template>
     <v-card class="lesson-time-dialog" variant="flat">
-        <div class="lesson-time-heading"><span class="lesson-time-icon"><v-icon icon="mdi-clock-edit-outline" /></span><div><span>Lezione del giorno</span><h2>Modifica orario</h2><p>Imposta l'inizio e la fine della lezione.</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="emit('close')" /></div>
+        <div class="lesson-time-heading"><span class="lesson-time-icon"><v-icon icon="mdi-clock-edit-outline" /></span><div><h2>Modifica orario</h2></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="emit('close')" /></div>
         <v-card-text class="lesson-time-content">
             <div class="lesson-time-fields">
                 <v-text-field v-model="_startTime" :active="startModal" :focus="startModal" label="Inizio"

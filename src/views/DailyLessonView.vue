@@ -40,7 +40,7 @@
                             <v-expansion-panel-title>
                                 <span class="day-options-title"><v-icon icon="mdi-dots-horizontal-circle-outline"
                                         size="20" /><span>Gestione
-                                        giornata<small>Data ufficiale e altre azioni</small></span></span>
+                                        giornata</span></span>
                             </v-expansion-panel-title>
                             <v-expansion-panel-text>
                                 <div class="day-options-actions">
@@ -77,8 +77,7 @@
                 <header class="lesson-main-header">
                     <div class="lesson-main-title">
                         <BackButton />
-                        <div><small>Lezione del giorno</small>
-                            <h1>{{ yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format() }}</h1>
+                        <div><h1>{{ yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format() }}</h1>
                         </div>
                     </div>
                     <div class="lesson-week-nav">

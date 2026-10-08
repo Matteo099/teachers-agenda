@@ -1,5 +1,5 @@
 <template>
-    <StatisticsPanel :title="title ?? 'Grafico'" :subtitle="subtitle" icon="mdi-chart-donut-variant">
+    <StatisticsPanel :title="title ?? 'Grafico'" icon="mdi-chart-donut-variant">
         <div class="chart-container" ref="chartdiv"></div>
     </StatisticsPanel>
 </template>
@@ -16,7 +16,6 @@ interface BaseChartProps {
     from?: IyyyyMMdd;
     to?: IyyyyMMdd;
     title?: string;
-    subtitle?: string;
     schools?: School[];
 
     createChart: (root: am5.Root) => void;

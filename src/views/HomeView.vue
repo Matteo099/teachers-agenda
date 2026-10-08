@@ -2,9 +2,7 @@
   <v-container fluid class="home-view">
     <div class="page-heading mb-5">
       <div>
-        <div class="page-eyebrow">La tua agenda</div>
         <h1>Le mie scuole</h1>
-        <p>Scuole e lezioni a portata di mano</p>
       </div>
     </div>
     <v-expand-transition mode="out-in">
@@ -51,7 +49,7 @@
             <v-card class="school-card add-school-card" variant="flat" v-bind="activatorProps">
               <div class="d-flex align-center ga-4">
                 <div class="school-icon add-icon"><v-icon size="28">mdi-plus</v-icon></div>
-                <div><h2>Aggiungi una scuola</h2><p class="school-address">Crea una nuova sede</p></div>
+                <div><h2>Aggiungi una scuola</h2></div>
               </div>
             </v-card>
           </template>
@@ -72,7 +70,7 @@
         </v-col>
         <v-col v-for="tl in todayLessons" :key="tl.lesson.id" cols="12" sm="4">
           <v-card append-icon="mdi-chevron-right" class="pa-4" variant="flat" :to="'/lesson/' + tl.lesson.id"
-            prepend-icon="mdi-music-note" subtitle="Apri la lezione" :title="tl.school.name">
+            prepend-icon="mdi-music-note" :title="tl.school.name">
           </v-card>
         </v-col>
       </v-row>

@@ -2,7 +2,7 @@
     <v-card class="lesson-filter-card" variant="flat">
         <div class="lesson-filter-heading">
             <span class="lesson-filter-icon"><v-icon icon="mdi-filter-variant" size="22" /></span>
-            <div><h2>Filtra lezioni</h2><p>Scegli quali giornate mostrare nell'elenco.</p></div>
+            <div><h2>Filtra lezioni</h2></div>
             <v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi filtri" @click="emit('close')" />
         </div>
         <v-card-text class="lesson-filter-content">

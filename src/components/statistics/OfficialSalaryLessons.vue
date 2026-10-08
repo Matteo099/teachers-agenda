@@ -1,5 +1,5 @@
 <template>
-    <StatisticsPanel title="Lezioni incluse nei rimborsi" subtitle="Giornate ufficiali e compensi" icon="mdi-calendar-check-outline" :loading="loading">
+    <StatisticsPanel title="Lezioni incluse nei rimborsi" icon="mdi-calendar-check-outline" :loading="loading">
         <v-data-table v-if="items.length" :headers="headers" :items="items" item-value="id" density="comfortable">
             <template #item.date="{ item }">{{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}</template>
             <template #item.salary="{ item }">{{ currency(item.salary) }}</template>

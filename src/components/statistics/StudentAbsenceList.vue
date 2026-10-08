@@ -1,5 +1,5 @@
 <template>
-    <StatisticsPanel title="Assenze per studente" subtitle="Assenze e recuperi degli allievi" icon="mdi-account-clock-outline" :loading="loading">
+    <StatisticsPanel title="Assenze per studente" icon="mdi-account-clock-outline" :loading="loading">
         <v-data-table :headers="headers" :items="items" item-value="student">
             <template #item.unjustified="{ item }">
                 {{ item.unjustified }} (A)

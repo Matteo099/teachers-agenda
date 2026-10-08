@@ -2,7 +2,7 @@
     <BaseChart :schools="schools" :from="from" :to="to" :create-chart="createChart"
         :after-chart-created="afterChartCreated" :are-update-condition-satistied="areUpdateConditionSatistied"
         :update-chart-data="updateChartData" title="Distribuzione degli studenti"
-        subtitle="Numero di studenti in una scuola" />
+        />
 </template>
 
 <script setup lang="ts">

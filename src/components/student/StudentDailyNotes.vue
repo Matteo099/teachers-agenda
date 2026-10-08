@@ -1,6 +1,6 @@
 <template>
   <v-card class="student-notes" variant="flat" :loading="loading">
-    <div class="notes-heading"><span class="notes-icon"><v-icon icon="mdi-note-text-outline" size="20" /></span><div><h3>Note delle lezioni</h3><p>Annotazioni registrate nelle lezioni</p></div></div>
+    <div class="notes-heading"><span class="notes-icon"><v-icon icon="mdi-note-text-outline" size="20" /></span><div><h3>Note delle lezioni</h3></div></div>
     <v-card-text v-if="notes.length">
       <div class="notes-list"><div v-for="note in notes" :key="note.date" class="note-item">
         <time>{{ yyyyMMdd.fromIyyyyMMdd(note.date).format() }}</time><p>{{ note.text }}</p>

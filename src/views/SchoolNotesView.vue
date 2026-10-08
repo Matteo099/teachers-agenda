@@ -1,6 +1,6 @@
 <template>
   <v-card class="school-panel" variant="flat" :loading="loading">
-    <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-note-text-outline" size="22" /></span><div><h2>Note della scuola</h2><p>Annotazioni e promemoria</p></div><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" @click="startNewNote">Aggiungi nota</v-btn></div>
+    <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-note-text-outline" size="22" /></span><div><h2>Note della scuola</h2></div><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" @click="startNewNote">Aggiungi nota</v-btn></div>
     <v-card-text class="school-panel-content">
       <v-data-table :headers="headers" :items="notes" item-value="id" :items-per-page="5" items-per-page-text="Righe per pagina">
         <template #item.date="{ item }">{{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}</template>
@@ -20,7 +20,7 @@
 
   <v-dialog v-model="dialog" max-width="640">
     <v-card class="school-note-dialog" variant="flat">
-      <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-note-edit-outline" size="22" /></span><div><h2>{{ editingId ? 'Modifica nota' : 'Aggiungi nota' }}</h2><p>Annotazione per {{ school.name }}</p></div></div>
+      <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-note-edit-outline" size="22" /></span><div><h2>{{ editingId ? 'Modifica nota' : 'Aggiungi nota' }}</h2></div></div>
       <v-card-text>
         <v-date-input v-model="noteDate" label="Data" variant="outlined" inputmode="none" />
         <v-textarea v-model="description" label="Nota" variant="outlined" rows="4" counter="1000" autofocus />

@@ -2,7 +2,7 @@
     <BaseChart :schools="schools" :from="from" :to="to" :create-chart="createChart"
         :after-chart-created="afterChartCreated" :are-update-condition-satistied="areUpdateConditionSatistied"
         :update-chart-data="updateChartData" title="Andamento degli Studenti"
-        subtitle="Andamento della presenza in un periodo di tempo per studente" />
+        />
 </template>
 
 <script setup lang="ts">

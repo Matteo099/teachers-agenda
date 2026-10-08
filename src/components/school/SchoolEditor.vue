@@ -2,10 +2,10 @@
     <v-card class="school-editor" variant="flat">
         <div class="editor-page-header"><span class="school-panel-icon"><v-icon icon="mdi-school-outline" size="24" /></span><div><span>Scuole</span><h2>{{ edit ? 'Modifica scuola' : 'Nuova scuola' }}</h2></div><v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" /></div>
         <v-card-text class="editor-page-content school-form-content">
-            <div class="school-form-intro"><h3>Dettagli della scuola</h3><p>Completa i dati principali, organizza i livelli e configura il compenso delle lezioni.</p></div>
+            <div class="school-form-intro"><h3>Dettagli della scuola</h3></div>
             <div class="school-form-layout"><div class="school-form-main">
             <section class="editor-page-section">
-            <div class="form-section-heading"><span class="form-step">1</span><div><h3>Informazioni e contatti</h3><p>Dati visibili nell'anagrafica della scuola</p></div></div>
+            <div class="form-section-heading"><span class="form-step">1</span><div><h3>Informazioni e contatti</h3></div></div>
             <v-row density="comfortable">
                 <v-col cols="12" md="6">
                     <v-text-field v-model="name" v-bind="nameProps" label="Nome della scuola" variant="outlined" required></v-text-field>
@@ -50,7 +50,7 @@
             </v-row>
             </section>
             <section class="editor-page-section">
-            <div class="form-section-heading"><span class="form-step">2</span><div><h3>Compensi e rimborsi</h3><p>Regole applicate alle lezioni della scuola</p></div></div>
+            <div class="form-section-heading"><span class="form-step">2</span><div><h3>Compensi e rimborsi</h3></div></div>
             <v-row density="comfortable">
                 <v-col cols="12" md="6">
                     <v-select v-model="salaryStrategy" v-bind="salaryStrategyProps" :items="salaryStrategys"
@@ -71,7 +71,7 @@
             </v-row>
             </section>
             <section class="editor-page-section">
-            <div class="form-section-heading"><span class="form-step">3</span><div><h3>Funzioni della scuola</h3><p>Attiva le aree che utilizzi</p></div></div>
+            <div class="form-section-heading"><span class="form-step">3</span><div><h3>Funzioni della scuola</h3></div></div>
             <v-row density="comfortable">
                 <v-col cols="12" md="12">
                     <v-row justify-center>
@@ -94,7 +94,7 @@
             </div>
             <aside class="school-form-side">
                 <section class="editor-page-section levels-summary">
-                    <div class="form-section-heading"><span class="form-step">4</span><div><h3>Livelli e compensi</h3><p>Fasce orarie e livelli associati</p></div></div>
+                    <div class="form-section-heading"><span class="form-step">4</span><div><h3>Livelli e compensi</h3></div></div>
                     <div v-if="levelRanges?.length" class="levels-summary-list">
                         <div v-for="range in levelRanges" :key="range.price" class="levels-summary-row">
                             <span class="levels-summary-price">{{ numberFormat(range.price) }} € / ora</span>

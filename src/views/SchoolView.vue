@@ -3,7 +3,7 @@
         <header class="school-page-header">
             <BackButton />
             <span class="school-page-icon"><v-icon icon="mdi-school-outline" size="27" /></span>
-            <div class="school-page-title"><span>Scuola</span><h1>{{ school.name }}</h1><p v-if="school.city"><v-icon icon="mdi-map-marker-outline" size="16" /> {{ school.city }}</p></div>
+            <div class="school-page-title"><h1>{{ school.name }}</h1><p v-if="school.city"><v-icon icon="mdi-map-marker-outline" size="16" /> {{ school.city }}</p></div>
             <v-menu transition="slide-y-transition">
                 <template v-slot:activator="{ props }">
                     <v-btn icon="mdi-dots-vertical" variant="text" aria-label="Azioni scuola" v-bind="props"></v-btn>

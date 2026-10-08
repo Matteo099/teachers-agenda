@@ -6,7 +6,7 @@
 
         <template v-slot:default>
             <v-card class="recovery-dialog" variant="flat" :loading="loadingSchedulingRecovery">
-                <div class="recovery-dialog-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-plus-outline" size="23" /></span><div><span>Nuova data</span><h2>Programma recupero</h2><p>Definisci quando recuperare la lezione.</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="close" /></div>
+                <div class="recovery-dialog-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-plus-outline" size="23" /></span><div><h2>Programma recupero</h2></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="close" /></div>
                 <v-card-text class="recovery-dialog-content">
                     <div class="recovery-origin"><v-icon icon="mdi-account-outline" size="20" /><div><strong>{{ recovery.student.name }} {{ recovery.student.surname }}</strong><span>Lezione originale · {{ yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format() }}</span></div></div>
                     <div class="recovery-dialog-fields">

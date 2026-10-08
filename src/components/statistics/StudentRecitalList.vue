@@ -1,5 +1,5 @@
 <template>
-    <StatisticsPanel title="Saggi" subtitle="Brani preparati dagli allievi" icon="mdi-music-note-outline" :loading="loading">
+    <StatisticsPanel title="Saggi" icon="mdi-music-note-outline" :loading="loading">
         <v-data-table :headers="headers" :items="items" item-value="id">
             <template #no-data>Nessun saggio registrato.</template>
         </v-data-table>

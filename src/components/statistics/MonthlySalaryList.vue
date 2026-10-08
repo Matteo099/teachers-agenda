@@ -1,5 +1,5 @@
 <template>
-    <StatisticsPanel title="Riepilogo stipendi mensile" subtitle="Compensi per mese nel periodo selezionato" icon="mdi-cash-multiple" :loading="loading">
+    <StatisticsPanel title="Riepilogo stipendi mensile" icon="mdi-cash-multiple" :loading="loading">
         <v-list v-if="items.length" class="statistics-list">
             <v-list-item v-for="item in items" :key="item.month" :title="item.month">
                 <template #append>{{ item.salary.toFixed(2) }} €</template>

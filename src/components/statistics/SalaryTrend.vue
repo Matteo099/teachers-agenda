@@ -1,7 +1,7 @@
 <template>
     <BaseChart :schools="schools" :from="from" :to="to" :create-chart="createChart" :after-chart-created="afterChartCreated"
         :are-update-condition-satistied="areUpdateConditionSatistied" :update-chart-data="updateChartData" 
-        title="Andamento dello Stipendio" subtitle="Andamento dello stipendio in un periodo di tempo per scuola"/>
+        title="Andamento dello Stipendio"/>
 </template>
 
 <script setup lang="ts">

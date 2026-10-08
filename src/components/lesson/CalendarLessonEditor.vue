@@ -1,6 +1,6 @@
 <template>
     <v-card class="weekly-calendar-editor" variant="flat" :loading="loadingCalendar || loadingStudents">
-        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-week-outline" size="22" /></span><div><h2>Orario settimanale</h2><p>Le lezioni programmate della scuola</p></div>
+        <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-week-outline" size="22" /></span><div><h2>Orario settimanale</h2></div>
             <v-dialog v-model="dialog" transition="dialog-bottom-transition" fullscreen>
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn prepend-icon="mdi-plus" color="primary" variant="flat" v-bind="activatorProps">Nuovo orario</v-btn>

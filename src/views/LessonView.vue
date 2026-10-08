@@ -5,7 +5,6 @@
                 <span class="overview-icon"><v-icon icon="mdi-calendar-week-outline" size="23" /></span>
                 <div>
                     <h2>Lezioni</h2>
-                    <p>Calendario e giornate della scuola</p>
                 </div>
             </div>
             <div class="lesson-overview-actions">

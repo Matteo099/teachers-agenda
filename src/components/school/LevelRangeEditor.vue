@@ -2,7 +2,7 @@
     <v-card class="level-range-editor" variant="flat">
         <div class="level-editor-header">
             <span class="school-panel-icon"><v-icon icon="mdi-format-list-numbered" size="24" /></span>
-            <div><span>Configurazione scuola</span><h2>Livelli e compensi</h2><p>Crea una fascia oraria, poi aggiungi i livelli associati.</p></div>
+            <div><h2>Livelli e compensi</h2></div>
             <v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" />
         </div>
 
@@ -10,7 +10,6 @@
             <div class="level-workspace">
                 <section class="level-ranges">
                     <div class="level-section-heading"><h3>Fasce orarie</h3><span>{{ levelRanges.length }}</span></div>
-                    <p class="level-help">Ogni fascia definisce il compenso orario dei suoi livelli.</p>
                     <div class="level-add-row">
                         <v-number-input v-model="levelRangePrice" label="Compenso orario" prefix="€" :precision="3"
                             :min="0" control-variant="default" variant="outlined" hide-details />
@@ -35,7 +34,6 @@
                             <v-btn color="error" variant="text" size="small" prepend-icon="mdi-delete-outline"
                                 @click="deleteLevelRange">Elimina fascia</v-btn>
                         </div>
-                        <p class="level-help">Aggiungi i livelli che utilizzano questo compenso.</p>
                         <div class="level-add-row">
                             <v-text-field v-model="levelName" label="Nome del livello" variant="outlined" hide-details
                                 @keyup.enter="addLevelName(tab)" />
@@ -50,7 +48,7 @@
                         </div>
                         <div v-else class="level-empty">Questa fascia non ha ancora livelli.</div>
                     </template>
-                    <div v-else class="level-placeholder"><v-icon icon="mdi-format-list-bulleted" size="32" /><h3>Seleziona una fascia</h3><p>I livelli della fascia scelta compariranno qui.</p></div>
+                    <div v-else class="level-placeholder"><v-icon icon="mdi-format-list-bulleted" size="32" /><h3>Seleziona una fascia</h3></div>
                 </section>
             </div>
         </v-card-text>

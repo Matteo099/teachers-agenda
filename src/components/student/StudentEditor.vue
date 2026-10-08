@@ -5,7 +5,6 @@
             <div class="editor-heading">
                 <div class="editor-eyebrow">{{ school.name }}</div>
                 <h2>{{ edit ? 'Modifica studente' : 'Nuovo studente' }}</h2>
-                <p>Informazioni e organizzazione delle lezioni</p>
             </div>
             <v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" />
         </div>
@@ -15,7 +14,6 @@
                     <div class="section-icon"><v-icon icon="mdi-account-outline" size="20" /></div>
                     <div>
                         <h3>Dati personali</h3>
-                        <p>Nome e recapito dello studente</p>
                     </div>
                 </div>
                 <v-row density="comfortable">
@@ -42,7 +40,6 @@
                     <div class="section-icon"><v-icon icon="mdi-calendar-clock-outline" size="20" /></div>
                     <div>
                         <h3>Lezioni</h3>
-                        <p>Livello, orario e tipologia</p>
                     </div>
                 </div>
                 <v-row density="comfortable">
@@ -114,9 +111,7 @@
                             <div class="biweekly-setting-header">
                                 <span class="biweekly-setting-icon"><v-icon icon="mdi-calendar-weekend-outline"
                                         size="20" /></span>
-                                <div><strong>Lezioni a settimane alterne</strong>
-                                    <p>Una lezione ogni due settimane, a partire dalla data scelta.</p>
-                                </div>
+                                <div><strong>Lezioni a settimane alterne</strong></div>
                                 <v-switch v-model="biweekly" color="primary" hide-details
                                     aria-label="Lezioni a settimane alterne" />
                             </div>
@@ -185,7 +180,7 @@
             <section class="editor-section">
                 <div class="section-heading recital-heading">
                     <div class="section-icon"><v-icon icon="mdi-music-note-outline" size="20" /></div>
-                    <div><h3>Saggi</h3><p>Brani preparati dallo studente e relativi autori</p></div>
+                    <div><h3>Saggi</h3></div>
                     <v-chip v-if="recitalPieces.length" color="primary" variant="tonal" size="small">{{ recitalPieces.length }} {{ recitalPieces.length === 1 ? 'brano' : 'brani' }}</v-chip>
                 </div>
                 <div v-if="recitalPieces.length" class="recital-list">

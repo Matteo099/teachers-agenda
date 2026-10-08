@@ -1,6 +1,6 @@
 <template>
     <div class="statistics-view">
-        <header class="statistics-heading"><span class="statistics-heading-icon"><v-icon icon="mdi-chart-box-outline" size="27" /></span><div><span>Panoramica</span><h1>Statistiche</h1><p>Analizza lezioni, scuole, studenti e compensi.</p></div></header>
+        <header class="statistics-heading"><span class="statistics-heading-icon"><v-icon icon="mdi-chart-box-outline" size="27" /></span><div><h1>Statistiche</h1></div></header>
         <v-tabs v-model="tab" class="statistics-tabs" color="primary" show-arrows>
             <v-tab prepend-icon="mdi-cash" text="Stipendio" value="salary"></v-tab>
             <v-tab prepend-icon="mdi-town-hall" text="Scuole" value="schools"></v-tab>

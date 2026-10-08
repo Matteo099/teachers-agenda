@@ -1,13 +1,13 @@
 <template>
     <v-card class="school-panel recovery-panel" variant="flat" :loading="loadingExtendedRecoveries">
-        <div class="school-panel-header recovery-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-refresh-outline" size="22" /></span><div><h2>Recuperi</h2><p>Tieni sotto controllo le lezioni da recuperare</p></div></div>
+        <div class="school-panel-header recovery-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-refresh-outline" size="22" /></span><div><h2>Recuperi</h2></div></div>
 
         <v-tabs v-model="activeStatus" class="recovery-tabs" color="primary" grow show-arrows aria-label="Stato dei recuperi">
             <v-tab v-for="status in recoveryTabs" :key="status.value" :value="status.value"><v-icon :icon="status.icon" size="18" /><span>{{ status.label }}</span><span class="recovery-tab-count">{{ recoveryCount(status.value) }}</span></v-tab>
         </v-tabs>
 
         <div class="recovery-content">
-            <div class="recovery-section-heading"><div><h3>{{ activeTab.title }}</h3><p>{{ activeTab.description }}</p></div><v-chip size="small" variant="tonal" color="primary">{{ activeRecoveries.length }}</v-chip></div>
+            <div class="recovery-section-heading"><div><h3>{{ activeTab.title }}</h3></div><v-chip size="small" variant="tonal" color="primary">{{ activeRecoveries.length }}</v-chip></div>
 
             <div v-if="activeRecoveries.length" class="recovery-entries">
                 <article v-for="recovery in visibleRecoveries" :key="`${recovery.lesson.lessonId}_${recovery.recoveryReference.originalDailyLesson.id}`" class="recovery-entry">
@@ -32,7 +32,7 @@
                 </v-btn>
             </div>
 
-            <div v-else-if="!loadingExtendedRecoveries" class="recovery-empty-state"><span class="recovery-empty-icon"><v-icon :icon="activeTab.emptyIcon" size="25" /></span><strong>{{ activeTab.emptyTitle }}</strong><p>{{ activeTab.emptyDescription }}</p></div>
+            <div v-else-if="!loadingExtendedRecoveries" class="recovery-empty-state"><span class="recovery-empty-icon"><v-icon :icon="activeTab.emptyIcon" size="25" /></span><strong>{{ activeTab.emptyTitle }}</strong></div>
         </div>
     </v-card>
 </template>
@@ -71,9 +71,9 @@ const expandedStatuses = ref<Record<RecoveryStatus, boolean>>({
 let initialStatusSelected = false;
 
 const recoveryTabs = [
-    { value: RecoveryStatus.UNSET, label: 'Da fare', title: 'Da programmare', description: 'Lezioni in attesa di una nuova data', icon: 'mdi-calendar-clock-outline', emptyIcon: 'mdi-calendar-check-outline', emptyTitle: 'Tutto programmato', emptyDescription: 'Non ci sono lezioni in attesa di recupero.' },
-    { value: RecoveryStatus.PENDING, label: 'Programmati', title: 'Recuperi programmati', description: 'Lezioni con una nuova data fissata', icon: 'mdi-calendar-arrow-right', emptyIcon: 'mdi-calendar-blank-outline', emptyTitle: 'Nessun recupero programmato', emptyDescription: 'I recuperi con una data fissata appariranno qui.' },
-    { value: RecoveryStatus.DONE, label: 'Completati', title: 'Recuperi completati', description: 'Lezioni già recuperate', icon: 'mdi-check-circle-outline', emptyIcon: 'mdi-check-all', emptyTitle: 'Nessun recupero completato', emptyDescription: 'Le lezioni svolte appariranno qui.' },
+    { value: RecoveryStatus.UNSET, label: 'Da fare', title: 'Da programmare', icon: 'mdi-calendar-clock-outline', emptyIcon: 'mdi-calendar-check-outline', emptyTitle: 'Tutto programmato' },
+    { value: RecoveryStatus.PENDING, label: 'Programmati', title: 'Recuperi programmati', icon: 'mdi-calendar-arrow-right', emptyIcon: 'mdi-calendar-blank-outline', emptyTitle: 'Nessun recupero programmato' },
+    { value: RecoveryStatus.DONE, label: 'Completati', title: 'Recuperi completati', icon: 'mdi-check-circle-outline', emptyIcon: 'mdi-check-all', emptyTitle: 'Nessun recupero completato' },
 ] as const;
 const activeTab = computed(() => recoveryTabs.find(tab => tab.value === activeStatus.value) ?? recoveryTabs[0]!);
 const activeRecoveries = computed(() => extendedRecoveries.value?.recoveryMap.get(activeStatus.value) ?? []);

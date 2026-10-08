@@ -1,5 +1,5 @@
 <template>
-  <StatisticsPanel title="Presenze per giorno della settimana" subtitle="Registro delle presenze per allievo" icon="mdi-calendar-check-outline" :loading="loading">
+  <StatisticsPanel title="Presenze per giorno della settimana" icon="mdi-calendar-check-outline" :loading="loading">
       <div class="attendance-toolbar">
         <v-select v-model="selectedDay" :items="weekDays" label="Giorno della settimana" variant="outlined" density="comfortable" hide-details />
         <div class="attendance-exports"><v-btn prepend-icon="mdi-file-pdf-box" color="primary" variant="tonal" @click="exportPdf">Esporta PDF</v-btn>

@@ -2,11 +2,11 @@
     <v-card class="week-lesson-editor" variant="flat">
         <div class="editor-page-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-edit" size="24" /></span><div><span>{{ school.name }}</span><h2>{{ edit ? 'Modifica orario settimanale' : 'Nuovo orario settimanale' }}</h2></div><v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" /></div>
         <v-card-text class="weekly-editor-content">
-            <div class="weekly-editor-intro"><h3>Componi la giornata</h3><p>Definisci la ricorrenza, scegli gli allievi e verifica gli orari nell'anteprima.</p></div>
+            <div class="weekly-editor-intro"><h3>Componi la giornata</h3></div>
             <div class="weekly-editor-layout">
                 <v-form class="weekly-editor-form">
                     <section class="editor-page-section">
-                        <div class="weekly-section-heading"><span class="weekly-step">1</span><div><h3>Ricorrenza</h3><p>Giorno e periodo di validità</p></div></div>
+                        <div class="weekly-section-heading"><span class="weekly-step">1</span><div><h3>Ricorrenza</h3></div></div>
                         <v-select v-model="dayOfWeek" v-bind="dayOfWeekProps" :items="days" label="Giorno della settimana"
                             variant="outlined" required />
                         <div class="weekly-date-grid">
@@ -35,7 +35,7 @@
                     </section>
 
                     <section class="editor-page-section">
-                        <div class="weekly-section-heading"><span class="weekly-step">3</span><div><h3>Allievi e band</h3><p>Seleziona chi partecipa alla giornata</p></div></div>
+                        <div class="weekly-section-heading"><span class="weekly-step">3</span><div><h3>Allievi e band</h3></div></div>
                         <SelectStudents v-model="selectedStudents" :all-students="studentsForSelectedDay" mode="list" />
                         <v-btn class="weekly-other-students" color="primary" variant="text" size="small"
                             :prepend-icon="showOtherStudents ? 'mdi-filter-check-outline' : 'mdi-account-search-outline'"

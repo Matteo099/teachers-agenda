@@ -67,7 +67,7 @@
           </template>
           <template #default="{ isActive }">
             <v-card class="lesson-action-dialog" variant="flat">
-              <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-account-group-outline" /></span><div><span>Lezione del giorno</span><h2>Presenze della band</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
+              <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-account-group-outline" /></span><div><h2>Presenze della band</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
               <v-list class="lesson-dialog-content" lines="two">
                 <v-list-item v-for="member in item.student.bandMembers ?? []" :key="member.id"
                   :title="`${member.name} ${member.surname}`" :subtitle="member.instrument">
@@ -95,7 +95,7 @@
 
           <template v-slot:default="{ isActive }">
             <v-card class="lesson-action-dialog" variant="flat">
-              <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-account-off-outline" /></span><div><span>Presenze</span><h2>Segna assenza</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
+              <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-account-off-outline" /></span><div><h2>Segna assenza</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
               <v-card-text class="lesson-dialog-content"><p class="lesson-dialog-description">Scegli se la lezione può essere recuperata.</p><div class="absence-options"><v-btn variant="tonal" color="warning" prepend-icon="mdi-calendar-refresh" @click="isActive.value = false; emit('absent', true)">Da recuperare</v-btn><v-btn variant="tonal" color="error" prepend-icon="mdi-account-remove-outline" @click="isActive.value = false; emit('absent', false)">Ingiustificata</v-btn></div></v-card-text>
             </v-card>
           </template>
@@ -124,9 +124,8 @@
 
                   <template v-slot:default="{ isActive }">
                     <v-card class="lesson-action-dialog" variant="flat">
-                      <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-calendar-arrow-right" /></span><div><span>Lezione del giorno</span><h2>Sposta lezione</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false; newLessonDate = undefined" /></div>
+                      <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-calendar-arrow-right" /></span><div><h2>Sposta lezione</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false; newLessonDate = undefined" /></div>
                       <v-card-text class="lesson-dialog-content">
-                        <p class="lesson-dialog-description">Seleziona la nuova data della lezione.</p>
                         <v-date-picker class="lesson-date-picker" v-model="newLessonDate" width="100%"></v-date-picker>
                       </v-card-text>
                       <v-card-actions class="lesson-dialog-actions">
@@ -192,7 +191,7 @@
                     </v-btn>
                   </template>
                   <v-card class="lesson-action-dialog" variant="flat">
-                    <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-note-edit-outline" /></span><div><span>Lezione del giorno</span><h2>Nota della giornata</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="dailyNoteDialog = false" /></div>
+                    <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-note-edit-outline" /></span><div><h2>Nota della giornata</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="dailyNoteDialog = false" /></div>
                     <v-card-text class="lesson-dialog-content">
                       <div class="lesson-dialog-section-title">Note precedenti</div>
                       <v-progress-linear v-if="loadingDailyNotes" indeterminate color="primary" class="mb-2" />
@@ -219,7 +218,7 @@
                   </template>
                   <template v-slot:default="{ isActive }">
                     <v-card class="lesson-action-dialog" variant="flat">
-                      <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-eye-off-outline" /></span><div><span>Visibilità</span><h2>Nascondi oggi</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
+                      <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-eye-off-outline" /></span><div><h2>Nascondi oggi</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
                       <v-card-text class="lesson-dialog-content"><p class="lesson-dialog-description">La lezione sarà nascosta solo per questa giornata. Potrai renderla di nuovo visibile in seguito.</p></v-card-text>
                       <v-card-actions class="lesson-dialog-actions">
                         <v-btn text="Annulla" variant="outlined" @click="isActive.value = false" />

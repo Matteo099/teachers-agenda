@@ -4,7 +4,6 @@
       <span class="school-panel-icon"><v-icon icon="mdi-account-group-outline" size="22" /></span>
       <div>
         <h2>Anagrafica studenti</h2>
-        <p>Allievi e dettagli delle lezioni</p>
       </div>
       <v-dialog v-model="dialog" fullscreen>
         <template #activator="{ props: activatorProps }"><v-btn class="student-add-button" color="primary"

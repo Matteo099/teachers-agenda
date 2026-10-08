@@ -1,6 +1,6 @@
 <template>
     <v-card class="student-filter mx-auto" min-width="300px" variant="flat">
-        <div class="filter-heading"><div class="filter-icon"><v-icon icon="mdi-filter-variant" size="20" /></div><div><h3>Filtra studenti</h3><p>Scegli quali allievi visualizzare</p></div></div>
+        <div class="filter-heading"><div class="filter-icon"><v-icon icon="mdi-filter-variant" size="20" /></div><div><h3>Filtra studenti</h3></div></div>
         <v-card-text>
             <v-row>
                 <v-col>
