@@ -56,7 +56,7 @@ onMounted(reset);
 </script>
 
 <style scoped>
-.lesson-filter-card { width: min(430px, 94vw); overflow: hidden; border: 1px solid var(--app-border); border-radius: 16px !important; background: var(--app-surface); }
+.lesson-filter-card { width: 100%; overflow: hidden; border: 1px solid var(--app-border); border-radius: 16px !important; background: var(--app-surface); }
 .lesson-filter-heading { display: flex; align-items: center; gap: 12px; padding: 20px 22px 18px; border-bottom: 1px solid var(--app-border); }
 .lesson-filter-icon, .lesson-filter-option-icon { display: grid; place-items: center; flex: none; border-radius: 11px; background: var(--app-accent-surface); color: var(--app-primary); }
 .lesson-filter-icon { width: 42px; height: 42px; }

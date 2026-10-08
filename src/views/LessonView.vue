@@ -43,7 +43,7 @@
                 :to="'/calendar?filters=' + school.id">Calendario
                 completo</v-btn>
             <div class="lesson-overview-tools">
-                <v-dialog transition="dialog-bottom-transition">
+                <v-dialog transition="dialog-bottom-transition" max-width="430">
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn prepend-icon="mdi-filter-variant" variant="text" v-bind="activatorProps">Filtri</v-btn>
                     </template>
