@@ -44,7 +44,7 @@
                             </v-expansion-panel-title>
                             <v-expansion-panel-text>
                                 <div class="day-options-actions">
-                                    <v-btn variant="text" prepend-icon="mdi-calendar-check-outline"
+                                    <v-btn class="app-secondary-action" variant="flat" prepend-icon="mdi-calendar-check-outline"
                                         @click="toggleOfficialCalendarDate">
                                         {{ dailyLesson.isOfficialCalendarDate ? 'Rimuovi data ufficiale' :
                                             'Segna data ufficiale' }}
@@ -81,11 +81,11 @@
                         </div>
                     </div>
                     <div class="lesson-week-nav">
-                        <v-btn icon="mdi-chevron-left" variant="outlined"
+                        <v-btn class="app-secondary-action" icon="mdi-chevron-left" variant="flat"
                             aria-label="Lezione della settimana precedente" :disabled="loading"
                             @click="goToWeekLesson(-1)" />
                         <span>Settimana</span>
-                        <v-btn icon="mdi-chevron-right" variant="outlined"
+                        <v-btn class="app-secondary-action" icon="mdi-chevron-right" variant="flat"
                             aria-label="Lezione della settimana successiva" :disabled="loading"
                             @click="goToWeekLesson(1)" />
                     </div>

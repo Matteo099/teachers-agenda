@@ -8,6 +8,9 @@
 .v-card-title { color: var(--app-text); font-size: 1.1rem; font-weight: 650; letter-spacing: -.02em; }
 .v-card-subtitle, .text-medium-emphasis { color: var(--app-muted) !important; }
 .v-btn { border-radius: 11px; text-transform: none; letter-spacing: 0; font-weight: 600; }
+.v-btn.app-secondary-action:not(.v-btn--disabled) { border: 1px solid var(--app-border) !important; background: var(--app-surface) !important; color: var(--app-text) !important; box-shadow: none !important; }
+.v-btn.app-secondary-action:not(.v-btn--disabled):hover { border-color: var(--app-hover-border) !important; background: var(--app-hover-surface) !important; }
+.v-btn.app-secondary-action:focus-visible { outline: 2px solid var(--app-primary); outline-offset: 2px; }
 .v-chip { border-radius: 10px; font-weight: 600; }
 .v-field { border-radius: 12px !important; }
 .v-tabs { background: var(--app-surface); border-radius: 12px; }

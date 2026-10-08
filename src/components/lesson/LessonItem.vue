@@ -62,7 +62,7 @@
           v-if="presentVisible && !item.lesson.hiddenForDate" @click="emit('present')">Presente</v-btn>
         <v-dialog v-if="item.student.isBand" max-width="600" scrollable>
           <template #activator="{ props: activatorProps }">
-            <v-btn :disabled="loading" variant="tonal" prepend-icon="mdi-account-group-outline"
+            <v-btn :disabled="loading" class="app-secondary-action" variant="flat" prepend-icon="mdi-account-group-outline"
               v-bind="activatorProps">Presenze band</v-btn>
           </template>
           <template #default="{ isActive }">
@@ -101,7 +101,7 @@
           </template>
         </v-dialog>
 
-        <v-btn :disabled="loading" variant="tonal" v-if="trialVisible && !item.lesson.hiddenForDate"
+        <v-btn :disabled="loading" class="app-secondary-action" variant="flat" v-if="trialVisible && !item.lesson.hiddenForDate"
           @click="emit('trial')">Prova</v-btn>
       </div>
       <v-expansion-panels variant="accordion" class="student-more-actions">
@@ -110,14 +110,14 @@
             <div class="student-more-action-buttons">
               <div class="student-actions-group">
                 <h3>Lezione</h3>
-                <v-btn :disabled="loading" class="student-action-button" color="secondary" variant="tonal"
+                <v-btn :disabled="loading" class="student-action-button app-secondary-action" variant="flat"
                   prepend-icon="mdi-restore" v-if="resetVisible && !item.lesson.hiddenForDate"
                   @click="emit('reset')">Ripristina stato</v-btn>
 
                 <v-dialog v-model="dateDialog" transition="dialog-bottom-transition" max-width="500" scrollable
                   v-if="!item.lesson.moved">
                   <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn :disabled="loading" class="student-action-button" color="secondary" variant="tonal"
+                    <v-btn :disabled="loading" class="student-action-button app-secondary-action" variant="flat"
                       prepend-icon="mdi-calendar-arrow-right" v-bind="activatorProps" v-if="moveVisible">Sposta
                       lezione</v-btn>
                   </template>
@@ -137,13 +137,13 @@
                   </template>
                 </v-dialog>
                 <template v-else-if="item.lesson.moved.ref == 'moved'">
-                  <v-btn :disabled="loading" class="student-action-button" color="secondary" variant="tonal"
+                  <v-btn :disabled="loading" class="student-action-button app-secondary-action" variant="flat"
                     :to="`/lesson/${item.lesson.moved.lessonRef.dailyLessonId}`">
                     <template v-slot:prepend> <v-icon>mdi-eye-arrow-right-outline</v-icon> </template>Vai alla lezione
                     spostata</v-btn>
                 </template>
                 <template v-else>
-                  <v-btn :disabled="loading" class="student-action-button" color="secondary" variant="tonal"
+                  <v-btn :disabled="loading" class="student-action-button app-secondary-action" variant="flat"
                     :to="`/lesson/${item.lesson.moved.lessonRef.dailyLessonId}`">
                     <template v-slot:prepend>
                       <v-icon>mdi-eye-arrow-left-outline</v-icon>
@@ -153,7 +153,7 @@
 
                 <v-dialog v-model="timeDialog" transition="dialog-bottom-transition" max-width="560" scrollable>
                   <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn :disabled="loading" class="student-action-button" color="secondary" variant="tonal"
+                    <v-btn :disabled="loading" class="student-action-button app-secondary-action" variant="flat"
                       prepend-icon="mdi-clock-edit-outline" v-bind="activatorProps">Modifica orario</v-btn>
                   </template>
 
@@ -169,14 +169,14 @@
 
               <div v-if="isRecoveryLesson || isOriginalRecoverableLesson" class="student-actions-group">
                 <h3>Collegamenti</h3>
-                <v-btn :disabled="loading" v-if="isRecoveryLesson" class="student-action-button" color="secondary"
-                  variant="tonal" :to="`/lesson/${item.lesson.recovery?.lessonRef.dailyLessonId}`">
+                <v-btn :disabled="loading" v-if="isRecoveryLesson" class="student-action-button app-secondary-action"
+                  variant="flat" :to="`/lesson/${item.lesson.recovery?.lessonRef.dailyLessonId}`">
                   <template v-slot:prepend>
                     <v-icon>mdi-eye-arrow-left-outline</v-icon>
                   </template>
                   Vai alla lezione originale</v-btn>
-                <v-btn :disabled="loading" v-if="isOriginalRecoverableLesson" class="student-action-button"
-                  color="secondary" variant="tonal" :to="`/lesson/${item.lesson.recovery?.lessonRef.dailyLessonId}`">
+                <v-btn :disabled="loading" v-if="isOriginalRecoverableLesson" class="student-action-button app-secondary-action"
+                  variant="flat" :to="`/lesson/${item.lesson.recovery?.lessonRef.dailyLessonId}`">
                   <template v-slot:prepend> <v-icon>mdi-eye-arrow-right-outline</v-icon> </template>Vai al
                   recupero</v-btn>
               </div>
@@ -185,7 +185,7 @@
                 <h3>Note e visibilità</h3>
                 <v-dialog v-model="dailyNoteDialog" max-width="600">
                   <template #activator="{ props: activatorProps }">
-                    <v-btn :disabled="loading" class="student-action-button" color="secondary" variant="tonal"
+                    <v-btn :disabled="loading" class="student-action-button app-secondary-action" variant="flat"
                       v-bind="activatorProps" prepend-icon="mdi-note-edit-outline">
                       {{ item.lesson.dailyNote ? 'Modifica nota' : 'Aggiungi nota' }}
                     </v-btn>
@@ -213,7 +213,7 @@
                 </v-dialog>
                 <v-dialog v-if="!item.lesson.hiddenForDate" max-width="460">
                   <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn :disabled="loading" class="student-action-button" color="secondary" variant="tonal"
+                    <v-btn :disabled="loading" class="student-action-button app-secondary-action" variant="flat"
                       prepend-icon="mdi-eye-off-outline" v-bind="activatorProps">Nascondi oggi</v-btn>
                   </template>
                   <template v-slot:default="{ isActive }">
