@@ -51,8 +51,8 @@
                         <LessonFilter v-model="filters" @close="isActive.value = false" />
                     </template>
                 </v-dialog>
-                <v-btn icon="mdi-refresh" variant="text" aria-label="Aggiorna lezioni"
-                    :disabled="!school || computingLessonGroups" @click="loadLessonGroup" />
+                <!-- <v-btn icon="mdi-refresh" variant="text" aria-label="Aggiorna lezioni"
+                    :disabled="!school || computingLessonGroups" @click="loadLessonGroup" /> -->
             </div>
         </div>
 
