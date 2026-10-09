@@ -1,38 +1,27 @@
 <template>
     <v-container fluid class="daily-calendar-container">
-        <AppCalendar :calendar-app="calendarApp" compact hide-header :hide-day-header="!showDay">
-            <template #eventModal="{ calendarEvent }">
-                <v-card class="daily-calendar-event-modal" variant="flat">
-                    <div class="daily-calendar-event-heading"><span class="school-panel-icon"><v-icon
-                                icon="mdi-calendar-clock-outline" size="20" /></span>
-                        <div>
-                            <h3>{{ calendarEvent.title }}</h3>
-                            <p>{{ calendarEvent.start.split(' ')[1] }}–{{ calendarEvent.end.split(' ')[1] }}</p>
-                        </div>
-                    </div>
-                    <v-card-text v-if="calendarEvent.description">{{ calendarEvent.description }}</v-card-text>
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-dialog v-model="editTimeModal" transition="dialog-bottom-transition">
-                            <template v-slot:activator="{ props: activatorProps }">
-                                <v-btn text="Chiudi" variant="text" @click="eventModal.close()"></v-btn>
-                                <v-btn text="Modifica orario" color="primary" variant="flat"
-                                    prepend-icon="mdi-pencil-outline" v-bind="activatorProps" @click.stop></v-btn>
-                            </template>
-
-                            <template v-slot:default="{ isActive }">
-                                <EditLessonTime @close="isActive.value = false"
-                                    @save="updateEventTime(calendarEvent, $event)"
-                                    :startTime="calendarEvent.start?.split(' ')[1]"
-                                    :endTime="calendarEvent.end?.split(' ')[1]"
-                                    :minutesOfLesson="calendarEvent.data.minutesLessonDuration">
-                                </EditLessonTime>
-                            </template>
-                        </v-dialog>
-                    </v-card-actions>
-                </v-card>
-            </template>
-        </AppCalendar>
+        <AppCalendar :calendar-app="calendarApp" compact hide-header :hide-day-header="!showDay" />
+        <v-dialog v-if="editable" v-model="eventDetailsOpen" max-width="440">
+            <v-card v-if="selectedEvent" class="daily-calendar-event-modal" variant="flat">
+                <div class="daily-calendar-event-heading">
+                    <span class="school-panel-icon"><v-icon icon="mdi-calendar-clock-outline" size="20" /></span>
+                    <div><h3>{{ selectedEvent.title }}</h3><p>{{ selectedEvent.start.split(' ')[1] }}–{{ selectedEvent.end.split(' ')[1] }}</p></div>
+                </div>
+                <v-card-text v-if="selectedEvent.description">{{ selectedEvent.description }}</v-card-text>
+                <v-card-actions>
+                    <v-btn text="Chiudi" variant="text" @click="eventDetailsOpen = false" />
+                    <v-btn text="Modifica orario" color="primary" variant="flat" prepend-icon="mdi-pencil-outline"
+                        @click="eventDetailsOpen = false; editTimeModal = true" />
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+        <v-dialog v-model="editTimeModal" max-width="560" scrollable>
+            <EditLessonTime v-if="selectedEvent" @close="editTimeModal = false"
+                @save="updateEventTime(selectedEvent, $event)"
+                :startTime="selectedEvent.start.split(' ')[1]"
+                :endTime="selectedEvent.end.split(' ')[1]"
+                :minutesOfLesson="selectedEvent.data?.minutesLessonDuration" />
+        </v-dialog>
     </v-container>
 </template>
 
@@ -47,7 +36,6 @@ import {
 } from '@schedule-x/calendar';
 import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
 import { createDragAndDropPlugin } from '@schedule-x/drag-and-drop';
-import { createEventModalPlugin } from '@schedule-x/event-modal';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { onMounted, ref, watch } from 'vue';
 import { useTheme } from 'vuetify';
@@ -77,6 +65,8 @@ const model = defineModel<(CalendarEventExt | StudentLesson)[]>({ default: [] })
 const _events = ref<CalendarEventExt[]>([]);
 
 const editTimeModal = ref(false);
+const eventDetailsOpen = ref(false);
+const selectedEvent = ref<CalendarEventExt | null>(null);
 let start = "24:00";
 let end = "00:00";
 
@@ -84,7 +74,6 @@ watch(model, () => updateInternalEvents(), { deep: true });
 watch(() => props.trimTime, updateCalendarBoundaries);
 
 const eventsServicePlugin = createEventsServicePlugin();
-const eventModal = createEventModalPlugin();
 const dndPlugin = createDragAndDropPlugin(15);
 const calendarControls = createCalendarControlsPlugin()
 // Do not use a ref here, as the calendar instance is not reactive, and doing so might cause issues
@@ -94,8 +83,13 @@ const calendarApp = createCalendar({
     selectedDate: props.date.toScheduleX(),
     views: [createViewDay()],
     events: [],
-    plugins: props.editable ? [dndPlugin, eventsServicePlugin, eventModal, calendarControls] : [dndPlugin, eventsServicePlugin, calendarControls],
+    plugins: [dndPlugin, eventsServicePlugin, calendarControls],
     callbacks: {
+        onEventClick(calendarEvent) {
+            if (!props.editable) return;
+            selectedEvent.value = calendarEvent as CalendarEventExt;
+            eventDetailsOpen.value = true;
+        },
         onEventUpdate(calendarEvent: CalendarEvent) {
             const event = _events.value.find(e => e.id == calendarEvent.id);
             if (!event) return;
@@ -239,6 +233,8 @@ onMounted(() => {
     padding: 18px 20px 8px;
 }
 
+.daily-calendar-event-heading > div { min-width: 0; }
+
 .daily-calendar-event-heading h3 {
     margin: 0;
     color: var(--app-text);
@@ -253,6 +249,15 @@ onMounted(() => {
 }
 
 .daily-calendar-event-modal :deep(.v-card-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
     padding: 12px 20px 18px;
+}
+
+@media (max-width: 480px) {
+    .daily-calendar-event-modal :deep(.v-card-actions) { display: grid; grid-template-columns: 1fr; padding: 12px 16px 16px; }
+    .daily-calendar-event-modal :deep(.v-card-actions .v-btn) { width: 100%; margin: 0; }
 }
 </style>
