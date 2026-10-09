@@ -77,6 +77,7 @@ import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import DailyLessonCalendar from '../calendar/DailyLessonCalendar.vue';
+import { calendarEventContent } from '../calendar/calendarEventContent';
 import SelectStudents from '../inputs/SelectStudents.vue';
 
 interface WeekLessonEditorProps {
@@ -220,11 +221,15 @@ function updateScheduledLessonsTime() {
     const today = yyyyMMdd.today();
     events.value = scheduledLessons.value.map(sl => {
         const st = getStudent(sl.studentId);
+        const studentName = getCompleteStudentName(sl.studentId);
+        const lessonDay = getStudentLessonDay(sl.studentId);
         return {
             id: sl.lessonId,
             start: today.toScheduleX() + " " + Time.fromITime(sl.startTime).format(),
             end: today.toScheduleX() + " " + Time.fromITime(sl.endTime).format(),
-            title: `${getCompleteStudentName(sl.studentId)} - ${getStudentLessonDay(sl.studentId)}`,
+            title: `${studentName} - ${lessonDay}`,
+            calendarId: props.school.id.toLowerCase(),
+            _customContent: calendarEventContent(studentName, lessonDay),
             data: { ...sl, ...st }
         };
     });
@@ -402,7 +407,7 @@ onMounted(async () => {
 .weekly-preview { position: sticky; top: 104px; padding: 20px; }
 .weekly-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .weekly-preview-kicker { color: var(--app-primary); font-size: .75rem; font-weight: 650; }
-.weekly-calendar { overflow: hidden; border: 1px solid var(--app-border); border-radius: 12px; }
+.weekly-calendar { min-width: 0; }
 .weekly-calendar :deep(.daily-calendar-container) { padding: 0; }
 .week-lesson-editor :deep(.v-card-actions) { padding: 16px 24px; border-top: 1px solid var(--app-border); }
 @media (max-width: 1050px) { .weekly-editor-layout { grid-template-columns: 1fr; } .weekly-preview { position: static; } }

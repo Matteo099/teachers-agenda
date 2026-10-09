@@ -20,6 +20,23 @@ withDefaults(defineProps<{ calendarApp: CalendarApp; compact?: boolean; hideHead
 
 <style scoped>
 .app-calendar { overflow: hidden; border: 1px solid var(--app-border); border-radius: 14px; background: var(--app-surface); }
+.app-calendar :deep(.sx__calendar-wrapper) {
+  --sx-color-primary: var(--app-primary);
+  --sx-color-primary-container: var(--app-accent-surface);
+  --sx-color-on-primary-container: var(--app-primary);
+  --sx-color-secondary: var(--app-muted);
+  --sx-color-surface: var(--app-surface);
+  --sx-color-surface-container: var(--app-hover-surface);
+  --sx-color-surface-container-low: var(--app-background);
+  --sx-color-surface-container-high: var(--app-hover-surface);
+  --sx-color-background: var(--app-surface);
+  --sx-color-on-background: var(--app-text);
+  --sx-color-on-surface: var(--app-text);
+  --sx-color-outline: var(--app-border);
+  --sx-color-outline-variant: var(--app-border);
+  --sx-color-neutral: var(--app-muted);
+  --sx-border: 1px solid var(--app-border);
+}
 .app-calendar :deep(.sx-vue-calendar-wrapper) { min-height: 620px; font-family: Inter, Roboto, system-ui, sans-serif; }
 .app-calendar :deep(.sx__calendar) { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; font-family: inherit !important; }
 .app-calendar :deep(.sx__calendar-header) { align-items: center; flex-wrap: wrap; padding: 18px 20px; border-bottom: 1px solid var(--app-border); background: var(--app-surface); }

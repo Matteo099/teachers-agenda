@@ -140,14 +140,12 @@ function updateInternalEvents() {
 
 function updateCalendarBoundaries() {
     if (props.trimTime) {
-        if (start >= "01:00") start = Time.fromHHMM(start)!.add({ hour: -1 }).format();
-        else start = "00:00";
-        if (end <= "23:00") end = Time.fromHHMM(end)!.add({ hour: 1 }).format();
-        else end = "24:00";
-        calendarControls.setDayBoundaries({ start, end })
-        const opt = calendarControls.getWeekOptions();
-        const range = parseInt(end.split(":")[0]!) - parseInt(start.split(":")[0]!);
-        calendarControls.setWeekOptions({ ...opt, gridHeight: Math.max(1000 * range / 24, 400) });
+        const showAllHours = _events.value.length > 0 && (start < '08:00' || end > '22:00');
+        const boundaries = showAllHours ? { start: '00:00', end: '24:00' } : { start: '08:00', end: '22:00' };
+        calendarControls.setDayBoundaries(boundaries);
+        const options = calendarControls.getWeekOptions();
+        const gridHeight = showAllHours ? 1000 : Math.max(1000 * 14 / 24, 400);
+        if (options.gridHeight !== gridHeight) calendarControls.setWeekOptions({ ...options, gridHeight });
     } else {
         calendarControls.setDayBoundaries({ start: "00:00", end: "24:00" })
     }
