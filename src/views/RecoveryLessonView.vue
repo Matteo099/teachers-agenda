@@ -1,6 +1,6 @@
 <template>
     <v-card class="school-panel recovery-panel" variant="flat" :loading="loadingExtendedRecoveries">
-        <div class="school-panel-header recovery-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-refresh-outline" size="22" /></span><div><h2>Recuperi</h2></div></div>
+        <div class="school-panel-header recovery-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-refresh-outline" size="22" /></span><div><h2>Recuperi</h2></div><CopyDebugJsonButton :data="{ school, recoveries, extendedRecoveries }" label="Copia i recuperi in JSON" /></div>
 
         <v-tabs v-model="activeStatus" class="recovery-tabs" color="primary" grow show-arrows aria-label="Stato dei recuperi">
             <v-tab v-for="status in recoveryTabs" :key="status.value" :value="status.value"><v-icon :icon="status.icon" size="18" /><span>{{ status.label }}</span><span class="recovery-tab-count">{{ recoveryCount(status.value) }}</span></v-tab>
@@ -39,6 +39,7 @@
 
 <script setup lang="ts">
 import ScheduleRecoveryLessonButton from '@/components/lesson/ScheduleRecoveryLessonButton.vue';
+import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import { withCache } from '@/models/decorators/cache-decorator';
 import { RecoveryStatus, yyyyMMdd, type School } from '@/models/model';
 import { SchoolRecoveryLessonRepository } from '@/models/repositories/recovery-lesson-repository';

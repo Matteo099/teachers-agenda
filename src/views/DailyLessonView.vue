@@ -79,6 +79,8 @@
                         <BackButton />
                         <div><h1>{{ yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format() }}</h1>
                         </div>
+                        <CopyDebugJsonButton :data="{ dailyLesson, school, studentLessons }"
+                            label="Copia la lezione giornaliera in JSON" />
                     </div>
                     <div class="lesson-week-nav">
                         <v-btn class="app-secondary-action" icon="mdi-chevron-left" variant="flat"
@@ -202,6 +204,7 @@
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
+import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import SelectStudents from '@/components/inputs/SelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';

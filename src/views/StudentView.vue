@@ -5,6 +5,7 @@
       <div>
         <h2>Anagrafica studenti</h2>
       </div>
+      <CopyDebugJsonButton :data="{ school, students }" label="Copia gli studenti in JSON" />
       <v-dialog v-model="dialog" fullscreen>
         <template #activator="{ props: activatorProps }"><v-btn class="student-add-button" color="primary"
             prepend-icon="mdi-plus" variant="flat" v-bind="activatorProps">Nuovo studente</v-btn></template>
@@ -60,6 +61,7 @@
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
+import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import StudentEditor from '@/components/student/StudentEditor.vue';
 import StudentFilter from '@/components/student/StudentFilter.vue';
 import { days, STUDENT_FILTERS, yyyyMMdd, type School, type Student, type StudentFilterObj } from '@/models/model';

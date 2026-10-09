@@ -8,6 +8,7 @@
                 </div>
             </div>
             <div class="lesson-overview-actions">
+                <CopyDebugJsonButton :data="{ school, lessonGroups, filters }" label="Copia le lezioni della scuola in JSON" />
                 <v-dialog transition="dialog-bottom-transition" class="justify-center">
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn color="primary" prepend-icon="mdi-plus" :disabled="!school" v-bind="activatorProps">Nuova
@@ -111,6 +112,7 @@
 
 <script setup lang="ts">
 import CalendarLessonEditor from '@/components/lesson/CalendarLessonEditor.vue';
+import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import LessonFilter from '@/components/lesson/LessonFilter.vue';
 import { LESSON_FILTERS, yyyyMMdd, type School } from '@/models/model';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';

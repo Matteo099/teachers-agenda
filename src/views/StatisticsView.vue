@@ -5,6 +5,8 @@
             <div>
                 <h1>Statistiche</h1>
             </div>
+            <CopyDebugJsonButton :data="{ period: dateRange, selectedSchools, tab }"
+                label="Copia i filtri delle statistiche in JSON" />
         </header>
         <v-tabs v-model="tab" class="statistics-tabs" color="primary" show-arrows>
             <v-tab prepend-icon="mdi-cash" text="Stipendio" value="salary"></v-tab>
@@ -57,6 +59,7 @@
 
 <script setup lang="ts">
 import MonthPeriodControls from '@/components/inputs/MonthPeriodControls.vue';
+import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import SalaryPeriodReport from '@/components/statistics/SalaryPeriodReport.vue';
 import LessonDistribution from '@/components/statistics/LessonDistribution.vue';
 import WeeklyLessonAttendance from '@/components/statistics/WeeklyLessonAttendance.vue';

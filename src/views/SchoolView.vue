@@ -4,6 +4,7 @@
             <BackButton />
             <span class="school-page-icon"><v-icon icon="mdi-school-outline" size="27" /></span>
             <div class="school-page-title"><h1>{{ school.name }}</h1><p v-if="school.city"><v-icon icon="mdi-map-marker-outline" size="16" /> {{ school.city }}</p></div>
+            <CopyDebugJsonButton :data="school" label="Copia la scuola in JSON" />
             <v-menu transition="slide-y-transition">
                 <template v-slot:activator="{ props }">
                     <v-btn icon="mdi-dots-vertical" variant="text" aria-label="Azioni scuola" v-bind="props"></v-btn>
@@ -75,6 +76,7 @@
 
 <script setup lang="ts">
 import DeleteDialog from '@/components/DeleteDialog.vue';
+import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import { SchoolRepository } from '@/models/repositories/school-repository';

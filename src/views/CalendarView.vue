@@ -4,6 +4,8 @@
             <BackButton :delta="deltaHistory" />
             <span class="calendar-page-icon"><v-icon icon="mdi-calendar-month-outline" size="27" /></span>
             <div><h1>Calendario delle lezioni</h1></div>
+            <CopyDebugJsonButton :data="{ selectedSchools, lessons, activeView, currentDate }"
+                label="Copia gli eventi del calendario in JSON" />
             <div class="calendar-view-choice">
                 <v-btn-toggle :model-value="activeView" mandatory color="primary" @update:model-value="setCalendarView">
                     <v-btn :value="viewMonthGrid.name">Mese</v-btn>
@@ -56,6 +58,7 @@
 
 <script setup lang="ts">
 import BackButton from '@/components/inputs/BackButton.vue';
+import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import AppCalendar from '@/components/calendar/AppCalendar.vue';
 import { calendarEventContent } from '@/components/calendar/calendarEventContent';
 import { Time, yyyyMMdd, type CalendarEventExt, type School } from '@/models/model';
