@@ -1,7 +1,8 @@
 import type { TAPieData, TAStudentTrendData, TAXYData } from "../charts/chart-helper";
-import { LessonStatus, yyyyMMdd, type IyyyyMMdd, type School, type Student } from "../model";
+import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type School, type Student } from "../model";
 import { getStudentRecitalPieces } from "../recital-pieces";
 import { SchoolRepository } from "../repositories/school-repository";
+import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { StudentRepository } from "../repositories/student-repository";
 import { DailyLessonService } from "./daily-lesson-service";
 import { MonthlySalaryService } from "./monthly-salary-service";
@@ -145,14 +146,25 @@ export class StatisticsService {
 
         for (const school of schools) {
             const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
+            const dailyLessonsById = new Map<string, DailyLesson | undefined>(dailyLessons.map(day => [day.id, day]));
             for (const dailyLesson of dailyLessons) {
                 for (const lesson of dailyLesson.lessons) {
                     const summary = result.get(lesson.studentId);
                     if (!summary || ![LessonStatus.ABSENT, LessonStatus.UNJUSTIFIED_ABSENCE].includes(lesson.status)) continue;
 
                     summary.total++;
-                    if (lesson.status === LessonStatus.UNJUSTIFIED_ABSENCE) summary.unjustified++;
-                    else if (lesson.recovery?.ref === 'original') summary.recovered++;
+                    let recovered = false;
+                    if (lesson.recovery?.ref === 'recovery') {
+                        const { dailyLessonId, lessonId } = lesson.recovery.lessonRef;
+                        if (!dailyLessonsById.has(dailyLessonId)) {
+                            dailyLessonsById.set(dailyLessonId, await DailyLessonRepository.instance.get(dailyLessonId));
+                        }
+                        const recoveryLesson = dailyLessonsById.get(dailyLessonId)?.lessons.find(candidate => candidate.lessonId === lessonId);
+                        recovered = recoveryLesson?.studentId === lesson.studentId && recoveryLesson.status === LessonStatus.PRESENT;
+                    }
+
+                    if (recovered) summary.recovered++;
+                    else if (lesson.status === LessonStatus.UNJUSTIFIED_ABSENCE) summary.unjustified++;
                     else summary.recoverable++;
                 }
             }

@@ -25,7 +25,7 @@
                 <SalaryPeriodReport :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
                 <div v-if="selectedSchools.length" class="statistics-content statistics-salary-details">
                     <SalaryDistribution :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
-                    <SalaryTrend :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" />
+                    <!-- <SalaryTrend :schools="selectedSchools" :from="dateRange.from" :to="dateRange.to" /> -->
                     <MonthlySalaryList :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                     <OfficialSalaryLessons :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                 </div>
