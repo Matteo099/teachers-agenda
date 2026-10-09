@@ -7,21 +7,36 @@
                 {{ selectAllStudents ? 'Deseleziona tutti' : 'Seleziona tutti' }}
             </v-btn>
         </div>
-        <div class="student-picker-count">{{ selectedStudents.length }} selezionati · {{ allStudents.length }} disponibili</div>
+        <div class="student-picker-count">{{ selectedStudents.length }} selezionati · {{ allStudents.length }}
+            disponibili</div>
         <div v-if="filteredStudents.length" class="student-picker-list">
-            <button v-for="student in filteredStudents" :key="student.id" type="button" class="student-picker-item"
+            <button v-for="student in pagedStudents" :key="student.id" type="button" class="student-picker-item"
                 :class="{ 'student-picker-item-selected': selectedStudents.some(item => item.id === student.id) }"
-                :aria-pressed="selectedStudents.some(item => item.id === student.id)"
-                @click="toggleStudent(student)">
-                <span class="student-picker-avatar"><v-icon :icon="student.isBand ? 'mdi-account-music-outline' : 'mdi-account-outline'" size="18" /></span>
+                :aria-pressed="selectedStudents.some(item => item.id === student.id)" @click="toggleStudent(student)">
+                <span class="student-picker-avatar"><v-icon
+                        :icon="student.isBand ? 'mdi-account-music-outline' : 'mdi-account-outline'" size="18" /></span>
                 <span class="student-picker-name">{{ student.name }} {{ student.surname }}</span>
                 <span v-if="student.isBand" class="student-picker-band">Band</span>
                 <span class="student-picker-duration">{{ student.minutesLessonDuration }} min</span>
-                <v-icon :icon="selectedStudents.some(item => item.id === student.id) ? 'mdi-check-circle' : 'mdi-checkbox-blank-circle-outline'"
-                    :color="selectedStudents.some(item => item.id === student.id) ? 'primary' : 'secondary'" size="22" />
+                <v-icon
+                    :icon="selectedStudents.some(item => item.id === student.id) ? 'mdi-check-circle' : 'mdi-checkbox-blank-circle-outline'"
+                    :color="selectedStudents.some(item => item.id === student.id) ? 'primary' : 'secondary'"
+                    size="22" />
             </button>
         </div>
-        <div v-else class="student-picker-empty">{{ allStudents.length ? 'Nessun risultato per la ricerca.' : 'Nessuno studente disponibile per questa scuola.' }}</div>
+        <div v-else class="student-picker-empty">{{ allStudents.length ? 'Nessun risultato per la ricerca.' :
+            'Nessuno studente disponibile per questa scuola.' }}</div>
+        <nav v-if="filteredStudents.length > pageSize" class="student-picker-pagination"
+            aria-label="Pagine degli allievi">
+            <span>{{ (page - 1) * pageSize + 1 }}–{{ Math.min(page * pageSize, filteredStudents.length) }} di {{
+                filteredStudents.length }}</span>
+            <div>
+                <v-btn icon="mdi-chevron-left" variant="outlined" size="small" aria-label="Pagina precedente"
+                    :disabled="page === 1" @click="page--" />
+                <v-btn icon="mdi-chevron-right" variant="outlined" size="small" aria-label="Pagina successiva"
+                    :disabled="page === pageCount" @click="page++" />
+            </div>
+        </nav>
     </div>
     <v-select v-else v-model="selectedStudents" :items="allStudents" label="Studenti" :item-props="itemProps"
         :return-object="true" multiple no-data-text="Nessuno studente disponibile per questa scuola">
@@ -39,7 +54,7 @@
 
 <script setup lang="ts">
 import type { Student } from '@/models/model';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface VSelectStudentsProps {
     allStudents: Student[];
@@ -52,11 +67,17 @@ const props = withDefaults(defineProps<VSelectStudentsProps>(), {
 });
 const selectedStudents = defineModel<Student[]>({ default: [] });
 const search = ref('');
+const pageSize = 5;
+const page = ref(1);
 const filteredStudents = computed(() => props.allStudents.filter(student =>
     `${student.name} ${student.surname}`.toLocaleLowerCase('it').includes((search.value ?? '').trim().toLocaleLowerCase('it'))
 ));
+const pageCount = computed(() => Math.max(1, Math.ceil(filteredStudents.value.length / pageSize)));
+const pagedStudents = computed(() => filteredStudents.value.slice((page.value - 1) * pageSize, page.value * pageSize));
 const selectAllStudents = computed(() => selectedStudents.value.length === props.allStudents.length);
 const selectSomeStudents = computed(() => selectedStudents.value.length > 0);
+
+watch([search, () => props.allStudents], () => { page.value = 1; });
 
 function itemProps(item: Student) {
     return { title: item.name + ' ' + item.surname, id: item.id };
@@ -74,16 +95,126 @@ function toggleStudent(student: Student) {
 </script>
 
 <style scoped>
-.student-picker-toolbar { display: flex; align-items: center; gap: 8px; }
-.student-picker-toolbar > .v-input { min-width: 0; flex: 1; }
-.student-picker-count { padding: 12px 2px 8px; color: var(--app-muted); font-size: .78rem; }
-.student-picker-list { display: grid; gap: 7px; max-height: 380px; overflow-y: auto; padding: 2px; }
-.student-picker-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 58px; padding: 9px 11px; border: 1px solid var(--app-border); border-radius: 11px; background: var(--app-surface); text-align: left; cursor: pointer; }
-.student-picker-item:hover, .student-picker-item-selected { border-color: var(--app-hover-border); background: var(--app-accent-surface); }
-.student-picker-avatar { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border-radius: 10px; background: var(--app-accent-surface); color: var(--app-primary); }
-.student-picker-name { flex: 1; min-width: 0; overflow: hidden; color: var(--app-text); font-size: .86rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.student-picker-band { color: var(--app-primary); font-size: .7rem; font-weight: 700; }
-.student-picker-duration { color: var(--app-muted); font-size: .76rem; white-space: nowrap; }
-.student-picker-empty { padding: 24px 12px; border: 1px dashed var(--app-border); border-radius: 11px; color: var(--app-muted); font-size: .84rem; text-align: center; }
-@media (max-width: 600px) { .student-picker-toolbar { flex-wrap: wrap; } .student-picker-toolbar > .v-input { flex-basis: 100%; } .student-picker-duration { display: none; } }
+.student-picker-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.student-picker-toolbar>.v-input {
+    min-width: 0;
+    flex: 1;
+}
+
+.student-picker-count {
+    padding: 12px 2px 8px;
+    color: var(--app-muted);
+    font-size: .78rem;
+}
+
+.student-picker-list {
+    display: grid;
+    gap: 7px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding: 2px;
+}
+
+.student-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 58px;
+    padding: 9px 11px;
+    border: 1px solid var(--app-border);
+    border-radius: 11px;
+    background: var(--app-surface);
+    text-align: left;
+    cursor: pointer;
+}
+
+.student-picker-item:hover,
+.student-picker-item-selected {
+    border-color: var(--app-hover-border);
+    background: var(--app-accent-surface);
+}
+
+.student-picker-avatar {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 10px;
+    background: var(--app-accent-surface);
+    color: var(--app-primary);
+}
+
+.student-picker-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--app-text);
+    font-size: .86rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.student-picker-band {
+    color: var(--app-primary);
+    font-size: .7rem;
+    font-weight: 700;
+}
+
+.student-picker-duration {
+    color: var(--app-muted);
+    font-size: .76rem;
+    white-space: nowrap;
+}
+
+.student-picker-empty {
+    padding: 24px 12px;
+    border: 1px dashed var(--app-border);
+    border-radius: 11px;
+    color: var(--app-muted);
+    font-size: .84rem;
+    text-align: center;
+}
+
+.student-picker-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 2px 0;
+    color: var(--app-muted);
+    font-size: .8rem;
+}
+
+.student-picker-pagination>div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.student-picker-pagination .v-btn {
+    border-color: var(--app-border);
+    color: var(--app-text);
+}
+
+@media (max-width: 600px) {
+    .student-picker-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .student-picker-toolbar>.v-input {
+        flex-basis: 100%;
+    }
+
+    .student-picker-duration {
+        display: none;
+    }
+}
 </style>
