@@ -261,6 +261,20 @@ describe("MonthlySalaryService", () => {
         });
     });
 
+    it("uses the saved daily compensation for the monthly total", async () => {
+        const daily: DailyLesson = { id: "october", schoolId: "school", date: "20261005", salary: 79,
+            lessons: [{ lessonId: "lesson", studentId: "student", startTime: 0, endTime: 3600,
+                status: LessonStatus.PRESENT,
+                compensation: { level: "base", hourlyRate: 156, minutes: 60, amount: 156, type: "REGULAR" },
+                createdAt: timestamp, updatedAt: timestamp }], isOfficialCalendarDate: false };
+        vi.spyOn(DailyLessonService.instance, "getDailyLessonOfSchoolBetweenDate").mockResolvedValue([daily]);
+        vi.spyOn(WeeklyLessonService.instance, "getWeeklyLessonOfSchool").mockResolvedValue([]);
+
+        const report = await MonthlySalaryService.instance.compute({ ...school, dailyExpenseReimbursement: 0 }, "20261001", "20261031");
+        expect(report.regularLessonsTotal).toBe(79);
+        expect(report.netTotal).toBe(79);
+    });
+
     it("excludes recovery-only dates from reimbursements", async () => {
         const daily: DailyLesson = { id: "extra", schoolId: "school", date: "20240103", lessons: [], salary: 0,
             isOfficialCalendarDate: false };

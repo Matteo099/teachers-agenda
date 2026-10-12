@@ -14,8 +14,9 @@ export class MonthlySalaryService {
 
     public async compute(school: School, from: IyyyyMMdd, to: IyyyyMMdd): Promise<MonthlySalaryReport> {
         const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
-        const regularLessonsTotal = await this.computeRegularLessons(school, dailyLessons);
+        const lessonsTotal = dailyLessons.reduce((total, daily) => total + (Number.isFinite(daily.salary) ? daily.salary : 0), 0);
         const recoveryTotal = await this.computeRecoveries(school, dailyLessons);
+        const regularLessonsTotal = lessonsTotal - recoveryTotal;
         const activityDays = (await this.getOfficialCalendarDates(school.id, from, to, dailyLessons)).size;
         const reimbursementTotal = activityDays * (school.dailyExpenseReimbursement ?? 0);
         const managementTotal = this.computeManagementTotal(school, from, to);
@@ -59,21 +60,6 @@ export class MonthlySalaryService {
                 const student = (await StudentLessonService.instance.getStudentLesson(dailyLesson, [lesson.studentId]))
                     .find(sl => sl.lesson.lessonId === lesson.lessonId);
                 total += await SalaryService.instance.getSalaryOfRecoveryLesson(school, lesson, student?.student, dailyLesson.date);
-            }
-        }
-        return total;
-    }
-
-    private async computeRegularLessons(school: School, dailyLessons: DailyLesson[]): Promise<number> {
-        let total = 0;
-        for (const dailyLesson of dailyLessons) {
-            const studentLessons = await StudentLessonService.instance.getStudentLesson(dailyLesson);
-            for (const { lesson, student } of studentLessons) {
-                // Moved origin is marker only; economic amount belongs to destination.
-                if (lesson.moved?.ref === 'moved') continue;
-                total += lesson.compensation?.type !== 'RECOVERY'
-                    ? (lesson.compensation?.amount ?? await SalaryService.instance.getSalaryOfStudentLesson(school, lesson, student, dailyLesson.date))
-                    : 0;
             }
         }
         return total;
