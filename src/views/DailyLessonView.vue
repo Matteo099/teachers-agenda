@@ -387,7 +387,7 @@ async function loadSchoolStudents() {
         loadingAllStudents.value = true;
         const studentIds = dailyLesson.value.lessons.map(l => l.studentId)
         const students = await StudentService.instance.getStudentsOfSchool(dailyLesson.value.schoolId);
-        availableStudents.value = students.filter(s => !studentIds.includes(s.id))
+        availableStudents.value = students.filter(s => !s.removed && !studentIds.includes(s.id))
         selectedStudents.value = [];
     } catch (error) {
         toast.warn("Impossibile caricare gli studenti...")

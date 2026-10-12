@@ -30,7 +30,7 @@
                 size="18" /></span><span class="student-identity-content"><span class="student-name">{{ item.name }} {{ item.surname }}</span><v-chip
               v-if="item.biweeklyStartDate" size="x-small" color="primary" variant="tonal"
               :title="`Ogni due settimane dal ${yyyyMMdd.fromIyyyyMMdd(item.biweeklyStartDate).format()}`">Ogni 2
-              sett.</v-chip></span></div>
+              sett.</v-chip><v-chip v-if="item.removed" size="x-small" color="secondary" variant="tonal">Archiviato</v-chip></span></div>
         </template>
         <template #item.lessonDay="{ item }"><span :title="item.lessonDay !== undefined && item.lessonDay !== null ? days[item.lessonDay] : undefined">{{ item.lessonDay !== undefined && item.lessonDay !== null ? abbreviatedDays[item.lessonDay] : '—' }}</span></template>
         <template #item.level="{ item }"><v-chip v-if="item.level" size="small" color="primary" variant="tonal">{{
@@ -47,10 +47,16 @@
                   @save="isActive.value = false" />
               </template>
             </v-dialog>
-            <DeleteDialog :name="item.name + ' ' + item.surname" objName="Studente"
-              :onDelete="async () => await deleteStudent(item)">
-              <template #activator="{ props: activatorProps }"><v-btn icon="mdi-delete-outline"
-                  aria-label="Elimina studente" title="Elimina studente" size="small" variant="text" color="error"
+            <v-btn v-if="item.removed" icon="mdi-archive-arrow-up-outline" aria-label="Ripristina studente"
+              title="Ripristina studente" size="small" variant="text" color="primary"
+              @click="setStudentArchived(item, false)" />
+            <DeleteDialog v-else :name="item.name + ' ' + item.surname" objName="Studente"
+              title="Archivia studente" description="Lo studente resterà nell'anagrafica e nelle lezioni già registrate. Sarà rimosso dagli orari programmati e dalle lezioni future ancora da svolgere."
+              warning="Potrai ripristinarlo in qualsiasi momento, ma gli orari rimossi non saranno ricreati automaticamente." confirm-text="Archivia"
+              icon="mdi-archive-outline" success-text="Studente archiviato" error-text="Impossibile archiviare lo studente"
+              :onDelete="async () => await setStudentArchived(item, true)">
+              <template #activator="{ props: activatorProps }"><v-btn icon="mdi-archive-outline"
+                  aria-label="Archivia studente" title="Archivia studente" size="small" variant="text" color="secondary"
                   v-bind="activatorProps" /></template>
             </DeleteDialog>
           </div>
@@ -65,10 +71,10 @@ import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import StudentEditor from '@/components/student/StudentEditor.vue';
 import StudentFilter from '@/components/student/StudentFilter.vue';
 import { days, STUDENT_FILTERS, yyyyMMdd, type School, type Student, type StudentFilterObj } from '@/models/model';
-import { StudentRepository } from '@/models/repositories/student-repository';
 import { StudentService } from '@/models/services/student-service';
 import type { EventSubscription } from '@/models/utils/event';
 import { onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import { toast } from 'vue3-toastify';
 
 const props = defineProps<{ school: School }>();
 const subscriptions: EventSubscription[] = [];
@@ -89,10 +95,15 @@ const filters: Ref<StudentFilterObj[]> = ref(STUDENT_FILTERS);
 watch(filters, filterStudent);
 watch(search, filterStudent);
 function onSaveStudent(student?: Student) { if (student) dialog.value = false; }
-async function deleteStudent(student?: Student): Promise<boolean> {
-  if (!student) return false;
-  try { await StudentRepository.instance.delete(student.id); return true; }
-  catch { return false; }
+async function setStudentArchived(student: Student, archived: boolean): Promise<boolean> {
+  try {
+    await StudentService.instance.setArchived(student.id, archived);
+    if (!archived) toast.success('Studente ripristinato');
+    return true;
+  } catch {
+    if (!archived) toast.error('Impossibile ripristinare lo studente');
+    return false;
+  }
 }
 async function loadStudents() {
   loadingStudents.value = true;

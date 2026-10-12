@@ -86,6 +86,7 @@ StudentService.instance.getStudentsOfSchool(props.school.id).then(students => {
 function addMember() { members.value.push({ id: uuidv4(), name: '', surname: '', instrument: '' }); }
 
 function selectStudent(member: BandMember, studentId?: string): void {
+    if (studentId && schoolStudents.value.find(student => student.id === studentId)?.removed) return;
     member.studentId = studentId;
     const student = schoolStudents.value.find(item => item.id === studentId);
     if (student) {
@@ -101,7 +102,8 @@ function availableStudents(member: BandMember): Array<Student & { fullName: stri
             .map(otherMember => otherMember.studentId)
             .filter(Boolean),
     );
-    return schoolStudents.value.filter(student => !assignedToOtherMember.has(student.id));
+    return schoolStudents.value.filter(student =>
+        !assignedToOtherMember.has(student.id) && (!student.removed || student.id === member.studentId));
 }
 
 async function save() {

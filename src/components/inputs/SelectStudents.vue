@@ -3,11 +3,11 @@
         <div class="student-picker-toolbar">
             <v-text-field v-model="search" label="Cerca allievo o band" prepend-inner-icon="mdi-magnify"
                 variant="outlined" density="compact" hide-details clearable />
-            <v-btn v-if="allStudents.length > 1" color="primary" variant="text" size="small" @click="toggle">
+            <v-btn v-if="activeStudents.length > 1" color="primary" variant="text" size="small" @click="toggle">
                 {{ selectAllStudents ? 'Deseleziona tutti' : 'Seleziona tutti' }}
             </v-btn>
         </div>
-        <div class="student-picker-count">{{ selectedStudents.length }} selezionati · {{ allStudents.length }}
+        <div class="student-picker-count">{{ selectedStudents.length }} selezionati · {{ activeStudents.length }}
             disponibili</div>
         <div v-if="filteredStudents.length" class="student-picker-list">
             <button v-for="student in pagedStudents" :key="student.id" type="button" class="student-picker-item"
@@ -17,6 +17,7 @@
                         :icon="student.isBand ? 'mdi-account-music-outline' : 'mdi-account-outline'" size="18" /></span>
                 <span class="student-picker-name">{{ student.name }} {{ student.surname }}</span>
                 <span v-if="student.isBand" class="student-picker-band">Band</span>
+                <v-chip v-if="student.removed" size="x-small" color="secondary" variant="tonal">Archiviato</v-chip>
                 <span class="student-picker-duration">{{ student.minutesLessonDuration }} min</span>
                 <v-icon
                     :icon="selectedStudents.some(item => item.id === student.id) ? 'mdi-check-circle' : 'mdi-checkbox-blank-circle-outline'"
@@ -24,7 +25,7 @@
                     size="22" />
             </button>
         </div>
-        <div v-else class="student-picker-empty">{{ allStudents.length ? 'Nessun risultato per la ricerca.' :
+        <div v-else class="student-picker-empty">{{ selectableStudents.length ? 'Nessun risultato per la ricerca.' :
             'Nessuno studente disponibile per questa scuola.' }}</div>
         <nav v-if="filteredStudents.length > pageSize" class="student-picker-pagination"
             aria-label="Pagine degli allievi">
@@ -38,9 +39,9 @@
             </div>
         </nav>
     </div>
-    <v-select v-else v-model="selectedStudents" :items="allStudents" label="Studenti" :item-props="itemProps"
+    <v-select v-else v-model="selectedStudents" :items="selectableStudents" label="Studenti" :item-props="itemProps"
         :return-object="true" multiple no-data-text="Nessuno studente disponibile per questa scuola">
-        <template #prepend-item v-if="allStudents.length > 1">
+        <template #prepend-item v-if="activeStudents.length > 1">
             <v-list-item title="Seleziona tutti" @click="toggle">
                 <template #prepend>
                     <v-checkbox-btn color="primary" :indeterminate="selectSomeStudents && !selectAllStudents"
@@ -69,25 +70,32 @@ const selectedStudents = defineModel<Student[]>({ default: [] });
 const search = ref('');
 const pageSize = 5;
 const page = ref(1);
-const filteredStudents = computed(() => props.allStudents.filter(student =>
+const activeStudents = computed(() => props.allStudents.filter(student => !student.removed));
+const selectableStudents = computed(() => props.allStudents.filter(student =>
+    !student.removed || selectedStudents.value.some(selected => selected.id === student.id)));
+const filteredStudents = computed(() => selectableStudents.value.filter(student =>
     `${student.name} ${student.surname}`.toLocaleLowerCase('it').includes((search.value ?? '').trim().toLocaleLowerCase('it'))
 ));
 const pageCount = computed(() => Math.max(1, Math.ceil(filteredStudents.value.length / pageSize)));
 const pagedStudents = computed(() => filteredStudents.value.slice((page.value - 1) * pageSize, page.value * pageSize));
-const selectAllStudents = computed(() => selectedStudents.value.length === props.allStudents.length);
-const selectSomeStudents = computed(() => selectedStudents.value.length > 0);
+const selectAllStudents = computed(() => activeStudents.value.length > 0 &&
+    activeStudents.value.every(student => selectedStudents.value.some(selected => selected.id === student.id)));
+const selectSomeStudents = computed(() => activeStudents.value.some(student =>
+    selectedStudents.value.some(selected => selected.id === student.id)));
 
 watch([search, () => props.allStudents], () => { page.value = 1; });
 
 function itemProps(item: Student) {
-    return { title: item.name + ' ' + item.surname, id: item.id };
+    return { title: `${item.name} ${item.surname}${item.removed ? ' (archiviato)' : ''}`, id: item.id };
 }
 function toggle() {
-    if (selectAllStudents.value) selectedStudents.value = [];
-    else selectedStudents.value = props.allStudents.slice();
+    const alreadySelectedInactive = selectedStudents.value.filter(student => student.removed);
+    if (selectAllStudents.value) selectedStudents.value = alreadySelectedInactive;
+    else selectedStudents.value = [...alreadySelectedInactive, ...activeStudents.value];
 }
 function toggleStudent(student: Student) {
     const exists = selectedStudents.value.some(item => item.id === student.id);
+    if (student.removed && !exists) return;
     selectedStudents.value = exists
         ? selectedStudents.value.filter(item => item.id !== student.id)
         : [...selectedStudents.value, student];

@@ -456,6 +456,7 @@ async function save(values: GenericObject) {
         updatedAt: Timestamp.now(),
         minutesLessonDuration: values.minutesLessonDuration,
         isSubstitution: values.isSubstitution ?? false,
+        removed: props.initialStudent?.removed ?? false,
         level: values.level,
         levelHistory,
         recitalPieces: recitalPieces.value.map(({ piece, author }) => ({ piece: piece.trim(), author: author.trim() }))

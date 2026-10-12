@@ -6,15 +6,15 @@
 
         <v-card class="delete-dialog" variant="flat">
             <div class="delete-dialog-heading">
-                <span class="delete-dialog-icon"><v-icon icon="mdi-delete-outline" size="25" /></span>
-                <h2>Elimina {{ objName }}</h2>
+                <span class="delete-dialog-icon"><v-icon :icon="icon" size="25" /></span>
+                <h2>{{ title ?? `Elimina ${objName}` }}</h2>
             </div>
-            <p class="delete-dialog-description">Vuoi eliminare definitivamente questo elemento?</p>
+            <p class="delete-dialog-description">{{ description ?? 'Vuoi eliminare definitivamente questo elemento?' }}</p>
             <div class="delete-dialog-item">{{ name }}</div>
-            <p class="delete-dialog-warning"><v-icon icon="mdi-information-outline" size="18" /> L'operazione non può essere annullata.</p>
+            <p class="delete-dialog-warning"><v-icon icon="mdi-information-outline" size="18" /> {{ warning ?? "L'operazione non può essere annullata." }}</p>
             <v-card-actions class="delete-dialog-actions">
                 <v-btn text="Annulla" variant="outlined" :disabled="removing" @click="dialog = false" />
-                <v-btn color="error" prepend-icon="mdi-delete-outline" text="Elimina" variant="flat"
+                <v-btn color="error" :prepend-icon="icon" :text="confirmText" variant="flat"
                     :loading="removing" @click="remove" />
             </v-card-actions>
         </v-card>
@@ -30,12 +30,21 @@ interface DeleteDialogProps {
     objName?: string,
     useToast?: boolean,
     name: string,
-    onDelete: () => Promise<boolean>
+    onDelete: () => Promise<boolean>,
+    title?: string,
+    description?: string,
+    warning?: string,
+    confirmText?: string,
+    icon?: string,
+    successText?: string,
+    errorText?: string
 }
 
 const props = withDefaults(defineProps<DeleteDialogProps>(), {
     objName: "Oggetto",
-    useToast: true
+    useToast: true,
+    confirmText: 'Elimina',
+    icon: 'mdi-delete-outline'
 });
 
 defineEmits(['delete']);
@@ -48,8 +57,8 @@ async function remove() {
     removing.value = true;
     const res = await props.onDelete?.() ?? false;
     if (props.useToast) {
-        if (res) toast.success(`${props.objName} eliminato/a`)
-        else toast.warning("Errore durante l'eliminazione")
+        if (res) toast.success(props.successText ?? `${props.objName} eliminato/a`)
+        else toast.warning(props.errorText ?? "Errore durante l'eliminazione")
     }
     removing.value = false;
     dialog.value = !res;
