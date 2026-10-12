@@ -14,6 +14,7 @@ export interface MonthlySalarySummary {
 
 export interface StudentAbsenceSummary {
     student: string;
+    archived?: boolean;
     total: number;
     unjustified: number;
     recoverable: number;
@@ -23,6 +24,7 @@ export interface StudentAbsenceSummary {
 export interface RecitalStudent {
     id: string;
     student: string;
+    archived?: boolean;
     school: string;
     piece: string;
     author: string;
@@ -137,6 +139,7 @@ export class StatisticsService {
         for (const student of students) {
             result.set(student.id, {
                 student: `${student.name} ${student.surname}`,
+                archived: !!student.removed,
                 total: 0,
                 unjustified: 0,
                 recoverable: 0,
@@ -183,6 +186,7 @@ export class StatisticsService {
             .flatMap(student => getStudentRecitalPieces(student).map((recital, index) => ({
                 id: `${student.id}-${index}`,
                 student: `${student.name} ${student.surname}`,
+                archived: !!student.removed,
                 school: schoolNames.get(student.schoolId)!,
                 piece: recital.piece,
                 author: recital.author,
@@ -230,7 +234,7 @@ export class StatisticsService {
 
             students.forEach(student => {
                 const item: TAStudentTrendData = {
-                    student: student.name + " " + student.surname,
+                    student: student.name + " " + student.surname + (student.removed ? ' (archiviato)' : ''),
                     present: 0,
                     absent: 0,
                     recovery: 0

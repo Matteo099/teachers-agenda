@@ -159,12 +159,13 @@ function transformModel(): CalendarEventExt[] {
                 id: sl.lesson.lessonId,
                 start: date + " " + Time.fromITime(sl.lesson.startTime).format(),
                 end: date + " " + Time.fromITime(sl.lesson.endTime).format(),
-                title: `${sl.student.name} ${sl.student.surname} - ${days[sl.student.lessonDay ?? 0]}`,
+                title: `${sl.student.name} ${sl.student.surname}${sl.student.removed ? ' (archiviato)' : ''} - ${days[sl.student.lessonDay ?? 0]}`,
                 calendarId: (props.school?.id ?? sl.student.schoolId).toLowerCase(),
                 _customContent: calendarEventContent(
                     `${sl.student.name} ${sl.student.surname}`,
-                    days[sl.student.lessonDay ?? 0] ?? '',
-                    lessonStatusColor(sl.lesson)
+                    sl.student.removed ? 'Archiviato' : days[sl.student.lessonDay ?? 0] ?? '',
+                    lessonStatusColor(sl.lesson),
+                    !!sl.student.removed
                 ),
                 data: { ...sl }
             };

@@ -26,11 +26,11 @@
     <v-card-text class="school-panel-content"><p class="student-table-hint">Scorri la tabella per vedere tutte le colonne <v-icon icon="mdi-arrow-right" size="16" /></p><v-data-table class="student-table" :headers="studentHeaders"
         :items="filteredStudents" item-value="id" :items-per-page="10" no-data-text="Nessuno studente trovato">
         <template #item.name="{ item }">
-          <div class="student-identity"><span class="student-avatar"><v-icon icon="mdi-account-outline"
-                size="18" /></span><span class="student-identity-content"><span class="student-name">{{ item.name }} {{ item.surname }}</span><v-chip
+          <div class="student-identity"><span class="student-avatar" :class="{ 'archived-avatar': item.removed }"><v-icon :icon="item.removed ? 'mdi-archive-outline' : 'mdi-account-outline'"
+                size="18" /></span><span class="student-identity-content"><span class="student-name" :class="{ 'archived-name': item.removed }">{{ item.name }} {{ item.surname }}</span><v-chip
               v-if="item.biweeklyStartDate" size="x-small" color="primary" variant="tonal"
               :title="`Ogni due settimane dal ${yyyyMMdd.fromIyyyyMMdd(item.biweeklyStartDate).format()}`">Ogni 2
-              sett.</v-chip><v-chip v-if="item.removed" size="x-small" color="secondary" variant="tonal">Archiviato</v-chip></span></div>
+              sett.</v-chip><ArchivedBadge :archived="item.removed" /></span></div>
         </template>
         <template #item.lessonDay="{ item }"><span :title="item.lessonDay !== undefined && item.lessonDay !== null ? days[item.lessonDay] : undefined">{{ item.lessonDay !== undefined && item.lessonDay !== null ? abbreviatedDays[item.lessonDay] : '—' }}</span></template>
         <template #item.level="{ item }"><v-chip v-if="item.level" size="small" color="primary" variant="tonal">{{
@@ -47,18 +47,14 @@
                   @save="isActive.value = false" />
               </template>
             </v-dialog>
-            <v-btn v-if="item.removed" icon="mdi-archive-arrow-up-outline" aria-label="Ripristina studente"
-              title="Ripristina studente" size="small" variant="text" color="primary"
-              @click="setStudentArchived(item, false)" />
-            <DeleteDialog v-else :name="item.name + ' ' + item.surname" objName="Studente"
-              title="Archivia studente" description="Lo studente resterà nell'anagrafica e nelle lezioni già registrate. Sarà rimosso dagli orari programmati e dalle lezioni future ancora da svolgere."
-              warning="Potrai ripristinarlo in qualsiasi momento, ma gli orari rimossi non saranno ricreati automaticamente." confirm-text="Archivia"
-              icon="mdi-archive-outline" success-text="Studente archiviato" error-text="Impossibile archiviare lo studente"
-              :onDelete="async () => await setStudentArchived(item, true)">
-              <template #activator="{ props: activatorProps }"><v-btn icon="mdi-archive-outline"
-                  aria-label="Archivia studente" title="Archivia studente" size="small" variant="text" color="secondary"
-                  v-bind="activatorProps" /></template>
-            </DeleteDialog>
+            <ArchiveStatusDialog :name="item.name + ' ' + item.surname" entity-label="studente"
+              :archived="!item.removed" :on-confirm="date => StudentService.instance.setArchived(item.id, !item.removed, date)">
+              <template #activator="{ props: activatorProps }"><v-btn
+                  :icon="item.removed ? 'mdi-archive-arrow-up-outline' : 'mdi-archive-outline'"
+                  :aria-label="item.removed ? 'Ripristina studente' : 'Archivia studente'"
+                  :title="item.removed ? 'Ripristina studente' : 'Archivia studente'" size="small" variant="text"
+                  :color="item.removed ? 'primary' : 'secondary'" v-bind="activatorProps" /></template>
+            </ArchiveStatusDialog>
           </div>
         </template>
       </v-data-table></v-card-text>
@@ -66,15 +62,15 @@
 </template>
 
 <script setup lang="ts">
-import DeleteDialog from '@/components/DeleteDialog.vue';
+import ArchiveStatusDialog from '@/components/student/ArchiveStatusDialog.vue';
 import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import StudentEditor from '@/components/student/StudentEditor.vue';
 import StudentFilter from '@/components/student/StudentFilter.vue';
+import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
 import { days, STUDENT_FILTERS, yyyyMMdd, type School, type Student, type StudentFilterObj } from '@/models/model';
 import { StudentService } from '@/models/services/student-service';
 import type { EventSubscription } from '@/models/utils/event';
 import { onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
-import { toast } from 'vue3-toastify';
 
 const props = defineProps<{ school: School }>();
 const subscriptions: EventSubscription[] = [];
@@ -95,16 +91,6 @@ const filters: Ref<StudentFilterObj[]> = ref(STUDENT_FILTERS);
 watch(filters, filterStudent);
 watch(search, filterStudent);
 function onSaveStudent(student?: Student) { if (student) dialog.value = false; }
-async function setStudentArchived(student: Student, archived: boolean): Promise<boolean> {
-  try {
-    await StudentService.instance.setArchived(student.id, archived);
-    if (!archived) toast.success('Studente ripristinato');
-    return true;
-  } catch {
-    if (!archived) toast.error('Impossibile ripristinare lo studente');
-    return false;
-  }
-}
 async function loadStudents() {
   loadingStudents.value = true;
   const studentSubscription = StudentService.instance.observeStudentsOfSchool(props.school.id).subscribe({
@@ -118,12 +104,13 @@ async function loadStudents() {
   subscriptions.push(studentSubscription);
 }
 function filterStudent() {
+  const selectedTypes = new Set(filters.value.map(filter => filter.type));
   filteredStudents.value = students.value.filter(s => {
-    if (filters.value.length == 2) return true;
-    if (filters.value.map(f => f.type).includes('substistution')) return !!s.isSubstitution;
-    if (filters.value.map(f => f.type).includes('normal')) return !s.isSubstitution;
+    if (s.removed) return selectedTypes.has('archived');
+    return selectedTypes.has(s.isSubstitution ? 'substistution' : 'normal');
   }).filter(s => `${s.name} ${s.surname}`.toLocaleLowerCase('it').includes((search.value ?? '').trim().toLocaleLowerCase('it')))
-    .sort((a, b) => a.surname.localeCompare(b.surname, 'it', { sensitivity: 'base' })
+    .sort((a, b) => Number(!!a.removed) - Number(!!b.removed)
+      || a.surname.localeCompare(b.surname, 'it', { sensitivity: 'base' })
       || a.name.localeCompare(b.name, 'it', { sensitivity: 'base' }));
 }
 onMounted(async () => { await loadStudents(); });

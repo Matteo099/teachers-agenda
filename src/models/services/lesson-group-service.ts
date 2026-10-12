@@ -1,7 +1,8 @@
 import { where } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
 import { isBiweeklyHidden } from '../biweekly-lessons';
-import { LessonStatus, months, Time, yyyyMMdd, type CalendarEventExt, type DailyLesson, type IyyyyMMdd, type LessonFilterObj, type ScheduledLesson, type WeeklyLesson } from "../model";
+import { scheduledLessonsForDate } from '../student-archive';
+import { LessonStatus, months, Time, yyyyMMdd, type CalendarEventExt, type DailyLesson, type IyyyyMMdd, type LessonFilterObj, type ScheduledLesson, type Student, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { WeeklyLessonRepository } from "../repositories/weekly-lesson-repository";
 import { lessonStatusColor } from '../statusColors';
@@ -116,8 +117,8 @@ export class LessonGroupService {
                 const date = yyyyMMdd.fromDate(next).toScheduleX();
                 if (materializedDates.has(yyyyMMdd.fromDate(next).toIyyyyMMdd())) return;
 
-                const uniqueSchedule = [...new Map(w.schedule
-                    .filter(s => !byId.get(s.studentId) || !isBiweeklyHidden(byId.get(s.studentId)!, yyyyMMdd.fromDate(next).toIyyyyMMdd()))
+                const uniqueSchedule = [...new Map(scheduledLessonsForDate(w.schedule, byId, yyyyMMdd.fromDate(next).toIyyyyMMdd())
+                    .filter(s => !isBiweeklyHidden(byId.get(s.studentId)!, yyyyMMdd.fromDate(next).toIyyyyMMdd()))
                     .map(s => [s.studentId, s])).values()];
                 lessons.push(...uniqueSchedule.map(s => {
                     return {
@@ -141,18 +142,20 @@ export class LessonGroupService {
         this.calculateToday();
 
         const _schoolLessons = filterSchoolLessons(schoolLessons, filters);
+        const students = await StudentService.instance.getStudentsOfSchool(schoolLessons.schoolId);
+        const studentsById = new Map(students.map(student => [student.id, student]));
 
         // Step 1: Filter the last 2 lessons from daily lessons or (if no daily lesson present) weekly lesson based on today
-        await this.addLastLessons(_schoolLessons, lessonProjections, previousCount);
+        await this.addLastLessons(_schoolLessons, lessonProjections, previousCount, studentsById);
 
         // Step 2: Add the upcoming 4 lessons from weekly lessons based on today
-        this.addUpcomingLessons(_schoolLessons, lessonProjections, upcomingCount);
+        this.addUpcomingLessons(_schoolLessons, lessonProjections, upcomingCount, studentsById);
 
         // Step 3: Group lessons by month
         return this.groupLessonsByMonth(lessonProjections);
     }
 
-    private async addLastLessons(schoolLessons: SchoolLessons, lessonProjections: LessonProjection[], count: number) {
+    private async addLastLessons(schoolLessons: SchoolLessons, lessonProjections: LessonProjection[], count: number, studentsById: Map<string, Student>) {
         const dailyLessons: DailyLesson[] = schoolLessons.dailyLessons;
         const weeklyLessons: WeeklyLesson[] = schoolLessons.weeklyLessons;
         const byDate = new Map<string, LessonProjection>();
@@ -171,7 +174,8 @@ export class LessonGroupService {
             const dateString = formattedDate.toIyyyyMMdd();
             weeklyLessons.forEach(weekLesson => {
                 if (weekLesson.dayOfWeek !== date.getDay() || weekLesson.from > dateString || dateString > weekLesson.to || weekLesson.exclude.includes(dateString)) return;
-                if (!byDate.has(dateString)) byDate.set(dateString, { date: formattedDate, pending: true, next: false, lessons: weekLesson.schedule });
+                const schedule = scheduledLessonsForDate(weekLesson.schedule, studentsById, dateString);
+                if (schedule.length && !byDate.has(dateString)) byDate.set(dateString, { date: formattedDate, pending: true, next: false, lessons: schedule });
             });
         }
         Array.from(byDate.values()).sort((a, b) => a.date.toIyyyyMMdd().localeCompare(b.date.toIyyyyMMdd()))
@@ -216,7 +220,8 @@ export class LessonGroupService {
     private addUpcomingLessons(
         schoolLessons: SchoolLessons,
         lessonProjections: LessonProjection[],
-        count: number
+        count: number,
+        studentsById: Map<string, Student>
     ) {
         const dailyLessons: DailyLesson[] = schoolLessons.dailyLessons;
         const weeklyLessons: WeeklyLesson[] = schoolLessons.weeklyLessons;
@@ -263,11 +268,12 @@ export class LessonGroupService {
                 }
 
                 // Step 5: Ensure this weekly lesson isn't already in the projection
-                if (lessonProjections.length < totalLessons && !lessonProjections.some(lesson => lesson.date.equals(formattedDate))) {
+                const schedule = scheduledLessonsForDate(weekLesson.schedule, studentsById, nextLessonDateString);
+                if (schedule.length && lessonProjections.length < totalLessons && !lessonProjections.some(lesson => lesson.date.equals(formattedDate))) {
                     lessonProjections.push({
                         date: formattedDate,
                         next: false, // Mark as next lesson later
-                        lessons: weekLesson.schedule
+                        lessons: schedule
                     });
                 }
             });

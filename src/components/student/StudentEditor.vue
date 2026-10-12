@@ -1,14 +1,18 @@
 <template>
     <v-card class="student-editor" variant="flat">
         <div class="editor-header">
-            <div class="editor-header-icon"><v-icon icon="mdi-account-school-outline" size="26" /></div>
+            <div class="editor-header-icon" :class="{ 'archived-avatar': initialStudent?.removed }"><v-icon :icon="initialStudent?.removed ? 'mdi-archive-outline' : 'mdi-account-school-outline'" size="26" /></div>
             <div class="editor-heading">
                 <div class="editor-eyebrow">{{ school.name }}</div>
                 <h2>{{ edit ? 'Modifica studente' : 'Nuovo studente' }}</h2>
+                <ArchivedBadge :archived="initialStudent?.removed" />
             </div>
             <v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" />
         </div>
         <v-card-text class="editor-content">
+            <v-alert v-if="initialStudent?.archiveHistory?.length" class="mb-4" variant="tonal" color="warning" title="Storico archivio">
+                <div class="d-flex flex-wrap ga-2 mt-2"><v-chip v-for="change in initialStudent.archiveHistory" :key="`${change.date}-${change.archived}`" size="small" variant="flat" class="archived-badge">{{ change.archived ? 'Archiviato' : 'Ripristinato' }} il {{ yyyyMMdd.fromIyyyyMMdd(change.date).format() }} · dal giorno successivo</v-chip></div>
+            </v-alert>
             <section class="editor-section">
                 <div class="section-heading">
                     <div class="section-icon"><v-icon icon="mdi-account-outline" size="20" /></div>
@@ -228,6 +232,7 @@ import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import StudentDailyNotes from './StudentDailyNotes.vue';
+import ArchivedBadge from './ArchivedBadge.vue';
 
 type StudentEditorField = "name" | "surname" | "contact" | "lessonDay" | "level" | "minutesLessonDuration";
 interface StudentEditorProps {
@@ -457,6 +462,7 @@ async function save(values: GenericObject) {
         minutesLessonDuration: values.minutesLessonDuration,
         isSubstitution: values.isSubstitution ?? false,
         removed: props.initialStudent?.removed ?? false,
+        ...(props.initialStudent?.archiveHistory ? { archiveHistory: props.initialStudent.archiveHistory } : {}),
         level: values.level,
         levelHistory,
         recitalPieces: recitalPieces.value.map(({ piece, author }) => ({ piece: piece.trim(), author: author.trim() }))

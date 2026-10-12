@@ -136,10 +136,10 @@
                                     </td>
                                     <td class="lesson-table-time">{{ Time.fromITime(item.lesson.startTime).format()
                                     }}</td>
-                                    <td class="lesson-table-student"><span class="student-mini-avatar"><v-icon
-                                                icon="mdi-account-outline" size="16" /></span><strong>{{
+                                    <td class="lesson-table-student" :class="{ 'archived-lesson-student': item.student.removed }"><span class="student-mini-avatar" :class="{ 'archived-avatar': item.student.removed }"><v-icon
+                                                :icon="item.student.removed ? 'mdi-archive-outline' : 'mdi-account-outline'" size="16" /></span><strong :class="{ 'archived-name': item.student.removed }">{{
                                                     item.student.name }} {{
-                                                item.student.surname }}</strong><v-icon v-if="item.lesson.dailyNote"
+                                                item.student.surname }}</strong><ArchivedBadge :archived="item.student.removed" /><v-icon v-if="item.lesson.dailyNote"
                                             icon="mdi-note-text-outline" size="16" color="secondary" /></td>
                                     <td class="status-col"><span v-if="lessonStatusColor(item.lesson)"
                                             class="status-badge" :class="'status-' + lessonStatusColor(item.lesson)"
@@ -162,9 +162,8 @@
                     <v-list density="compact"><v-list-item
                             v-for="item in studentLessons.filter(item => item.lesson.dailyNote)"
                             :key="`note-${item.lesson.lessonId}`"
-                            :title="`${item.student.name} ${item.student.surname}`"
                             :subtitle="`${yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).format()} — ${item.lesson.dailyNote}`"
-                            prepend-icon="mdi-note-text-outline" /></v-list>
+                            prepend-icon="mdi-note-text-outline"><template #title><span class="d-inline-flex align-center flex-wrap ga-2">{{ item.student.name }} {{ item.student.surname }}<ArchivedBadge :archived="item.student.removed" /></span></template></v-list-item></v-list>
                 </v-card>
             </main>
 
@@ -208,6 +207,7 @@ import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import BackButton from '@/components/inputs/BackButton.vue';
 import SelectStudents from '@/components/inputs/SelectStudents.vue';
 import LessonItem from '@/components/lesson/LessonItem.vue';
+import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
 import { withCache } from '@/models/decorators/cache-decorator';
 import { LessonStatus, Time, yyyyMMdd, type EventTime, type Lesson, type School, type Student, type StudentLesson } from '@/models/model';
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
@@ -916,6 +916,8 @@ onMounted(async () => {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.lesson-table-student.archived-lesson-student { white-space: normal; }
 
 .lesson-table-student strong {
     color: var(--app-text);

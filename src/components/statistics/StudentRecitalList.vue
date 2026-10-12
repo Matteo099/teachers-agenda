@@ -1,6 +1,7 @@
 <template>
     <StatisticsPanel title="Saggi" icon="mdi-music-note-outline" :loading="loading">
         <v-data-table :headers="headers" :items="items" item-value="id">
+            <template #item.student="{ item }"><span class="d-inline-flex align-center flex-wrap ga-2">{{ item.student }}<ArchivedBadge :archived="item.archived" /></span></template>
             <template #no-data>Nessun saggio registrato.</template>
         </v-data-table>
     </StatisticsPanel>
@@ -11,6 +12,7 @@ import type { School } from '@/models/model';
 import { StatisticsService, type RecitalStudent } from '@/models/services/statistics-service';
 import { ref, watch } from 'vue';
 import StatisticsPanel from './StatisticsPanel.vue';
+import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
 
 const props = defineProps<{ schools?: School[] }>();
 const items = ref<RecitalStudent[]>([]);

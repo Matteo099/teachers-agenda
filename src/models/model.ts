@@ -21,9 +21,10 @@ export interface LessonFilterObj extends AbstractFilter {
 export const STUDENT_FILTERS: StudentFilterObj[] = [
     { name: "Normale", icon: "mdi-account", color: "green", type: 'normal' },
     { name: "Supplenza", icon: "mdi-account-box", color: "blue", type: 'substistution' },
+    { name: "Archiviati", icon: "mdi-archive-outline", color: "warning", type: 'archived' },
 ];
 export interface StudentFilterObj extends AbstractFilter {
-    type: 'substistution' | 'normal';
+    type: 'substistution' | 'normal' | 'archived';
 }
 
 export type CalendarEventExt = CalendarEvent & { data?: any };
@@ -207,6 +208,8 @@ export interface Student {
 
     levelHistory?: LevelHistory[];
     removed?: boolean;
+    /** Each change takes effect on the day after `date`. */
+    archiveHistory?: { date: IyyyyMMdd; archived: boolean }[];
     trial?: Trial;
     isSubstitution?: boolean;
     isBand?: boolean;
@@ -367,6 +370,8 @@ export interface DailyLesson {
     date: IyyyyMMdd;
     schoolId: string;
     lessons: Lesson[];
+    /** Lessons removed by dated archive rules, kept for reversible history. */
+    archivedLessons?: Lesson[];
     /** Explicit official date; supports manual and irregular calendars. */
     isOfficialCalendarDate?: boolean;
     lastSalaryUpdate?: Timestamp;

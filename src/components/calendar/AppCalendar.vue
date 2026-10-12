@@ -55,6 +55,7 @@ withDefaults(defineProps<{ calendarApp: CalendarApp; compact?: boolean; hideHead
 .app-calendar :deep(.app-calendar-event-line) { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .app-calendar :deep(.app-calendar-event-title) { flex: 1; min-width: 0; overflow: hidden; font-size: .78rem; font-weight: 700; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .app-calendar :deep(.app-calendar-event-badge) { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 5px; background: var(--status-bg); color: var(--status-fg); font-size: .7rem; font-weight: 800; line-height: 1; }
+.app-calendar :deep(.app-calendar-archived-badge) { display: inline-flex; flex: none; align-items: center; border-radius: 5px; padding: 2px 4px; background: var(--app-archived-bg); color: var(--app-archived-fg); font-size: .62rem; font-weight: 700; line-height: 1.1; }
 .app-calendar :deep(.app-calendar-event-subtitle) { overflow: hidden; margin-top: 2px; font-size: .68rem; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .app-calendar :deep(.sx__event-modal) { overflow: hidden; border: 1px solid var(--app-border); border-radius: 14px; box-shadow: var(--app-hover-shadow); }
 .app-calendar-hide-header :deep(.sx__calendar-header), .app-calendar-hide-day :deep(.sx__week-header) { display: none !important; }

@@ -15,6 +15,8 @@
   --status-recovery-fg: #2F6FED;
   --status-moved-bg: #FFE0C7;
   --status-moved-fg: #E67A1F;
+  --app-archived-bg: #FFEAD8;
+  --app-archived-fg: #AD5A16;
   --app-primary: #2563EB;
   --app-background: #F7F9FC;
   --app-surface: #FFFFFF;
@@ -50,6 +52,8 @@
   --status-recovery-fg: #9BC5FF;
   --status-moved-bg: #543820;
   --status-moved-fg: #FFBA83;
+  --app-archived-bg: #543820;
+  --app-archived-fg: #FFBA83;
 }
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: var(--app-background); color: var(--app-text); }

@@ -12,8 +12,8 @@
             <div v-if="activeRecoveries.length" class="recovery-entries">
                 <article v-for="recovery in visibleRecoveries" :key="`${recovery.lesson.lessonId}_${recovery.recoveryReference.originalDailyLesson.id}`" class="recovery-entry">
                     <div class="recovery-entry-heading">
-                        <span class="recovery-student-avatar"><v-icon icon="mdi-account-outline" size="20" /></span>
-                        <div class="recovery-student-name"><strong>{{ recovery.student.name }} {{ recovery.student.surname }}</strong><small>Lezione di {{ Math.round((recovery.lesson.endTime - recovery.lesson.startTime) / 60) }} minuti</small></div>
+                        <span class="recovery-student-avatar" :class="{ 'archived-avatar': recovery.student.removed }"><v-icon :icon="recovery.student.removed ? 'mdi-archive-outline' : 'mdi-account-outline'" size="20" /></span>
+                        <div class="recovery-student-name"><strong :class="{ 'archived-name': recovery.student.removed }">{{ recovery.student.name }} {{ recovery.student.surname }}</strong><ArchivedBadge :archived="recovery.student.removed" /><small>Lezione di {{ Math.round((recovery.lesson.endTime - recovery.lesson.startTime) / 60) }} minuti</small></div>
                         <span class="recovery-state" :class="`recovery-state-${activeStatus}`"><v-icon :icon="activeTab.icon" size="15" />{{ activeTab.label }}</span>
                     </div>
                     <div class="recovery-date-list">
@@ -40,6 +40,7 @@
 <script setup lang="ts">
 import ScheduleRecoveryLessonButton from '@/components/lesson/ScheduleRecoveryLessonButton.vue';
 import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
+import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
 import { withCache } from '@/models/decorators/cache-decorator';
 import { RecoveryStatus, yyyyMMdd, type School } from '@/models/model';
 import { SchoolRecoveryLessonRepository } from '@/models/repositories/recovery-lesson-repository';

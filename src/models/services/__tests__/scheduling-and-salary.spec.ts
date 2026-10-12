@@ -62,6 +62,7 @@ describe("lesson day completion", () => {
     });
 
     it("counts a trial alongside a completed lesson without raising a duplicate warning", async () => {
+        vi.spyOn(StudentService.instance, 'getStudentsOfSchool').mockResolvedValue([{ id: 'student', schoolId: 'school' } as Student]);
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const daily: DailyLesson = {

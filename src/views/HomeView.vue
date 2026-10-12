@@ -88,6 +88,7 @@
 <script setup lang="ts">
 import SchoolEditor from '@/components/school/SchoolEditor.vue';
 import { DEFAULT_SCHOOL_COLOR } from '@/models/constants';
+import { isStudentArchivedOnDate, scheduledLessonsForDate } from '@/models/student-archive';
 import { Time, yyyyMMdd, type School, type TodayLesson } from '@/models/model';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { LessonGroupService } from '@/models/services/lesson-group-service';
@@ -145,8 +146,8 @@ async function loadSchoolSummaries(currentSchools: School[]) {
       WeeklyLessonService.instance.getWeeklyLessonOfSchool(school.id),
       LessonGroupService.instance.getCalendarLessons(school.id, rangeStart, rangeEnd),
     ]);
-    const activeStudents = students.filter(student => !student.removed);
-    const studentNames = new Map(activeStudents.map(student => [student.id, `${student.name} ${student.surname}`]));
+    const activeStudents = students.filter(student => !isStudentArchivedOnDate(student, today.toIyyyyMMdd()));
+    const studentNames = new Map(students.map(student => [student.id, `${student.name} ${student.surname}`]));
     const next = calendarLessons
       .filter(lesson => lesson.start >= currentDateTime && studentNames.has(lesson.data?.studentId))
       .sort((a, b) => a.start.localeCompare(b.start))[0];
@@ -154,7 +155,8 @@ async function loadSchoolSummaries(currentSchools: School[]) {
     const when = next && nextDate ? `${new Intl.DateTimeFormat('it-IT', { weekday: 'short', day: 'numeric', month: 'short' }).format(nextDate)} · ${next.start.slice(11, 16)}` : undefined;
     return [school.id, {
       students: activeStudents.length,
-      weeklyLessons: weeklyLessons.filter(lesson => lesson.from <= today.toIyyyyMMdd() && lesson.to >= today.toIyyyyMMdd()).reduce((total, lesson) => total + lesson.schedule.length, 0),
+      weeklyLessons: weeklyLessons.filter(lesson => lesson.from <= today.toIyyyyMMdd() && lesson.to >= today.toIyyyyMMdd())
+        .reduce((total, lesson) => total + scheduledLessonsForDate(lesson.schedule, new Map(students.map(student => [student.id, student])), today.toIyyyyMMdd()).length, 0),
       nextWhen: when,
       nextStudent: next ? studentNames.get(next.data?.studentId) : undefined,
     }] as const;

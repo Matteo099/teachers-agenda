@@ -2,20 +2,20 @@
   <v-card variant="flat" :loading="loading" v-if="item.student" class="student-lesson-card"
     :class="{ 'hidden-lesson': item.lesson.hiddenForDate, 'student-lesson-card--panel': panel }">
     <div class="student-card-header">
-      <span v-if="panel" class="student-panel-avatar"><v-icon icon="mdi-account-outline" size="28" /></span>
+      <span v-if="panel" class="student-panel-avatar" :class="{ 'archived-avatar': item.student.removed }"><v-icon :icon="item.student.removed ? 'mdi-archive-outline' : 'mdi-account-outline'" size="28" /></span>
       <div v-if="panel" class="student-card-identity student-panel-name">
-        <strong>{{ item.student.name }} {{ item.student.surname }}</strong><small>{{
+        <strong :class="{ 'archived-name': item.student.removed }">{{ item.student.name }} {{ item.student.surname }}</strong><ArchivedBadge :archived="item.student.removed" /><small>{{
           Time.fromITime(item.lesson.startTime).format() }} – {{ Time.fromITime(item.lesson.endTime).format() }}</small>
       </div>
       <v-checkbox v-else-if="!item.lesson.hiddenForDate" v-model="select" :value="item.student.id" multiple
         density="compact" hide-details>
         <template v-slot:label>
-          <span class="student-card-identity"><strong>{{ item.student.name }} {{ item.student.surname }}</strong>
+          <span class="student-card-identity"><strong>{{ item.student.name }} {{ item.student.surname }}</strong><ArchivedBadge :archived="item.student.removed" />
             <small>{{ Time.fromITime(item.lesson.startTime).format() }} – {{
               Time.fromITime(item.lesson.endTime).format() }}</small></span>
         </template>
       </v-checkbox>
-      <span v-else class="student-card-identity"> {{ item.student.name }} {{ item.student.surname }} </span>
+      <span v-else class="student-card-identity"> {{ item.student.name }} {{ item.student.surname }} <ArchivedBadge :archived="item.student.removed" /></span>
       <span v-if="currentStatus" class="status-badge" :class="'status-' + currentStatus"
         :title="statusColors[currentStatus].label">{{ statusColors[currentStatus].short }}</span>
       <v-dialog fullscreen>
@@ -67,7 +67,7 @@
           </template>
           <template #default="{ isActive }">
             <v-card class="lesson-action-dialog" variant="flat">
-              <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-account-group-outline" /></span><div><h2>Presenze della band</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
+              <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-account-group-outline" /></span><div><h2>Presenze della band</h2><p>{{ item.student.name }} {{ item.student.surname }} <ArchivedBadge :archived="item.student.removed" /></p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
               <v-list class="lesson-dialog-content" lines="two">
                 <v-list-item v-for="member in item.student.bandMembers ?? []" :key="member.id"
                   :title="`${member.name} ${member.surname}`" :subtitle="member.instrument">
@@ -95,7 +95,7 @@
 
           <template v-slot:default="{ isActive }">
             <v-card class="lesson-action-dialog" variant="flat">
-              <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-account-off-outline" /></span><div><h2>Segna assenza</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
+              <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-account-off-outline" /></span><div><h2>Segna assenza</h2><p>{{ item.student.name }} {{ item.student.surname }} <ArchivedBadge :archived="item.student.removed" /></p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
               <v-card-text class="lesson-dialog-content"><p class="lesson-dialog-description">Scegli se la lezione può essere recuperata.</p><div class="absence-options"><v-btn variant="tonal" color="warning" prepend-icon="mdi-calendar-refresh" @click="isActive.value = false; emit('absent', true)">Da recuperare</v-btn><v-btn variant="tonal" color="error" prepend-icon="mdi-account-remove-outline" @click="isActive.value = false; emit('absent', false)">Ingiustificata</v-btn></div></v-card-text>
             </v-card>
           </template>
@@ -124,7 +124,7 @@
 
                   <template v-slot:default="{ isActive }">
                     <v-card class="lesson-action-dialog" variant="flat">
-                      <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-calendar-arrow-right" /></span><div><h2>Sposta lezione</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false; newLessonDate = undefined" /></div>
+                      <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-calendar-arrow-right" /></span><div><h2>Sposta lezione</h2><p>{{ item.student.name }} {{ item.student.surname }} <ArchivedBadge :archived="item.student.removed" /></p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false; newLessonDate = undefined" /></div>
                       <v-card-text class="lesson-dialog-content">
                         <v-date-picker class="lesson-date-picker" v-model="newLessonDate" width="100%"></v-date-picker>
                       </v-card-text>
@@ -191,7 +191,7 @@
                     </v-btn>
                   </template>
                   <v-card class="lesson-action-dialog" variant="flat">
-                    <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-note-edit-outline" /></span><div><h2>Nota della giornata</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="dailyNoteDialog = false" /></div>
+                    <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-note-edit-outline" /></span><div><h2>Nota della giornata</h2><p>{{ item.student.name }} {{ item.student.surname }} <ArchivedBadge :archived="item.student.removed" /></p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="dailyNoteDialog = false" /></div>
                     <v-card-text class="lesson-dialog-content">
                       <div class="lesson-dialog-section-title">Note precedenti</div>
                       <v-progress-linear v-if="loadingDailyNotes" indeterminate color="primary" class="mb-2" />
@@ -218,7 +218,7 @@
                   </template>
                   <template v-slot:default="{ isActive }">
                     <v-card class="lesson-action-dialog" variant="flat">
-                      <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-eye-off-outline" /></span><div><h2>Nascondi oggi</h2><p>{{ item.student.name }} {{ item.student.surname }}</p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
+                      <div class="lesson-dialog-heading"><span class="lesson-dialog-icon"><v-icon icon="mdi-eye-off-outline" /></span><div><h2>Nascondi oggi</h2><p>{{ item.student.name }} {{ item.student.surname }} <ArchivedBadge :archived="item.student.removed" /></p></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="isActive.value = false" /></div>
                       <v-card-text class="lesson-dialog-content"><p class="lesson-dialog-description">La lezione sarà nascosta solo per questa giornata. Potrai renderla di nuovo visibile in seguito.</p></v-card-text>
                       <v-card-actions class="lesson-dialog-actions">
                         <v-btn text="Annulla" variant="outlined" @click="isActive.value = false" />
@@ -254,6 +254,7 @@ import { computed, ref, watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import DeleteDialog from '../DeleteDialog.vue';
 import StudentEditor from '../student/StudentEditor.vue';
+import ArchivedBadge from '../student/ArchivedBadge.vue';
 
 const props = defineProps<{
   school: School;

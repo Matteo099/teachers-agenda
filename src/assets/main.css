@@ -12,6 +12,9 @@
 .v-btn.app-secondary-action:not(.v-btn--disabled):hover { border-color: var(--app-hover-border) !important; background: var(--app-hover-surface) !important; }
 .v-btn.app-secondary-action:focus-visible { outline: 2px solid var(--app-primary); outline-offset: 2px; }
 .v-chip { border-radius: 10px; font-weight: 600; }
+.archived-badge { background: var(--app-archived-bg) !important; color: var(--app-archived-fg) !important; }
+.archived-avatar { background: var(--app-archived-bg) !important; color: var(--app-archived-fg) !important; }
+.archived-name { color: var(--app-muted) !important; }
 .v-field { border-radius: 12px !important; }
 .v-tabs { background: var(--app-surface); border-radius: 12px; }
 .v-tab { text-transform: none; letter-spacing: 0; border-radius: 10px; }

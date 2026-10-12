@@ -45,7 +45,7 @@ describe('Assenze per studente', () => {
 
         const result = await StatisticsService.instance.getStudentAbsenceSummary('20261001', '20261031', school);
 
-        expect(result).toEqual([{ student: 'Marta Bianchi', total: 5, unjustified: 1, recoverable: 2, recovered: 2 }]);
+        expect(result).toEqual([{ student: 'Marta Bianchi', archived: false, total: 5, unjustified: 1, recoverable: 2, recovered: 2 }]);
         expect(getDay).toHaveBeenCalledTimes(2);
     });
 });

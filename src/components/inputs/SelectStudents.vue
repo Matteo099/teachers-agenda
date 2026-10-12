@@ -13,11 +13,11 @@
             <button v-for="student in pagedStudents" :key="student.id" type="button" class="student-picker-item"
                 :class="{ 'student-picker-item-selected': selectedStudents.some(item => item.id === student.id) }"
                 :aria-pressed="selectedStudents.some(item => item.id === student.id)" @click="toggleStudent(student)">
-                <span class="student-picker-avatar"><v-icon
-                        :icon="student.isBand ? 'mdi-account-music-outline' : 'mdi-account-outline'" size="18" /></span>
+                <span class="student-picker-avatar" :class="{ 'archived-avatar': student.removed }"><v-icon
+                        :icon="student.removed ? 'mdi-archive-outline' : student.isBand ? 'mdi-account-music-outline' : 'mdi-account-outline'" size="18" /></span>
                 <span class="student-picker-name">{{ student.name }} {{ student.surname }}</span>
                 <span v-if="student.isBand" class="student-picker-band">Band</span>
-                <v-chip v-if="student.removed" size="x-small" color="secondary" variant="tonal">Archiviato</v-chip>
+                <ArchivedBadge :archived="student.removed" />
                 <span class="student-picker-duration">{{ student.minutesLessonDuration }} min</span>
                 <v-icon
                     :icon="selectedStudents.some(item => item.id === student.id) ? 'mdi-check-circle' : 'mdi-checkbox-blank-circle-outline'"
@@ -55,6 +55,7 @@
 
 <script setup lang="ts">
 import type { Student } from '@/models/model';
+import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
 import { computed, ref, watch } from 'vue';
 
 interface VSelectStudentsProps {

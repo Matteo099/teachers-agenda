@@ -9,7 +9,7 @@
           <thead>
             <tr>
               <th>Data</th>
-              <th v-for="s in students" :key="s.id">{{ s.name }}</th>
+              <th v-for="s in students" :key="s.id"><span class="d-inline-flex align-center flex-wrap ga-1">{{ s.name }}<ArchivedBadge :archived="s.archived" /></span></th>
             </tr>
           </thead>
           <tbody>
@@ -37,11 +37,13 @@ import { StudentService } from '@/models/services/student-service';
 import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
 import { ref, watch } from 'vue';
 import StatisticsPanel from './StatisticsPanel.vue';
+import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
+import { scheduledLessonsForDate } from '@/models/student-archive';
 
 const props = defineProps<{ from?: IyyyyMMdd; to?: IyyyyMMdd; schools?: School[] }>();
 const selectedDay = ref(5);
 const loading = ref(false);
-const students = ref<{ id: string; name: string }[]>([]);
+const students = ref<{ id: string; name: string; archived: boolean }[]>([]);
 const rows = ref<any[]>([]);
 const weekDays = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato']
   .map((title, value) => ({ title, value }));
@@ -55,15 +57,8 @@ async function load() {
 
   for (const school of props.schools ?? []) {
     const weekly = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(school.id);
-    for (const wl of weekly) {
-      if (wl.dayOfWeek !== selectedDay.value) continue;
-      for (const scheduled of wl.schedule) {
-        ids.add(scheduled.studentId);
-        const currentStart = studentStartTimes.get(scheduled.studentId);
-        if (currentStart === undefined || scheduled.startTime < currentStart)
-          studentStartTimes.set(scheduled.studentId, scheduled.startTime);
-      }
-    }
+    const schoolStudents = await StudentService.instance.getStudentsOfSchool(school.id);
+    const schoolStudentMap = new Map(schoolStudents.map(student => [student.id, student]));
     const days = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, props.from, props.to);
     const dailyById = new Map(days.map(day => [day.id, day]));
     for (const day of days) {
@@ -104,14 +99,27 @@ async function load() {
     }
     for (let date = yyyyMMdd.fromIyyyyMMdd(props.from).toDate(); date <= yyyyMMdd.fromIyyyyMMdd(props.to).toDate(); date.setDate(date.getDate() + 1)) {
       const dateValue = yyyyMMdd.fromDate(date).toIyyyyMMdd();
-      if (date.getDay() !== selectedDay.value || !weekly.some(wl => WeeklyLessonService.instance.isValid(wl, dateValue))) continue;
+      if (date.getDay() !== selectedDay.value) continue;
+      const scheduled = weekly
+        .filter(wl => WeeklyLessonService.instance.isValid(wl, dateValue))
+        .flatMap(wl => scheduledLessonsForDate(wl.schedule, schoolStudentMap, dateValue));
+      if (!scheduled.length) continue;
+      for (const lesson of scheduled) {
+        ids.add(lesson.studentId);
+        const currentStart = studentStartTimes.get(lesson.studentId);
+        if (currentStart === undefined || lesson.startTime < currentStart)
+          studentStartTimes.set(lesson.studentId, lesson.startTime);
+      }
       if (!map.has(dateValue)) map.set(dateValue, { date: dateValue, lessons: {} });
     }
   }
   const names = new Map<string, string>();
+  const archivedIds = new Set<string>();
   for (const school of props.schools ?? [])
-    for (const student of await StudentService.instance.getStudentsOfSchool(school.id))
+    for (const student of await StudentService.instance.getStudentsOfSchool(school.id)) {
       names.set(student.id, `${student.name} ${student.surname}`);
+      if (student.removed) archivedIds.add(student.id);
+    }
 
   const uniqueStudents = new Map<string, string>();
   [...ids]
@@ -122,7 +130,7 @@ async function load() {
       const key = student.name.trim().toLocaleLowerCase();
       if (!uniqueStudents.has(key)) uniqueStudents.set(key, student.id);
     });
-  students.value = [...uniqueStudents.values()].map(id => ({ id, name: names.get(id) ?? id }));
+  students.value = [...uniqueStudents.values()].map(id => ({ id, name: names.get(id) ?? id, archived: archivedIds.has(id) }));
 
   rows.value = [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
   loading.value = false;

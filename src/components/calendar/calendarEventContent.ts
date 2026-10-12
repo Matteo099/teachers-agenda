@@ -6,11 +6,12 @@ function escapeText(value: string): string {
     })[character]!);
 }
 
-export function calendarEventContent(title: string, subtitle: string, status?: StatusColorKey) {
+export function calendarEventContent(title: string, subtitle: string, status?: StatusColorKey, archived = false) {
     const badge = status
         ? `<span class="app-calendar-event-badge status-${status}" aria-label="${escapeText(statusColors[status].label)}">${statusColors[status].short}</span>`
         : '';
-    const line = `<div class="app-calendar-event-line"><span class="app-calendar-event-title">${escapeText(title)}</span>${badge}</div>`;
+    const archivedBadge = archived ? '<span class="app-calendar-archived-badge">Archiviato</span>' : '';
+    const line = `<div class="app-calendar-event-line"><span class="app-calendar-event-title">${escapeText(title)}</span>${archivedBadge}${badge}</div>`;
     return {
         timeGrid: `${line}<div class="app-calendar-event-subtitle">${escapeText(subtitle)}</div>`,
         dateGrid: line,

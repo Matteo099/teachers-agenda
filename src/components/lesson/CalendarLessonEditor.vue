@@ -46,9 +46,10 @@
                     <v-expansion-panel-text>
                         <v-list v-if="pl.schedule.length > 0" class="weekly-schedule-list">
                             <v-list-item v-for="element of pl.schedule" :key="element.studentId" :value="element"
-                                :title="getCompleteStudentName(element.studentId)"
                                 :subtitle="`${Time.fromITime(element.startTime).format()} – ${Time.fromITime(element.endTime).format()}`"
-                                prepend-icon="mdi-account-outline" color="primary" />
+                                :prepend-icon="getStudent(element.studentId)?.removed ? 'mdi-archive-outline' : 'mdi-account-outline'" color="primary">
+                                <template #title><span class="d-inline-flex align-center flex-wrap ga-2">{{ getCompleteStudentName(element.studentId) }}<ArchivedBadge :archived="getStudent(element.studentId)?.removed" /></span></template>
+                            </v-list-item>
                         </v-list>
                         <!-- <v-list :items="pl.schedule" item-props v-if="pl.schedule.length > 0">
                             <template v-slot:title="{ item }">
@@ -77,6 +78,7 @@ import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
 import type { EventSubscription } from '@/models/utils/event';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import DeleteDialog from '../DeleteDialog.vue';
+import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
 import WeekLessonEditor from './WeekLessonEditor.vue';
 
 interface CalendarLessonEditorProps {
@@ -133,8 +135,12 @@ async function loadStudents() {
 }
 
 function getCompleteStudentName(studentId: string): string {
-    const student = allStudents.value.find(s => s.id == studentId);
+    const student = getStudent(studentId);
     return `${student?.name} ${student?.surname}`;
+}
+
+function getStudent(studentId: string): Student | undefined {
+    return allStudents.value.find(student => student.id === studentId);
 }
 
 onMounted(async () => {

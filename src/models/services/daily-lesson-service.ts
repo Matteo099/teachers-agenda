@@ -1,6 +1,7 @@
 import { orderBy, Timestamp, where, type OrderByDirection } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
 import { applyBiweeklyVisibility, isBiweeklyHidden } from "../biweekly-lessons";
+import { scheduledLessonsForDate } from '../student-archive';
 import { DeleteMode, LessonStatus, Time, yyyyMMdd, type DailyLesson, type EventTime, type IyyyyMMdd, type Lesson, type RecoverySchedule, type ScheduledLesson, type School, type Student, type StudentLesson, type WeeklyLesson } from "../model";
 import type { ID } from "../repositories/abstract-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
@@ -126,7 +127,7 @@ export class DailyLessonService {
             // A daily lesson created from a scheduled school-calendar
             // projection is an official calendar date by definition.
             isOfficialCalendarDate: true,
-            lessons: lessonGroup.lessons.map(l => ({
+            lessons: scheduledLessonsForDate(lessonGroup.lessons, byId, date).map(l => ({
                 lessonId: uuidv4(),
                 status: LessonStatus.NONE,
                 studentId: l.studentId,
@@ -186,7 +187,7 @@ export class DailyLessonService {
                 date: formattedDate,
                 schoolId: schoolId,
                 isOfficialCalendarDate: !!weeklyLesson,
-                lessons: weeklyLesson.schedule.map(l => ({
+                lessons: scheduledLessonsForDate(weeklyLesson.schedule, byId, formattedDate).map(l => ({
                     lessonId: uuidv4(),
                     status: LessonStatus.NONE,
                     studentId: l.studentId,
@@ -412,7 +413,7 @@ export class DailyLessonService {
         const existing = new Set(dailyLesson.lessons.map(l => l.studentId));
         const students = await StudentService.instance.getStudentsOfSchool(weeklyLesson.schoolId);
         const byId = new Map(students.map(student => [student.id, student]));
-        weeklyLesson.schedule.filter(l => !existing.has(l.studentId)).forEach(l => dailyLesson.lessons.push({
+        scheduledLessonsForDate(weeklyLesson.schedule, byId, date).filter(l => !existing.has(l.studentId)).forEach(l => dailyLesson.lessons.push({
             lessonId: uuidv4(), status: LessonStatus.NONE, studentId: l.studentId,
             startTime: l.startTime, endTime: l.endTime,
             ...(byId.get(l.studentId) && isBiweeklyHidden(byId.get(l.studentId)!, date)
@@ -557,6 +558,7 @@ export class DailyLessonService {
             lastSalaryUpdate: Timestamp.now(),
             salary
         };
+        if (dailyLesson.archivedLessons?.length) newDailyLesson.archivedLessons = dailyLesson.archivedLessons;
         if (dailyLesson.isOfficialCalendarDate !== undefined)
             newDailyLesson.isOfficialCalendarDate = dailyLesson.isOfficialCalendarDate;
         if (opts?.school.salaryStrategy != undefined) newDailyLesson.salaryStrategy = opts.school.salaryStrategy;

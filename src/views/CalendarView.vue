@@ -38,8 +38,8 @@
             <v-dialog v-model="eventDetailsOpen" max-width="440">
                 <v-card v-if="selectedEvent" class="lesson-event-modal" variant="flat">
                     <div class="lesson-event-heading">
-                        <span class="lesson-event-avatar"><v-icon icon="mdi-account-music-outline" size="25" /></span>
-                        <div class="lesson-event-heading-text"><span class="lesson-event-eyebrow">Dettagli lezione</span><h3>{{ selectedEvent.title }}</h3></div>
+                        <span class="lesson-event-avatar" :class="{ 'archived-avatar': selectedEvent.data?.archived }"><v-icon :icon="selectedEvent.data?.archived ? 'mdi-archive-outline' : 'mdi-account-music-outline'" size="25" /></span>
+                        <div class="lesson-event-heading-text"><span class="lesson-event-eyebrow">Dettagli lezione</span><h3>{{ selectedEvent.title }}</h3><ArchivedBadge :archived="selectedEvent.data?.archived" /></div>
                         <v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi dettagli" @click="eventDetailsOpen = false" />
                     </div>
                     <div class="lesson-event-details">
@@ -60,6 +60,7 @@
 import BackButton from '@/components/inputs/BackButton.vue';
 import CopyDebugJsonButton from '@/components/debugger/CopyDebugJsonButton.vue';
 import AppCalendar from '@/components/calendar/AppCalendar.vue';
+import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
 import { calendarEventContent } from '@/components/calendar/calendarEventContent';
 import { Time, yyyyMMdd, type CalendarEventExt, type School } from '@/models/model';
 import type { ID } from '@/models/repositories/abstract-repository';
@@ -280,11 +281,12 @@ async function loadLessons(range?: DateRange | null) {
             const st = students.find(s => s.id == l.title);
             if (st) {
                 l.title = st.name + " " + st.surname;
+                l.data = { ...l.data, archived: !!st.removed };
             }
             l.description = schools.value.find(s => s.id === schoolId)?.name;
             l._customContent = {
                 ...l._customContent,
-                ...calendarEventContent(l.title ?? '', l.description ?? '', l.data?.statusColor as StatusColorKey | undefined)
+                ...calendarEventContent(l.title ?? '', l.description ?? '', l.data?.statusColor as StatusColorKey | undefined, !!st?.removed)
             };
         });
         // Do not show historical lessons whose student was deleted.

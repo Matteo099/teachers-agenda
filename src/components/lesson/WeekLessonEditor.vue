@@ -229,7 +229,7 @@ function updateScheduledLessonsTime() {
             end: today.toScheduleX() + " " + Time.fromITime(sl.endTime).format(),
             title: `${studentName} - ${lessonDay}`,
             calendarId: props.school.id.toLowerCase(),
-            _customContent: calendarEventContent(studentName, lessonDay),
+            _customContent: calendarEventContent(studentName, lessonDay, undefined, !!st?.removed),
             data: { ...sl, ...st }
         };
     });

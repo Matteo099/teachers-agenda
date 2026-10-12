@@ -8,7 +8,7 @@
             <v-card class="recovery-dialog" variant="flat" :loading="loadingSchedulingRecovery">
                 <div class="recovery-dialog-header"><span class="school-panel-icon"><v-icon icon="mdi-calendar-plus-outline" size="23" /></span><div><h2>Programma recupero</h2></div><v-btn icon="mdi-close" variant="text" size="small" aria-label="Chiudi" @click="close" /></div>
                 <v-card-text class="recovery-dialog-content">
-                    <div class="recovery-origin"><v-icon icon="mdi-account-outline" size="20" /><div><strong>{{ recovery.student.name }} {{ recovery.student.surname }}</strong><span>Lezione originale · {{ yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format() }}</span></div></div>
+                    <div class="recovery-origin"><v-icon :icon="recovery.student.removed ? 'mdi-archive-outline' : 'mdi-account-outline'" :class="{ 'archived-avatar': recovery.student.removed }" size="20" /><div><strong>{{ recovery.student.name }} {{ recovery.student.surname }}</strong><ArchivedBadge :archived="recovery.student.removed" /><span>Lezione originale · {{ yyyyMMdd.fromIyyyyMMdd(recovery.recoveryReference.originalDailyLesson.date).format() }}</span></div></div>
                     <div class="recovery-dialog-fields">
                         <v-date-input v-model="date" v-bind="dateProps" label="Data del recupero" variant="outlined" density="comfortable" inputmode="none" prepend-inner-icon="mdi-calendar-outline" prepend-icon="" hide-details="auto" />
                         <v-text-field v-model="time" v-bind="timeProps" :active="modalTimePicker" :focused="modalTimePicker" inputmode="none" label="Ora di inizio" variant="outlined" density="comfortable" prepend-inner-icon="mdi-clock-outline" hide-details="auto" readonly>
@@ -30,6 +30,7 @@
 
 <script setup lang="ts">
 import { withCache } from '@/models/decorators/cache-decorator';
+import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
 import { Time, yyyyMMdd, type RecoverySchedule, type School } from '@/models/model';
 import { SchoolRecoveryLessonService, type StudentLessonWithRecovery } from '@/models/services/school-recovery-lesson-service';
 import { useForm, type GenericObject } from 'vee-validate';

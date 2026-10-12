@@ -1,7 +1,10 @@
 <template>
     <v-card class="band-editor" variant="flat">
-        <div class="editor-page-header"><span class="school-panel-icon"><v-icon icon="mdi-account-music-outline" size="24" /></span><div><span>{{ school.name }}</span><h2>{{ initialBand ? 'Modifica band' : 'Nuova band' }}</h2></div><v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" /></div>
+        <div class="editor-page-header"><span class="school-panel-icon" :class="{ 'archived-avatar': initialBand?.removed }"><v-icon :icon="initialBand?.removed ? 'mdi-archive-outline' : 'mdi-account-music-outline'" size="24" /></span><div><span>{{ school.name }}</span><h2>{{ initialBand ? 'Modifica band' : 'Nuova band' }}</h2><ArchivedBadge :archived="initialBand?.removed" /></div><v-btn icon="mdi-close" variant="text" aria-label="Chiudi" @click="emit('close')" /></div>
         <v-card-text class="editor-page-content">
+            <v-alert v-if="initialBand?.archiveHistory?.length" class="mb-4" variant="tonal" color="warning" title="Storico archivio">
+                <div class="d-flex flex-wrap ga-2 mt-2"><v-chip v-for="change in initialBand.archiveHistory" :key="`${change.date}-${change.archived}`" size="small" variant="flat" class="archived-badge">{{ change.archived ? 'Archiviata' : 'Ripristinata' }} il {{ yyyyMMdd.fromIyyyyMMdd(change.date).format() }} · dal giorno successivo</v-chip></div>
+            </v-alert>
             <section class="editor-page-section">
             <div class="editor-section-title"><v-icon icon="mdi-information-outline" size="20" /><h3>Informazioni della band</h3></div>
             <v-text-field v-model="name" label="Nome della band" variant="outlined" required />
@@ -28,7 +31,10 @@
                         <v-col cols="12">
                             <v-select :model-value="member.studentId" :items="availableStudents(member)" item-title="fullName"
                                 item-value="id" label="Studente della scuola" variant="outlined" clearable
-                                @update:model-value="selectStudent(member, $event)" />
+                                @update:model-value="selectStudent(member, $event)">
+                                <template #item="{ item, props: itemProps }"><v-list-item v-bind="itemProps"><template #append><ArchivedBadge :archived="item.removed" /></template></v-list-item></template>
+                                <template #selection="{ item }"><span>{{ item.fullName }}</span><ArchivedBadge :archived="item.removed" /></template>
+                            </v-select>
                         </v-col>
                         <v-col cols="12" sm="4"><v-text-field v-model="member.name" label="Nome" variant="outlined" /></v-col>
                         <v-col cols="12" sm="4"><v-text-field v-model="member.surname" label="Cognome" variant="outlined" /></v-col>
@@ -47,12 +53,13 @@
 </template>
 
 <script setup lang="ts">
-import type { BandMember, School, Student } from '@/models/model';
+import { yyyyMMdd, type BandMember, type School, type Student } from '@/models/model';
 import { StudentRepository } from '@/models/repositories/student-repository';
 import { StudentService } from '@/models/services/student-service';
 import { Timestamp } from 'firebase/firestore';
 import { ref, watch } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
+import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
 
 const props = defineProps<{ school: School; initialBand?: Student }>();
 const emit = defineEmits(['close', 'save']);
