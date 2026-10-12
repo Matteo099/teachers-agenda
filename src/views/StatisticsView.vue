@@ -47,7 +47,7 @@
             <v-tabs-window-item value="students">
                 <div v-if="selectedSchools.length" class="statistics-content statistics-content-three">
                     <StudentAbsenceList :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
-                    <StudentRecitalList :schools="selectedSchools" />
+                    <StudentRecitalList :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                     <StudentTrend :schools="selectedSchools" :from="dateRange?.from" :to="dateRange?.to" />
                 </div>
             </v-tabs-window-item>

@@ -1,6 +1,7 @@
 import type { TAPieData, TAStudentTrendData, TAXYData } from "../charts/chart-helper";
 import { LessonStatus, yyyyMMdd, type DailyLesson, type IyyyyMMdd, type School, type Student } from "../model";
 import { getStudentRecitalPieces } from "../recital-pieces";
+import { isStudentArchivedOnDate, isStudentVisibleInPeriod, studentArchiveDateInPeriod } from '../student-archive';
 import { SchoolRepository } from "../repositories/school-repository";
 import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { StudentRepository } from "../repositories/student-repository";
@@ -15,6 +16,7 @@ export interface MonthlySalarySummary {
 export interface StudentAbsenceSummary {
     student: string;
     archived?: boolean;
+    archiveDate?: IyyyyMMdd;
     total: number;
     unjustified: number;
     recoverable: number;
@@ -25,6 +27,7 @@ export interface RecitalStudent {
     id: string;
     student: string;
     archived?: boolean;
+    archiveDate?: IyyyyMMdd;
     school: string;
     piece: string;
     author: string;
@@ -133,13 +136,15 @@ export class StatisticsService {
         if (!schools || schools.length === 0) schools = await this.cache.getSchools();
 
         const schoolIds = new Set(schools.map(school => school.id));
-        const students = (await this.cache.getStudents()).filter(student => schoolIds.has(student.schoolId));
+        const students = (await this.cache.getStudents()).filter(student => schoolIds.has(student.schoolId) && isStudentVisibleInPeriod(student, from, to));
+        const studentsById = new Map(students.map(student => [student.id, student]));
         const result = new Map<string, StudentAbsenceSummary>();
 
         for (const student of students) {
             result.set(student.id, {
                 student: `${student.name} ${student.surname}`,
                 archived: !!student.removed,
+                archiveDate: studentArchiveDateInPeriod(student, from, to),
                 total: 0,
                 unjustified: 0,
                 recoverable: 0,
@@ -153,7 +158,9 @@ export class StatisticsService {
             for (const dailyLesson of dailyLessons) {
                 for (const lesson of dailyLesson.lessons) {
                     const summary = result.get(lesson.studentId);
-                    if (!summary || ![LessonStatus.ABSENT, LessonStatus.UNJUSTIFIED_ABSENCE].includes(lesson.status)) continue;
+                    const student = studentsById.get(lesson.studentId);
+                    if (!summary || !student || isStudentArchivedOnDate(student, dailyLesson.date)
+                        || ![LessonStatus.ABSENT, LessonStatus.UNJUSTIFIED_ABSENCE].includes(lesson.status)) continue;
 
                     summary.total++;
                     let recovered = false;
@@ -178,15 +185,16 @@ export class StatisticsService {
             .sort((first, second) => second.total - first.total || first.student.localeCompare(second.student));
     }
 
-    public async getRecitalStudents(...schools: School[]): Promise<RecitalStudent[]> {
+    public async getRecitalStudents(from: IyyyyMMdd, to: IyyyyMMdd, ...schools: School[]): Promise<RecitalStudent[]> {
         if (!schools || schools.length === 0) schools = await this.cache.getSchools();
         const schoolNames = new Map(schools.map(school => [school.id, school.name]));
         return (await this.cache.getStudents())
-            .filter(student => schoolNames.has(student.schoolId))
+            .filter(student => schoolNames.has(student.schoolId) && isStudentVisibleInPeriod(student, from, to))
             .flatMap(student => getStudentRecitalPieces(student).map((recital, index) => ({
                 id: `${student.id}-${index}`,
                 student: `${student.name} ${student.surname}`,
                 archived: !!student.removed,
+                archiveDate: studentArchiveDateInPeriod(student, from, to),
                 school: schoolNames.get(student.schoolId)!,
                 piece: recital.piece,
                 author: recital.author,
@@ -204,14 +212,14 @@ export class StatisticsService {
         }));
     }
 
-    public async getSchoolStudentDistribution(...schools: School[]): Promise<TAPieData[]> {
+    public async getSchoolStudentDistribution(from: IyyyyMMdd, to: IyyyyMMdd, ...schools: School[]): Promise<TAPieData[]> {
         const data: TAPieData[] = [];
         if (!schools || schools.length == 0) {
             schools = await this.cache.getSchools();
         }
         const students = await this.cache.getStudents();
         for (const school of schools) {
-            const total = students.filter(s => s.schoolId == school.id).length;
+            const total = students.filter(s => s.schoolId == school.id && isStudentVisibleInPeriod(s, from, to)).length;
             if (total)
                 data.push({
                     category: school.name,
@@ -229,17 +237,20 @@ export class StatisticsService {
         }
 
         for await (const school of schools) {
-            const students = (await this.cache.getStudents()).filter(s => s.schoolId == school.id);
+            const students = (await this.cache.getStudents()).filter(s => s.schoolId == school.id && isStudentVisibleInPeriod(s, from, to));
             const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
 
             students.forEach(student => {
+                const archiveDate = studentArchiveDateInPeriod(student, from, to);
                 const item: TAStudentTrendData = {
-                    student: student.name + " " + student.surname + (student.removed ? ' (archiviato)' : ''),
+                    student: student.name + " " + student.surname + (archiveDate
+                        ? ` (archiviato dal ${yyyyMMdd.fromIyyyyMMdd(archiveDate).format()})` : ''),
                     present: 0,
                     absent: 0,
                     recovery: 0
                 };
                 for (const dl of dailyLessons) {
+                    if (isStudentArchivedOnDate(student, dl.date)) continue;
                     const lesson = dl.lessons.find(l => l.studentId == student.id)
                     if (lesson) {
                         if (lesson.recovery?.ref == 'original') item.recovery++;

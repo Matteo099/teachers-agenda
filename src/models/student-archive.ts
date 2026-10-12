@@ -1,4 +1,4 @@
-import type { DailyLesson, IyyyyMMdd, Student, ScheduledLesson } from './model';
+import { yyyyMMdd, type DailyLesson, type IyyyyMMdd, type Student, type ScheduledLesson } from './model';
 
 /** The chosen date is the last day of the previous state. */
 export function isStudentArchivedOnDate(student: Student, date: IyyyyMMdd): boolean {
@@ -10,6 +10,22 @@ export function isStudentArchivedOnDate(student: Student, date: IyyyyMMdd): bool
         archived = change.archived;
     }
     return archived;
+}
+
+export function isStudentVisibleInPeriod(student: Student, from: IyyyyMMdd, to: IyyyyMMdd): boolean {
+    if (!isStudentArchivedOnDate(student, from)) return true;
+    return (student.archiveHistory ?? []).some(change => !change.archived && change.date >= from && change.date < to);
+}
+
+/** First archive transition inside the selected period, expressed as its effective date. */
+export function studentArchiveDateInPeriod(student: Student, from: IyyyyMMdd, to: IyyyyMMdd): IyyyyMMdd | undefined {
+    const transition = [...(student.archiveHistory ?? [])]
+        .filter(change => change.archived && change.date >= from && change.date < to)
+        .sort((a, b) => a.date.localeCompare(b.date))[0];
+    if (!transition) return;
+    const nextDay = yyyyMMdd.fromIyyyyMMdd(transition.date).toDate();
+    nextDay.setDate(nextDay.getDate() + 1);
+    return yyyyMMdd.fromDate(nextDay).toIyyyyMMdd();
 }
 
 export function scheduledLessonsForDate(schedule: ScheduledLesson[], students: Map<string, Student>, date: IyyyyMMdd): ScheduledLesson[] {

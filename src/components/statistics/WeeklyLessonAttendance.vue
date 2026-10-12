@@ -9,7 +9,7 @@
           <thead>
             <tr>
               <th>Data</th>
-              <th v-for="s in students" :key="s.id"><span class="d-inline-flex align-center flex-wrap ga-1">{{ s.name }}<ArchivedBadge :archived="s.archived" /></span></th>
+              <th v-for="s in students" :key="s.id"><span class="d-inline-flex align-center flex-wrap ga-1">{{ s.name }}<v-chip v-if="s.archiveDate" size="x-small" color="warning" variant="tonal">Archiviato dal {{ yyyyMMdd.fromIyyyyMMdd(s.archiveDate).format() }}</v-chip></span></th>
             </tr>
           </thead>
           <tbody>
@@ -37,13 +37,12 @@ import { StudentService } from '@/models/services/student-service';
 import { WeeklyLessonService } from '@/models/services/weely-lesson-service';
 import { ref, watch } from 'vue';
 import StatisticsPanel from './StatisticsPanel.vue';
-import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
-import { scheduledLessonsForDate } from '@/models/student-archive';
+import { isStudentArchivedOnDate, isStudentVisibleInPeriod, scheduledLessonsForDate, studentArchiveDateInPeriod } from '@/models/student-archive';
 
 const props = defineProps<{ from?: IyyyyMMdd; to?: IyyyyMMdd; schools?: School[] }>();
 const selectedDay = ref(5);
 const loading = ref(false);
-const students = ref<{ id: string; name: string; archived: boolean }[]>([]);
+const students = ref<{ id: string; name: string; archiveDate?: IyyyyMMdd }[]>([]);
 const rows = ref<any[]>([]);
 const weekDays = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato']
   .map((title, value) => ({ title, value }));
@@ -54,17 +53,28 @@ async function load() {
   const map = new Map<string, any>();
   const ids = new Set<string>();
   const studentStartTimes = new Map<string, number>();
+  const archiveDates = new Map<string, IyyyyMMdd>();
 
   for (const school of props.schools ?? []) {
     const weekly = await WeeklyLessonService.instance.getWeeklyLessonOfSchool(school.id);
     const schoolStudents = await StudentService.instance.getStudentsOfSchool(school.id);
-    const schoolStudentMap = new Map(schoolStudents.map(student => [student.id, student]));
+    const schoolStudentMap = new Map(schoolStudents.filter(student => isStudentVisibleInPeriod(student, props.from!, props.to!)).map(student => [student.id, student]));
+    for (const student of schoolStudentMap.values()) {
+      const archiveDate = studentArchiveDateInPeriod(student, props.from, props.to);
+      if (archiveDate) archiveDates.set(student.id, archiveDate);
+    }
     const days = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, props.from, props.to);
     const dailyById = new Map(days.map(day => [day.id, day]));
     for (const day of days) {
       if (yyyyMMdd.fromIyyyyMMdd(day.date).toDate().getDay() !== selectedDay.value) continue;
+      if (!day.lessons.some(lesson => {
+        const student = schoolStudentMap.get(lesson.studentId);
+        return student && !isStudentArchivedOnDate(student, day.date);
+      })) continue;
       const row = map.get(day.date) ?? { date: day.date, lessons: {} };
       for (const lesson of day.lessons) {
+        const student = schoolStudentMap.get(lesson.studentId);
+        if (!student || isStudentArchivedOnDate(student, day.date)) continue;
         const linkedRecovery = lesson.recovery?.ref === 'recovery'
           ? dailyById.get(lesson.recovery.lessonRef.dailyLessonId)?.lessons.find(recoveryLesson => recoveryLesson.lessonId === lesson.recovery?.lessonRef.lessonId)
           : undefined;
@@ -114,11 +124,10 @@ async function load() {
     }
   }
   const names = new Map<string, string>();
-  const archivedIds = new Set<string>();
   for (const school of props.schools ?? [])
     for (const student of await StudentService.instance.getStudentsOfSchool(school.id)) {
+      if (!isStudentVisibleInPeriod(student, props.from, props.to)) continue;
       names.set(student.id, `${student.name} ${student.surname}`);
-      if (student.removed) archivedIds.add(student.id);
     }
 
   const uniqueStudents = new Map<string, string>();
@@ -130,7 +139,7 @@ async function load() {
       const key = student.name.trim().toLocaleLowerCase();
       if (!uniqueStudents.has(key)) uniqueStudents.set(key, student.id);
     });
-  students.value = [...uniqueStudents.values()].map(id => ({ id, name: names.get(id) ?? id, archived: archivedIds.has(id) }));
+  students.value = [...uniqueStudents.values()].map(id => ({ id, name: names.get(id) ?? id, archiveDate: archiveDates.get(id) }));
 
   rows.value = [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
   loading.value = false;

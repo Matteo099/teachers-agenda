@@ -1,7 +1,7 @@
 <template>
     <StatisticsPanel title="Assenze per studente" icon="mdi-account-clock-outline" :loading="loading">
         <v-data-table :headers="headers" :items="items" item-value="student">
-            <template #item.student="{ item }"><span class="d-inline-flex align-center flex-wrap ga-2">{{ item.student }}<ArchivedBadge :archived="item.archived" /></span></template>
+            <template #item.student="{ item }"><span class="d-inline-flex align-center flex-wrap ga-2">{{ item.student }}<v-chip v-if="item.archiveDate" size="x-small" color="warning" variant="tonal">Archiviato dal {{ yyyyMMdd.fromIyyyyMMdd(item.archiveDate).format() }}</v-chip></span></template>
             <template #item.unjustified="{ item }">
                 {{ item.unjustified }} (A)
             </template>
@@ -13,11 +13,10 @@
 </template>
 
 <script setup lang="ts">
-import type { IyyyyMMdd, School } from '@/models/model';
+import { yyyyMMdd, type IyyyyMMdd, type School } from '@/models/model';
 import { StatisticsService, type StudentAbsenceSummary } from '@/models/services/statistics-service';
 import { ref, watch } from 'vue';
 import StatisticsPanel from './StatisticsPanel.vue';
-import ArchivedBadge from '@/components/student/ArchivedBadge.vue';
 
 const props = defineProps<{ from?: IyyyyMMdd; to?: IyyyyMMdd; schools?: School[] }>();
 const items = ref<StudentAbsenceSummary[]>([]);

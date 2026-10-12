@@ -79,7 +79,7 @@ function areUpdateConditionSatistied(): boolean {
 }
 
 async function updateChartData(from: IyyyyMMdd, to: IyyyyMMdd, ...schools: School[]) {
-    const data = await StatisticsService.instance.getSchoolStudentDistribution(...schools);
+    const data = await StatisticsService.instance.getSchoolStudentDistribution(from, to, ...schools);
     series.data.setAll(data);
 
     // The text does not update...
