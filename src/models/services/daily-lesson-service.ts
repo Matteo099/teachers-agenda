@@ -46,7 +46,9 @@ export class DailyLessonService {
         const _query2 = where(nameof<DailyLesson>('date'), '>=', from);
         queries.push(_query1, _query2);
         if (orderByDirection) queries.push(orderBy(nameof<DailyLesson>('date'), orderByDirection))
-        return DailyLessonRepository.instance.getAll(...queries);
+        const dailyLessons = await DailyLessonRepository.instance.getAll(...queries);
+        await this.removeLessonsWithoutStudent(schoolId, dailyLessons);
+        return dailyLessons;
     }
 
     public async getDailyLessonOfSchoolBetweenDate(schoolId: ID, from: IyyyyMMdd, to: IyyyyMMdd): Promise<DailyLesson[]> {
@@ -54,7 +56,33 @@ export class DailyLessonService {
         const _query1 = where(nameof<DailyLesson>('schoolId'), '==', schoolId);
         const _query2 = where(nameof<DailyLesson>('date'), '>=', from);
         const _query3 = where(nameof<DailyLesson>('date'), '<=', to);
-        return await DailyLessonRepository.instance.getAll(_query1, _query2, _query3);
+        const dailyLessons = await DailyLessonRepository.instance.getAll(_query1, _query2, _query3);
+        await this.removeLessonsWithoutStudent(schoolId, dailyLessons);
+        return dailyLessons;
+    }
+
+    public async removeLessonsWithoutStudent(schoolId: ID, dailyLessons: DailyLesson[]): Promise<void> {
+        if (!dailyLessons.some(daily => daily.lessons.length > 0)) return;
+        const students = await StudentService.instance.getStudentsOfSchool(schoolId);
+        const studentIds = new Set(students.map(student => student.id));
+
+        for (const daily of dailyLessons) {
+            const orphaned = daily.lessons.filter(lesson => !studentIds.has(lesson.studentId));
+            if (orphaned.length === 0) continue;
+
+            const lessons = daily.lessons.filter(lesson => studentIds.has(lesson.studentId));
+            const removedCompensation = orphaned.reduce((total, lesson) => total + (lesson.compensation?.amount ?? 0), 0);
+            const corrected = {
+                ...daily,
+                lessons,
+                salary: Math.max(0, (daily.salary ?? 0) - removedCompensation),
+                ...(removedCompensation ? { lastSalaryUpdate: Timestamp.now() } : {})
+            };
+            await DailyLessonRepository.instance.save(corrected, daily.id);
+            daily.lessons = lessons;
+            daily.salary = corrected.salary;
+            if (corrected.lastSalaryUpdate) daily.lastSalaryUpdate = corrected.lastSalaryUpdate;
+        }
     }
 
 

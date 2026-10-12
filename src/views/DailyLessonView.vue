@@ -475,6 +475,7 @@ async function updateStudentLesson() {
         loadingSchool.value = false;
     }
     await DailyLessonService.instance.ensureOfficialCalendarDate(dailyLesson.value);
+    await DailyLessonService.instance.removeLessonsWithoutStudent(dailyLesson.value.schoolId, [dailyLesson.value]);
     await StudentLessonService.instance.updateStudentLesson(dailyLesson.value, studentLessons.value, loadingStudents);
 }
 
