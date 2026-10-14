@@ -45,6 +45,7 @@
                     <div>
                         <h3>Lezioni</h3>
                     </div>
+                    <div v-if="edit && initialStudent?.id" class="ms-auto"><StudentLessonHistory :school="school" :student="initialStudent" /></div>
                 </div>
                 <v-row density="comfortable">
                     <v-col cols="12" md="6">
@@ -232,6 +233,7 @@ import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { toast } from 'vue3-toastify';
 import * as yup from 'yup';
 import StudentDailyNotes from './StudentDailyNotes.vue';
+import StudentLessonHistory from './StudentLessonHistory.vue';
 import ArchivedBadge from './ArchivedBadge.vue';
 
 type StudentEditorField = "name" | "surname" | "contact" | "lessonDay" | "level" | "minutesLessonDuration";
