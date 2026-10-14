@@ -22,6 +22,7 @@ withDefaults(defineProps<{ calendarApp: CalendarApp; compact?: boolean; hideHead
 .app-calendar { overflow: hidden; border: 1px solid var(--app-border); border-radius: 14px; background: var(--app-surface); }
 .app-calendar :deep(.sx__calendar-wrapper) {
   --sx-color-primary: var(--app-primary);
+  --sx-color-on-primary: var(--app-surface);
   --sx-color-primary-container: var(--app-accent-surface);
   --sx-color-on-primary-container: var(--app-primary);
   --sx-color-secondary: var(--app-muted);
@@ -46,7 +47,8 @@ withDefaults(defineProps<{ calendarApp: CalendarApp; compact?: boolean; hideHead
 .app-calendar :deep(.sx__week-header) { border-bottom: 1px solid var(--app-border); background: var(--app-surface); }
 .app-calendar :deep(.sx__week-grid__day-name) { color: var(--app-muted); font-size: .78rem; font-weight: 650; }
 .app-calendar :deep(.sx__week-grid__date-number) { color: var(--app-text); font-weight: 700; }
-.app-calendar :deep(.sx__week-grid__date--is-today .sx__week-grid__date-number) { color: var(--app-primary); }
+.app-calendar :deep(.sx__week-grid__date--is-today .sx__week-grid__date-number) { border: 1px solid var(--app-hover-border); background: var(--app-accent-surface); color: var(--app-primary); }
+.app-calendar :deep(.sx__month-grid-day__header-date.sx__is-today) { background: var(--app-accent-surface); color: var(--app-primary); }
 .app-calendar :deep(.sx__week-grid__hour-text) { color: var(--app-muted); font-size: .73rem; }
 .app-calendar :deep(.sx__time-grid-day), .app-calendar :deep(.sx__date-grid-cell), .app-calendar :deep(.sx__month-grid-day) { background: var(--app-surface); }
 .app-calendar :deep(.sx__time-grid-event), .app-calendar :deep(.sx__date-grid-event), .app-calendar :deep(.sx__month-grid-event) { overflow: hidden; border-radius: 9px !important; box-shadow: 0 2px 6px rgba(30, 50, 100, .08); }
