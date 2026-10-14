@@ -40,5 +40,5 @@ export function getStudentLessonHistory(days: DailyLesson[], studentId: string, 
             seen.add(lesson.lessonId);
             return [{ id: lesson.lessonId, date: day.date, startTime: lesson.startTime, statuses }];
         })
-    ).sort((a, b) => b.date.localeCompare(a.date) || b.startTime - a.startTime);
+    ).sort((a, b) => a.date.localeCompare(b.date) || a.startTime - b.startTime);
 }

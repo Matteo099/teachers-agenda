@@ -22,12 +22,12 @@ describe('storico lezioni dello studente', () => {
         const entries = getStudentLessonHistory(days, 'student', '20261011');
 
         expect(entries.map(entry => [entry.id, entry.statuses])).toEqual([
-            ['trial', ['present']],
-            ['destination', ['moved', 'present']],
-            ['moved', ['moved']],
-            ['recovery', ['recovery', 'present']],
-            ['due', ['due']], ['absent', ['absent']],
             ['present', ['present']],
+            ['due', ['due']], ['absent', ['absent']],
+            ['recovery', ['recovery', 'present']],
+            ['moved', ['moved']],
+            ['destination', ['moved', 'present']],
+            ['trial', ['present']],
         ]);
     });
 
