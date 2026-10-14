@@ -23,16 +23,26 @@
         </template>
       </v-dialog>
     </div>
-    <v-card-text class="school-panel-content"><p class="student-table-hint">Scorri la tabella per vedere tutte le colonne <v-icon icon="mdi-arrow-right" size="16" /></p><v-data-table class="student-table" :headers="studentHeaders"
-        :items="filteredStudents" item-value="id" :items-per-page="10" no-data-text="Nessuno studente trovato">
+    <v-card-text class="school-panel-content">
+      <p class="student-table-hint">Scorri la tabella per vedere tutte le colonne <v-icon icon="mdi-arrow-right"
+          size="16" /></p><v-data-table class="student-table" :headers="studentHeaders" :items="filteredStudents"
+        item-value="id" :items-per-page="10" no-data-text="Nessuno studente trovato">
         <template #item.name="{ item }">
-          <div class="student-identity"><span class="student-avatar" :class="{ 'archived-avatar': item.removed }"><v-icon :icon="item.removed ? 'mdi-archive-outline' : 'mdi-account-outline'"
-                size="18" /></span><span class="student-identity-content"><span class="student-name" :class="{ 'archived-name': item.removed }">{{ item.name }} {{ item.surname }}</span><v-chip
-              v-if="item.biweeklyStartDate" size="x-small" color="primary" variant="tonal"
-              :title="`Ogni due settimane dal ${yyyyMMdd.fromIyyyyMMdd(item.biweeklyStartDate).format()}`">Ogni 2
-              sett.</v-chip><ArchivedBadge :archived="item.removed" /></span></div>
+          <div class="student-identity"><span class="student-avatar"
+              :class="{ 'archived-avatar': item.removed }"><v-icon
+                :icon="item.removed ? 'mdi-archive-outline' : 'mdi-account-outline'" size="18" /></span><span
+              class="student-identity-content"><span class="student-name" :class="{ 'archived-name': item.removed }">{{
+                item.name }} {{ item.surname }}</span><v-chip v-if="item.biweeklyStartDate" size="x-small"
+                color="primary" variant="tonal"
+                :title="`Ogni due settimane dal ${yyyyMMdd.fromIyyyyMMdd(item.biweeklyStartDate).format()}`">Ogni 2
+                sett.</v-chip>
+              <ArchivedBadge :archived="item.removed" />
+            </span></div>
         </template>
-        <template #item.lessonDay="{ item }"><span :title="item.lessonDay !== undefined && item.lessonDay !== null ? days[item.lessonDay] : undefined">{{ item.lessonDay !== undefined && item.lessonDay !== null ? abbreviatedDays[item.lessonDay] : '—' }}</span></template>
+        <template #item.lessonDay="{ item }"><span
+            :title="item.lessonDay !== undefined && item.lessonDay !== null ? days[item.lessonDay] : undefined">{{
+              item.lessonDay !== undefined && item.lessonDay !== null ? abbreviatedDays[item.lessonDay] : '—'
+            }}</span></template>
         <template #item.level="{ item }"><v-chip v-if="item.level" size="small" color="primary" variant="tonal">{{
           item.level }}</v-chip><span v-else>—</span></template>
         <template #item.minutesLessonDuration="{ item }">{{ item.minutesLessonDuration }} min</template>
@@ -48,7 +58,8 @@
               </template>
             </v-dialog>
             <ArchiveStatusDialog :name="item.name + ' ' + item.surname" entity-label="studente"
-              :archived="!item.removed" :on-confirm="date => StudentService.instance.setArchived(item.id, !item.removed, date)">
+              :archived="!item.removed"
+              :on-confirm="date => StudentService.instance.setArchived(item.id, !item.removed, date)">
               <template #activator="{ props: activatorProps }"><v-btn
                   :icon="item.removed ? 'mdi-archive-arrow-up-outline' : 'mdi-archive-outline'"
                   :aria-label="item.removed ? 'Ripristina studente' : 'Archivia studente'"
@@ -57,7 +68,8 @@
             </ArchiveStatusDialog>
           </div>
         </template>
-      </v-data-table></v-card-text>
+      </v-data-table>
+    </v-card-text>
   </v-card>
 </template>
 
@@ -87,7 +99,7 @@ const studentHeaders: any = [
   { title: 'Durata', key: 'minutesLessonDuration', width: 76 },
   { title: 'Azioni', key: 'actions', sortable: false, align: 'end', width: 90 },
 ];
-const filters: Ref<StudentFilterObj[]> = ref(STUDENT_FILTERS);
+const filters: Ref<StudentFilterObj[]> = ref([STUDENT_FILTERS[0]!, STUDENT_FILTERS[1]!]);
 watch(filters, filterStudent);
 watch(search, filterStudent);
 function onSaveStudent(student?: Student) { if (student) dialog.value = false; }
@@ -135,9 +147,18 @@ onUnmounted(() => { subscriptions.forEach(u => u.unsubscribe()); });
   border-radius: 12px;
 }
 
-.student-table :deep(.v-table__wrapper) { overflow-x: auto; }
-.student-table :deep(table) { min-width: 620px; table-layout: fixed; }
-.student-table-hint { display: none; }
+.student-table :deep(.v-table__wrapper) {
+  overflow-x: auto;
+}
+
+.student-table :deep(table) {
+  min-width: 620px;
+  table-layout: fixed;
+}
+
+.student-table-hint {
+  display: none;
+}
 
 .student-identity {
   display: grid;
@@ -195,6 +216,13 @@ onUnmounted(() => { subscriptions.forEach(u => u.unsubscribe()); });
     min-width: 0;
   }
 
-  .student-table-hint { display: flex; align-items: center; gap: 5px; margin: 2px 0 8px; color: var(--app-muted); font-size: .75rem; }
+  .student-table-hint {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 2px 0 8px;
+    color: var(--app-muted);
+    font-size: .75rem;
+  }
 }
 </style>
