@@ -372,6 +372,8 @@ export interface DailyLesson {
     lessons: Lesson[];
     /** Lessons removed by dated archive rules, kept for reversible history. */
     archivedLessons?: Lesson[];
+    /** Students deliberately removed from this date, even if still on its weekly schedule. */
+    excludedScheduledStudentIds?: string[];
     /** Explicit official date; supports manual and irregular calendars. */
     isOfficialCalendarDate?: boolean;
     lastSalaryUpdate?: Timestamp;

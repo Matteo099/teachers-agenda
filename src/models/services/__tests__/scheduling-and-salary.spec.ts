@@ -14,6 +14,83 @@ const timestamp = Timestamp.fromMillis(0);
 
 afterEach(() => vi.restoreAllMocks());
 
+describe('riallineamento delle lezioni già create al calendario settimanale', () => {
+    const student = { id: 'emanuele', schoolId: 'lizard', name: 'Emanuele', surname: 'Vita' } as Student;
+    const weekly = { id: 'weekly', schoolId: 'lizard', dayOfWeek: DayOfWeek.TUESDAY,
+        from: '20260901', to: '20261231', exclude: [], createdAt: timestamp, updatedAt: timestamp,
+        schedule: [{ lessonId: 'scheduled', studentId: student.id, startTime: 57600, endTime: 60000 }] } as WeeklyLesson;
+
+    it('aggiunge subito la lezione delle 16:00 a una giornata già materializzata, una sola volta', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-10-14T10:00:00'));
+        try {
+            const day = { id: '20261013_lizard', schoolId: 'lizard', date: '20261013', salary: 0, lessons: [] } as DailyLesson;
+            vi.spyOn(WeeklyLessonService.instance, 'getWeeklyLessonOfSchoolByDayBetweenDate').mockResolvedValue([weekly]);
+            vi.spyOn(StudentService.instance, 'getStudentsOfSchool').mockResolvedValue([student]);
+            const save = vi.spyOn(DailyLessonRepository.instance, 'save').mockResolvedValue(day.id);
+
+            await DailyLessonService.instance.syncDailyLessonWithWeeklySchedule(day);
+            await DailyLessonService.instance.syncDailyLessonWithWeeklySchedule(day);
+
+            expect(day.lessons).toHaveLength(1);
+            expect(day.lessons[0]).toMatchObject({ studentId: student.id, startTime: 57600, endTime: 60000 });
+            expect(save).toHaveBeenCalledTimes(1);
+        } finally { vi.useRealTimers(); }
+    });
+
+    it('rispetta la rimozione esplicita dello studente dalla singola giornata', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-10-14T10:00:00'));
+        try {
+            const day = { id: '20261013_lizard', schoolId: 'lizard', date: '20261013', salary: 0,
+                lessons: [], excludedScheduledStudentIds: [student.id] } as DailyLesson;
+            vi.spyOn(WeeklyLessonService.instance, 'getWeeklyLessonOfSchoolByDayBetweenDate').mockResolvedValue([weekly]);
+            vi.spyOn(StudentService.instance, 'getStudentsOfSchool').mockResolvedValue([student]);
+            const save = vi.spyOn(DailyLessonRepository.instance, 'save').mockResolvedValue(day.id);
+
+            await DailyLessonService.instance.syncDailyLessonWithWeeklySchedule(day);
+
+            expect(day.lessons).toHaveLength(0);
+            expect(save).not.toHaveBeenCalled();
+        } finally { vi.useRealTimers(); }
+    });
+
+    it('non applica a ieri una modifica del calendario salvata soltanto oggi', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-10-14T10:00:00'));
+        try {
+            const day = { id: '20261013_lizard', schoolId: 'lizard', date: '20261013', salary: 0, lessons: [] } as DailyLesson;
+            vi.spyOn(WeeklyLessonService.instance, 'getWeeklyLessonOfSchoolByDayBetweenDate')
+                .mockResolvedValue([{ ...weekly, updatedAt: Timestamp.fromDate(new Date('2026-10-14T09:00:00')) }]);
+            const save = vi.spyOn(DailyLessonRepository.instance, 'save').mockResolvedValue(day.id);
+
+            await DailyLessonService.instance.syncDailyLessonWithWeeklySchedule(day);
+
+            expect(day.lessons).toHaveLength(0);
+            expect(save).not.toHaveBeenCalled();
+        } finally { vi.useRealTimers(); }
+    });
+
+    it('aggiorna anche le giornate future già create quando si salva il calendario', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-10-13T10:00:00'));
+        try {
+            const today = { id: '20261013_lizard', schoolId: 'lizard', date: '20261013', salary: 0, lessons: [] } as DailyLesson;
+            const nextWeek = { id: '20261020_lizard', schoolId: 'lizard', date: '20261020', salary: 0, lessons: [] } as DailyLesson;
+            vi.spyOn(DailyLessonService.instance, 'getOrCreateDailyLessonId').mockResolvedValue(today.id);
+            vi.spyOn(DailyLessonService.instance, 'getDailyLessonOfSchoolFromDate').mockResolvedValue([today, nextWeek]);
+            vi.spyOn(StudentService.instance, 'getStudentsOfSchool').mockResolvedValue([student]);
+            const save = vi.spyOn(DailyLessonRepository.instance, 'save').mockResolvedValue(today.id);
+
+            await DailyLessonService.instance.syncTodayWithWeeklyLesson(weekly);
+
+            expect(today.lessons.map(lesson => lesson.studentId)).toEqual([student.id]);
+            expect(nextWeek.lessons.map(lesson => lesson.studentId)).toEqual([student.id]);
+            expect(save).toHaveBeenCalledTimes(2);
+        } finally { vi.useRealTimers(); }
+    });
+});
+
 describe("school lesson filters", () => {
     const regular = (studentId: string, extra: Partial<DailyLesson['lessons'][number]> = {}): DailyLesson['lessons'][number] => ({
         lessonId: studentId, studentId, startTime: 36000, endTime: 39600,

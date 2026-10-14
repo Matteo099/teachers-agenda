@@ -427,6 +427,9 @@ const deleteDailyLesson = withCache(async () => {
 const deleteStudentLesson = withCache(async (_studentLesson: StudentLesson, deleteDailyLessonWhenNoLessons = true) => {
     if (!dailyLesson.value) return false;
     updateOperationStatus(_studentLesson, true);
+    dailyLesson.value.excludedScheduledStudentIds = [
+        ...new Set([...(dailyLesson.value.excludedScheduledStudentIds ?? []), _studentLesson.student.id])
+    ];
     await DailyLessonService.instance.deleteLessons(dailyLesson.value!, deleteDailyLessonWhenNoLessons, [_studentLesson.lesson]);
     if (!dailyLesson.value || dailyLesson.value.lessons.length == 0) {
         router.push(`/school/${school.value!.id}`);
@@ -476,6 +479,7 @@ async function updateStudentLesson() {
     }
     await DailyLessonService.instance.ensureOfficialCalendarDate(dailyLesson.value);
     await DailyLessonService.instance.removeLessonsWithoutStudent(dailyLesson.value.schoolId, [dailyLesson.value]);
+    await DailyLessonService.instance.syncDailyLessonWithWeeklySchedule(dailyLesson.value);
     await StudentLessonService.instance.updateStudentLesson(dailyLesson.value, studentLessons.value, loadingStudents);
 }
 

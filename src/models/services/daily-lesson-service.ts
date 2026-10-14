@@ -351,6 +351,8 @@ export class DailyLessonService {
     }
 
     public async addStudents(dailyLesson: DailyLesson, students: Student[]) {
+        const addedIds = new Set(students.map(student => student.id));
+        dailyLesson.excludedScheduledStudentIds = (dailyLesson.excludedScheduledStudentIds ?? []).filter(id => !addedIds.has(id));
         students.forEach(s => {
             // 08:00 => 28800 seconds
             const lastLessonEndTime = dailyLesson.lessons.length == 0 ? 28800 : dailyLesson.lessons[dailyLesson.lessons.length - 1]!.endTime;
@@ -401,27 +403,61 @@ export class DailyLessonService {
         // A calendar may have been created for a future date (for example the
         // next Monday). When a student is added, the first available lesson is
         // the next occurrence from today, not the calendar's old start date.
-        if (weeklyLesson.exclude.includes(date)) return;
-        if (weeklyLesson.from > date) {
+        if (weeklyLesson.from > date && weeklyLesson.to >= date && !weeklyLesson.exclude.includes(date)) {
             weeklyLesson.from = date;
             await WeeklyLessonRepository.instance.save(weeklyLesson, weeklyLesson.id);
         }
 
-        const id = await this.getOrCreateDailyLessonId(weeklyLesson.schoolId, firstAvailableDate);
-        const dailyLesson = await DailyLessonRepository.instance.get(id);
-        if (!dailyLesson) return;
-        const existing = new Set(dailyLesson.lessons.map(l => l.studentId));
+        if (WeeklyLessonService.instance.isValid(weeklyLesson, date)) {
+            await this.getOrCreateDailyLessonId(weeklyLesson.schoolId, firstAvailableDate);
+        }
+        const dailyLessons = await this.getDailyLessonOfSchoolFromDate(weeklyLesson.schoolId, date);
         const students = await StudentService.instance.getStudentsOfSchool(weeklyLesson.schoolId);
         const byId = new Map(students.map(student => [student.id, student]));
-        scheduledLessonsForDate(weeklyLesson.schedule, byId, date).filter(l => !existing.has(l.studentId)).forEach(l => dailyLesson.lessons.push({
-            lessonId: uuidv4(), status: LessonStatus.NONE, studentId: l.studentId,
-            startTime: l.startTime, endTime: l.endTime,
-            ...(byId.get(l.studentId) && isBiweeklyHidden(byId.get(l.studentId)!, date)
-                ? { hiddenForDate: true, biweeklyAutoHidden: true } : {}),
-            createdAt: Timestamp.now(), updatedAt: Timestamp.now()
-        }));
+        for (const dailyLesson of dailyLessons) {
+            if (!WeeklyLessonService.instance.isValid(weeklyLesson, dailyLesson.date)) continue;
+            await this.addMissingScheduledLessons(dailyLesson, [weeklyLesson], byId);
+        }
+    }
+
+    /** Reconcile materialized days in the current week and future with their recurring calendar. */
+    public async syncDailyLessonWithWeeklySchedule(dailyLesson: DailyLesson): Promise<void> {
+        const today = yyyyMMdd.today().toDate();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+        if (dailyLesson.date < yyyyMMdd.fromDate(startOfWeek).toIyyyyMMdd()) return;
+        const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchoolByDayBetweenDate(
+            dailyLesson.schoolId, yyyyMMdd.fromIyyyyMMdd(dailyLesson.date).toDate().getDay(), dailyLesson.date);
+        const applicable = weeklyLessons.filter(weekly =>
+            WeeklyLessonService.instance.isValid(weekly, dailyLesson.date) &&
+            (dailyLesson.date >= yyyyMMdd.fromDate(today).toIyyyyMMdd() ||
+                !weekly.updatedAt || yyyyMMdd.fromDate(weekly.updatedAt.toDate()).toIyyyyMMdd() <= dailyLesson.date));
+        if (!applicable.length) return;
+        const students = await StudentService.instance.getStudentsOfSchool(dailyLesson.schoolId);
+        await this.addMissingScheduledLessons(dailyLesson, applicable, new Map(students.map(student => [student.id, student])));
+    }
+
+    private async addMissingScheduledLessons(dailyLesson: DailyLesson, weeklyLessons: WeeklyLesson[], byId: Map<string, Student>): Promise<void> {
+        const existing = new Set(dailyLesson.lessons.map(lesson => lesson.studentId));
+        const excluded = new Set(dailyLesson.excludedScheduledStudentIds ?? []);
+        const scheduled = weeklyLessons
+            .filter(weekly => WeeklyLessonService.instance.isValid(weekly, dailyLesson.date))
+            .flatMap(weekly => scheduledLessonsForDate(weekly.schedule, byId, dailyLesson.date));
+        const missing = scheduled.filter(lesson => !existing.has(lesson.studentId) && !excluded.has(lesson.studentId));
+        if (!missing.length) return;
+        for (const lesson of missing) {
+            if (existing.has(lesson.studentId)) continue;
+            existing.add(lesson.studentId);
+            dailyLesson.lessons.push({
+                lessonId: uuidv4(), status: LessonStatus.NONE, studentId: lesson.studentId,
+                startTime: lesson.startTime, endTime: lesson.endTime,
+                ...(isBiweeklyHidden(byId.get(lesson.studentId)!, dailyLesson.date)
+                    ? { hiddenForDate: true, biweeklyAutoHidden: true } : {}),
+                createdAt: Timestamp.now(), updatedAt: Timestamp.now()
+            });
+        }
         dailyLesson.lessons.sort((a, b) => a.startTime - b.startTime);
-        await this.save(dailyLesson);
+        await DailyLessonRepository.instance.save(dailyLesson, dailyLesson.id);
     }
 
     /** Apply a changed alternating-week schedule to already-created future dates. */
@@ -559,6 +595,8 @@ export class DailyLessonService {
             salary
         };
         if (dailyLesson.archivedLessons?.length) newDailyLesson.archivedLessons = dailyLesson.archivedLessons;
+        if (dailyLesson.excludedScheduledStudentIds?.length)
+            newDailyLesson.excludedScheduledStudentIds = dailyLesson.excludedScheduledStudentIds;
         if (dailyLesson.isOfficialCalendarDate !== undefined)
             newDailyLesson.isOfficialCalendarDate = dailyLesson.isOfficialCalendarDate;
         if (opts?.school.salaryStrategy != undefined) newDailyLesson.salaryStrategy = opts.school.salaryStrategy;
