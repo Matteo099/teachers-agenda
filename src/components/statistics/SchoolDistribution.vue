@@ -1,7 +1,7 @@
 <template>
-    <BaseChart :schools="schools" :from="from" :to="to" :create-chart="createChart" :after-chart-created="afterChartCreated"
-        :are-update-condition-satistied="areUpdateConditionSatistied" :update-chart-data="updateChartData"
-        title="Distribuzione delle scuole" />
+    <BaseChart :schools="schools" :from="from" :to="to" :create-chart="createChart"
+        :after-chart-created="afterChartCreated" :are-update-condition-satistied="areUpdateConditionSatistied"
+        :update-chart-data="updateChartData" title="Distribuzione delle scuole" />
 </template>
 
 <script setup lang="ts">
@@ -66,7 +66,7 @@ function createChart(_root: am5.Root) {
         textType: "circular"
     });
 
-    createEmptyPieChartModal(root, series);    
+    createEmptyPieChartModal(root, series);
 }
 
 function afterChartCreated() {
@@ -90,7 +90,7 @@ function updateLabel() {
     label = am5.Label.new(root, {
         centerX: am5.percent(50),
         centerY: am5.percent(50),
-        text: "Scuole: {valueSum}",
+        text: "Scuola\n{valueSum}",
         populateText: true,
         fontSize: "1.5em"
     })

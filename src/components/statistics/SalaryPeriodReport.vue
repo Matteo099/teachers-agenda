@@ -1,23 +1,33 @@
 <template>
     <StatisticsPanel title="Resoconto del compenso" icon="mdi-cash-multiple" :loading="loading">
         <div class="salary-report-totals">
-            <div class="salary-report-total"><span>Totale netto lezioni</span><strong>{{ currency(lessonsTotal) }}</strong></div>
-            <div class="salary-report-total"><span>Totale rimborsi</span><strong>{{ currency(reimbursementsTotal) }}</strong></div>
+            <div class="salary-report-total"><span>Totale netto lezioni</span><strong>{{ currency(lessonsTotal)
+                    }}</strong></div>
+            <div class="salary-report-total"><span>Totale rimborsi</span><strong>{{ currency(reimbursementsTotal)
+                    }}</strong></div>
             <div class="salary-report-total salary-report-total--overall">
                 <span>Totale globale</span><strong>{{ currency(globalTotal) }}</strong>
                 <small v-if="managementTotal">Include {{ currency(managementTotal) }} di quota gestione</small>
             </div>
         </div>
         <div class="salary-report-heading">
-            <h3>Giorni di lezione</h3>
+            <h3>Lezioni del mese</h3>
             <span>{{ days.length }} {{ days.length === 1 ? 'giorno' : 'giorni' }}</span>
         </div>
         <div class="salary-report-table">
-            <v-data-table :headers="headers" :items="days" item-value="id" density="comfortable" :items-per-page="10">
+            <v-data-table v-model:page="page" :headers="headers" :items="days" item-value="id"
+                density="comfortable" :items-per-page="10" hide-default-footer>
                 <template #item.date="{ item }">{{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}</template>
                 <template #item.salary="{ item }"><strong>{{ currency(item.salary) }}</strong></template>
                 <template #no-data>Nessuna lezione nel periodo selezionato.</template>
             </v-data-table>
+        </div>
+        <div v-if="days.length > 10" class="d-flex align-center justify-center ga-3 py-3">
+            <v-btn icon="mdi-chevron-left" variant="text" size="small" aria-label="Pagina precedente"
+                :disabled="page === 1" @click="page--" />
+            <span class="text-body-2">{{ page }} / {{ Math.ceil(days.length / 10) }}</span>
+            <v-btn icon="mdi-chevron-right" variant="text" size="small" aria-label="Pagina successiva"
+                :disabled="page >= Math.ceil(days.length / 10)" @click="page++" />
         </div>
     </StatisticsPanel>
 </template>
@@ -36,6 +46,7 @@ const headers = [
     { title: 'Compenso giornaliero', key: 'salary', align: 'end' as const },
 ];
 const days = ref<{ id: string; date: IyyyyMMdd; school: string; salary: number }[]>([]);
+const page = ref(1);
 const lessonsTotal = ref(0);
 const reimbursementsTotal = ref(0);
 const managementTotal = ref(0);
@@ -74,6 +85,7 @@ watch(() => [props.from, props.to, props.schools], async () => {
             school: school.name,
             salary: Number.isFinite(salary.salary) ? salary.salary : 0,
         }))).sort((a, b) => b.date.localeCompare(a.date) || a.school.localeCompare(b.school));
+        page.value = 1;
         lessonsTotal.value = days.value.reduce((sum, day) => sum + day.salary, 0);
         reimbursementsTotal.value = results.reduce((sum, { report }) => sum + report.reimbursementTotal, 0);
         managementTotal.value = results.reduce((sum, { report }) => sum + report.managementTotal, 0);
@@ -85,18 +97,95 @@ watch(() => [props.from, props.to, props.schools], async () => {
 </script>
 
 <style scoped>
-.salary-report-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.salary-report-total { display: grid; align-content: center; gap: 6px; min-height: 112px; padding: 18px; border: 1px solid var(--app-border); border-radius: 13px; background: var(--app-hover-surface); }
-.salary-report-total span { color: var(--app-muted); font-size: .82rem; }
-.salary-report-total strong { color: var(--app-text); font-size: clamp(1.2rem, 2.5vw, 1.65rem); line-height: 1.2; }
-.salary-report-total--overall { border-color: var(--app-hover-border); background: var(--app-accent-surface); }
-.salary-report-total--overall strong { color: var(--app-primary); }
-.salary-report-total small { color: var(--app-muted); font-size: .74rem; }
-.salary-report-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 24px 0 10px; }
-.salary-report-heading h3 { margin: 0; color: var(--app-text); font-size: 1rem; font-weight: 700; }
-.salary-report-heading span { color: var(--app-muted); font-size: .82rem; }
-.salary-report-table { overflow-x: auto; border: 1px solid var(--app-border); border-radius: 12px; }
-.salary-report-table :deep(.v-data-table) { min-width: 520px; }
-@media (max-width: 760px) { .salary-report-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); } .salary-report-total--overall { grid-column: 1 / -1; } }
-@media (max-width: 420px) { .salary-report-totals { grid-template-columns: 1fr; } .salary-report-total--overall { grid-column: auto; } }
+.salary-report-totals {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.salary-report-total {
+    display: grid;
+    align-content: center;
+    gap: 6px;
+    min-height: 112px;
+    padding: 18px;
+    border: 1px solid var(--app-border);
+    border-radius: 13px;
+    background: var(--app-hover-surface);
+}
+
+.salary-report-total span {
+    color: var(--app-muted);
+    font-size: .82rem;
+}
+
+.salary-report-total strong {
+    color: var(--app-text);
+    font-size: clamp(1.2rem, 2.5vw, 1.65rem);
+    line-height: 1.2;
+}
+
+.salary-report-total--overall {
+    border-color: var(--app-hover-border);
+    background: var(--app-accent-surface);
+}
+
+.salary-report-total--overall strong {
+    color: var(--app-primary);
+}
+
+.salary-report-total small {
+    color: var(--app-muted);
+    font-size: .74rem;
+}
+
+.salary-report-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 24px 0 10px;
+}
+
+.salary-report-heading h3 {
+    margin: 0;
+    color: var(--app-text);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.salary-report-heading span {
+    color: var(--app-muted);
+    font-size: .82rem;
+}
+
+.salary-report-table {
+    overflow-x: auto;
+    border: 1px solid var(--app-border);
+    border-radius: 12px;
+}
+
+.salary-report-table :deep(.v-data-table) {
+    min-width: 520px;
+}
+
+@media (max-width: 760px) {
+    .salary-report-totals {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .salary-report-total--overall {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 420px) {
+    .salary-report-totals {
+        grid-template-columns: 1fr;
+    }
+
+    .salary-report-total--overall {
+        grid-column: auto;
+    }
+}
 </style>
