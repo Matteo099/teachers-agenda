@@ -91,6 +91,7 @@ function updateLabel() {
         centerX: am5.percent(50),
         centerY: am5.percent(50),
         text: "Scuola\n{valueSum}",
+        textAlign: "center",
         populateText: true,
         fontSize: "1.5em"
     })
