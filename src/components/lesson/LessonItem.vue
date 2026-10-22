@@ -323,7 +323,7 @@ const absentVisible = computed(() => (isRecoveryLesson.value) && (!isTrial.value
 const recoverableAbsentVisible = computed(() => (originalLessonHasRecovery.value || isRecoveryLesson.value) && (!isTrial.value && !isAbsent.value && !isUnjustifiedAbsent.value && !isOriginalMovedLesson.value));
 const unjustifiedAbsentVisible = computed(() => (originalLessonHasRecovery.value || isRecoveryLesson.value) && (!isTrial.value && !isAbsent.value && !isUnjustifiedAbsent.value && !isOriginalMovedLesson.value));
 const trialVisible = computed(() => (originalLessonHasRecovery.value || isRecoveryLesson.value) && (isUnset.value && !isTrialDone.value && !isOriginalMovedLesson.value));
-const resetVisible = computed(() => (originalLessonHasRecovery.value || isRecoveryLesson.value) && (!isUnset.value || isOriginalMovedLesson.value));
+const resetVisible = computed(() => (originalLessonHasRecovery.value || isRecoveryLesson.value || isOriginalRecoverableLesson.value) && (!isUnset.value || isOriginalMovedLesson.value));
 const moveVisible = computed(() => originalLessonHasMoved.value && originalLessonHasRecovery.value && isUnset.value)
 
 function saveDailyNote() {

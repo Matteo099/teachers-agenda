@@ -121,18 +121,24 @@ export class SchoolRecoveryLessonService {
         const { isRecoveryLesson, originalLessonRef, recoveryLessonRef } = this.getLessonRefs(lesson, dailyLessonId);
 
         if (!isRecoveryLesson) {
+            const entry = recovery.recoveries.find(r => r.originalLesson.dailyLessonId === originalLessonRef.dailyLessonId && r.originalLesson.lessonId === originalLessonRef.lessonId);
+            const linkedRecoveries = [...(entry?.recoveryLessons ?? []), ...(lesson.recovery ? [lesson.recovery.lessonRef] : [])]
+                .filter((ref, index, refs) => refs.findIndex(other => other.dailyLessonId === ref.dailyLessonId && other.lessonId === ref.lessonId) === index);
             this.updateRecovery(recovery, originalLessonRef);
             await SchoolRecoveryLessonRepository.instance.save(recovery, schoolId);
 
-            // if has recovery, delete the recovery lesson
-            if (lesson.recovery) {
-                // delete recovery lesson
-                const recoveryDailyLesson = await DailyLessonRepository.instance.get(lesson.recovery.lessonRef.dailyLessonId);
-                const recoveryLesson = recoveryDailyLesson?.lessons.find(l => l.lessonId == lesson.recovery!.lessonRef.lessonId)
+            for (const ref of linkedRecoveries) {
+                const recoveryDailyLesson = await DailyLessonRepository.instance.get(ref.dailyLessonId);
+                const recoveryLesson = recoveryDailyLesson?.lessons.find(l => l.lessonId === ref.lessonId);
                 if (recoveryDailyLesson && recoveryLesson)
                     await DailyLessonService.instance.deleteLessons(recoveryDailyLesson, true, [recoveryLesson], deleteMode);
-                else console.warn("unable to remove recovery lesson")
             }
+            // Deleting a linked recovery may recreate an UNSET entry; the original
+            // is being reset, so neither the reference nor that entry should remain.
+            delete lesson.recovery;
+            const latestRecovery = await this.getOrCreate(schoolId);
+            this.updateRecovery(latestRecovery, originalLessonRef);
+            await SchoolRecoveryLessonRepository.instance.save(latestRecovery, schoolId);
         } else {
             if (deleteMode == DeleteMode.DELETING_ORIGINAL_LESSON) this.updateRecovery(recovery, originalLessonRef);
             else if (deleteMode == DeleteMode.DELETING_RECOVERY_LESSON) this.updateRecovery(recovery, originalLessonRef, RecoveryStatus.UNSET);

@@ -35,10 +35,18 @@ export class LessonService {
         if (this.lessonIds.includes(lesson.lessonId)) return;
 
         this.lessonIds.push(lesson.lessonId);
-        await this.cancelMovedLesson(dailyLesson, lesson, deleteMode);
-        await this.updateLessonStatus(LessonStatus.NONE, dailyLesson, lesson);
-        await SchoolRecoveryLessonService.instance.resetRecoveries(dailyLesson, lesson, deleteMode);
-        this.lessonIds = this.lessonIds.filter(i => i != lesson.lessonId);
+        const hasScheduledRecovery = lesson.recovery?.ref === 'recovery';
+        try {
+            await this.cancelMovedLesson(dailyLesson, lesson, deleteMode);
+            // Keep the recovery links available while cancelling every linked recovery.
+            if (hasScheduledRecovery)
+                await SchoolRecoveryLessonService.instance.resetRecoveries(dailyLesson, lesson, deleteMode);
+            await this.updateLessonStatus(LessonStatus.NONE, dailyLesson, lesson);
+            if (!hasScheduledRecovery)
+                await SchoolRecoveryLessonService.instance.resetRecoveries(dailyLesson, lesson, deleteMode);
+        } finally {
+            this.lessonIds = this.lessonIds.filter(i => i != lesson.lessonId);
+        }
     }
 
     public createFrom(lesson: Lesson, newId?: ID): Lesson {
