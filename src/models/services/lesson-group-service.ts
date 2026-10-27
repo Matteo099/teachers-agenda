@@ -84,10 +84,19 @@ export class LessonGroupService {
         const lessons: CalendarEventExt[] = [];
         const students = await StudentService.instance.getStudentsOfSchool(schoolId);
         const byId = new Map(students.map(student => [student.id, student]));
+        const _query4 = where(nameof<WeeklyLesson>('schoolId'), '==', schoolId);
+        const _query5 = where(nameof<WeeklyLesson>('from'), '<=', to.date.toIyyyyMMdd());
+        const _query6 = where(nameof<WeeklyLesson>('to'), '>=', from.date.toIyyyyMMdd());
+        const weeklyLessons = await WeeklyLessonRepository.instance.getAll(_query4, _query5, _query6);
 
         const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(schoolId, from.date.toIyyyyMMdd(), to.date.toIyyyyMMdd());
         const materializedDates = new Set(dailyLessons.map(daily => daily.date));
         lessons.push(...dailyLessons.flatMap(dl => {
+            // Legacy materialized school dates may still contain the old schedule.
+            // A manually recreated day has isOfficialCalendarDate=false.
+            if (dl.isOfficialCalendarDate !== false &&
+                weeklyLessons.some(weekly => weekly.exclude.includes(dl.date)) &&
+                !weeklyLessons.some(weekly => WeeklyLessonService.instance.isValid(weekly, dl.date))) return [];
             const date = yyyyMMdd.fromIyyyyMMdd(dl.date).toScheduleX();
             const uniqueLessons = [...new Map(dl.lessons.filter(l => !l.hiddenForDate).map(l => [l.studentId, l])).values()];
             return uniqueLessons.map(l => {
@@ -103,10 +112,6 @@ export class LessonGroupService {
         }));
 
         // compute the weekly lesson according to from and to
-        const _query4 = where(nameof<WeeklyLesson>('schoolId'), '==', schoolId);
-        const _query5 = where(nameof<WeeklyLesson>('from'), '<=', to.date.toIyyyyMMdd());
-        const _query6 = where(nameof<WeeklyLesson>('to'), '>=', from.date.toIyyyyMMdd());
-        const weeklyLessons = await WeeklyLessonRepository.instance.getAll(_query4, _query5, _query6);
         const toDate = to.date.toDate();
         const startingDate = from.date.toDate();
         while (startingDate <= toDate && weeklyLessons.length > 0) {
@@ -115,7 +120,8 @@ export class LessonGroupService {
                 if (next > toDate) return;
                 if (next > yyyyMMdd.fromIyyyyMMdd(w.to).toDate() || next < yyyyMMdd.fromIyyyyMMdd(w.from).toDate()) return;
                 const date = yyyyMMdd.fromDate(next).toScheduleX();
-                if (materializedDates.has(yyyyMMdd.fromDate(next).toIyyyyMMdd())) return;
+                const dateKey = yyyyMMdd.fromDate(next).toIyyyyMMdd();
+                if (w.exclude.includes(dateKey) || materializedDates.has(dateKey)) return;
 
                 const uniqueSchedule = [...new Map(scheduledLessonsForDate(w.schedule, byId, yyyyMMdd.fromDate(next).toIyyyyMMdd())
                     .filter(s => !isBiweeklyHidden(byId.get(s.studentId)!, yyyyMMdd.fromDate(next).toIyyyyMMdd()))

@@ -176,7 +176,7 @@ export class DailyLessonService {
         formattedDate: string
     ): Promise<Partial<DailyLesson>> {
         const weeklyLessons = await WeeklyLessonService.instance.getWeeklyLessonOfSchoolByDayBetweenDate(schoolId, lessonDate.getDay(), formattedDate);
-        const weeklyLesson = weeklyLessons?.[0];
+        const weeklyLesson = weeklyLessons.find(weekly => WeeklyLessonService.instance.isValid(weekly, formattedDate));
         // const weeklyLesson = schoolLessons.weeklyLessons.find(l => l.dayOfWeek === lessonDate.getDay());
 
         if (weeklyLesson) {
@@ -216,11 +216,21 @@ export class DailyLessonService {
         if (wl) {
             wl.exclude.push(dailyLesson.date);
             await WeeklyLessonRepository.instance.save(wl, wl.id);
+            await this.deleteLessons(dailyLesson, true, [...dailyLesson.lessons]);
             return true;
         }
 
-        this.deleteLessons(dailyLesson, true, dailyLesson.lessons);
+        await this.deleteLessons(dailyLesson, true, [...dailyLesson.lessons]);
         return false;
+    }
+
+    /** Clear materialized school-calendar lessons when a date is newly excluded. */
+    public async clearExcludedDates(weeklyLesson: WeeklyLesson, dates: IyyyyMMdd[]): Promise<void> {
+        for (const date of dates) {
+            const dailyLesson = await this.getDailyLessonOfSchoolByDate(weeklyLesson.schoolId, date);
+            if (!dailyLesson) continue;
+            await this.deleteLessons(dailyLesson, true, [...dailyLesson.lessons]);
+        }
     }
 
     private dailyLessonIdToDelete?: ID;

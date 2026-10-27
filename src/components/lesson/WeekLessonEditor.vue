@@ -320,6 +320,8 @@ async function save(values: GenericObject) {
             savedWeeklyLesson = { ...weekLesson, id } as WeeklyLesson;
             toast.success("Lezione Settimanale Creata")
         }
+        await DailyLessonService.instance.clearExcludedDates(savedWeeklyLesson,
+            savedWeeklyLesson.exclude.filter(date => !props.initialWeekLesson?.exclude.includes(date)));
         await DailyLessonService.instance.syncTodayWithWeeklyLesson(savedWeeklyLesson);
         emit('save', weekLesson);
     } catch (e) {
