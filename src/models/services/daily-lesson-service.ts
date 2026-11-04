@@ -52,13 +52,14 @@ export class DailyLessonService {
         return dailyLessons;
     }
 
-    public async getDailyLessonOfSchoolBetweenDate(schoolId: ID, from: IyyyyMMdd, to: IyyyyMMdd): Promise<DailyLesson[]> {
+    public async getDailyLessonOfSchoolBetweenDate(schoolId: ID, from: IyyyyMMdd, to: IyyyyMMdd, salarySchool?: School): Promise<DailyLesson[]> {
         // retireve all the dailyLesson between from and to
         const _query1 = where(nameof<DailyLesson>('schoolId'), '==', schoolId);
         const _query2 = where(nameof<DailyLesson>('date'), '>=', from);
         const _query3 = where(nameof<DailyLesson>('date'), '<=', to);
         const dailyLessons = await DailyLessonRepository.instance.getAll(_query1, _query2, _query3);
         await this.removeLessonsWithoutStudent(schoolId, dailyLessons);
+        if (salarySchool) await SalaryService.instance.reconcileMovedDailyLessons(salarySchool, dailyLessons);
         return dailyLessons;
     }
 

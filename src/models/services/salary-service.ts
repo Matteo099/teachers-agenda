@@ -1,4 +1,6 @@
+import { Timestamp } from "firebase/firestore";
 import { LessonStatus, SalaryStrategy, TrialLessonPaymentStrategy, type DailyLesson, type IyyyyMMdd, type Lesson, type LessonCompensation, type Salary, type School, type Student } from "../model";
+import { DailyLessonRepository } from "../repositories/daily-lesson-repository";
 import { StudentRepository } from "../repositories/student-repository";
 import { DailyLessonService } from "./daily-lesson-service";
 import { StudentService } from "./student-service";
@@ -12,7 +14,7 @@ export class SalaryService {
     }
 
     public async computeSalary(school: School, from: IyyyyMMdd, to: IyyyyMMdd): Promise<Salary[]> {
-        const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
+        const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to, school);
 
         return this.computeSalaryOfDailyLessons(dailyLessons);
     }
@@ -34,14 +36,40 @@ export class SalaryService {
         return salaries;
     }
 
+    /** Correct legacy totals only on days affected by a move, keeping other saved salaries intact. */
+    public async reconcileMovedDailyLessons(school: School, dailyLessons: DailyLesson[]): Promise<void> {
+        const movedDays = dailyLessons.filter(day => day.lessons.some(lesson => lesson.moved));
+        if (!movedDays.length) return;
+        const students = await StudentService.instance.getStudentsOfSchool(school.id);
+        const studentsById = new Map(students.map(student => [student.id, student]));
+
+        for (const day of movedDays) {
+            const schoolForDay = day.salaryStrategy ? { ...school, salaryStrategy: day.salaryStrategy } : school;
+            let salary = 0;
+            for (const lesson of day.lessons) {
+                if (lesson.hiddenForDate || lesson.moved?.ref === 'moved') continue;
+                const student = studentsById.get(lesson.studentId);
+                if (!student) continue;
+                const compensation = await this.getLessonCompensation(schoolForDay, lesson, student, day.date);
+                if (!compensation) continue;
+                salary += lesson.compensation?.amount ?? compensation.amount;
+                if (!lesson.compensation) lesson.compensation = compensation;
+            }
+            if (Math.abs(salary - (day.salary ?? 0)) < 0.001) continue;
+            day.salary = salary;
+            day.lastSalaryUpdate = Timestamp.now();
+            await DailyLessonRepository.instance.save(day, day.id);
+        }
+    }
+
     public async getSalaryOfStudentLesson(school: School | undefined, lesson: Lesson, student: Student | undefined, lessonDate: IyyyyMMdd): Promise<number> {
         if (!school) return 0;
 
         // A recovery is accounted for separately, on the date it is physically performed.
-        if (lesson.recovery?.ref === 'original') return 0;
+        if (lesson.recovery?.ref === 'original' || lesson.moved?.ref === 'moved') return 0;
 
         const computeSalary =
-            (school.salaryStrategy == SalaryStrategy.ABSENT_AND_PRESENT && (lesson.status == LessonStatus.PRESENT || lesson.status == LessonStatus.ABSENT || lesson.status == LessonStatus.UNJUSTIFIED_ABSENCE || lesson.moved?.ref == 'moved') && !lesson.moved?.ref?.includes('original')) ||
+            (school.salaryStrategy == SalaryStrategy.ABSENT_AND_PRESENT && (lesson.status == LessonStatus.PRESENT || lesson.status == LessonStatus.ABSENT || lesson.status == LessonStatus.UNJUSTIFIED_ABSENCE || lesson.moved?.ref == 'original')) ||
             (school.salaryStrategy == SalaryStrategy.ONLY_PRESENT && lesson.status == LessonStatus.PRESENT) ||
             (school.trialLessonPaymentStrategy != TrialLessonPaymentStrategy.NOTHING && lesson.status == LessonStatus.TRIAL);
 
@@ -77,7 +105,7 @@ export class SalaryService {
     }
 
     public async getLessonCompensation(school: School | undefined, lesson: Lesson, student: Student | undefined, lessonDate: IyyyyMMdd): Promise<LessonCompensation | undefined> {
-        if (!school) return;
+        if (!school || lesson.moved?.ref === 'moved') return;
         student ??= await StudentRepository.instance.get(lesson.studentId);
         if (!student) return;
 
@@ -89,7 +117,7 @@ export class SalaryService {
         const recovery = lesson.recovery?.ref === 'original';
         const paidRecovery = recovery && school.salaryStrategy === SalaryStrategy.ONLY_PRESENT && lesson.status === LessonStatus.PRESENT;
         const regularPaid = !recovery && (
-            (school.salaryStrategy === SalaryStrategy.ABSENT_AND_PRESENT && [LessonStatus.PRESENT, LessonStatus.ABSENT, LessonStatus.UNJUSTIFIED_ABSENCE].includes(lesson.status)) ||
+            (school.salaryStrategy === SalaryStrategy.ABSENT_AND_PRESENT && (lesson.moved?.ref === 'original' || [LessonStatus.PRESENT, LessonStatus.ABSENT, LessonStatus.UNJUSTIFIED_ABSENCE].includes(lesson.status))) ||
             (school.salaryStrategy === SalaryStrategy.ONLY_PRESENT && lesson.status === LessonStatus.PRESENT)
         );
         const trialPaid = !recovery && lesson.status === LessonStatus.TRIAL && school.trialLessonPaymentStrategy !== TrialLessonPaymentStrategy.NOTHING;

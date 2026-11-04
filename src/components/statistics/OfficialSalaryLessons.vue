@@ -30,7 +30,7 @@ async function load() {
     loading.value = true;
     const result: any[] = [];
     for (const school of props.schools ?? []) {
-        const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, props.from, props.to);
+        const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, props.from, props.to, school);
         const officialDates = await MonthlySalaryService.instance.getOfficialCalendarDates(school.id, props.from, props.to, dailyLessons);
         dailyLessons.filter(d => officialDates.has(d.date)).forEach(d => result.push({
             id: `${school.id}-${d.id}`, school: school.name, date: d.date, lessons: d.lessons.length,

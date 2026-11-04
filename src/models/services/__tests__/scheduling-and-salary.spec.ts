@@ -308,6 +308,60 @@ describe("SalaryService.getSalaryOfStudentLesson", () => {
     });
 });
 
+describe("compenso delle lezioni spostate", () => {
+    const school: School = {
+        id: "lizard", name: "Lizard", managed: false,
+        levelRanges: [{ levels: ["base"], price: 10 }, { levels: ["alto"], price: 11 }],
+        salaryStrategy: SalaryStrategy.ABSENT_AND_PRESENT,
+        trialLessonPaymentStrategy: TrialLessonPaymentStrategy.NOTHING,
+        createdAt: timestamp, updatedAt: timestamp,
+    };
+    const regularStudent = { id: "base", schoolId: school.id, name: "Base", surname: "",
+        level: "base", minutesLessonDuration: 60, createdAt: timestamp, updatedAt: timestamp } as Student;
+    const movedStudent = { ...regularStudent, id: "alto", level: "alto" };
+    const original = { lessonId: "original", studentId: movedStudent.id, startTime: 0, endTime: 3600,
+        status: LessonStatus.NONE, moved: { ref: "moved" as const, lessonRef: { dailyLessonId: "new-day", lessonId: "destination" } },
+        createdAt: timestamp, updatedAt: timestamp };
+    const destination = { ...original, lessonId: "destination", moved: {
+        ref: "original" as const, lessonRef: { dailyLessonId: "old-day", lessonId: "original" }
+    } };
+
+    it("paga solo la data di destinazione, anche se la presenza non è ancora segnata", async () => {
+        await expect(SalaryService.instance.getSalaryOfStudentLesson(school, original, movedStudent, "20261001")).resolves.toBe(0);
+        await expect(SalaryService.instance.getLessonCompensation(school, original, movedStudent, "20261001")).resolves.toBeUndefined();
+        await expect(SalaryService.instance.getSalaryOfStudentLesson(school, destination, movedStudent, "20261008")).resolves.toBe(11);
+        await expect(SalaryService.instance.getLessonCompensation(school, destination, movedStudent, "20261008"))
+            .resolves.toMatchObject({ amount: 11, type: "REGULAR" });
+        await expect(SalaryService.instance.getLessonCompensation({ ...school, salaryStrategy: SalaryStrategy.ONLY_PRESENT }, destination, movedStudent, "20261008"))
+            .resolves.toBeUndefined();
+    });
+
+    it("corregge una giornata storica da 81 a 70 euro e non ricalcola le giornate estranee", async () => {
+        const regularLessons = Array.from({ length: 7 }, (_, index) => ({
+            lessonId: `base-${index}`, studentId: regularStudent.id, startTime: index * 3600,
+            endTime: (index + 1) * 3600, status: LessonStatus.PRESENT,
+            compensation: { level: "base", hourlyRate: 10, minutes: 60, amount: 10, type: "REGULAR" as const },
+            createdAt: timestamp, updatedAt: timestamp,
+        }));
+        const oldDay: DailyLesson = { id: "old-day", schoolId: school.id, date: "20261001", salary: 81,
+            lessons: [...regularLessons, original] };
+        const newDay: DailyLesson = { id: "new-day", schoolId: school.id, date: "20261008", salary: 0,
+            lessons: [destination] };
+        const unrelated: DailyLesson = { id: "other-day", schoolId: school.id, date: "20261009", salary: 79,
+            lessons: regularLessons };
+        vi.spyOn(StudentService.instance, "getStudentsOfSchool").mockResolvedValue([regularStudent, movedStudent]);
+        const save = vi.spyOn(DailyLessonRepository.instance, "save").mockResolvedValue("saved");
+
+        await SalaryService.instance.reconcileMovedDailyLessons(school, [oldDay, newDay, unrelated]);
+        await SalaryService.instance.reconcileMovedDailyLessons(school, [oldDay, newDay, unrelated]);
+
+        expect(oldDay.salary).toBe(70);
+        expect(newDay.salary).toBe(11);
+        expect(unrelated.salary).toBe(79);
+        expect(save).toHaveBeenCalledTimes(2);
+    });
+});
+
 describe("MonthlySalaryService", () => {
     const school: School = {
         id: "school", name: "School", managed: false, levelRanges: [{ levels: ["base"], price: 30 }],

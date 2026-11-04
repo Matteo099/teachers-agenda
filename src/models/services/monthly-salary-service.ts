@@ -13,7 +13,7 @@ export class MonthlySalaryService {
     }
 
     public async compute(school: School, from: IyyyyMMdd, to: IyyyyMMdd): Promise<MonthlySalaryReport> {
-        const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
+        const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to, school);
         const lessonsTotal = dailyLessons.reduce((total, daily) => total + (Number.isFinite(daily.salary) ? daily.salary : 0), 0);
         const recoveryTotal = await this.computeRecoveries(school, dailyLessons);
         const regularLessonsTotal = lessonsTotal - recoveryTotal;

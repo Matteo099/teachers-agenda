@@ -213,6 +213,7 @@ import { LessonStatus, Time, yyyyMMdd, type EventTime, type Lesson, type School,
 import { DailyLessonRepository } from '@/models/repositories/daily-lesson-repository';
 import { SchoolRepository } from '@/models/repositories/school-repository';
 import { DailyLessonService } from '@/models/services/daily-lesson-service';
+import { SalaryService } from '@/models/services/salary-service';
 import { StudentLessonService } from '@/models/services/student-lesson-service';
 import { StudentService } from '@/models/services/student-service';
 import { lessonStatusColor, statusColors } from '@/models/statusColors';
@@ -467,6 +468,8 @@ const toggleOfficialCalendarDate = withCache(async () => {
 async function dailyLessonUpdate() {
     await updateStudentLesson();
     await computeSalaryAndSave();
+    if (dailyLesson.value && school.value)
+        await SalaryService.instance.reconcileMovedDailyLessons(school.value, [dailyLesson.value]);
 }
 
 async function updateStudentLesson() {

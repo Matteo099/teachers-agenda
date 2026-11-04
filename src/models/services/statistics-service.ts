@@ -71,7 +71,7 @@ export class StatisticsService {
         }
 
         for await (const school of schools) {
-            const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
+            const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to, school);
             const seriesData: TAXYData[] = dailyLessons.filter(d => !isNaN(d.salary))
                 .map(d => ({ date: yyyyMMdd.fromIyyyyMMdd(d.date).toDate().getTime(), value: d.salary }))
             data.push(...seriesData);
@@ -88,7 +88,7 @@ export class StatisticsService {
         }
 
         for await (const school of schools) {
-            const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
+            const dailyLessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to, school);
             const total = dailyLessons.filter(d => !isNaN(d.salary)).map(d => d.salary).reduce((a, b) => a + b, 0);
             data.push({
                 category: school.name,
@@ -104,7 +104,7 @@ export class StatisticsService {
         const totals = new Map<string, number>();
 
         for (const school of schools) {
-            const lessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to);
+            const lessons = await DailyLessonService.instance.getDailyLessonOfSchoolBetweenDate(school.id, from, to, school);
             for (const lesson of lessons) {
                 const month = lesson.date.substring(0, 6);
                 const salary = Number.isNaN(lesson.salary) ? 0 : lesson.salary;
