@@ -48,6 +48,8 @@ export class SchoolRecoveryLessonService {
         }
         if (status === RecoveryStatus.UNSET) {
             delete recoveryEntry.recoveryLesson;
+            delete recoveryEntry.recoveryLessons;
+            recoveryEntry.recoveredMinutes = 0;
         }
         return true;
     }
@@ -218,25 +220,71 @@ export class SchoolRecoveryLessonService {
         await this.updateRecoveries(schoolId, originalDailyLesson.id, originalLesson);
     }
 
+    /** Cancel the latest scheduled recovery, including entries whose lesson was already removed. */
+    public async cancelScheduledRecovery(originalLesson: LessonRef): Promise<void> {
+        const originalDailyLesson = await DailyLessonRepository.instance.get(originalLesson.dailyLessonId);
+        if (!originalDailyLesson) throw new Error("Original daily lesson not found");
+        const original = originalDailyLesson.lessons.find(lesson => lesson.lessonId === originalLesson.lessonId);
+        if (!original) throw new Error("Original lesson not found");
+
+        const recovery = await this.getOrCreate(originalDailyLesson.schoolId);
+        const entry = recovery.recoveries.find(item => item.originalLesson.dailyLessonId === originalLesson.dailyLessonId && item.originalLesson.lessonId === originalLesson.lessonId);
+        const recoveryLesson = entry?.recoveryLesson ?? entry?.recoveryLessons?.[entry.recoveryLessons.length - 1] ?? original.recovery?.lessonRef;
+        if (!entry || !recoveryLesson) throw new Error("Scheduled recovery not found");
+
+        await this.cancelRecoveryFraction(originalLesson, recoveryLesson);
+    }
+
     /** Remove one scheduled fraction without cancelling other fractions. */
-    public async cancelRecoveryFraction(originalLesson: LessonRef, recoveryLesson: LessonRef, minutes: number): Promise<void> {
-        const recoveryDailyLesson = await DailyLessonRepository.instance.get(recoveryLesson.dailyLessonId);
+    public async cancelRecoveryFraction(originalLesson: LessonRef, recoveryLesson: LessonRef): Promise<void> {
+        const originalDailyLesson = await DailyLessonRepository.instance.get(originalLesson.dailyLessonId);
+        if (!originalDailyLesson) throw new Error("Original daily lesson not found");
+        const original = originalDailyLesson.lessons.find(lesson => lesson.lessonId === originalLesson.lessonId);
+        if (!original) throw new Error("Original lesson not found");
+
+        const recovery = await this.getOrCreate(originalDailyLesson.schoolId);
+        const entry = recovery.recoveries.find(r => r.originalLesson.dailyLessonId === originalLesson.dailyLessonId && r.originalLesson.lessonId === originalLesson.lessonId);
+        if (!entry) throw new Error("Scheduled recovery not found");
+
+        const recoveryDailyLesson = recoveryLesson.dailyLessonId === originalDailyLesson.id
+            ? originalDailyLesson : await DailyLessonRepository.instance.get(recoveryLesson.dailyLessonId);
         if (recoveryDailyLesson) {
             const index = recoveryDailyLesson.lessons.findIndex(l => l.lessonId === recoveryLesson.lessonId);
             if (index !== -1) {
+                const removedLesson = recoveryDailyLesson.lessons[index]!;
+                recoveryDailyLesson.salary = Math.max(0, (recoveryDailyLesson.salary ?? 0) - (removedLesson.compensation?.amount ?? 0));
                 recoveryDailyLesson.lessons.splice(index, 1);
-                await DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
+                if (recoveryDailyLesson !== originalDailyLesson)
+                    await DailyLessonRepository.instance.save(recoveryDailyLesson, recoveryDailyLesson.id);
             }
         }
-        const recovery = await this.getOrCreate((await DailyLessonRepository.instance.get(originalLesson.dailyLessonId))!.schoolId);
-        const entry = recovery.recoveries.find(r => r.originalLesson.dailyLessonId === originalLesson.dailyLessonId && r.originalLesson.lessonId === originalLesson.lessonId);
-        if (entry) {
-            entry.recoveryLessons = (entry.recoveryLessons ?? []).filter(r => r.dailyLessonId !== recoveryLesson.dailyLessonId || r.lessonId !== recoveryLesson.lessonId);
-            entry.recoveredMinutes = Math.max(0, (entry.recoveredMinutes ?? 0) - minutes);
-            if (entry.recoveryLesson?.dailyLessonId === recoveryLesson.dailyLessonId && entry.recoveryLesson.lessonId === recoveryLesson.lessonId)
-                entry.recoveryLesson = entry.recoveryLessons[entry.recoveryLessons.length - 1];
-            if ((entry.recoveredMinutes ?? 0) === 0) entry.status = RecoveryStatus.UNSET;
+
+        const refs = [...(entry.recoveryLessons ?? []), ...(entry.recoveryLesson ? [entry.recoveryLesson] : [])]
+            .filter((ref, index, all) => all.findIndex(other => other.dailyLessonId === ref.dailyLessonId && other.lessonId === ref.lessonId) === index)
+            .filter(ref => ref.dailyLessonId !== recoveryLesson.dailyLessonId || ref.lessonId !== recoveryLesson.lessonId);
+        const remainingRefs: LessonRef[] = [];
+        let recoveredMinutes = 0;
+        for (const ref of refs) {
+            const day = await DailyLessonRepository.instance.get(ref.dailyLessonId);
+            const lesson = day?.lessons.find(item => item.lessonId === ref.lessonId);
+            if (!lesson) continue;
+            remainingRefs.push(ref);
+            recoveredMinutes += lesson.recovery?.fractionMinutes ?? Math.round((lesson.endTime - lesson.startTime) / 60);
         }
+        entry.recoveredMinutes = recoveredMinutes;
+        if (remainingRefs.length) {
+            entry.recoveryLessons = remainingRefs;
+            entry.recoveryLesson = remainingRefs[remainingRefs.length - 1]!;
+            entry.status = RecoveryStatus.PENDING;
+            original.recovery = { ref: 'recovery', lessonRef: entry.recoveryLesson };
+        } else {
+            delete entry.recoveryLessons;
+            delete entry.recoveryLesson;
+            entry.status = RecoveryStatus.UNSET;
+            delete original.recovery;
+        }
+
+        await DailyLessonRepository.instance.save(originalDailyLesson, originalDailyLesson.id);
         await SchoolRecoveryLessonRepository.instance.save(recovery, recovery.schoolId);
     }
 }

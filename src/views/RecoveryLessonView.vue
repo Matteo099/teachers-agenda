@@ -87,35 +87,43 @@ function recoveryCount(status: RecoveryStatus): number {
 
 watch(recoveries, async () => computeDailyLessons());
 
-const cancelScheduleRecovery = withCache(async (recovery: StudentLessonWithRecovery) => {
-    cancellingScheduleRecovery.value = true;
-    const recoveryLesson = recovery.recoveryReference.recoveryDailyLesson?.lessons.find(l =>
-        l.recovery?.ref === 'original' &&
-        l.recovery.lessonRef.dailyLessonId === recovery.recoveryReference.originalDailyLesson.id &&
-        l.recovery.lessonRef.lessonId === recovery.lesson.lessonId);
-    if (recoveryLesson?.recovery) {
-        await SchoolRecoveryLessonService.instance.cancelRecoveryFraction(
-            recovery.lesson.recovery?.lessonRef ?? { dailyLessonId: recovery.recoveryReference.originalDailyLesson.id, lessonId: recovery.lesson.lessonId },
-            { dailyLessonId: recovery.recoveryReference.recoveryDailyLesson!.id, lessonId: recoveryLesson.lessonId },
-            Math.round((recoveryLesson.endTime - recoveryLesson.startTime) / 60)
-        );
-    } else {
-        await SchoolRecoveryLessonService.instance.cancelRecovery(recovery);
-    }
-    toast.success('Recupero annullato');
+const cancelRecoveryWithCache = withCache(async (recovery: StudentLessonWithRecovery) => {
+    await SchoolRecoveryLessonService.instance.cancelScheduledRecovery({
+        dailyLessonId: recovery.recoveryReference.originalDailyLesson.id,
+        lessonId: recovery.lesson.lessonId,
+    });
+    return true;
 }, (error) => {
     toast.warn("Impossibile annullare la lezione di recupero")
     console.error("Unable to cancel recovery lesson", error);
-}, async () => {
-    cancellingScheduleRecovery.value = false;
+    return false;
 });
 
-async function computeDailyLessons() {
-    if (!recoveries.value) return;
+async function cancelScheduleRecovery(recovery: StudentLessonWithRecovery) {
+    cancellingScheduleRecovery.value = true;
+    try {
+        if (!await cancelRecoveryWithCache(recovery)) return;
+        const latest = await SchoolRecoveryLessonRepository.instance.get(props.school.id);
+        await computeDailyLessons(latest);
+        const updated = latest?.recoveries.find(entry =>
+            entry.originalLesson.dailyLessonId === recovery.recoveryReference.originalDailyLesson.id &&
+            entry.originalLesson.lessonId === recovery.lesson.lessonId);
+        activeStatus.value = updated?.status === RecoveryStatus.UNSET ? RecoveryStatus.UNSET : RecoveryStatus.PENDING;
+        toast.success('Recupero annullato');
+    } catch (error) {
+        toast.warn("Impossibile aggiornare la lista dei recuperi");
+        console.error("Unable to refresh recovery lessons", error);
+    } finally {
+        cancellingScheduleRecovery.value = false;
+    }
+}
+
+async function computeDailyLessons(source = recoveries.value) {
+    if (!source) return;
 
     try {
         loadingExtendedRecoveries.value = true;
-        extendedRecoveries.value = await SchoolRecoveryLessonExtService.instance.computeDailyLessons(recoveries.value);
+        extendedRecoveries.value = await SchoolRecoveryLessonExtService.instance.computeDailyLessons(source);
         if (!initialStatusSelected) {
             activeStatus.value = recoveryTabs.find(tab => recoveryCount(tab.value) > 0)?.value ?? RecoveryStatus.UNSET;
             initialStatusSelected = true;
