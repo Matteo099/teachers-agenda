@@ -255,8 +255,9 @@ export class LessonGroupService {
                 const formattedDate = yyyyMMdd.fromDate(nextLessonDate);
                 const nextLessonDateString = formattedDate.toIyyyyMMdd();
 
-                // if the next lesson to add is outside the boundary of the weekly event, discard the weeklylesson
-                if (weekLesson.from > nextLessonDateString || nextLessonDateString > weekLesson.to) {
+                // Keep a calendar with a future start date until its first occurrence.
+                if (nextLessonDateString < weekLesson.from) return;
+                if (nextLessonDateString > weekLesson.to) {
                     _weeklyLessons.splice(index, 1);
                     return;
                 }

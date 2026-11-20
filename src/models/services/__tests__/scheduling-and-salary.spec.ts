@@ -2,6 +2,7 @@ import { Timestamp } from "firebase/firestore";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DayOfWeek, LessonStatus, SalaryStrategy, TrialLessonPaymentStrategy, yyyyMMdd, type DailyLesson, type School, type Student, type WeeklyLesson } from "@/models/model";
 import { DailyLessonRepository } from "@/models/repositories/daily-lesson-repository";
+import { WeeklyLessonRepository } from "@/models/repositories/weekly-lesson-repository";
 import { DailyLessonService } from "../daily-lesson-service";
 import { SalaryService } from "../salary-service";
 import { StudentLessonService } from "../student-lesson-service";
@@ -87,6 +88,44 @@ describe('riallineamento delle lezioni già create al calendario settimanale', (
             expect(today.lessons.map(lesson => lesson.studentId)).toEqual([student.id]);
             expect(nextWeek.lessons.map(lesson => lesson.studentId)).toEqual([student.id]);
             expect(save).toHaveBeenCalledTimes(2);
+        } finally { vi.useRealTimers(); }
+    });
+});
+
+describe('future school calendar start', () => {
+    it('keeps the chosen first Saturday and projects the first lesson on that date', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date(2026, 10, 20, 10));
+        try {
+            const student = { id: 'student', schoolId: 'school', name: 'Ada', surname: 'Rossi' } as Student;
+            const weekly = {
+                id: 'weekly', schoolId: 'school', dayOfWeek: DayOfWeek.SATURDAY,
+                from: '20270116', to: '20270331', exclude: [],
+                createdAt: timestamp, updatedAt: timestamp,
+                schedule: [{ lessonId: 'scheduled', studentId: student.id, startTime: 57600, endTime: 60000 }],
+            } as WeeklyLesson;
+            vi.spyOn(StudentService.instance, 'getStudentsOfSchool').mockResolvedValue([student]);
+            const loadDays = vi.spyOn(DailyLessonService.instance, 'getDailyLessonOfSchoolFromDate').mockResolvedValue([]);
+            vi.spyOn(DailyLessonService.instance, 'getDailyLessonOfSchoolBetweenDate').mockResolvedValue([]);
+            vi.spyOn(WeeklyLessonRepository.instance, 'getAll').mockResolvedValue([weekly]);
+            const saveWeekly = vi.spyOn(WeeklyLessonRepository.instance, 'save').mockResolvedValue(weekly.id);
+            const createDay = vi.spyOn(DailyLessonService.instance, 'getOrCreateDailyLessonId');
+
+            await DailyLessonService.instance.syncTodayWithWeeklyLesson(weekly);
+            const groups = await LessonGroupService.instance.getGroupedLessons(
+                { schoolId: 'school', dailyLessons: [], weeklyLessons: [weekly] }, undefined, 0, 1);
+            const calendarEvents = await LessonGroupService.instance.getCalendarLessons('school',
+                { date: yyyyMMdd.fromIyyyyMMdd('20270101') },
+                { date: yyyyMMdd.fromIyyyyMMdd('20270131') });
+
+            expect(weekly.from).toBe('20270116');
+            expect(loadDays).toHaveBeenCalledWith('school', '20270116');
+            expect(saveWeekly).not.toHaveBeenCalled();
+            expect(createDay).not.toHaveBeenCalled();
+            expect(groups.flatMap(group => group.lessons).map(lesson => lesson.date.toIyyyyMMdd()))
+                .toEqual(['20270116']);
+            expect(calendarEvents.map(event => event.start.slice(0, 10)))
+                .toEqual(['2027-01-16', '2027-01-23', '2027-01-30']);
         } finally { vi.useRealTimers(); }
     });
 });

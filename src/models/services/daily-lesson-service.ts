@@ -411,18 +411,11 @@ export class DailyLessonService {
         firstAvailableDate.setDate(today.getDate() + daysUntilLesson);
         const date = yyyyMMdd.fromDate(firstAvailableDate).toIyyyyMMdd();
 
-        // A calendar may have been created for a future date (for example the
-        // next Monday). When a student is added, the first available lesson is
-        // the next occurrence from today, not the calendar's old start date.
-        if (weeklyLesson.from > date && weeklyLesson.to >= date && !weeklyLesson.exclude.includes(date)) {
-            weeklyLesson.from = date;
-            await WeeklyLessonRepository.instance.save(weeklyLesson, weeklyLesson.id);
-        }
-
         if (WeeklyLessonService.instance.isValid(weeklyLesson, date)) {
             await this.getOrCreateDailyLessonId(weeklyLesson.schoolId, firstAvailableDate);
         }
-        const dailyLessons = await this.getDailyLessonOfSchoolFromDate(weeklyLesson.schoolId, date);
+        const dailyLessons = await this.getDailyLessonOfSchoolFromDate(
+            weeklyLesson.schoolId, weeklyLesson.from > date ? weeklyLesson.from : date);
         const students = await StudentService.instance.getStudentsOfSchool(weeklyLesson.schoolId);
         const byId = new Map(students.map(student => [student.id, student]));
         for (const dailyLesson of dailyLessons) {
