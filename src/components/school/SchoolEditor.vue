@@ -237,6 +237,7 @@ async function save(values: GenericObject) {
     saving.value = true;
 
     const school: Partial<School> = {
+        ...(props.edit ? props.initialSchool : undefined),
         name: values.name,
         salaryStrategy: values.salaryStrategy,
         trialLessonPaymentStrategy: values.trialLessonPaymentStrategy,
@@ -247,11 +248,12 @@ async function save(values: GenericObject) {
         createdAt: props.edit ? props.initialSchool?.createdAt : Timestamp.now(),
         updatedAt: Timestamp.now()
     };
-    if (values.city) school.city = values.city;
-    if (values.email) school.email = values.email;
-    if (values.phoneNumber) school.phoneNumber = values.phoneNumber;
-    if (values.color && values.color.trim().length != 0) school.color = values.color;
+    if (values.city) school.city = values.city; else delete school.city;
+    if (values.email) school.email = values.email; else delete school.email;
+    if (values.phoneNumber) school.phoneNumber = values.phoneNumber; else delete school.phoneNumber;
+    if (values.color && values.color.trim().length != 0) school.color = values.color; else delete school.color;
     if (managed.value) school.managerOptions = managerOptions.value ?? { totalStudents: 0, quotePerStudent: 0, cashFund: 0 };
+    else delete school.managerOptions;
 
     try {
         if (props.edit && props.initialSchool?.id != undefined) {
@@ -266,7 +268,6 @@ async function save(values: GenericObject) {
         }
         emit('save', school);
     } catch (e) {
-        emit('save');
         toast.error("Errore durante il salvataggio")
         console.error("Error adding document (schools): ", e);
     } finally {

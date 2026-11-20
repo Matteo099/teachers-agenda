@@ -3,7 +3,7 @@
     <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-chart-box-outline" size="22" /></span><div><h2>Gestione economica</h2></div></div>
     <v-card-text class="school-panel-content">
       <v-row>
-        <v-col cols="12" md="4"><div class="school-stat-card primary"><span class="label">Fondo cassa</span><strong class="value">{{ currency(cashBalance) }}</strong></div></v-col>
+        <v-col cols="12" md="4"><div class="school-stat-card primary"><span class="label">Fondo cassa · {{ selectedSchoolYear }}/{{ String(selectedSchoolYear + 1).slice(-2) }}</span><strong class="value">{{ currency(cashBalance) }}</strong></div></v-col>
         <v-col cols="6" md="4"><div class="school-stat-card"><span class="label">Studenti · {{ formatMonth(selectedMonth.replace('-', '')) }}</span><strong class="value">{{ editValues.totalStudents }}</strong></div></v-col>
         <v-col cols="6" md="4"><div class="school-stat-card"><span class="label">Quota per studente</span><strong class="value">{{ currency(editValues.quotePerStudent) }}</strong></div></v-col>
       </v-row>
@@ -28,6 +28,10 @@
       <v-card class="management-section my-4" variant="flat">
         <div class="school-panel-header"><span class="school-panel-icon"><v-icon icon="mdi-swap-horizontal" size="22" /></span><div><h2>Movimenti del fondo cassa</h2></div><v-btn color="primary" prepend-icon="mdi-plus" variant="flat" @click="openNewMovement">Registra movimento</v-btn></div>
         <v-card-text>
+          <v-row class="align-center mb-2">
+            <v-col cols="12" sm="5"><v-select v-model="selectedSchoolYear" :items="schoolYearOptions" label="Anno scolastico" variant="outlined" density="compact" hide-details /></v-col>
+            <v-col cols="12" sm="7" class="text-medium-emphasis text-body-2">Saldo iniziale: {{ currency(cashLedger.openingBalance) }}</v-col>
+          </v-row>
           <v-data-table :headers="headers" :items="movementRows" item-value="id" density="comfortable">
             <template #item.date="{ item }">{{ yyyyMMdd.fromIyyyyMMdd(item.date).format() }}</template>
             <template #item.type="{ item }"><v-chip size="small" variant="tonal" :color="item.type === 'INCOME' ? 'success' : 'warning'">{{
@@ -37,7 +41,7 @@
             <template #item.balance="{ item }">{{ currency(item.balance) }}</template>
             <template #item.actions="{ item }"><v-btn icon="mdi-pencil" size="small" variant="text"
                 aria-label="Modifica movimento" @click="editMovement(item)" /></template>
-            <template #no-data>Nessun movimento registrato.</template>
+            <template #no-data>Nessun movimento in questo anno scolastico.</template>
           </v-data-table>
         </v-card-text>
       </v-card>
@@ -82,6 +86,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import { Timestamp } from 'firebase/firestore';
 import { yyyyMMdd, type CashMovement, type ManagerMonthlySnapshot, type School } from '@/models/model';
 import { SchoolRepository } from '@/models/repositories/school-repository';
+import { schoolCashLedger, schoolYearStartYear } from '@/models/school-cash-ledger';
 import { toast } from 'vue3-toastify';
 
 const props = defineProps<{ school: School }>();
@@ -96,6 +101,8 @@ const selectedMonth = computed(() => `${selectedYear.value}-${String(selectedMon
 const editValues = reactive({ totalStudents: props.school.managerOptions?.totalStudents ?? 0, quotePerStudent: props.school.managerOptions?.quotePerStudent ?? 0 });
 let snapshotBeforeEdit = { year: selectedYear.value, month: selectedMonthNumber.value, totalStudents: editValues.totalStudents, quotePerStudent: editValues.quotePerStudent };
 const todayKey = yyyyMMdd.today().toIyyyyMMdd();
+const currentSchoolYear = schoolYearStartYear(todayKey);
+const selectedSchoolYear = ref(currentSchoolYear);
 const movement = reactive<{ type: 'INCOME' | 'EXPENSE'; date: string; description: string; amount: number }>({ type: 'INCOME', date: `${todayKey.slice(0, 4)}-${todayKey.slice(4, 6)}-${todayKey.slice(6, 8)}`, description: '', amount: 0 });
 const movementTypes = [{ title: 'Entrata', value: 'INCOME' }, { title: 'Uscita', value: 'EXPENSE' }];
 const headers = [{ title: 'Data', key: 'date' }, { title: 'Tipo', key: 'type' }, { title: 'Motivazione', key: 'description' }, { title: 'Importo', key: 'amount', align: 'end' as const }, { title: 'Saldo dopo il movimento', key: 'balance', align: 'end' as const }, { title: 'Azioni', key: 'actions', sortable: false, align: 'center' as const }];
@@ -117,14 +124,20 @@ const yearOptions = computed(() => {
   snapshots.value.forEach(snapshot => years.add(Number(snapshot.month.slice(0, 4))));
   return [...years].sort((a, b) => b - a);
 });
-const movementRows = computed(() => {
-  let balance = props.school.managerOptions?.cashFund ?? 0;
-  return [...(props.school.cashMovements ?? [])].sort((a, b) => a.date.localeCompare(b.date)).map(item => {
-    balance += item.type === 'INCOME' ? item.amount : -item.amount;
-    return { ...item, balance };
-  }).reverse();
+const schoolYearOptions = computed(() => {
+  const created = props.school.createdAt?.toDate();
+  const firstYear = created ? schoolYearStartYear(yyyyMMdd.fromDate(created).toIyyyyMMdd()) : currentSchoolYear;
+  const datedYears = [firstYear,
+    ...(props.school.cashMovements ?? []).map(item => schoolYearStartYear(item.date))];
+  const first = Math.min(currentSchoolYear, ...datedYears);
+  return Array.from({ length: currentSchoolYear - first + 1 }, (_, index) => {
+    const year = currentSchoolYear - index;
+    return { title: `${year}/${String(year + 1).slice(-2)}`, value: year };
+  });
 });
-const cashBalance = computed(() => (props.school.managerOptions?.cashFund ?? 0) + (props.school.cashMovements ?? []).reduce((total, item) => total + (item.type === 'INCOME' ? item.amount : -item.amount), 0));
+const cashLedger = computed(() => schoolCashLedger(props.school, selectedSchoolYear.value, todayKey));
+const movementRows = computed(() => cashLedger.value.rows);
+const cashBalance = computed(() => cashLedger.value.balance);
 
 watch(() => [props.school.managerOptions?.totalStudents, props.school.managerOptions?.quotePerStudent, props.school.managerOptions?.monthlyHistory, selectedMonth.value], () => {
   const monthKey = selectedMonth.value.replace('-', '');
@@ -164,12 +177,13 @@ function editMovement(item: CashMovement) {
   movementDialog.value = true;
 }
 function closeMovementDialog() { movementDialog.value = false; editingMovementId.value = undefined; }
-async function persist(patch: Partial<School>) {
-  if (saving.value) return;
+async function persist(patch: Partial<School>): Promise<boolean> {
+  if (saving.value) return false;
   saving.value = true;
   try {
     await SchoolRepository.instance.save({ ...props.school, ...patch, updatedAt: Timestamp.now() }, props.school.id);
-  } catch (error) { toast.error('Impossibile salvare la gestione della scuola'); console.error(error); }
+    return true;
+  } catch (error) { toast.error('Impossibile salvare la gestione della scuola'); console.error(error); return false; }
   finally { saving.value = false; }
 }
 async function saveSnapshot() {
@@ -178,13 +192,13 @@ async function saveSnapshot() {
   const managerOptions = props.school.managerOptions ?? { totalStudents: 0, quotePerStudent: 0, cashFund: 0 };
   const next: ManagerMonthlySnapshot = { month, totalStudents: Number(editValues.totalStudents), quotePerStudent: Number(editValues.quotePerStudent) };
   const history = [...(managerOptions.monthlyHistory ?? []).filter(item => item.month !== month), next].sort((a, b) => a.month.localeCompare(b.month));
-  await persist({
+  if (!await persist({
     managerOptions: {
       ...managerOptions,
       baseline: managerOptions.baseline ?? { totalStudents: managerOptions.totalStudents, quotePerStudent: managerOptions.quotePerStudent },
       monthlyHistory: history,
     }
-  });
+  })) return;
   toast.success(`Valori salvati per ${formatMonth(month)}`);
   snapshotDialog.value = false;
 }
@@ -203,7 +217,7 @@ async function saveMovement() {
     ? existing.map(item => item.id === editingMovementId.value ? entry : item)
     : [...existing, entry];
   const wasEditing = !!editingMovementId.value;
-  await persist({ cashMovements });
+  if (!await persist({ cashMovements })) return;
   movement.description = ''; movement.amount = 0; closeMovementDialog();
   toast.success(wasEditing ? 'Movimento aggiornato' : 'Movimento registrato');
 }
